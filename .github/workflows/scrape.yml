@@ -1,37 +1,50 @@
 name: Real-time 4D Scraper
+
 on:
   schedule:
+    # 每天马时间 19:00 启动 (UTC 11:00)
     - cron: '0 11 * * *'
-  workflow_dispatch:
+  workflow_dispatch: # 允许手动点击运行
 
 jobs:
   scrape:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: write # 必须赋予写入权限，否则无法更新 data.json
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Start 60-Minute Loop Scraper
         run: |
+          # 设置 Git 用户信息
+          git config --global user.name "GitHub Action"
+          git config --global user.email "action@github.com"
+          
           for i in {1..60}
           do
-            echo "正在同步实时开奖 - 轮次: $i"
+            echo "------------------------------------------"
+            echo "正在同步实时开奖 - 轮次: $i - $(date -d '+8 hours' '+%Y-%m-%d %H:%M:%S')"
+            
+            # 抓取数据
+            # 使用 -sL 确保静默抓取并自动跟随重定向
             curl -sL "https://livedraw.damacai.com.my/DrawResult.json" > data.json
             
-            if grep -q "drawNo" data.json; then
-              git config --global user.name "GitHub Action"
-              git config --global user.email "action@github.com"
+            # 检查抓到的数据是否包含关键字段 "drawNo" 或 "DrawNo" (忽略大小写)
+            if grep -qi "drawNo" data.json; then
               git add data.json
+              # 只有当文件内容真的发生变化时才提交
               if git commit -m "Live Update: $(date -d '+8 hours' '+%H:%M:%S')"; then
                 git push
-                echo "✅ 发现新号码，已同步到网页！"
+                echo "✅ 发现新号码，已同步到仓库！"
               else
-                echo "😴 数据未变化。"
+                echo "😴 数据未变化，无需更新。"
               fi
             else
-              echo "⚠️ 接口尚未返回有效数据。"
+              echo "⚠️ 接口尚未返回有效数据 (当前抓取内容: $(head -c 50 data.json)...)"
             fi
+            
+            echo "等待 60 秒..."
             sleep 60
           done
