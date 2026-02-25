@@ -1,0 +1,24 @@
+name: Get 4D Result
+on:
+  schedule:
+    - cron: '30 12 * * *' # 每天北京时间 20:30 自动运行
+  workflow_dispatch: # 允许你手动点击运行
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch and Send
+        run: |
+          # 获取今天日期 (马来西亚时间)
+          DATE=$(date -d "+8 hours" +%Y%m%d)
+          
+          # 抓取大马彩数据
+          RESPONSE=$(curl -s "https://www.damacai.com.my/callpassresult?pastdate=$DATE")
+          
+          # 发送 POST 请求到你的 InfinityFree 网站
+          # 注意：key 必须和你 PHP 里的 $my_key 一致
+          curl -X POST "https://4dresult.xo.je/crawl.php" \
+            -d "key=123456" \
+            -d "date=$DATE" \
+            -d "data=$RESPONSE"
