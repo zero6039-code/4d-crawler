@@ -1,15 +1,25 @@
-- name: Start 60-Minute Loop Scraper
+name: Real-time 4D Scraper
+on:
+  schedule:
+    - cron: '0 11 * * *'
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Start 60-Minute Loop Scraper
         run: |
-          # 循环 60 次，每次间隔 60 秒
           for i in {1..60}
           do
             echo "正在同步实时开奖 - 轮次: $i"
-            
-            # 使用大马彩官方实时 JSON 地址
-            # 这个地址会自动重定向到你截图中看到的那个 Azure 链接
             curl -sL "https://livedraw.damacai.com.my/DrawResult.json" > data.json
             
-            # 检查抓到的数据是否包含有效字段
             if grep -q "drawNo" data.json; then
               git config --global user.name "GitHub Action"
               git config --global user.email "action@github.com"
@@ -21,8 +31,7 @@
                 echo "😴 数据未变化。"
               fi
             else
-              echo "⚠️ 接口尚未返回有效数据，等待下一分钟。"
+              echo "⚠️ 接口尚未返回有效数据。"
             fi
-            
             sleep 60
           done
