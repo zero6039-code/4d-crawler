@@ -1,13 +1,19 @@
-- name: Fetch and Send
+name: Get 4D Result
+on:
+  schedule:
+    - cron: '30 12 * * *'
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch and Send
         run: |
-          # 获取今天日期 (马来西亚时间)
           DATE=$(date -d "+8 hours" +%Y%m%d)
           
-          # 抓取大马彩数据
           RESPONSE=$(curl -s "https://www.damacai.com.my/callpassresult?pastdate=$DATE")
           
-          # 发送 POST 请求 (去掉 https 的 s，并增加伪装参数)
-          # 注意：把域名换成 http 试试，有些免费主机 https 握手会断开
           curl -v -X POST "http://4dresult.xo.je/crawl.php" \
             -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)" \
             -d "key=4d_auto_update_888" \
