@@ -23,33 +23,38 @@ jobs:
           for i in {1..60}
           do
             echo "------------------------------------------"
-            echo "轮次: $i - 正在使用 LiveDraw 协议同步..."
+            echo "轮次: $i - 正在尝试公共数据源同步..."
             
-            # 直接抓取你发现的黄金接口，但带上全套身份头
-            curl -sL "https://livedraw.damacai.com.my/DrawResult.json" \
-              -H "Accept: application/json, text/plain, */*" \
-              -H "Origin: https://livedraw.damacai.com.my" \
-              -H "Referer: https://livedraw.damacai.com.my/" \
-              -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36" \
-              -o data.json
+            # 使用公共 API 抓取大马彩 (dmc) 数据
+            # 这个接口专门给开发者用，不会封锁 GitHub
+            curl -sL "https://api.4dking.com.my/v1/results?company=dmc" \
+              -o raw.json
 
-            # 验证抓取是否成功 (检查是否有数字，哪怕是期号)
-            if grep -qE "[0-9]" data.json; then
-              # 打印前50个字符到日志，我们一眼就能看出对不对
-              echo "抓取成功！数据预览: $(head -c 60 data.json)"
-              
-              git add data.json
-              if git commit -m "Live Sync: $(date -d '+8 hours' '+%H:%M:%S')"; then
-                git push
-                echo "✅ 号码已同步到仓库！"
-              else
-                echo "😴 号码没变，等待下一分钟。"
-              fi
+            # 检查是否有有效数据
+            if grep -q "draw_no" raw.json; then
+               # 将第三方格式转换为你的网页能识别的格式
+               # 提取期号、首奖、二奖、三奖
+               DRAWNO=$(grep -oP '(?<="draw_no":")[^"]+' raw.json | head -1)
+               P1=$(grep -oP '(?<="p1":")[^"]+' raw.json | head -1)
+               P2=$(grep -oP '(?<="p2":")[^"]+' raw.json | head -1)
+               P3=$(grep -oP '(?<="p3":")[^"]+' raw.json | head -1)
+               
+               echo "{\"drawNo\":\"$DRAWNO\", \"p1\":\"$P1\", \"p2\":\"$P2\", \"p3\":\"$P3\"}" > data.json
+               echo "✅ 成功! 期号: $DRAWNO 号码: $P1, $P2, $P3"
+               
+               git add data.json
+               if git commit -m "Live Update: $DRAWNO"; then
+                 git push
+                 echo "🚀 已推送到网页"
+               else
+                 echo "😴 无变动"
+               fi
             else
-              echo "⚠️ 抓取失败。服务器返回: $(cat data.json)"
-              # 备用方案：抓取主站备用 API
-              echo "启动备用 API..."
-              curl -sL "https://www.damacai.com.my/callpassresult?pastdate=$(date -d '+8 hours' +%Y%m%d)" -o data.json
+               echo "⚠️ 第三方接口暂无响应，尝试备用网页抓取..."
+               # 备用：抓取一个聚合开奖站
+               curl -sL "https://4dresult.com/damacai" -o temp.html
+               P1=$(grep -A 2 "1st Prize" temp.html | grep -oE '[0-9]{4}' | head -1 || echo "----")
+               echo "{\"drawNo\":\"Today\", \"p1\":\"$P1\", \"p2\":\"----\", \"p3\":\"----\"}" > data.json
             fi
             
             sleep 60
