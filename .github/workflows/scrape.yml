@@ -10,7 +10,7 @@ jobs:
   scrape:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # 必须赋予写入权限，否则无法更新 data.json
+      contents: write # 赋予写入权限以更新 data.json
     
     steps:
       - name: Checkout code
@@ -18,7 +18,7 @@ jobs:
 
       - name: Start 60-Minute Loop Scraper
         run: |
-          # 设置 Git 用户信息
+          # 配置 Git 身份
           git config --global user.name "GitHub Action"
           git config --global user.email "action@github.com"
           
@@ -27,24 +27,27 @@ jobs:
             echo "------------------------------------------"
             echo "正在同步实时开奖 - 轮次: $i - $(date -d '+8 hours' '+%Y-%m-%d %H:%M:%S')"
             
-            # 抓取数据
-            # 使用 -sL 确保静默抓取并自动跟随重定向
-            curl -sL "https://livedraw.damacai.com.my/DrawResult.json" > data.json
+            # 强化抓取：加入 Referer 和 User-Agent 伪装浏览器
+            curl -sL "https://livedraw.damacai.com.my/DrawResult.json" \
+              -H "Referer: https://livedraw.damacai.com.my/" \
+              -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
+              -o data.json
             
-            # 检查抓到的数据是否包含关键字段 "drawNo" 或 "DrawNo" (忽略大小写)
+            # 检查是否成功抓取到包含 drawNo 的 JSON 数据
             if grep -qi "drawNo" data.json; then
               git add data.json
-              # 只有当文件内容真的发生变化时才提交
+              # 只有内容变化（产生新号码）时才推送
               if git commit -m "Live Update: $(date -d '+8 hours' '+%H:%M:%S')"; then
                 git push
-                echo "✅ 发现新号码，已同步到仓库！"
+                echo "✅ 发现新号码，网页已同步！"
               else
-                echo "😴 数据未变化，无需更新。"
+                echo "😴 数据暂无变化。"
               fi
             else
-              echo "⚠️ 接口尚未返回有效数据 (当前抓取内容: $(head -c 50 data.json)...)"
+              echo "⚠️ 抓取内容无效。前50字符: $(head -c 50 data.json)"
+              echo "提示：如果依然显示 Resource removed，请检查接口链接是否失效。"
             fi
             
-            echo "等待 60 秒..."
+            echo "等待 60 秒进行下轮抓取..."
             sleep 60
           done
