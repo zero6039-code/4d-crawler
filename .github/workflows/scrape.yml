@@ -1,46 +1,28 @@
-name: Real-time 4D Scraper
-on:
-  schedule:
-    # 每天马时间 19:00 启动 (UTC 11:00)
-    - cron: '0 11 * * *'
-  workflow_dispatch: # 允许你现在手动点击运行
-
-jobs:
-  scrape:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Start 60-Minute Loop Scraper
+- name: Start 60-Minute Loop Scraper
         run: |
-          DATE=$(date -d "+8 hours" +%Y%m%d)
-          # 循环 60 次，每次间隔 60 秒，总共 1 小时
+          # 循环 60 次，每次间隔 60 秒
           for i in {1..60}
           do
-            echo "抓取轮次: $i - 时间: $(date -d '+8 hours' '+%Y-%m-%d %H:%M:%S')"
+            echo "正在同步实时开奖 - 轮次: $i"
             
-            # 使用你截图中发现的实时 JSON 接口
-              curl -s "https://prddmcreallivedraw.blob.core.windows.net/livedraw/DrawResult.json" > data.json
+            # 使用大马彩官方实时 JSON 地址
+            # 这个地址会自动重定向到你截图中看到的那个 Azure 链接
+            curl -sL "https://livedraw.damacai.com.my/DrawResult.json" > data.json
             
-            # 检查文件是否包含有效数据 (例如包含 drawNo)
+            # 检查抓到的数据是否包含有效字段
             if grep -q "drawNo" data.json; then
               git config --global user.name "GitHub Action"
               git config --global user.email "action@github.com"
               git add data.json
-              # git commit 只有在文件内容真的有变化时才会成功
               if git commit -m "Live Update: $(date -d '+8 hours' '+%H:%M:%S')"; then
                 git push
-                echo "✅ 检测到新号码，已更新网页！"
+                echo "✅ 发现新号码，已同步到网页！"
               else
-                echo "😴 数据未变化，无需推送。"
+                echo "😴 数据未变化。"
               fi
             else
-              echo "⚠️ 抓取失败或官网尚未更新数据。"
+              echo "⚠️ 接口尚未返回有效数据，等待下一分钟。"
             fi
             
-            echo "等待 60 秒进行下一次抓取..."
             sleep 60
           done
