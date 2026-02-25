@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大马彩实时开奖</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f0f0f0; display: flex; justify-content: center; padding-top: 50px; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 350px; text-align: center; }
+        .draw-info { font-size: 14px; color: #666; margin-bottom: 10px; }
+        .prize-box { margin: 15px 0; padding: 10px; border-radius: 8px; background: #fff5f5; }
+        .prize-label { font-size: 14px; color: #999; }
+        .prize-num { font-size: 32px; color: #e41e26; font-weight: bold; display: block; }
+        .loading { color: #999; font-style: italic; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>大马彩 3+3D 实时结果</h2>
+        <div id="draw-date" class="draw-info">正在连接实时数据...</div>
+        
+        <div class="prize-box">
+            <span class="prize-label">首奖</span>
+            <span id="p1" class="prize-num">----</span>
+        </div>
+        <div class="prize-box">
+            <span class="prize-label">二奖</span>
+            <span id="p2" class="prize-num">----</span>
+        </div>
+        <div class="prize-box">
+            <span class="prize-label">三奖</span>
+            <span id="p3" class="prize-num">----</span>
+        </div>
+        
+        <p style="font-size: 11px; color: #ccc;">数据每 30 秒自动同步</p>
+    </div>
+
+    <script>
+        function fetchResult() {
+            // 添加随机参数防止浏览器缓存旧数据
+            fetch('data.json?t=' + new Date().getTime())
+                .then(res => res.json())
+                .then(data => {
+                    // 这里的字段名需根据 data.json 的实际结构微调
+                    document.getElementById('draw-date').innerText = "期号: " + (data.drawNo || "今日");
+                    document.getElementById('p1').innerText = data.p1 || "----";
+                    document.getElementById('p2').innerText = data.p2 || "----";
+                    document.getElementById('p3').innerText = data.p3 || "----";
+                })
+                .catch(err => console.log("等待数据更新..."));
+        }
+
+        fetchResult();
+        // 每 30 秒自动刷新页面显示的内容
+        setInterval(fetchResult, 30000);
+    </script>
+</body>
+</html>
