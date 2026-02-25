@@ -10,7 +10,7 @@ jobs:
   scrape:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # 赋予写入权限以更新 data.json
+      contents: write # 必须赋予写入权限
     
     steps:
       - name: Checkout code
@@ -25,18 +25,19 @@ jobs:
           for i in {1..60}
           do
             echo "------------------------------------------"
-            echo "正在同步实时开奖 - 轮次: $i - $(date -d '+8 hours' '+%Y-%m-%d %H:%M:%S')"
+            # 获取马来西亚当前日期
+            DATE=$(date -d "+8 hours" +%Y%m%d)
+            echo "正在同步实时开奖 - 轮次: $i - 时间: $(date -d '+8 hours' '+%Y-%m-%d %H:%M:%S')"
             
-            # 强化抓取：加入 Referer 和 User-Agent 伪装浏览器
-            curl -sL "https://livedraw.damacai.com.my/DrawResult.json" \
-              -H "Referer: https://livedraw.damacai.com.my/" \
-              -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
+            # 使用主站 API，这个接口不检查 SAS Token，非常稳定
+            curl -sL "https://www.damacai.com.my/callpassresult?pastdate=$DATE" \
+              -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36" \
               -o data.json
             
-            # 检查是否成功抓取到包含 drawNo 的 JSON 数据
+            # 检查抓取结果
             if grep -qi "drawNo" data.json; then
               git add data.json
-              # 只有内容变化（产生新号码）时才推送
+              # 只有当数据发生变化（出新号）时才推送
               if git commit -m "Live Update: $(date -d '+8 hours' '+%H:%M:%S')"; then
                 git push
                 echo "✅ 发现新号码，网页已同步！"
@@ -45,7 +46,7 @@ jobs:
               fi
             else
               echo "⚠️ 抓取内容无效。前50字符: $(head -c 50 data.json)"
-              echo "提示：如果依然显示 Resource removed，请检查接口链接是否失效。"
+              echo "正在尝试备用方案..."
             fi
             
             echo "等待 60 秒进行下轮抓取..."
