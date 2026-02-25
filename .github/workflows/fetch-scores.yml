@@ -1,32 +1,112 @@
-name: Fetch Latest Results
+const axios = require('axios');
+const cheerio = require('cheerio');
+const fs = require('fs');
 
-on:
-  schedule:
-    - cron: '* 11-12 * * *'   # 马来西亚时间 19:00–20:00
-  workflow_dispatch:
+// ---------- 配置 ----------
+const TARGETS = {
+  damacai: 'https://livedraw.damacai.com.my/',   // 请替换为真实 URL
+  magnum: 'https://www.magnum4d.my/en/4d-results',       // 请替换为真实 URL
+  // 可继续添加其他公司
+};
 
-jobs:
-  fetch:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+// 模拟浏览器的请求头
+const HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+};
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
+// ---------- 抓取单个公司的函数 ----------
+async function fetchCompany(url, companyName) {
+  console.log(`\n===== 开始抓取 ${companyName} =====`);
+  try {
+    // 发送请求
+    console.log(`请求 URL: ${url}`);
+    const response = await axios.get(url, { headers: HEADERS, timeout: 10000 });
+    console.log(`请求成功，状态码: ${response.status}`);
 
-      - name: Install dependencies
-        run: npm install axios cheerio
+    // 加载 HTML
+    const $ = cheerio.load(response.data);
+    
+    // 打印一小段 HTML 以确认内容（可选，用于调试）
+    // console.log('HTML 片段:', $('body').html().substring(0, 500));
 
-      - name: Run fetch script
-        run: node scripts/fetch.js
+    // --- 根据实际网页结构调整以下选择器 ---
+    // 示例选择器（请务必修改为正确的类名/ID）
+    const first = $('.prize-first .number').text().trim() || '';
+    const second = $('.prize-second .number').text().trim() || '';
+    const third = $('.prize-third .number').text().trim() || '';
 
-      - name: Commit and push if changed
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add docs/data.json
-          git diff --quiet && git diff --staged --quiet || git commit -m "Update results [skip ci]"
-          git push
+    // 特别奖列表（假设每个奖项都在 .special-item 中）
+    const special = [];
+    $('.special-item').each((i, el) => {
+      const num = $(el).text().trim();
+      if (num) special.push(num);
+    });
+
+    // 安慰奖列表
+    const consolation = [];
+    $('.consolation-item').each((i, el) => {
+      const num = $(el).text().trim();
+      if (num) consolation.push(num);
+    });
+
+    // 开奖信息（如日期、期号）
+    const drawInfo = $('.draw-info').text().trim() || '';
+
+    console.log(`解析结果：1st="${first}", 2nd="${second}", 3rd="${third}"`);
+    console.log(`特别奖数量: ${special.length}, 安慰奖数量: ${consolation.length}`);
+
+    return {
+      '1st': first,
+      '2nd': second,
+      '3rd': third,
+      special,
+      consolation,
+      draw_info: drawInfo
+    };
+  } catch (err) {
+    console.error(`❌ 抓取 ${companyName} 时出错:`, err.message);
+    // 返回空数据，避免整个脚本崩溃
+    return {
+      '1st': '',
+      '2nd': '',
+      '3rd': '',
+      special: [],
+      consolation: [],
+      draw_info: ''
+    };
+  }
+}
+
+// ---------- 主函数 ----------
+async function fetchAll() {
+  console.log('🚀 开始抓取所有公司数据...');
+  const results = {};
+
+  for (const [key, url] of Object.entries(TARGETS)) {
+    results[key] = await fetchCompany(url, key);
+    // 添加延时，避免请求过快
+    await new Promise(resolve => setTimeout(resolve, 2000));
+  }
+
+  // 构造输出 JSON（结构与前端一致）
+  const output = {
+    draw_date: new Date().toLocaleString('en-GB', {
+      weekday: 'short',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    }).replace(/\//g, '/'),  // 例如 "Wed, 25/02/2026"
+    global_draw_no: '需从某处获取或暂时留空', // 您可以从网页中提取期号
+    results
+  };
+
+  // 写入文件
+  fs.writeFileSync('docs/data.json', JSON.stringify(output, null, 2));
+  console.log('\n✅ 数据已写入 docs/data.json');
+}
+
+// 执行
+fetchAll().catch(err => {
+  console.error('脚本执行失败:', err);
+  process.exit(1);
+});
