@@ -1,4 +1,21 @@
-- name: Start 60-Minute Loop Scraper
+name: Real-time 4D Scraper
+
+on:
+  schedule:
+    - cron: '0 11 * * *'
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Start 60-Minute Loop Scraper
         run: |
           git config --global user.name "GitHub Action"
           git config --global user.email "action@github.com"
@@ -13,25 +30,22 @@
               -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36" \
               -o temp.html
 
-            # 使用更宽容的正则匹配提取数字
-            # 逻辑：寻找包含 p1-number 的行，去掉所有 HTML 标签只留数字
+            # 精准提取逻辑
             P1=$(grep "p1-number" temp.html | sed 's/<[^>]*>//g' | xargs || echo "----")
             P2=$(grep "p2-number" temp.html | sed 's/<[^>]*>//g' | xargs || echo "----")
             P3=$(grep "p3-number" temp.html | sed 's/<[^>]*>//g' | xargs || echo "----")
             DRAWNO=$(grep "draw-no" temp.html | head -1 | sed 's/<[^>]*>//g' | xargs || echo "Pending")
 
-            # 打印到日志方便查看
-            echo "提取结果 -> 期号: $DRAWNO | 首奖: $P1 | 二奖: $P2 | 三奖: $P3"
-
-            # 写入 JSON
             echo "{\"drawNo\":\"$DRAWNO\", \"p1\":\"$P1\", \"p2\":\"$P2\", \"p3\":\"$P3\"}" > data.json
+            
+            echo "提取到: $DRAWNO | $P1 | $P2 | $P3"
 
             git add data.json
             if git commit -m "Live Update: $DRAWNO"; then
               git push
-              echo "✅ 数据更新成功！"
+              echo "✅ 数据同步成功"
             else
-              echo "😴 无新变动。"
+              echo "😴 无变动"
             fi
             
             sleep 60
