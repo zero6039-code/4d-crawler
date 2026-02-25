@@ -22,8 +22,8 @@ jobs:
           do
             echo "抓取轮次: $i - 时间: $(date -d '+8 hours' '+%Y-%m-%d %H:%M:%S')"
             
-            # 抓取数据
-            curl -s "https://www.damacai.com.my/callpassresult?pastdate=$DATE" > data.json
+            # 使用你截图中发现的实时 JSON 接口
+              curl -s "https://prddmcreallivedraw.blob.core.windows.net/livedraw/DrawResult.json" > data.json
             
             # 检查文件是否包含有效数据 (例如包含 drawNo)
             if grep -q "drawNo" data.json; then
