@@ -23,29 +23,34 @@ jobs:
           for i in {1..60}
           do
             echo "------------------------------------------"
-            echo "正在同步实时开奖 - 轮次: $i"
+            echo "轮次: $i - 正在深度扫描网页号码..."
             
-            # 抓取首页
+            # 抓取首页源码
             curl -sL "https://www.damacai.com.my/" \
               -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36" \
               -o temp.html
 
-            # 精准提取逻辑
-            P1=$(grep "p1-number" temp.html | sed 's/<[^>]*>//g' | xargs || echo "----")
-            P2=$(grep "p2-number" temp.html | sed 's/<[^>]*>//g' | xargs || echo "----")
-            P3=$(grep "p3-number" temp.html | sed 's/<[^>]*>//g' | xargs || echo "----")
-            DRAWNO=$(grep "draw-no" temp.html | head -1 | sed 's/<[^>]*>//g' | xargs || echo "Pending")
+            # --- 强力提取逻辑 ---
+            # 找包含 p1-number 的行及其后 10 行，提取出 4 位数字
+            P1=$(grep -A 10 "p1-number" temp.html | grep -oE '[0-9]{4}' | head -1 || echo "----")
+            P2=$(grep -A 10 "p2-number" temp.html | grep -oE '[0-9]{4}' | head -1 || echo "----")
+            P3=$(grep -A 10 "p3-number" temp.html | grep -oE '[0-9]{4}' | head -1 || echo "----")
+            
+            # 提取期号 (类似 5801/26)
+            DRAWNO=$(grep -oE '[0-9]{4}/[0-9]{2}' temp.html | head -1 || echo "Pending")
 
+            # 生成 JSON
             echo "{\"drawNo\":\"$DRAWNO\", \"p1\":\"$P1\", \"p2\":\"$P2\", \"p3\":\"$P3\"}" > data.json
             
-            echo "提取到: $DRAWNO | $P1 | $P2 | $P3"
+            echo "抓取成功 -> 期号: $DRAWNO | 首奖: $P1 | 二奖: $P2 | 三奖: $P3"
 
+            # 提交并推送
             git add data.json
-            if git commit -m "Live Update: $DRAWNO"; then
+            if git commit -m "Live Update: $DRAWNO ($i)"; then
               git push
-              echo "✅ 数据同步成功"
+              echo "✅ 数据已推送到 GitHub Pages！"
             else
-              echo "😴 无变动"
+              echo "😴 数据未发生变化，跳过本次推送。"
             fi
             
             sleep 60
