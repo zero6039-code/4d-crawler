@@ -23,34 +23,33 @@ jobs:
           for i in {1..60}
           do
             echo "------------------------------------------"
-            echo "轮次: $i - 正在深度扫描网页号码..."
+            echo "轮次: $i - 正在使用 LiveDraw 协议同步..."
             
-            # 抓取首页源码
-            curl -sL "https://www.damacai.com.my/" \
+            # 直接抓取你发现的黄金接口，但带上全套身份头
+            curl -sL "https://livedraw.damacai.com.my/DrawResult.json" \
+              -H "Accept: application/json, text/plain, */*" \
+              -H "Origin: https://livedraw.damacai.com.my" \
+              -H "Referer: https://livedraw.damacai.com.my/" \
               -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36" \
-              -o temp.html
+              -o data.json
 
-            # --- 强力提取逻辑 ---
-            # 找包含 p1-number 的行及其后 10 行，提取出 4 位数字
-            P1=$(grep -A 10 "p1-number" temp.html | grep -oE '[0-9]{4}' | head -1 || echo "----")
-            P2=$(grep -A 10 "p2-number" temp.html | grep -oE '[0-9]{4}' | head -1 || echo "----")
-            P3=$(grep -A 10 "p3-number" temp.html | grep -oE '[0-9]{4}' | head -1 || echo "----")
-            
-            # 提取期号 (类似 5801/26)
-            DRAWNO=$(grep -oE '[0-9]{4}/[0-9]{2}' temp.html | head -1 || echo "Pending")
-
-            # 生成 JSON
-            echo "{\"drawNo\":\"$DRAWNO\", \"p1\":\"$P1\", \"p2\":\"$P2\", \"p3\":\"$P3\"}" > data.json
-            
-            echo "抓取成功 -> 期号: $DRAWNO | 首奖: $P1 | 二奖: $P2 | 三奖: $P3"
-
-            # 提交并推送
-            git add data.json
-            if git commit -m "Live Update: $DRAWNO ($i)"; then
-              git push
-              echo "✅ 数据已推送到 GitHub Pages！"
+            # 验证抓取是否成功 (检查是否有数字，哪怕是期号)
+            if grep -qE "[0-9]" data.json; then
+              # 打印前50个字符到日志，我们一眼就能看出对不对
+              echo "抓取成功！数据预览: $(head -c 60 data.json)"
+              
+              git add data.json
+              if git commit -m "Live Sync: $(date -d '+8 hours' '+%H:%M:%S')"; then
+                git push
+                echo "✅ 号码已同步到仓库！"
+              else
+                echo "😴 号码没变，等待下一分钟。"
+              fi
             else
-              echo "😴 数据未发生变化，跳过本次推送。"
+              echo "⚠️ 抓取失败。服务器返回: $(cat data.json)"
+              # 备用方案：抓取主站备用 API
+              echo "启动备用 API..."
+              curl -sL "https://www.damacai.com.my/callpassresult?pastdate=$(date -d '+8 hours' +%Y%m%d)" -o data.json
             fi
             
             sleep 60
