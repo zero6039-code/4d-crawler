@@ -1,0 +1,33 @@
+name: Fetch Latest Results
+
+on:
+  schedule:
+    # 每分钟运行一次（GitHub Actions 实际最小间隔约为5分钟，但可这样设置）
+    - cron: '* * * * *'
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install axios cheerio  # 根据您的抓取脚本需要的包
+
+      - name: Run fetch script
+        run: node scripts/fetch.js
+
+      - name: Commit and push if changed
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add docs/data.json
+          git diff --quiet && git diff --staged --quiet || git commit -m "Update results [skip ci]"
+          git push
