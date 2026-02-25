@@ -19,6 +19,6 @@ jobs:
           # 发送 POST 请求到你的 InfinityFree 网站
           # 注意：key 必须和你 PHP 里的 $my_key 一致
           curl -X POST "https://4dresult.xo.je/crawl.php" \
-            -d "key=123456" \
+            -d "key=4d_auto_update_888" \
             -d "date=$DATE" \
             -d "data=$RESPONSE"
