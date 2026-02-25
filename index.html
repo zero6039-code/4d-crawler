@@ -1,69 +1,533 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>大马彩实时开奖</title>
+    <title>4D 成绩 Malaysia · 实时更新</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f4f9; display: flex; justify-content: center; padding-top: 40px; margin: 0; }
-        .card { background: white; padding: 25px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 350px; text-align: center; border: 1px solid #eee; }
-        h2 { color: #333; margin-bottom: 5px; font-size: 22px; }
-        .draw-info { font-size: 14px; color: #888; margin-bottom: 20px; background: #f8f8f8; padding: 5px; border-radius: 5px; }
-        .prize-box { margin: 12px 0; padding: 15px; border-radius: 12px; background: #fffcfc; border: 1px solid #ffeaea; transition: transform 0.2s; }
-        .prize-box:hover { transform: scale(1.02); }
-        .prize-label { font-size: 14px; color: #777; font-weight: bold; }
-        .prize-num { font-size: 36px; color: #d32f2f; font-weight: 900; display: block; letter-spacing: 2px; }
-        .footer-note { font-size: 11px; color: #bbb; margin-top: 20px; }
-        .status-dot { height: 8px; width: 8px; background-color: #4caf50; border-radius: 50%; display: inline-block; margin-right: 5px; }
+        /* 原样保留您的所有样式，此处省略以节省空间，实际使用时请复制原 index.php 中的完整样式 */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
+        body { background: #f0f2f5; padding: 15px 10px; }
+        .container { max-width: 1300px; margin: 0 auto; }
+        h1 { font-size: 1.8rem; font-weight: 700; text-align: center; color: #1e2a3a; margin-bottom: 6px; background: linear-gradient(135deg, #0b1c2f, #2c3e50); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .draw-info { background: #ffffffcc; backdrop-filter: blur(4px); border-radius: 40px; padding: 8px 16px; text-align: center; display: inline-block; margin: 0 auto 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); font-weight: 500; color: #2c3e50; border: 1px solid rgba(255,255,255,0.8); left: 50%; position: relative; transform: translateX(-50%); }
+        .draw-info strong { color: #d32f2f; }
+        .companies-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        .company-section { background: white; border-radius: 24px; box-shadow: 0 8px 20px rgba(0,20,30,0.1); margin-bottom: 0; padding: 14px 12px; border: 1px solid rgba(255,255,255,0.5); transition: transform 0.15s ease; }
+        .company-section:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(0,0,0,0.12); }
+        .company-title { font-size: 1.6rem; font-weight: 800; margin-bottom: 4px; padding-left: 4px; background: linear-gradient(145deg, #1e2b3a, #2b3d55); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+        .company-title::before { content: "🎯"; margin-right: 6px; font-size: 1.4rem; background: none; -webkit-text-fill-color: initial; }
+        .draw-date { font-size: 0.9rem; color: #4a5568; margin-bottom: 10px; padding-left: 4px; font-weight: 500; }
+        .prize-grid { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 12px 0 16px; }
+        .prize-card { background: #f8fafd; border-radius: 16px; padding: 10px 12px; flex: 1 1 90px; min-width: 80px; text-align: center; box-shadow: inset 0 1px 4px #ffffff, 0 5px 10px rgba(0,0,0,0.04); border: 1px solid #e9ecf0; }
+        .prize-card .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #5f6b7a; font-weight: 500; margin-bottom: 4px; }
+        .prize-card .number { font-size: 1.7rem; font-weight: 800; color: #c62828; line-height: 1.2; text-shadow: 2px 2px 0 rgba(198,40,40,0.1); font-family: 'Courier New', monospace; }
+        .subsection { margin-top: 16px; background: #f9fbfd; border-radius: 16px; padding: 12px 10px; border: 1px solid #e2e8f0; }
+        .subsection-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 4px; color: #1e2f3e; }
+        .subsection-title::before { content: "✨"; font-size: 1.2rem; }
+        .number-list { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-start; }
+        .number-item { background: #ffffff; padding: 6px 10px; border-radius: 28px; font-family: 'Courier New', monospace; font-size: 1.1rem; font-weight: 600; color: #0b2a41; box-shadow: 0 3px 8px rgba(0,0,0,0.03); border: 1px solid #d4deec; min-width: 50px; text-align: center; transition: all 0.1s; white-space: pre-line; line-height: 1.4; }
+        .number-item:hover { background: #e6f0ff; border-color: #8a9cb0; }
+        .custom-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.9rem; }
+        .custom-table th { background: #e2e8f0; padding: 8px 4px; text-align: center; font-weight: 600; color: #2d3748; border: 1px solid #cbd5e0; }
+        .custom-table td { padding: 6px 4px; text-align: center; border: 1px solid #cbd5e0; background: white; }
+        .custom-table .alt-number { color: #3182ce; font-weight: 500; }
+        .group-subtitle { font-size: 0.95rem; font-weight: 600; margin: 8px 0 4px 0; color: #2c3e50; width: 100%; }
+        footer { text-align: center; margin-top: 30px; color: #7c8b9c; font-size: 0.8rem; border-top: 1px solid #dbe1ea; padding-top: 16px; }
+        @media (max-width: 900px) { .companies-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 600px) { .companies-grid { grid-template-columns: 1fr; } .company-title { font-size: 1.5rem; } .prize-card .number { font-size: 1.6rem; } .number-item { font-size: 1.0rem; padding: 5px 8px; min-width: 45px; } }
+        .company-section[data-company="damacai"] .company-title { background: linear-gradient(145deg, #1e5620, #2a7a2d); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .company-section[data-company="magnum"] .company-title { background: linear-gradient(145deg, #aa4a1e, #c95f2a); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .company-section[data-company="toto"] .company-title { background: linear-gradient(145deg, #b71c1c, #d32f2f); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h2>大马彩 3+3D</h2>
-        <div id="draw-date" class="draw-info">正在同步最新开奖...</div>
-        
-        <div class="prize-box">
-            <span class="prize-label">首奖 FIRST PRIZE</span>
-            <span id="p1" class="prize-num">----</span>
+    <div class="container">
+        <h1>🇲🇾 4D RESULT MALAYSIA</h1>
+        <div class="draw-info">
+            <strong>日期：</strong> <span id="draw_date">22-02-2026 (Sun)</span> &nbsp; | &nbsp; 
+            <strong>开彩期号：</strong> <span id="global_draw_no">6042-26</span> (通用)
         </div>
-        <div class="prize-box">
-            <span class="prize-label">二奖 SECOND PRIZE</span>
-            <span id="p2" class="prize-num">----</span>
-        </div>
-        <div class="prize-box">
-            <span class="prize-label">三奖 THIRD PRIZE</span>
-        </div>
-        
-        <p class="footer-note"><span class="status-dot"></span>系统每 30 秒自动检测数据</p>
+
+        <!-- 公司卡片容器，由 JavaScript 动态生成 -->
+        <div id="companies-grid" class="companies-grid"></div>
+
+        <footer>
+            ⚠️ 数据仅供参考，请以官方公告为准。<br>
+            更新于 <span id="update-time"><?php echo date('Y-m-d H:i:s'); ?></span>
+        </footer>
     </div>
 
     <script>
-        function fetchResult() {
-            // t= 时间戳强制刷新缓存
-            fetch('data.json?t=' + new Date().getTime())
-                .then(res => res.json())
-                .then(data => {
-                    // 自动识别数据结构：如果是数组取第一个，如果是对象直接取
-                    const result = Array.isArray(data) ? data[0] : data;
-                    
-                    if (result && (result.drawNo || result.DrawNo)) {
-                        document.getElementById('draw-date').innerText = "期号 Draw No: " + (result.drawNo || result.DrawNo);
-                        document.getElementById('p1').innerText = result.p1 || result.P1 || "----";
-                        document.getElementById('p2').innerText = result.p2 || result.P2 || "----";
-                        document.getElementById('p3').innerText = result.p3 || result.P3 || "----";
-                    } else {
-                        document.getElementById('draw-date').innerText = "等待官方公布结果...";
+        // ==================== 内嵌初始数据（源自原 PHP 数组） ====================
+        window.initialData = {
+            "draw_date": "22-02-2026 (Sun)",
+            "global_draw_no": "6042-26",
+            "results": {
+                "damacai": {
+                    "1st": "7470", "2nd": "4503", "3rd": "5795",
+                    "special": ["4565", "5302", "6287", "0434", "2010", "9321", "9164", "5099", "0820", "6964"],
+                    "consolation": ["2087", "8498", "6174", "5365", "6716", "7843", "5663", "8865", "1824", "1916"],
+                    "draw_info": "(Sun) 22-Feb-2026 #6042-26"
+                },
+                "magnum": {
+                    "1st": "7674", "2nd": "0531", "3rd": "2579",
+                    "special": ["9691", "7172", "9248", "8786", "6509", "5749", "4802", "0774", "6939", "1035"],
+                    "consolation": ["8582", "5530", "4589", "2827", "7016", "9130", "4682", "6669", "1262", "3987"],
+                    "draw_info": "(Sun) 22-Feb-2026 #332-26"
+                },
+                "toto": {
+                    "1st": "3294", "2nd": "6710", "3rd": "7919",
+                    "special": ["3543", "8142", "0712", "7493", "9645", "0134", "3733", "3361", "6240", ""],
+                    "consolation": ["1927", "5797", "1468", "6862", "2022", "8886", "6717", "6476", "2022", "8896"],
+                    "draw_info": "(Sun) 22-Feb-2026 #6095-26"
+                },
+                "singapore": {
+                    "1st": "1903", "2nd": "7215", "3rd": "3568",
+                    "special": ["0041", "1203", "1695", "3950", "6410", "6540", "7219", "7440", "", ""],
+                    "consolation": ["1376", "1790", "2634", "3301", "5217", "5685", "7875", "9419", "4698", "9984"],
+                    "draw_info": "(Sun) 22-Feb-2026 #5448"
+                },
+                "damacai_1p3d": {
+                    "1st": "287470", "2nd": "394503", "3rd": "005795",
+                    "special": ["244565", "575302", "966287", "160434", "812010", "189321", "019164", "665099", "030820", "906964"],
+                    "consolation": ["662087", "498498", "176174", "015365", "326716", "637843", "605663", "978865", "401824", "471916"],
+                    "draw_info": "(Sun) 22-Feb-2026 #6042-26"
+                },
+                "sandakan": {
+                    "1st": "4670", "2nd": "7431", "3rd": "0590",
+                    "special": ["3659", "4792", "1665", "0771", "9686", "2931", "8112", "8212", "1338", "0070"],
+                    "consolation": ["0382", "1110", "4315", "6633", "6896", "0600", "7449", "7929", "7582", "5070"],
+                    "draw_info": "(Sun) 22-Feb-2026 #026-26"
+                },
+                "sarawak_cashsweep": {
+                    "1st": "0739", "2nd": "5365", "3rd": "5825",
+                    "special": ["2920", "6131", "0585", "5279", "8878", "9663", "8388", "0087", "8429", "7250"],
+                    "consolation": ["1350", "2604", "8717", "4444", "3067", "6084", "2191", "2699", "4274", "0426"],
+                    "draw_info": "(Sun) 22-Feb-2026 #5254-26"
+                },
+                "sabah": {
+                    "1st": "4971", "2nd": "1333", "3rd": "1360",
+                    "special": ["2813", "5060", "9576", "3170", "5425", "1227", "0436", "7208", "9349", "6696"],
+                    "consolation": ["1522", "9419", "5334", "1283", "2559", "9234", "6040", "3135", "9904", "9832"],
+                    "draw_info": "(Sun) 22-Feb-2026 #4161-26",
+                    "3d": { "1st": "686", "2nd": "741", "3rd": "554" }  // 原有额外3D数据
+                },
+                "sabah_lotto": {
+                    "1st": "", "2nd": "", "3rd": "",
+                    "special": ["03", "12", "29", "32", "34", "44", "+", "16"],
+                    "consolation": ["Jackpot1: RM732,609.85", "Jackpot2: RM16,515.20"],
+                    "draw_info": "(Sun) 22-Feb-2026 #4161-26"
+                },
+                "sportstoto_fireball": {
+                    "type": "fireball",
+                    "first_prize": ["3294", "5294", "3594", "3254", "3295"],
+                    "second_prize": ["6710", "5710", "6510", "6750", "6715"],
+                    "third_prize": ["7919", "5919", "7519", "7959", "7915"],
+                    "special": ["0134", "0135", "0154", "0512", "0534", "0712", "0715", "0752", "3351", "3361", "3365", "3533", "3543", "3543", "3545", "3553", "3561", "3733", "3735", "3753", "5091", "5134", "5142", "5240", "5361", "5493", "5543", "5645", "5712", "5733", "6240", "6245", "6250", "6540", "7453", "7493", "7495", "7593", "8051", "8091", "8095", "8142", "8145", "8152", "8542", "8591", "9545", "9645", "9645", "9655"],
+                    "consolation": ["1125", "1125", "1155", "1458", "1465", "1468", "1525", "1527", "1568", "1925", "1927", "1957", "2022", "2025", "2052", "2522", "5022", "5125", "5419", "5468", "5476", "5597", "5717", "5757", "5795", "5797", "5797", "5862", "5886", "5927", "6456", "6475", "6476", "6517", "6562", "6576", "6715", "6717", "6757", "6852", "6862", "6865", "7415", "7419", "7459", "7519", "8586", "8856", "8885", "8886"],
+                    "draw_info": "(Sun) 22-Feb-2026 #6095-26"
+                },
+                "grand_dragon": {
+                    "1st": "9044", "2nd": "7457", "3rd": "3820",
+                    "special": ["9175", "2085", "3562", "5441", "9147", "9137", "3432", "9584", "7663", "4464"],
+                    "consolation": ["3753", "9812", "1956", "4459", "9527", "1052", "0745", "7707", "1812", "6503"],
+                    "draw_info": "(Tue) 24-Feb-2026"
+                },
+                "singapore_toto": {
+                    "type": "singapore_toto",
+                    "winning_numbers": ["24", "26", "30", "32", "37", "47", "+", "2"],
+                    "prize_table": [
+                        ["Group 1", "$893,718", "2"],
+                        ["Group 2", "$188,152", "2"],
+                        ["Group 3", "$2,562", "101"],
+                        ["Group 4", "$453", "312"],
+                        ["Group 5", "$50", "6,204"],
+                        ["Group 6", "$25", "9,583"]
+                    ],
+                    "draw_info": "(Mon) 23-Feb-2026 #4159"
+                },
+                "sportstoto_lotto": {
+                    "type": "lotto",
+                    "star": ["20", "21", "23", "26", "34", "49", "+", "12"],
+                    "power": ["9", "14", "16", "26", "37", "46"],
+                    "supreme": ["14", "19", "36", "40", "52", "53"],
+                    "jackpots": [
+                        "Star JP1: RM1,244,229.88",
+                        "Star JP2: RM168,249.97",
+                        "Power JP: RM5,338,888.36",
+                        "Supreme JP: RM14,145,385.69"
+                    ],
+                    "draw_info": "(Sun) 22-Feb-2026 #6095-26"
+                },
+                "magnum_jackpot_gold": {
+                    "type": "jackpot_gold",
+                    "jackpot1": ["74", "+", "31", "+", "79", "+", "16"],
+                    "jackpot2_options": [
+                        ["74", "+", "31", "+", "7", "+", "16"],
+                        ["or", "4", "+", "31", "+", "79", "+", "16"]
+                    ],
+                    "estimated": [
+                        "Jackpot 1: RM 12,027,000",
+                        "Jackpot 2: RM 187,000"
+                    ],
+                    "draw_info": "(Sun) 22-Feb-2026 #332-26"
+                },
+                "sportstoto_5d": {
+                    "type": "5d_table",
+                    "data": [
+                        ["1st Prize", "50787"],
+                        ["2nd Prize", "11292"],
+                        ["3rd Prize", "03460"],
+                        ["4th Prize", "0787"],
+                        ["5th Prize", "787"],
+                        ["6th Prize", "87"]
+                    ],
+                    "draw_info": "(Sun) 22-Feb-2026 #6095-26"
+                },
+                "sportstoto_6d": {
+                    "type": "6d_table",
+                    "data": [
+                        ["1st", "215818", ""],
+                        ["2nd", "21581*", "*15818"],
+                        ["3rd", "2158**", "**5818"],
+                        ["4th", "215***", "***818"],
+                        ["5th", "21****", "****18"]
+                    ],
+                    "draw_info": "(Sun) 22-Feb-2026 #6095-26"
+                },
+                "magnum_life": {
+                    "type": "magnum_life",
+                    "winning": ["05", "06", "10", "16", "21", "25", "26", "32"],
+                    "bonus": ["11", "22"],
+                    "draw_info": "(Sun) 22-Feb-2026 #332-26"
+                }
+            }
+        };
+
+        // ==================== 动态渲染函数 ====================
+        function renderCompanies(data) {
+            const grid = document.getElementById('companies-grid');
+            grid.innerHTML = ''; // 清空容器
+
+            // 更新顶部日期和期号
+            document.getElementById('draw_date').innerText = data.draw_date || '';
+            document.getElementById('global_draw_no').innerText = data.global_draw_no || '';
+
+            // 遍历每个公司
+            for (const [companyKey, companyData] of Object.entries(data.results)) {
+                const section = document.createElement('div');
+                section.className = 'company-section';
+                section.setAttribute('data-company', companyKey);
+
+                // ----- 公司标题（转换显示名称）-----
+                const titleDiv = document.createElement('div');
+                titleDiv.className = 'company-title';
+                let displayName = companyKey.replace(/_/g, ' ').toUpperCase();
+                // 特殊名称映射
+                const nameMap = {
+                    'sabah_lotto': 'SABAH LOTTO',
+                    'sportstoto_fireball': 'SPORTSTOTO FIREBALL',
+                    'sportstoto_5d': 'SPORTSTOTO 5D',
+                    'sportstoto_6d': 'SPORTSTOTO 6D',
+                    'sportstoto_lotto': 'SPORTSTOTO LOTTO',
+                    'singapore_toto': 'SINGAPORE TOTO',
+                    'magnum_jackpot_gold': 'MAGNUM JACKPOT GOLD',
+                    'magnum_life': 'MAGNUM LIFE',
+                    'grand_dragon': 'GRAND DRAGON',
+                    'singapore': 'SINGAPORE 4D'
+                };
+                displayName = nameMap[companyKey] || displayName;
+                titleDiv.innerText = displayName;
+                section.appendChild(titleDiv);
+
+                // ----- 开奖信息 -----
+                if (companyData.draw_info) {
+                    const drawDateDiv = document.createElement('div');
+                    drawDateDiv.className = 'draw-date';
+                    drawDateDiv.innerText = companyData.draw_info;
+                    section.appendChild(drawDateDiv);
+                }
+
+                // ----- Fireball 特殊：显示 Fireball 数字（假设固定为5，如需动态可修改）-----
+                if (companyKey === 'sportstoto_fireball') {
+                    const fbDiv = document.createElement('div');
+                    fbDiv.style.display = 'flex'; fbDiv.style.justifyContent = 'center'; fbDiv.style.marginBottom = '8px';
+                    fbDiv.innerHTML = `<div class="prize-card" style="flex:0 0 auto;padding:6px 16px;"><div class="label">Fireball</div><div class="number" style="font-size:2rem;">5</div></div>`;
+                    section.appendChild(fbDiv);
+                }
+
+                // ----- 根据公司类型渲染不同内容 -----
+                if (!companyData.type) {
+                    // 普通公司（有1st,2nd,3rd,special,consolation）
+                    if (companyData['1st'] && companyData['1st'] !== '-') {
+                        section.appendChild(createPrizeGrid(companyData));
                     }
-                })
-                .catch(err => {
-                    console.log("数据尚未就绪...");
-                    document.getElementById('draw-date').innerText = "正在等待数据写入...";
-                });
+                    // Sabah 额外3D（特殊处理）
+                    if (companyKey === 'sabah' && companyData['3d']) {
+                        const title3d = document.createElement('div');
+                        title3d.className = 'subsection-title';
+                        title3d.style.marginTop = '8px'; title3d.style.fontSize = '1.0rem';
+                        title3d.innerText = '🎯 3D Prize';
+                        section.appendChild(title3d);
+                        const prizeGrid3d = document.createElement('div');
+                        prizeGrid3d.className = 'prize-grid';
+                        prizeGrid3d.innerHTML = `
+                            <div class="prize-card"><div class="label">1st Prize</div><div class="number">${companyData['3d']['1st'] || ''}</div></div>
+                            <div class="prize-card"><div class="label">2nd Prize</div><div class="number">${companyData['3d']['2nd'] || ''}</div></div>
+                            <div class="prize-card"><div class="label">3rd Prize</div><div class="number">${companyData['3d']['3rd'] || ''}</div></div>
+                        `;
+                        section.appendChild(prizeGrid3d);
+                    }
+                    // Special 特别奖
+                    if (companyData.special && companyData.special.length > 0) {
+                        section.appendChild(createNumberListSection(companyKey === 'sabah_lotto' ? 'Lotto 6/45' : '🎁 特别奖 (Special)', companyData.special));
+                    }
+                    // Consolation 安慰奖
+                    if (companyData.consolation && companyData.consolation.length > 0 && companyKey !== 'sabah_lotto') {
+                        section.appendChild(createNumberListSection('😌 安慰奖 (Consolation)', companyData.consolation));
+                    }
+                } else {
+                    // 特殊类型公司
+                    switch (companyData.type) {
+                        case 'fireball':
+                            renderFireball(section, companyData);
+                            break;
+                        case 'singapore_toto':
+                            renderSingaporeToto(section, companyData);
+                            break;
+                        case 'lotto':
+                            renderSportstotoLotto(section, companyData);
+                            break;
+                        case 'jackpot_gold':
+                            renderMagnumJackpotGold(section, companyData);
+                            break;
+                        case '5d_table':
+                            render5DTable(section, companyData);
+                            break;
+                        case '6d_table':
+                            render6DTable(section, companyData);
+                            break;
+                        case 'magnum_life':
+                            renderMagnumLife(section, companyData);
+                            break;
+                    }
+                }
+
+                grid.appendChild(section);
+            }
+
+            // 更新页脚时间
+            document.getElementById('update-time').innerText = new Date().toLocaleString('en-GB', { timeZone: 'Asia/Kuala_Lumpur' });
         }
 
-        // 立即执行并开启定时器
-        fetchResult();
-        setInterval(fetchResult, 30000);
+        // ---------- 辅助函数：创建三奖卡片 ----------
+        function createPrizeGrid(companyData) {
+            const prizeGrid = document.createElement('div');
+            prizeGrid.className = 'prize-grid';
+            prizeGrid.innerHTML = `
+                <div class="prize-card"><div class="label">1st Prize</div><div class="number">${companyData['1st'] || ''}</div></div>
+                <div class="prize-card"><div class="label">2nd Prize</div><div class="number">${companyData['2nd'] || ''}</div></div>
+                <div class="prize-card"><div class="label">3rd Prize</div><div class="number">${companyData['3rd'] || ''}</div></div>
+            `;
+            return prizeGrid;
+        }
+
+        // 创建带标题的数字列表块
+        function createNumberListSection(title, numbers) {
+            const section = document.createElement('div');
+            section.className = 'subsection';
+            const titleDiv = document.createElement('div');
+            titleDiv.className = 'subsection-title';
+            titleDiv.innerText = title;
+            section.appendChild(titleDiv);
+            const listDiv = document.createElement('div');
+            listDiv.className = 'number-list';
+            numbers.forEach(num => {
+                const span = document.createElement('span');
+                span.className = 'number-item' + (num === '' ? ' empty-item' : '');
+                span.innerText = num || '—';
+                listDiv.appendChild(span);
+            });
+            section.appendChild(listDiv);
+            return section;
+        }
+
+        // Fireball 渲染
+        function renderFireball(section, data) {
+            const prizes = [
+                { title: 'First Prize (RM500)', items: data.first_prize },
+                { title: 'Second Prize (RM200)', items: data.second_prize },
+                { title: 'Third Prize (RM100)', items: data.third_prize }
+            ];
+            prizes.forEach(p => {
+                const title = document.createElement('div');
+                title.className = 'subsection-title';
+                title.style.marginTop = '8px';
+                title.innerText = p.title;
+                section.appendChild(title);
+                const list = document.createElement('div');
+                list.className = 'number-list';
+                list.style.marginBottom = '12px';
+                p.items.forEach(num => {
+                    const span = document.createElement('span');
+                    span.className = 'number-item';
+                    span.innerText = num;
+                    list.appendChild(span);
+                });
+                section.appendChild(list);
+            });
+            // Special & Consolation
+            section.appendChild(createNumberListSection('💰 Special (RM30)', data.special));
+            section.appendChild(createNumberListSection('💵 Consolation (RM10)', data.consolation));
+        }
+
+        // Singapore Toto 渲染
+        function renderSingaporeToto(section, data) {
+            section.appendChild(createNumberListSection('开奖号码', data.winning_numbers));
+            const tableDiv = document.createElement('div');
+            tableDiv.className = 'subsection';
+            tableDiv.innerHTML = '<div class="subsection-title">奖金分配</div>';
+            const table = document.createElement('table');
+            table.className = 'custom-table';
+            table.innerHTML = '<tr><th>Prize Group</th><th>Share Amount (Each)</th><th>No. of Winning Shares</th></tr>';
+            data.prize_table.forEach(row => {
+                table.innerHTML += `<tr><td>${row[0]}</td><td>${row[1]}</td><td>${row[2]}</td></tr>`;
+            });
+            tableDiv.appendChild(table);
+            section.appendChild(tableDiv);
+        }
+
+        // SportsToto Lotto 渲染
+        function renderSportstotoLotto(section, data) {
+            const lottoSection = document.createElement('div');
+            lottoSection.className = 'subsection';
+            lottoSection.innerHTML = '<div class="subsection-title">乐透号码</div>';
+            const groups = [
+                { title: 'Star Toto 6/50', items: data.star },
+                { title: 'Power Toto 6/55', items: data.power },
+                { title: 'Supreme Toto 6/58', items: data.supreme }
+            ];
+            groups.forEach(g => {
+                const sub = document.createElement('div');
+                sub.className = 'group-subtitle';
+                sub.innerText = g.title;
+                lottoSection.appendChild(sub);
+                const list = document.createElement('div');
+                list.className = 'number-list';
+                g.items.forEach(num => {
+                    const span = document.createElement('span');
+                    span.className = 'number-item';
+                    span.innerText = num;
+                    list.appendChild(span);
+                });
+                lottoSection.appendChild(list);
+            });
+            section.appendChild(lottoSection);
+
+            const jpSection = document.createElement('div');
+            jpSection.className = 'subsection';
+            jpSection.innerHTML = '<div class="subsection-title">💰 Jackpot</div>';
+            const jpList = document.createElement('div');
+            jpList.className = 'number-list';
+            data.jackpots.forEach(jp => {
+                const span = document.createElement('span');
+                span.className = 'number-item';
+                span.innerText = jp;
+                jpList.appendChild(span);
+            });
+            jpSection.appendChild(jpList);
+            section.appendChild(jpSection);
+        }
+
+        // Magnum Jackpot Gold
+        function renderMagnumJackpotGold(section, data) {
+            section.appendChild(createNumberListSection('Jackpot 1', data.jackpot1));
+            const jp2Section = document.createElement('div');
+            jp2Section.className = 'subsection';
+            jp2Section.innerHTML = '<div class="subsection-title">Jackpot 2</div>';
+            data.jackpot2_options.forEach((opt, idx) => {
+                const list = document.createElement('div');
+                list.className = 'number-list';
+                list.style.marginBottom = '8px';
+                opt.forEach(part => {
+                    const span = document.createElement('span');
+                    span.className = 'number-item';
+                    span.innerText = part;
+                    list.appendChild(span);
+                });
+                jp2Section.appendChild(list);
+            });
+            section.appendChild(jp2Section);
+
+            const estDiv = document.createElement('div');
+            estDiv.className = 'subsection';
+            estDiv.innerHTML = '<div class="subsection-title">Estimated Amount</div>';
+            data.estimated.forEach(est => {
+                const box = document.createElement('div');
+                box.style.background = '#e6f0ff';
+                box.style.borderRadius = '28px';
+                box.style.padding = '8px 12px';
+                box.style.marginBottom = '4px';
+                box.style.fontSize = '1rem';
+                box.style.fontWeight = '600';
+                box.style.color = '#1e40af';
+                box.style.border = '1px solid #a5b4fc';
+                box.style.textAlign = 'center';
+                box.innerText = est;
+                estDiv.appendChild(box);
+            });
+            section.appendChild(estDiv);
+        }
+
+        // 5D 表格
+        function render5DTable(section, data) {
+            const table = document.createElement('table');
+            table.className = 'custom-table';
+            data.data.forEach(row => {
+                table.innerHTML += `<tr><td style="font-weight:600;">${row[0]}</td><td>${row[1]}</td></tr>`;
+            });
+            section.appendChild(table);
+        }
+
+        // 6D 表格
+        function render6DTable(section, data) {
+            const table = document.createElement('table');
+            table.className = 'custom-table';
+            table.innerHTML = '<tr><th>奖项</th><th>主号码</th><th>OR</th></tr>';
+            data.data.forEach(row => {
+                table.innerHTML += `<tr><td>${row[0]}</td><td>${row[1]}</td><td class="alt-number">${row[2] || ''}</td></tr>`;
+            });
+            section.appendChild(table);
+        }
+
+        // Magnum Life
+        function renderMagnumLife(section, data) {
+            section.appendChild(createNumberListSection('WINNING NUMBERS', data.winning));
+            section.appendChild(createNumberListSection('BONUS NUMBERS', data.bonus));
+        }
+
+        // ==================== 数据加载与轮询 ====================
+        async function loadAndRender() {
+            try {
+                // 尝试请求最新数据，如果失败则保留上次渲染结果
+                const res = await fetch('data.json?t=' + Date.now());
+                if (res.ok) {
+                    const remoteData = await res.json();
+                    renderCompanies(remoteData);
+                } else {
+                    console.warn('远程数据加载失败，使用上次渲染的数据');
+                }
+            } catch (err) {
+                console.error('请求出错', err);
+            }
+        }
+
+        // 首次使用内嵌数据渲染
+        renderCompanies(window.initialData);
+
+        // 每30秒尝试更新
+        setInterval(loadAndRender, 30000);
     </script>
 </body>
 </html>
