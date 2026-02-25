@@ -1,63 +1,38 @@
-name: Real-time 4D Scraper
-
-on:
-  schedule:
-    # 每天马时间 19:00 启动 (UTC 11:00)
-    - cron: '0 11 * * *'
-  workflow_dispatch: # 允许手动点击运行
-
-jobs:
-  scrape:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write 
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Start 60-Minute Loop Scraper
+- name: Start 60-Minute Loop Scraper
         run: |
-          # 配置 Git 身份
           git config --global user.name "GitHub Action"
           git config --global user.email "action@github.com"
           
           for i in {1..60}
           do
             echo "------------------------------------------"
-            echo "正在同步实时开奖 (网页提取模式) - 轮次: $i - $(date -d '+8 hours' '+%H:%M:%S')"
+            echo "正在同步实时开奖 - 轮次: $i"
             
-            # 1. 抓取首页 HTML
+            # 抓取首页
             curl -sL "https://www.damacai.com.my/" \
               -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36" \
               -o temp.html
 
-            # 2. 从 HTML 结构中精确提取号码 (适配 3+3D 页面标签)
-            # 使用 grep 和 sed 过滤出奖号
-            P1=$(grep -oP '(?<=p1-number">)[^<]+' temp.html | head -1 || echo "----")
-            P2=$(grep -oP '(?<=p2-number">)[^<]+' temp.html | head -1 || echo "----")
-            P3=$(grep -oP '(?<=p3-number">)[^<]+' temp.html | head -1 || echo "----")
-            DRAWNO=$(grep -oP '(?<=draw-no">)[^<]+' temp.html | head -1 || echo "Pending")
+            # 使用更宽容的正则匹配提取数字
+            # 逻辑：寻找包含 p1-number 的行，去掉所有 HTML 标签只留数字
+            P1=$(grep "p1-number" temp.html | sed 's/<[^>]*>//g' | xargs || echo "----")
+            P2=$(grep "p2-number" temp.html | sed 's/<[^>]*>//g' | xargs || echo "----")
+            P3=$(grep "p3-number" temp.html | sed 's/<[^>]*>//g' | xargs || echo "----")
+            DRAWNO=$(grep "draw-no" temp.html | head -1 | sed 's/<[^>]*>//g' | xargs || echo "Pending")
 
-            # 3. 生成 JSON 文件
+            # 打印到日志方便查看
+            echo "提取结果 -> 期号: $DRAWNO | 首奖: $P1 | 二奖: $P2 | 三奖: $P3"
+
+            # 写入 JSON
             echo "{\"drawNo\":\"$DRAWNO\", \"p1\":\"$P1\", \"p2\":\"$P2\", \"p3\":\"$P3\"}" > data.json
-            
-            # 调试输出
-            echo "当前提取结果: $DRAWNO | $P1 | $P2 | $P3"
 
-            # 4. 只有当抓取到有效期号且内容变化时才提交
-            if [ "$DRAWNO" != "Pending" ]; then
-              git add data.json
-              if git commit -m "Live Update: $(date -d '+8 hours' '+%H:%M:%S')"; then
-                git push
-                echo "✅ 数据已更新至仓库！"
-              else
-                echo "😴 号码无变化。"
-              fi
+            git add data.json
+            if git commit -m "Live Update: $DRAWNO"; then
+              git push
+              echo "✅ 数据更新成功！"
             else
-              echo "⚠️ 网页尚未更新期号，请稍后。"
+              echo "😴 无新变动。"
             fi
             
-            echo "等待 60 秒..."
             sleep 60
           done
