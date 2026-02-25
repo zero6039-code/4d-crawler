@@ -1,21 +1,46 @@
-name: Get 4D Result
+name: Real-time 4D Scraper
 on:
   schedule:
-    - cron: '30 12 * * *'
-  workflow_dispatch:
+    # 每天马时间 19:00 启动 (UTC 11:00)
+    - cron: '0 11 * * *'
+  workflow_dispatch: # 允许你现在手动点击运行
 
 jobs:
   scrape:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - name: Fetch and Send
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Start 60-Minute Loop Scraper
         run: |
           DATE=$(date -d "+8 hours" +%Y%m%d)
-          
-          RESPONSE=$(curl -s "https://www.damacai.com.my/callpassresult?pastdate=$DATE")
-          
-          curl -v -X POST "http://4dresult.xo.je/crawl.php" \
-            -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)" \
-            -d "key=4d_auto_update_888" \
-            -d "date=$DATE" \
-            -d "data=$RESPONSE"
+          # 循环 60 次，每次间隔 60 秒，总共 1 小时
+          for i in {1..60}
+          do
+            echo "抓取轮次: $i - 时间: $(date -d '+8 hours' '+%Y-%m-%d %H:%M:%S')"
+            
+            # 抓取数据
+            curl -s "https://www.damacai.com.my/callpassresult?pastdate=$DATE" > data.json
+            
+            # 检查文件是否包含有效数据 (例如包含 drawNo)
+            if grep -q "drawNo" data.json; then
+              git config --global user.name "GitHub Action"
+              git config --global user.email "action@github.com"
+              git add data.json
+              # git commit 只有在文件内容真的有变化时才会成功
+              if git commit -m "Live Update: $(date -d '+8 hours' '+%H:%M:%S')"; then
+                git push
+                echo "✅ 检测到新号码，已更新网页！"
+              else
+                echo "😴 数据未变化，无需推送。"
+              fi
+            else
+              echo "⚠️ 抓取失败或官网尚未更新数据。"
+            fi
+            
+            echo "等待 60 秒进行下一次抓取..."
+            sleep 60
+          done
