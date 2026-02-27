@@ -1,6 +1,5 @@
 // scripts/scraper/damacai.js
 const fetch = require('node-fetch');
-const { JSDOM } = require('jsdom');
 const fs = require('fs');
 const path = require('path');
 
@@ -17,41 +16,71 @@ const defaultData = {
 
 async function fetchDamacaiResults() {
   try {
-    console.log('🔄 尝试从 DAMACAI 官网获取数据...');
+    console.log('🔄 步骤 1: 获取开奖日期列表...');
     
-    // 方法 1: 尝试官方 JSON 端点
-    const apiUrl = 'https://www.damacai.com.my/ListPastResult';
-    const response = await fetch(apiUrl, {
+    // 步骤 1: 获取开奖日期
+    const datesResponse = await fetch('https://www.damacai.com.my/ListPastResult', {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'application/json'
+      }
+    });
+    
+    if (!datesResponse.ok) {
+      throw new Error(`获取日期失败: HTTP ${datesResponse.status}`);
+    }
+    
+    const datesData = await datesResponse.json();
+    const drawDates = datesData.drawdate.trim().split(' ');
+    
+    if (!drawDates || drawDates.length === 0) {
+      throw new Error('没有获取到开奖日期');
+    }
+    
+    // 获取最新开奖日期 (YYYYMMDD 格式)
+    const latestDate = drawDates[0];
+    console.log(`📅 最新开奖日期: ${latestDate}`);
+    
+    // 步骤 2: 获取结果文件链接
+    console.log('🔄 步骤 2: 获取结果文件链接...');
+    const linkResponse = await fetch(`https://www.damacai.com.my/callpassresult?pastdate=${latestDate}`, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
         'Accept': 'application/json',
-        'Referer': 'https://www.damacai.com.my/'
+        'cookiesession': '363'  // 必需！
       }
     });
     
-    if (response.ok) {
-      const data = await response.json();
-      console.log('✅ 从 API 获取成功');
-      return parseDamacaiData(data);
+    if (!linkResponse.ok) {
+      throw new Error(`获取链接失败: HTTP ${linkResponse.status}`);
     }
     
-    // 方法 2: 爬虫官网页面
-    console.log('🔄 API 不可用，尝试爬虫官网页面...');
-    const pageUrl = 'https://www.damacai.com.my/past-draw-result';
-    const pageResponse = await fetch(pageUrl, {
+    const linkData = await linkResponse.json();
+    const resultUrl = linkData.link;
+    
+    if (!resultUrl) {
+      throw new Error('没有获取到结果链接');
+    }
+    
+    console.log(`🔗 结果链接: ${resultUrl.substring(0, 50)}...`);
+    
+    // 步骤 3: 获取实际开奖数据
+    console.log('🔄 步骤 3: 获取开奖数据...');
+    const resultResponse = await fetch(resultUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Accept': 'text/html',
-        'Referer': 'https://www.damacai.com.my/'
+        'Accept': 'application/json'
       }
     });
     
-    if (!pageResponse.ok) {
-      throw new Error(`HTTP ${pageResponse.status}: ${pageResponse.statusText}`);
+    if (!resultResponse.ok) {
+      throw new Error(`获取数据失败: HTTP ${resultResponse.status}`);
     }
     
-    const html = await pageResponse.text();
-    return parseDamacaiHTML(html);
+    const resultData = await resultResponse.json();
+    console.log('✅ 数据获取成功');
+    
+    return parseDamacaiData(resultData, latestDate);
     
   } catch (error) {
     console.error(`❌ 获取失败: ${error.message}`);
@@ -59,41 +88,22 @@ async function fetchDamacaiResults() {
   }
 }
 
-function parseDamacaiData(data) {
-  // 根据实际 API 返回格式解析
+function parseDamacaiData(data, drawDate) {
+  // 格式化日期: YYYYMMDD → DD-MM-YYYY
+  const formattedDate = `${drawDate.substring(6,8)}-${drawDate.substring(4,6)}-${drawDate.substring(0,4)}`;
+  
   return {
-    draw_date: data.drawDate || "----",
-    global_draw_no: data.drawNumber || "----",
-    "1st": data.firstPrize || "----",
-    "2nd": data.secondPrize || "----",
-    "3rd": data.thirdPrize || "----",
-    special: data.specialPrizes || Array(10).fill("----"),
-    consolation: data.consolationPrizes || Array(10).fill("----"),
-    draw_info: data.drawDate && data.drawNumber 
-      ? `(${data.day}) ${data.drawDate} #${data.drawNumber}`
+    draw_date: formattedDate,
+    global_draw_no: data.DrawNo || "----",
+    "1st": data.FirstPrize || "----",
+    "2nd": data.SecondPrize || "----",
+    "3rd": data.ThirdPrize || "----",
+    special: data.Special || Array(10).fill("----"),
+    consolation: data.Consolation || Array(10).fill("----"),
+    draw_info: data.DrawNo 
+      ? `${formattedDate} #${data.DrawNo}`
       : "----"
   };
-}
-
-function parseDamacaiHTML(html) {
-  const dom = new JSDOM(html);
-  const doc = dom.window.document;
-  
-  // 根据实际网页结构调整选择器
-  const result = { ...defaultData };
-  
-  // 示例：需要根据实际 HTML 调整
-  const drawNo = doc.querySelector('.draw-number')?.textContent;
-  const firstPrize = doc.querySelector('.prize-1st')?.textContent;
-  
-  if (drawNo) result.global_draw_no = drawNo.trim();
-  if (firstPrize) result["1st"] = firstPrize.trim();
-  
-  result.draw_info = result.global_draw_no !== "----" 
-    ? `Latest Draw #${result.global_draw_no}` 
-    : "----";
-  
-  return result;
 }
 
 async function main() {
