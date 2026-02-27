@@ -7,8 +7,7 @@ import re
 
 URL = "https://4d4d.co/"
 
-# 公司名称到 key 的映射（用于反向查找）
-# 注意：名称必须与页面中显示完全一致，包括大小写和空格
+# 公司名称到 key 的映射（必须与页面显示完全一致）
 COMPANY_NAME_TO_KEY = {
     "Damacai 4D": "damacai",
     "Magnum 4D": "magnum",
@@ -29,7 +28,7 @@ COMPANY_NAME_TO_KEY = {
     "Magnum Life": "magnum_life",
 }
 
-# 用于显示的公司显示名称（前端使用）
+# 显示名称（前端使用）
 NAME_MAP = {
     "damacai": "DAMACAI 4D",
     "magnum": "MAGNUM 4D",
@@ -50,7 +49,7 @@ NAME_MAP = {
     "magnum_life": "MAGNUM LIFE",
 }
 
-# 特殊公司列表（用于前端特殊渲染）
+# 需要特殊渲染的公司列表
 SPECIAL_COMPANIES = [
     "sportstoto_fireball", "sportstoto_lotto", "singapore_toto",
     "magnum_jackpot_gold", "sportstoto_5d", "sportstoto_6d", "magnum_life"
@@ -68,7 +67,7 @@ def fetch_html():
         return None
 
 def extract_global_date(soup):
-    """从页面第一个 outerbox 中提取全局日期和期号"""
+    """从页面第一个 outerbox 提取全局日期和期号"""
     first_box = soup.find("div", class_="outerbox")
     if not first_box:
         return None, None
@@ -86,22 +85,22 @@ def extract_global_date(soup):
     return date, draw_no
 
 def parse_outerbox(box, global_date, global_draw_no):
-    """解析单个outerbox，返回数据字典和公司名称"""
-    # 首先找到公司名称所在的 td
-    # 公司名称通常在第一个 td 中，类可能是 resultdamacailable, resultm4dlable 等
-    # 我们尝试获取所有可能的类名中的文本
-    possible_classes = ["resultdamacailable", "resultm4dlable", "resulttotolable", "resultsabahlable", "resultstc4dlable", "resultsteclable"]
+    """解析单个 outerbox，返回 (company_key, data)"""
+    # 尝试从多种方式获取公司名称
     company_name = None
+
+    # 方法1：查找可能包含公司名的 td
+    possible_classes = ["resultdamacailable", "resultm4dlable", "resulttotolable", "resultsabahlable", "resultstc4dlable", "resultsteclable"]
     for cls in possible_classes:
         name_td = box.find("td", class_=cls)
         if name_td:
             text = name_td.get_text(strip=True)
-            # 排除可能是图片alt的情况，但一般td内文字就是公司名
-            if text and not text.startswith("img"):
+            if text and not text.startswith(("img", "http")):
                 company_name = text
                 break
+
+    # 方法2：从图片 alt 属性获取
     if not company_name:
-        # 如果找不到，尝试从图片alt获取
         img = box.find("img")
         if img and img.get("alt"):
             company_name = img["alt"]
@@ -110,7 +109,6 @@ def parse_outerbox(box, global_date, global_draw_no):
         print("⚠️ 无法识别公司名称")
         return None, None
 
-    # 根据公司名称查找对应的 key
     company_key = COMPANY_NAME_TO_KEY.get(company_name)
     if not company_key:
         print(f"⚠️ 未知公司名称: {company_name}")
@@ -127,7 +125,7 @@ def parse_outerbox(box, global_date, global_draw_no):
         "type": company_key if company_key in SPECIAL_COMPANIES else None
     }
 
-    # 提取日期和期号
+    # 提取自己的日期和期号
     draw_row = box.find("td", class_="resultdrawdate")
     if draw_row:
         date_text = draw_row.get_text(strip=True)
@@ -139,13 +137,13 @@ def parse_outerbox(box, global_date, global_draw_no):
             no_text = next_td.get_text(strip=True)
             data["draw_no"] = re.sub(r"Draw No:?", "", no_text).strip()
 
-    # 如果公司没有自己的日期，使用全局日期
+    # 如果没有自己的日期，使用全局日期
     if not data["draw_date"] and global_date:
         data["draw_date"] = global_date
     if not data["draw_no"] and global_draw_no:
         data["draw_no"] = global_draw_no
 
-    # 提取前三名
+    # 前三名
     prize_tds = box.find_all("td", class_="resulttop")
     if len(prize_tds) >= 3:
         data["1st"] = prize_tds[0].get_text(strip=True)
@@ -239,15 +237,15 @@ def main():
     soup = BeautifulSoup(html, "html.parser")
 
     global_date, global_draw_no = extract_global_date(soup)
-    print(f"全局日期: {global_date}, 全局期号: {global_draw_no}")
+    print(f"🌍 全局日期: {global_date}, 全局期号: {global_draw_no}")
 
     outer_boxes = soup.find_all("div", class_="outerbox")
-    print(f"找到 {len(outer_boxes)} 个 outerbox")
+    print(f"📦 找到 {len(outer_boxes)} 个 outerbox")
 
     processed_keys = set()
 
     for idx, box in enumerate(outer_boxes):
-        print(f"正在解析第 {idx+1} 个 outerbox...")
+        print(f"🔍 正在解析第 {idx+1} 个 outerbox...")
         company_key, data = parse_outerbox(box, global_date, global_draw_no)
         if company_key and data:
             if company_key in processed_keys:
@@ -258,11 +256,13 @@ def main():
         else:
             print(f"⚠️ 第 {idx+1} 个 outerbox 解析失败")
 
-    # 检查是否有遗漏的公司
+    # 检查遗漏
     all_keys = set(COMPANY_NAME_TO_KEY.values())
     missing = all_keys - processed_keys
     if missing:
-        print(f"⚠️ 以下公司未找到: {missing}")
+        print(f"❌ 以下公司未找到: {missing}")
+    else:
+        print("✅ 所有公司均已成功处理")
 
     update_dates_index()
 
