@@ -1,0 +1,9 @@
+# docs/_config.yml
+exclude:
+  - README.md
+
+defaults:
+  - scope:
+      path: "data"
+    values:
+      cache_control: "no-store"
