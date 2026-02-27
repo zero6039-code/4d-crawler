@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>4D 成绩 Malaysia · 实时更新</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
         body { background: #f0f2f5; padding: 15px 10px; }
@@ -14,6 +17,8 @@
         .companies-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
         .company-section { background: white; border-radius: 24px; box-shadow: 0 8px 20px rgba(0,20,30,0.1); margin-bottom: 0; padding: 14px 12px; border: 1px solid rgba(255,255,255,0.5); transition: transform 0.15s ease; }
         .company-section:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(0,0,0,0.12); }
+        .company-section.loading { opacity: 0.6; pointer-events: none; }
+        .company-section.error { border-color: #d32f2f; background: #ffebee; }
         .company-title { font-size: 1.6rem; font-weight: 800; margin-bottom: 4px; padding-left: 4px; background: linear-gradient(145deg, #1e2b3a, #2b3d55); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
         .company-title::before { content: "🎯"; margin-right: 6px; font-size: 1.4rem; background: none; -webkit-text-fill-color: initial; }
         .draw-date { font-size: 0.9rem; color: #4a5568; margin-bottom: 10px; padding-left: 4px; font-weight: 500; }
@@ -38,6 +43,65 @@
         .company-section[data-company="damacai"] .company-title { background: linear-gradient(145deg, #1e5620, #2a7a2d); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .company-section[data-company="magnum"] .company-title { background: linear-gradient(145deg, #aa4a1e, #c95f2a); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .company-section[data-company="toto"] .company-title { background: linear-gradient(145deg, #b71c1c, #d32f2f); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        /* 🔧 新增：加载动画 */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e2e8f0;
+            border-top-color: #3182ce;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* 🔧 新增：刷新按钮 */
+        .refresh-btn {
+            background: linear-gradient(135deg, #3182ce, #2c5282);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-left: 10px;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(49,130,206,0.3);
+        }
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(49,130,206,0.4);
+        }
+        .refresh-btn:active {
+            transform: translateY(0);
+        }
+        .refresh-btn.refreshing {
+            animation: pulse 0.8s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        
+        /* 🔧 新增：状态指示器 */
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+        .status-indicator.success { background: #48bb78; }
+        .status-indicator.error { background: #f56565; }
+        .status-indicator.loading { background: #ecc94b; animation: blink 1s infinite; }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
     </style>
 </head>
 <body>
@@ -46,6 +110,7 @@
         <div class="draw-info">
             <strong>日期：</strong> <span id="draw_date">Loading...</span> &nbsp; | &nbsp; 
             <strong>开彩期号：</strong> <span id="global_draw_no">Loading...</span>
+            <button class="refresh-btn" id="refresh-btn" onclick="forceRefresh()">🔄 刷新</button>
         </div>
 
         <div id="companies-grid" class="companies-grid">
@@ -54,6 +119,10 @@
 
         <footer>
             ⚠️ 数据仅供参考，请以官方公告为准。<br>
+            <span id="status-text">
+                <span class="status-indicator loading"></span>正在加载...
+            </span>
+            <br>
             更新于 <span id="update-time">-</span>
         </footer>
     </div>
@@ -83,59 +152,164 @@
             'sarawak_cashsweep': 'SARAWAK CASHSWEEP'
         };
 
+        // 🔧 缓存控制：每次请求都添加唯一参数
+        let requestCounter = 0;
+        
         // ==================== 数据加载 ====================
         async function loadCompanyData(companyKey) {
-            try {
-                const res = await fetch(`data/${companyKey}.json?t=${Date.now()}`);
-                if (res.ok) {
-                    return await res.json();
+            const retryCount = 3;
+            const retryDelay = 1000;
+            
+            for (let i = 0; i < retryCount; i++) {
+                try {
+                    // 🔧 强制刷新：时间戳 + 随机数 + 计数器
+                    const cacheBuster = `?t=${Date.now()}&r=${Math.random()}&c=${++requestCounter}`;
+                    const url = `data/${companyKey}.json${cacheBuster}`;
+                    
+                    const res = await fetch(url, {
+                        method: 'GET',
+                        cache: 'no-store',
+                        headers: {
+                            'Cache-Control': 'no-cache, no-store, must-revalidate',
+                            'Pragma': 'no-cache',
+                            'Expires': '0',
+                            'If-Modified-Since': 'Mon, 01 Jan 1990 00:00:00 GMT'
+                        }
+                    });
+                    
+                    if (res.ok) {
+                        const data = await res.json();
+                        return { success: true, data };
+                    }
+                    
+                    if (i < retryCount - 1) {
+                        await sleep(retryDelay * (i + 1));
+                    }
+                } catch (err) {
+                    console.warn(`${companyKey} 请求失败 (尝试 ${i + 1}/${retryCount})`, err);
+                    if (i < retryCount - 1) {
+                        await sleep(retryDelay * (i + 1));
+                    }
                 }
-            } catch (err) {
-                console.warn(`${companyKey} 加载失败`, err);
             }
-            return getPlaceholderData(companyKey);
+            
+            return { success: false, data: getPlaceholderData(companyKey) };
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
         }
 
         function getPlaceholderData(companyKey) {
             return {
-                "1st": "----", "2nd": "----", "3rd": "----",
+                "1st": "----",
+                "2nd": "----",
+                "3rd": "----",
                 "special": Array(10).fill("----"),
                 "consolation": Array(10).fill("----"),
-                "draw_info": "等待更新"
+                "draw_info": "等待更新",
+                "draw_date": "----",
+                "global_draw_no": "----"
             };
         }
 
+        // 🔧 并行加载所有公司数据（而不是串行）
         async function loadAllCompanies() {
             const grid = document.getElementById('companies-grid');
+            const refreshBtn = document.getElementById('refresh-btn');
+            const statusText = document.getElementById('status-text');
+            
+            // 设置加载状态
+            if (refreshBtn) refreshBtn.classList.add('refreshing');
+            if (statusText) statusText.innerHTML = '<span class="status-indicator loading"></span>正在加载...';
             
             try {
-                const results = {};
-                for (const company of COMPANY_LIST) {
-                    results[company] = await loadCompanyData(company);
-                }
+                // 🔧 并行请求所有数据
+                const promises = COMPANY_LIST.map(company => 
+                    loadCompanyData(company).then(result => ({ company, ...result }))
+                );
+                
+                const results = await Promise.all(promises);
+                
+                // 转换为对象
+                const dataMap = {};
+                results.forEach(({ company, success, data }) => {
+                    dataMap[company] = data;
+                    
+                    // 更新公司卡片状态
+                    const section = document.querySelector(`.company-section[data-company="${company}"]`);
+                    if (section) {
+                        section.classList.remove('loading', 'error');
+                        if (!success) section.classList.add('error');
+                    }
+                });
 
-                // 使用第一个有数据的日期
-                const firstCompany = results[COMPANY_LIST[0]];
-                document.getElementById('draw_date').innerText = firstCompany.draw_date || "22-02-2026 (Sun)";
-                document.getElementById('global_draw_no').innerText = firstCompany.global_draw_no || "6042-26";
+                // 🔧 使用 DAMACAI 的日期（如果有）
+                const damacaiData = dataMap['damacai'];
+                if (damacaiData && damacaiData.draw_date && damacaiData.draw_date !== "----") {
+                    document.getElementById('draw_date').innerText = damacaiData.draw_date;
+                    document.getElementById('global_draw_no').innerText = damacaiData.global_draw_no || "----";
+                } else {
+                    // 备用：使用第一个有有效数据的日期
+                    const firstValid = results.find(r => r.success && r.data.draw_date && r.data.draw_date !== "----");
+                    if (firstValid) {
+                        document.getElementById('draw_date').innerText = firstValid.data.draw_date;
+                        document.getElementById('global_draw_no').innerText = firstValid.data.global_draw_no || "----";
+                    } else {
+                        document.getElementById('draw_date').innerText = "----";
+                        document.getElementById('global_draw_no').innerText = "----";
+                    }
+                }
 
                 // 渲染所有公司
                 grid.innerHTML = '';
-                for (const [companyKey, companyData] of Object.entries(results)) {
+                for (const [companyKey, companyData] of Object.entries(dataMap)) {
                     renderCompany(companyKey, companyData);
                 }
 
+                // 更新状态
+                const successCount = results.filter(r => r.success).length;
+                if (statusText) {
+                    statusText.innerHTML = `<span class="status-indicator ${successCount === COMPANY_LIST.length ? 'success' : 'error'}"></span>${successCount}/${COMPANY_LIST.length} 加载成功`;
+                }
+                
                 document.getElementById('update-time').innerText = new Date().toLocaleString('en-GB', { timeZone: 'Asia/Kuala_Lumpur' });
+                
             } catch (err) {
-                grid.innerHTML = `<p style="text-align: center; grid-column: 1/-1; color: #d32f2f;">❌ 加载失败: ${err.message}</p>`;
+                grid.innerHTML = `<p style="text-align: center; grid-column: 1/-1; color: #d32f2f;">❌ 加载失败：${err.message}</p>`;
+                if (statusText) statusText.innerHTML = '<span class="status-indicator error"></span>加载失败';
+            } finally {
+                if (refreshBtn) refreshBtn.classList.remove('refreshing');
             }
+        }
+
+        // 🔧 强制刷新功能
+        function forceRefresh() {
+            const refreshBtn = document.getElementById('refresh-btn');
+            if (refreshBtn) {
+                refreshBtn.classList.add('refreshing');
+                refreshBtn.innerText = '🔄 刷新中...';
+            }
+            
+            // 清除所有缓存
+            if ('caches' in window) {
+                caches.keys().then(names => names.forEach(name => caches.delete(name)));
+            }
+            
+            // 重新加载数据
+            loadAllCompanies().then(() => {
+                if (refreshBtn) {
+                    refreshBtn.innerText = '🔄 刷新';
+                    refreshBtn.classList.remove('refreshing');
+                }
+            });
         }
 
         // ==================== 渲染函数 ====================
         function renderCompany(companyKey, companyData) {
             const grid = document.getElementById('companies-grid');
             const section = document.createElement('div');
-            section.className = 'company-section';
+            section.className = 'company-section loading';
             section.setAttribute('data-company', companyKey);
 
             // 标题
@@ -146,7 +320,7 @@
             section.appendChild(titleDiv);
 
             // 开奖信息
-            if (companyData.draw_info) {
+            if (companyData.draw_info && companyData.draw_info !== "----") {
                 const drawDateDiv = document.createElement('div');
                 drawDateDiv.className = 'draw-date';
                 drawDateDiv.innerText = companyData.draw_info;
@@ -165,7 +339,7 @@
 
             // 根据类型渲染
             if (!companyData.type) {
-                if (companyData['1st']) {
+                if (companyData['1st'] && companyData['1st'] !== "----") {
                     section.appendChild(createPrizeGrid(companyData));
                 }
                 
@@ -180,9 +354,9 @@
                     const prizeGrid3d = document.createElement('div');
                     prizeGrid3d.className = 'prize-grid';
                     prizeGrid3d.innerHTML = `
-                        <div class="prize-card"><div class="label">1st Prize</div><div class="number">${companyData['3d']['1st'] || ''}</div></div>
-                        <div class="prize-card"><div class="label">2nd Prize</div><div class="number">${companyData['3d']['2nd'] || ''}</div></div>
-                        <div class="prize-card"><div class="label">3rd Prize</div><div class="number">${companyData['3d']['3rd'] || ''}</div></div>
+                        <div class="prize-card"><div class="label">1st Prize</div><div class="number">${companyData['3d']['1st'] || '----'}</div></div>
+                        <div class="prize-card"><div class="label">2nd Prize</div><div class="number">${companyData['3d']['2nd'] || '----'}</div></div>
+                        <div class="prize-card"><div class="label">3rd Prize</div><div class="number">${companyData['3d']['3rd'] || '----'}</div></div>
                     `;
                     section.appendChild(prizeGrid3d);
                 }
@@ -199,15 +373,18 @@
             }
 
             grid.appendChild(section);
+            
+            // 移除加载状态
+            setTimeout(() => section.classList.remove('loading'), 100);
         }
 
         function createPrizeGrid(companyData) {
             const prizeGrid = document.createElement('div');
             prizeGrid.className = 'prize-grid';
             prizeGrid.innerHTML = `
-                <div class="prize-card"><div class="label">1st Prize</div><div class="number">${companyData['1st'] || ''}</div></div>
-                <div class="prize-card"><div class="label">2nd Prize</div><div class="number">${companyData['2nd'] || ''}</div></div>
-                <div class="prize-card"><div class="label">3rd Prize</div><div class="number">${companyData['3rd'] || ''}</div></div>
+                <div class="prize-card"><div class="label">1st Prize</div><div class="number">${companyData['1st'] || '----'}</div></div>
+                <div class="prize-card"><div class="label">2nd Prize</div><div class="number">${companyData['2nd'] || '----'}</div></div>
+                <div class="prize-card"><div class="label">3rd Prize</div><div class="number">${companyData['3rd'] || '----'}</div></div>
             `;
             return prizeGrid;
         }
@@ -223,7 +400,7 @@
             listDiv.className = 'number-list';
             numbers.forEach(num => {
                 const span = document.createElement('span');
-                span.className = 'number-item' + (num === '' ? ' empty-item' : '');
+                span.className = 'number-item' + (num === '' || num === "----" ? ' empty-item' : '');
                 span.innerText = num || '—';
                 listDiv.appendChild(span);
             });
@@ -233,27 +410,13 @@
 
         function renderSpecialType(section, companyKey, data) {
             switch (data.type) {
-                case 'fireball':
-                    renderFireball(section, data);
-                    break;
-                case 'singapore_toto':
-                    renderSingaporeToto(section, data);
-                    break;
-                case 'lotto':
-                    renderSportstotoLotto(section, data);
-                    break;
-                case 'jackpot_gold':
-                    renderMagnumJackpotGold(section, data);
-                    break;
-                case '5d_table':
-                    render5DTable(section, data);
-                    break;
-                case '6d_table':
-                    render6DTable(section, data);
-                    break;
-                case 'magnum_life':
-                    renderMagnumLife(section, data);
-                    break;
+                case 'fireball': renderFireball(section, data); break;
+                case 'singapore_toto': renderSingaporeToto(section, data); break;
+                case 'lotto': renderSportstotoLotto(section, data); break;
+                case 'jackpot_gold': renderMagnumJackpotGold(section, data); break;
+                case '5d_table': render5DTable(section, data); break;
+                case '6d_table': render6DTable(section, data); break;
+                case 'magnum_life': renderMagnumLife(section, data); break;
             }
         }
 
@@ -406,7 +569,15 @@
         // ==================== 初始化 ====================
         document.addEventListener('DOMContentLoaded', () => {
             loadAllCompanies();
-            setInterval(loadAllCompanies, 30000); // 每30秒刷新
+            // 🔧 延长自动刷新间隔（减少服务器压力）
+            setInterval(loadAllCompanies, 60000); // 每 60 秒刷新（原 30 秒）
+        });
+
+        // 🔧 页面可见时自动刷新
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                loadAllCompanies();
+            }
         });
     </script>
 </body>
