@@ -12,8 +12,207 @@
         body { background: #f0f2f5; padding: 15px 10px; }
         .container { max-width: 1300px; margin: 0 auto; }
         h1 { font-size: 1.8rem; font-weight: 700; text-align: center; color: #1e2a3a; margin-bottom: 6px; background: linear-gradient(135deg, #0b1c2f, #2c3e50); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .draw-info { background: #ffffffcc; backdrop-filter: blur(4px); border-radius: 40px; padding: 8px 16px; text-align: center; display: inline-block; margin: 0 auto 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); font-weight: 500; color: #2c3e50; border: 1px solid rgba(255,255,255,0.8); left: 50%; position: relative; transform: translateX(-50%); }
-        .draw-info strong { color: #d32f2f; }
+        
+        /* 🔧 修改：顶部日期选择器样式 */
+        .date-selector-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .date-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .date-btn {
+            background: #ffffffcc;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255,255,255,0.8);
+            border-radius: 25px;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #2c3e50;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transition: all 0.2s;
+        }
+        
+        .date-btn:hover {
+            background: #ffffff;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+        }
+        
+        .date-btn .arrow {
+            font-size: 0.8rem;
+            transition: transform 0.2s;
+        }
+        
+        .date-btn.active .arrow {
+            transform: rotate(180deg);
+        }
+        
+        /* 🔧 月历样式 */
+        .date-dropdown-content {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            min-width: 280px;
+            z-index: 1000;
+            margin-top: 8px;
+            border: 1px solid #e2e8f0;
+            padding: 15px;
+        }
+        
+        .date-dropdown.show .date-dropdown-content {
+            display: block;
+        }
+        
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .calendar-header h4 {
+            font-size: 0.95rem;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        
+        .calendar-nav {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .calendar-nav button {
+            background: #f0f2f5;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: background 0.2s;
+        }
+        
+        .calendar-nav button:hover {
+            background: #e2e8f0;
+        }
+        
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+        
+        .calendar-day-header {
+            text-align: center;
+            font-size: 0.7rem;
+            color: #7c8b9c;
+            padding: 5px;
+            font-weight: 500;
+        }
+        
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.8rem;
+            position: relative;
+        }
+        
+        .calendar-day:hover {
+            background: #f0f2f5;
+        }
+        
+        .calendar-day.has-data {
+            background: #e6f0ff;
+            color: #3182ce;
+            font-weight: 600;
+        }
+        
+        .calendar-day.has-data:hover {
+            background: #3182ce;
+            color: white;
+        }
+        
+        .calendar-day.selected {
+            background: #667eea;
+            color: white;
+        }
+        
+        .calendar-day.today {
+            border: 2px solid #667eea;
+        }
+        
+        .calendar-day.empty {
+            cursor: default;
+            background: transparent;
+        }
+        
+        .calendar-day .date-num {
+            font-size: 0.85rem;
+        }
+        
+        .calendar-day .draw-indicator {
+            font-size: 0.6rem;
+            color: #667eea;
+            margin-top: 2px;
+        }
+        
+        .calendar-day.has-data.selected .draw-indicator {
+            color: white;
+        }
+        
+        .calendar-footer {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #e2e8f0;
+            text-align: center;
+            font-size: 0.75rem;
+            color: #7c8b9c;
+        }
+        
+        /* 🔧 修改：移除开彩期号样式 */
+        .draw-info { 
+            background: #ffffffcc; 
+            backdrop-filter: blur(4px); 
+            border-radius: 40px; 
+            padding: 8px 16px; 
+            text-align: center; 
+            display: inline-block; 
+            margin: 0 auto 20px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
+            font-weight: 500; 
+            color: #2c3e50; 
+            border: 1px solid rgba(255,255,255,0.8); 
+            left: 50%; 
+            position: relative; 
+            transform: translateX(-50%); 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+        }
+        
         .companies-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
         .company-section { background: white; border-radius: 24px; box-shadow: 0 8px 20px rgba(0,20,30,0.1); margin-bottom: 0; padding: 14px 12px; border: 1px solid rgba(255,255,255,0.5); transition: transform 0.15s ease; }
         .company-section:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(0,0,0,0.12); }
@@ -66,9 +265,11 @@
             cursor: pointer;
             font-size: 0.85rem;
             font-weight: 600;
-            margin-left: 10px;
             transition: all 0.2s;
             box-shadow: 0 2px 8px rgba(49,130,206,0.3);
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
         .refresh-btn:hover {
             transform: translateY(-2px);
@@ -99,108 +300,14 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0.3; }
         }
-
-        /* 🔧 新增：日期选择器样式 */
-        .date-selector {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        
-        .date-dropdown {
-            position: relative;
-            display: inline-block;
-        }
-        
-        .date-btn {
-            background: #ffffffcc;
-            backdrop-filter: blur(4px);
-            border: 1px solid rgba(255,255,255,0.8);
-            border-radius: 25px;
-            padding: 8px 16px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: #2c3e50;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            transition: all 0.2s;
-        }
-        
-        .date-btn:hover {
-            background: #ffffff;
-            box-shadow: 0 6px 16px rgba(0,0,0,0.1);
-        }
-        
-        .date-btn .arrow {
-            font-size: 0.8rem;
-            transition: transform 0.2s;
-        }
-        
-        .date-btn.active .arrow {
-            transform: rotate(180deg);
-        }
-        
-        .date-dropdown-content {
-            display: none;
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-            min-width: 200px;
-            max-height: 300px;
-            overflow-y: auto;
-            z-index: 1000;
-            margin-top: 8px;
-            border: 1px solid #e2e8f0;
-        }
-        
-        .date-dropdown.show .date-dropdown-content {
-            display: block;
-        }
-        
-        .date-option {
-            padding: 10px 16px;
-            cursor: pointer;
-            transition: background 0.2s;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        
-        .date-option:hover {
-            background: #f0f2f5;
-        }
-        
-        .date-option.active {
-            background: #e6f0ff;
-            color: #3182ce;
-            font-weight: 600;
-        }
-        
-        .date-option .draw-no {
-            font-size: 0.75rem;
-            color: #7c8b9c;
-        }
-        
-        .loading-history {
-            text-align: center;
-            padding: 20px;
-            color: #7c8b9c;
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🇲🇾 4D RESULT MALAYSIA</h1>
         
-        <!-- 🔧 新增：日期选择器 -->
-        <div class="date-selector">
+        <!-- 🔧 修改：顶部日期选择器（月历格式） -->
+        <div class="date-selector-container">
             <div class="date-dropdown" id="date-dropdown">
                 <button class="date-btn" id="date-btn" onclick="toggleDateDropdown()">
                     <span id="selected-date">Loading...</span>
@@ -212,10 +319,12 @@
             </div>
         </div>
         
+        <!-- 🔧 修改：移除开彩期号，只保留日期和刷新 -->
         <div class="draw-info">
-            <strong>日期：</strong> <span id="draw_date">Loading...</span> &nbsp; | &nbsp; 
-            <strong>开彩期号：</strong> <span id="global_draw_no">Loading...</span>
-            <button class="refresh-btn" id="refresh-btn" onclick="forceRefresh()">🔄 刷新</button>
+            <strong>日期：</strong> <span id="draw_date">Loading...</span>
+            <button class="refresh-btn" id="refresh-btn" onclick="forceRefresh()">
+                <span>🔄</span> 刷新
+            </button>
         </div>
 
         <div id="companies-grid" class="companies-grid">
@@ -260,14 +369,21 @@
         // 🔧 历史数据相关
         let damacaiHistoryData = [];
         let selectedDrawDate = null;
+        let selectedDrawIndex = 0;
+        let currentCalendarMonth = new Date();
         let requestCounter = 0;
 
-        // ==================== 日期选择器功能 ====================
+        // ==================== 日期选择器功能（月历） ====================
         function toggleDateDropdown() {
             const dropdown = document.getElementById('date-dropdown');
             const btn = document.getElementById('date-btn');
             dropdown.classList.toggle('show');
             btn.classList.toggle('active');
+            
+            // 打开时渲染月历
+            if (dropdown.classList.contains('show')) {
+                renderCalendar();
+            }
         }
 
         async function loadDamacaiHistory() {
@@ -278,52 +394,129 @@
                 
                 if (response.ok) {
                     damacaiHistoryData = await response.json();
-                    renderDateDropdown();
+                    
+                    // 默认选择最新一期
+                    if (damacaiHistoryData.length > 0 && !selectedDrawDate) {
+                        selectedDrawIndex = 0;
+                        selectedDrawDate = damacaiHistoryData[0].draw_date;
+                        document.getElementById('selected-date').innerText = selectedDrawDate;
+                    }
                 }
             } catch (err) {
                 console.log('加载历史数据失败:', err);
             }
         }
 
-        function renderDateDropdown() {
+        // 🔧 渲染月历
+        function renderCalendar() {
             const content = document.getElementById('date-dropdown-content');
             
             if (!damacaiHistoryData || damacaiHistoryData.length === 0) {
-                content.innerHTML = '<div class="loading-history">暂无历史数据</div>';
+                content.innerHTML = '<div style="padding: 20px; text-align: center; color: #7c8b9c;">暂无历史数据</div>';
                 return;
             }
             
-            let html = '';
-            damacaiHistoryData.forEach((data, index) => {
-                const isActive = index === 0 ? 'active' : '';
-                const isSelected = selectedDrawDate === data.draw_date ? 'active' : '';
-                html += `
-                    <div class="date-option ${isActive} ${isSelected}" onclick="selectDrawDate('${data.draw_date}', ${index})">
-                        <div>${data.draw_info || data.draw_date}</div>
-                        <div class="draw-no">${data.global_draw_no || ''}</div>
-                    </div>
-                `;
+            const year = currentCalendarMonth.getFullYear();
+            const month = currentCalendarMonth.getMonth();
+            
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                              'July', 'August', 'September', 'October', 'November', 'December'];
+            
+            // 创建有数据的日期映射
+            const dataMap = {};
+            damacaiHistoryData.forEach((item, index) => {
+                const dateKey = item.draw_date;
+                if (dateKey && dateKey !== '----') {
+                    dataMap[dateKey] = index;
+                }
             });
             
-            content.innerHTML = html;
+            // 获取当月第一天和最后一天
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startDay = firstDay.getDay();
+            const totalDays = lastDay.getDate();
             
-            // 设置默认选择最新一期
-            if (!selectedDrawDate && damacaiHistoryData.length > 0) {
-                selectDrawDate(damacaiHistoryData[0].draw_date, 0);
+            const today = new Date();
+            const todayStr = `${String(today.getDate()).padStart(2, '0')}-${String(today.getMonth() + 1).padStart(2, '0')}-${today.getFullYear()}`;
+            
+            // 生成月历 HTML
+            let html = `
+                <div class="calendar-header">
+                    <div class="calendar-nav">
+                        <button onclick="prevMonth(event)">◀</button>
+                    </div>
+                    <h4>${monthNames[month]} ${year}</h4>
+                    <div class="calendar-nav">
+                        <button onclick="nextMonth(event)">▶</button>
+                    </div>
+                </div>
+                <div class="calendar-grid">
+                    <div class="calendar-day-header">Sun</div>
+                    <div class="calendar-day-header">Mon</div>
+                    <div class="calendar-day-header">Tue</div>
+                    <div class="calendar-day-header">Wed</div>
+                    <div class="calendar-day-header">Thu</div>
+                    <div class="calendar-day-header">Fri</div>
+                    <div class="calendar-day-header">Sat</div>
+            `;
+            
+            // 空白日期
+            for (let i = 0; i < startDay; i++) {
+                html += `<div class="calendar-day empty"></div>`;
             }
+            
+            // 实际日期
+            for (let day = 1; day <= totalDays; day++) {
+                const dateStr = `${String(day).padStart(2, '0')}-${String(month + 1).padStart(2, '0')}-${year}`;
+                const hasData = dataMap[dateStr] !== undefined;
+                const isToday = dateStr === todayStr;
+                const isSelected = selectedDrawDate === dateStr;
+                
+                let classes = 'calendar-day';
+                if (hasData) classes += ' has-data';
+                if (isToday) classes += ' today';
+                if (isSelected) classes += ' selected';
+                
+                const clickAction = hasData ? `onclick="selectDrawDate('${dateStr}', ${dataMap[dateStr]})"` : '';
+                
+                html += `
+                    <div class="${classes}" ${clickAction}>
+                        <span class="date-num">${day}</span>
+                        ${hasData ? '<span class="draw-indicator">📊</span>' : ''}
+                    </div>
+                `;
+            }
+            
+            html += `
+                </div>
+                <div class="calendar-footer">
+                    📊 有开奖数据 &nbsp;|&nbsp; 点击选择日期
+                </div>
+            `;
+            
+            content.innerHTML = html;
+        }
+
+        // 🔧 切换月份（阻止事件冒泡）
+        function prevMonth(event) {
+            event.stopPropagation();
+            currentCalendarMonth.setMonth(currentCalendarMonth.getMonth() - 1);
+            renderCalendar();
+        }
+
+        function nextMonth(event) {
+            event.stopPropagation();
+            currentCalendarMonth.setMonth(currentCalendarMonth.getMonth() + 1);
+            renderCalendar();
         }
 
         function selectDrawDate(drawDate, index) {
             selectedDrawDate = drawDate;
+            selectedDrawIndex = index;
             
             // 更新按钮显示
             document.getElementById('selected-date').innerText = drawDate;
-            
-            // 更新下拉菜单选中状态
-            const options = document.querySelectorAll('.date-option');
-            options.forEach((opt, i) => {
-                opt.classList.toggle('active', i === index);
-            });
             
             // 关闭下拉菜单
             document.getElementById('date-dropdown').classList.remove('show');
@@ -336,7 +529,6 @@
             const data = damacaiHistoryData[index];
             if (data) {
                 document.getElementById('draw_date').innerText = data.draw_date;
-                document.getElementById('global_draw_no').innerText = data.global_draw_no || '----';
             }
         }
 
@@ -373,23 +565,17 @@
                 // 更新特别奖和安慰奖
                 const subsections = section.querySelectorAll('.subsection');
                 if (subsections.length >= 2) {
-                    // 特别奖
                     const specialList = subsections[0]?.querySelectorAll('.number-item');
                     if (specialList) {
                         data.special?.forEach((num, i) => {
-                            if (specialList[i]) {
-                                specialList[i].innerText = num || '----';
-                            }
+                            if (specialList[i]) specialList[i].innerText = num || '----';
                         });
                     }
                     
-                    // 安慰奖
                     const consolationList = subsections[1]?.querySelectorAll('.number-item');
                     if (consolationList) {
                         data.consolation?.forEach((num, i) => {
-                            if (consolationList[i]) {
-                                consolationList[i].innerText = num || '----';
-                            }
+                            if (consolationList[i]) consolationList[i].innerText = num || '----';
                         });
                     }
                 }
@@ -483,11 +669,13 @@
                 });
 
                 // 🔧 使用选中的日期或最新日期
-                const displayData = damacaiHistoryData[0] || dataMap['damacai'];
+                const displayData = damacaiHistoryData[selectedDrawIndex] || damacaiHistoryData[0] || dataMap['damacai'];
                 if (displayData && displayData.draw_date && displayData.draw_date !== "----") {
                     document.getElementById('draw_date').innerText = displayData.draw_date;
-                    document.getElementById('global_draw_no').innerText = displayData.global_draw_no || "----";
-                    document.getElementById('selected-date').innerText = displayData.draw_date;
+                    if (!selectedDrawDate) {
+                        document.getElementById('selected-date').innerText = displayData.draw_date;
+                        selectedDrawDate = displayData.draw_date;
+                    }
                 }
 
                 grid.innerHTML = '';
@@ -514,7 +702,7 @@
             const refreshBtn = document.getElementById('refresh-btn');
             if (refreshBtn) {
                 refreshBtn.classList.add('refreshing');
-                refreshBtn.innerText = '🔄 刷新中...';
+                refreshBtn.innerHTML = '<span>🔄</span> 刷新中...';
             }
             
             if ('caches' in window) {
@@ -523,10 +711,12 @@
             
             damacaiHistoryData = [];
             selectedDrawDate = null;
+            selectedDrawIndex = 0;
+            currentCalendarMonth = new Date();
             
             loadAllCompanies().then(() => {
                 if (refreshBtn) {
-                    refreshBtn.innerText = '🔄 刷新';
+                    refreshBtn.innerHTML = '<span>🔄</span> 刷新';
                     refreshBtn.classList.remove('refreshing');
                 }
             });
