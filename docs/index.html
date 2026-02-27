@@ -84,7 +84,6 @@
     <div class="container">
         <h1>MY 4D RESULT MALAYSIA</h1>
         
-        <!-- 日期选择器（下拉按钮） -->
         <div class="date-selector">
             <div class="date-dropdown" id="date-dropdown">
                 <button class="date-btn" id="date-btn" onclick="toggleDateDropdown()">
@@ -97,13 +96,11 @@
             </div>
         </div>
         
-        <!-- 日期条（日期+刷新按钮） -->
         <div class="draw-info">
             <span><strong>日期：</strong> <span id="draw_date">--</span></span>
             <button class="refresh-btn" id="refresh-btn" onclick="forceRefresh()">刷新</button>
         </div>
 
-        <!-- 公司卡片网格 -->
         <div id="companies-grid" class="companies-grid">
             <p style="text-align: center; grid-column: 1/-1; color: #666;">🔄 正在加载数据...</p>
         </div>
@@ -266,6 +263,7 @@
             let html = '';
 
             if (SPECIAL_COMPANIES.includes(companyKey)) {
+                // 特殊公司渲染（保持不变）
                 if (companyKey === 'sportstoto_5d' && data.data) {
                     html += '<div class="custom-table">';
                     data.data.forEach(row => {
@@ -293,14 +291,17 @@
                     html = '<p style="text-align:center;">特殊数据格式</p>';
                 }
             } else {
+                // 普通公司：三个奖项各占一行，宽度一致
                 html = `
                     <div class="prize-grid" style="flex-direction:column;align-items:center;">
-                        <div style="display:flex;justify-content:center;width:100%;margin-bottom:4px;">
-                            <div class="prize-card" style="flex:0 0 220px;"><div class="label">1st Prize</div><div class="number">${data['1st'] || '----'}</div></div>
+                        <div style="display:flex;justify-content:center;width:100%;margin-bottom:8px;">
+                            <div class="prize-card" style="width:220px;"><div class="label">1st Prize</div><div class="number">${data['1st'] || '----'}</div></div>
                         </div>
-                        <div style="display:flex;justify-content:center;gap:8px;width:100%;">
-                            <div class="prize-card" style="flex:1;"><div class="label">2nd Prize</div><div class="number">${data['2nd'] || '----'}</div></div>
-                            <div class="prize-card" style="flex:1;"><div class="label">3rd Prize</div><div class="number">${data['3rd'] || '----'}</div></div>
+                        <div style="display:flex;justify-content:center;width:100%;margin-bottom:8px;">
+                            <div class="prize-card" style="width:220px;"><div class="label">2nd Prize</div><div class="number">${data['2nd'] || '----'}</div></div>
+                        </div>
+                        <div style="display:flex;justify-content:center;width:100%;margin-bottom:8px;">
+                            <div class="prize-card" style="width:220px;"><div class="label">3rd Prize</div><div class="number">${data['3rd'] || '----'}</div></div>
                         </div>
                     </div>
                 `;
