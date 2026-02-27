@@ -7,25 +7,54 @@ import re
 
 URL = "https://4d4d.co/"
 
-COMPANY_CONFIG = {
-    "damacai": {"table_class": "resultdamacailable", "name": "Damacai 4D"},
-    "magnum": {"table_class": "resultm4dlable", "name": "Magnum 4D"},
-    "toto": {"table_class": "resulttotolable", "name": "Toto 4D"},
-    "singapore": {"table_class": "resultsabahlable", "name": "Singapore 4D"},
-    "damacai_1p3d": {"table_class": "resultdamacailable", "name": "Da Ma Cai 1+3D"},
-    "sandakan": {"table_class": "resultstc4dlable", "name": "Sandakan 4D"},
-    "sarawak_cashsweep": {"table_class": "resultsteclable", "name": "Cashweep 4D"},
-    "sabah": {"table_class": "resultsabahlable", "name": "Sabah88 4D"},
-    "sabah_lotto": {"table_class": "resultsabahlable", "name": "Sabah Lotto"},
-    "sportstoto_fireball": {"table_class": "resulttotolable", "name": "SportsToto Fireball"},
-    "grand_dragon": {"table_class": "resultdamacailable", "name": "Grand Dragon"},
-    "singapore_toto": {"table_class": "resultsabahlable", "name": "Singapore Toto"},
-    "sportstoto_lotto": {"table_class": "resulttotolable", "name": "SportsToto Lotto"},
-    "magnum_jackpot_gold": {"table_class": "resultm4dlable", "name": "Magnum Jackpot Gold"},
-    "sportstoto_5d": {"table_class": "resulttotolable", "name": "SportsToto 5D"},
-    "sportstoto_6d": {"table_class": "resulttotolable", "name": "SportsToto 6D"},
-    "magnum_life": {"table_class": "resultm4dlable", "name": "Magnum Life"},
+# 公司名称到 key 的映射（用于反向查找）
+# 注意：名称必须与页面中显示完全一致，包括大小写和空格
+COMPANY_NAME_TO_KEY = {
+    "Damacai 4D": "damacai",
+    "Magnum 4D": "magnum",
+    "Toto 4D": "toto",
+    "Singapore 4D": "singapore",
+    "Da Ma Cai 1+3D": "damacai_1p3d",
+    "Sandakan 4D": "sandakan",
+    "Cashweep 4D": "sarawak_cashsweep",
+    "Sabah88 4D": "sabah",
+    "Sabah Lotto": "sabah_lotto",
+    "SportsToto Fireball": "sportstoto_fireball",
+    "Grand Dragon": "grand_dragon",
+    "Singapore Toto": "singapore_toto",
+    "SportsToto Lotto": "sportstoto_lotto",
+    "Magnum Jackpot Gold": "magnum_jackpot_gold",
+    "SportsToto 5D": "sportstoto_5d",
+    "SportsToto 6D": "sportstoto_6d",
+    "Magnum Life": "magnum_life",
 }
+
+# 用于显示的公司显示名称（前端使用）
+NAME_MAP = {
+    "damacai": "DAMACAI 4D",
+    "magnum": "MAGNUM 4D",
+    "toto": "TOTO 4D",
+    "singapore": "SINGAPORE 4D",
+    "damacai_1p3d": "DAMACAI 1+3D",
+    "sandakan": "SANDAKAN 4D",
+    "sarawak_cashsweep": "SARAWAK CASHSWEEP",
+    "sabah": "SABAH 88 4D",
+    "sabah_lotto": "SABAH LOTTO",
+    "sportstoto_fireball": "SPORTSTOTO FIREBALL",
+    "grand_dragon": "GRAND DRAGON",
+    "singapore_toto": "SINGAPORE TOTO",
+    "sportstoto_lotto": "SPORTSTOTO LOTTO",
+    "magnum_jackpot_gold": "MAGNUM JACKPOT GOLD",
+    "sportstoto_5d": "SPORTSTOTO 5D",
+    "sportstoto_6d": "SPORTSTOTO 6D",
+    "magnum_life": "MAGNUM LIFE",
+}
+
+# 特殊公司列表（用于前端特殊渲染）
+SPECIAL_COMPANIES = [
+    "sportstoto_fireball", "sportstoto_lotto", "singapore_toto",
+    "magnum_jackpot_gold", "sportstoto_5d", "sportstoto_6d", "magnum_life"
+]
 
 def fetch_html():
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
@@ -38,18 +67,55 @@ def fetch_html():
         print(f"❌ 抓取失败: {e}")
         return None
 
-def extract_company_data(soup, company_key):
-    config = COMPANY_CONFIG[company_key]
-    outer_boxes = soup.find_all("div", class_="outerbox")
-    for box in outer_boxes:
-        name_td = box.find("td", class_=config["table_class"])
-        if name_td and config["name"] in name_td.get_text():
-            return parse_outerbox(box, company_key)
-    # 如果没找到，打印调试信息
-    print(f"⚠️ 未找到公司 {company_key} 的 outerbox")
-    return None
+def extract_global_date(soup):
+    """从页面第一个 outerbox 中提取全局日期和期号"""
+    first_box = soup.find("div", class_="outerbox")
+    if not first_box:
+        return None, None
+    draw_row = first_box.find("td", class_="resultdrawdate")
+    if not draw_row:
+        return None, None
+    date_text = draw_row.get_text(strip=True)
+    match = re.search(r"(\d{2}-\d{2}-\d{4})", date_text)
+    date = match.group(1) if match else None
+    next_td = draw_row.find_next("td", class_="resultdrawdate")
+    draw_no = None
+    if next_td:
+        no_text = next_td.get_text(strip=True)
+        draw_no = re.sub(r"Draw No:?", "", no_text).strip()
+    return date, draw_no
 
-def parse_outerbox(box, company_key):
+def parse_outerbox(box, global_date, global_draw_no):
+    """解析单个outerbox，返回数据字典和公司名称"""
+    # 首先找到公司名称所在的 td
+    # 公司名称通常在第一个 td 中，类可能是 resultdamacailable, resultm4dlable 等
+    # 我们尝试获取所有可能的类名中的文本
+    possible_classes = ["resultdamacailable", "resultm4dlable", "resulttotolable", "resultsabahlable", "resultstc4dlable", "resultsteclable"]
+    company_name = None
+    for cls in possible_classes:
+        name_td = box.find("td", class_=cls)
+        if name_td:
+            text = name_td.get_text(strip=True)
+            # 排除可能是图片alt的情况，但一般td内文字就是公司名
+            if text and not text.startswith("img"):
+                company_name = text
+                break
+    if not company_name:
+        # 如果找不到，尝试从图片alt获取
+        img = box.find("img")
+        if img and img.get("alt"):
+            company_name = img["alt"]
+
+    if not company_name:
+        print("⚠️ 无法识别公司名称")
+        return None, None
+
+    # 根据公司名称查找对应的 key
+    company_key = COMPANY_NAME_TO_KEY.get(company_name)
+    if not company_key:
+        print(f"⚠️ 未知公司名称: {company_name}")
+        return None, None
+
     data = {
         "draw_date": "",
         "draw_no": "",
@@ -58,10 +124,10 @@ def parse_outerbox(box, company_key):
         "3rd": "",
         "special": [],
         "consolation": [],
-        "type": None
+        "type": company_key if company_key in SPECIAL_COMPANIES else None
     }
 
-    # 提取开奖日期和期号
+    # 提取日期和期号
     draw_row = box.find("td", class_="resultdrawdate")
     if draw_row:
         date_text = draw_row.get_text(strip=True)
@@ -73,15 +139,11 @@ def parse_outerbox(box, company_key):
             no_text = next_td.get_text(strip=True)
             data["draw_no"] = re.sub(r"Draw No:?", "", no_text).strip()
 
-    # 如果当前公司没有 draw_date，尝试从页面第一个有日期的公司继承
-    if not data["draw_date"]:
-        first_box = soup.find("div", class_="outerbox")
-        if first_box:
-            first_draw = first_box.find("td", class_="resultdrawdate")
-            if first_draw:
-                match = re.search(r"(\d{2}-\d{2}-\d{4})", first_draw.get_text())
-                if match:
-                    data["draw_date"] = match.group(1)
+    # 如果公司没有自己的日期，使用全局日期
+    if not data["draw_date"] and global_date:
+        data["draw_date"] = global_date
+    if not data["draw_no"] and global_draw_no:
+        data["draw_no"] = global_draw_no
 
     # 提取前三名
     prize_tds = box.find_all("td", class_="resulttop")
@@ -122,11 +184,7 @@ def parse_outerbox(box, company_key):
                         cons_numbers.append(num)
             data["consolation"] = cons_numbers
 
-    # 特殊公司标记
-    if company_key in ["sportstoto_5d", "sportstoto_6d", "sportstoto_lotto", "singapore_toto", "magnum_jackpot_gold", "magnum_life"]:
-        data["type"] = company_key
-
-    return data
+    return company_key, data
 
 def save_json(company, data):
     if not data:
@@ -180,11 +238,31 @@ def main():
         return
     soup = BeautifulSoup(html, "html.parser")
 
-    # 逐个提取并保存
-    for company in COMPANY_CONFIG:
-        print(f"正在处理 {company}...")
-        data = extract_company_data(soup, company)
-        save_json(company, data)
+    global_date, global_draw_no = extract_global_date(soup)
+    print(f"全局日期: {global_date}, 全局期号: {global_draw_no}")
+
+    outer_boxes = soup.find_all("div", class_="outerbox")
+    print(f"找到 {len(outer_boxes)} 个 outerbox")
+
+    processed_keys = set()
+
+    for idx, box in enumerate(outer_boxes):
+        print(f"正在解析第 {idx+1} 个 outerbox...")
+        company_key, data = parse_outerbox(box, global_date, global_draw_no)
+        if company_key and data:
+            if company_key in processed_keys:
+                print(f"⚠️ 重复的公司 {company_key}，跳过")
+                continue
+            save_json(company_key, data)
+            processed_keys.add(company_key)
+        else:
+            print(f"⚠️ 第 {idx+1} 个 outerbox 解析失败")
+
+    # 检查是否有遗漏的公司
+    all_keys = set(COMPANY_NAME_TO_KEY.values())
+    missing = all_keys - processed_keys
+    if missing:
+        print(f"⚠️ 以下公司未找到: {missing}")
 
     update_dates_index()
 
