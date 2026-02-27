@@ -1,1 +1,14 @@
-
+{
+  "draw_date": "22-02-2026 (Sun)",
+  "global_draw_no": "6095-26",
+  "type": "5d_table",
+  "data": [
+    ["1st Prize", "50787"],
+    ["2nd Prize", "11292"],
+    ["3rd Prize", "03460"],
+    ["4th Prize", "0787"],
+    ["5th Prize", "787"],
+    ["6th Prize", "87"]
+  ],
+  "draw_info": "(Sun) 22-Feb-2026 #6095-26"
+}
