@@ -26,3 +26,4 @@ jobs:
           local-dir: ./ # 上传当前目录下的所有文件
           server-dir: ${{ secrets.REMOTE_DIR }} # 上传到InfinityFree的哪个文件夹
           dangerous-clean-slate: false # 设置为true会先删除服务器上所有文件再上传，首次部署可设为true，后续改为false以增量更新
+ 
