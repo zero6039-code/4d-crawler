@@ -45,6 +45,8 @@ def extract_company_data(soup, company_key):
         name_td = box.find("td", class_=config["table_class"])
         if name_td and config["name"] in name_td.get_text():
             return parse_outerbox(box, company_key)
+    # 如果没找到，打印调试信息
+    print(f"⚠️ 未找到公司 {company_key} 的 outerbox")
     return None
 
 def parse_outerbox(box, company_key):
@@ -59,23 +61,20 @@ def parse_outerbox(box, company_key):
         "type": None
     }
 
-    # ---------- 提取开奖日期和期号 ----------
+    # 提取开奖日期和期号
     draw_row = box.find("td", class_="resultdrawdate")
     if draw_row:
         date_text = draw_row.get_text(strip=True)
-        # 匹配 DD-MM-YYYY 格式
         match = re.search(r"(\d{2}-\d{2}-\d{4})", date_text)
         if match:
             data["draw_date"] = match.group(1)
-        # 期号通常在相邻的 td 中
         next_td = draw_row.find_next("td", class_="resultdrawdate")
         if next_td:
             no_text = next_td.get_text(strip=True)
             data["draw_no"] = re.sub(r"Draw No:?", "", no_text).strip()
 
-    # 如果当前公司没有 draw_date（如 Singapore 4D），尝试从页面中第一个有日期的公司继承
+    # 如果当前公司没有 draw_date，尝试从页面第一个有日期的公司继承
     if not data["draw_date"]:
-        # 从第一个找到的 outerbox 中提取全局日期
         first_box = soup.find("div", class_="outerbox")
         if first_box:
             first_draw = first_box.find("td", class_="resultdrawdate")
@@ -84,14 +83,16 @@ def parse_outerbox(box, company_key):
                 if match:
                     data["draw_date"] = match.group(1)
 
-    # ---------- 提取前三名 ----------
+    # 提取前三名
     prize_tds = box.find_all("td", class_="resulttop")
     if len(prize_tds) >= 3:
         data["1st"] = prize_tds[0].get_text(strip=True)
         data["2nd"] = prize_tds[1].get_text(strip=True)
         data["3rd"] = prize_tds[2].get_text(strip=True)
+    else:
+        print(f"⚠️ {company_key} 未找到前三名")
 
-    # ---------- 特别奖 ----------
+    # 特别奖
     special_section = box.find("td", string=re.compile("Special|特別獎"))
     if special_section:
         table = special_section.find_parent("table")
@@ -106,7 +107,7 @@ def parse_outerbox(box, company_key):
                         special_numbers.append(num)
             data["special"] = special_numbers
 
-    # ---------- 安慰奖 ----------
+    # 安慰奖
     cons_section = box.find("td", string=re.compile("Consolation|安慰獎"))
     if cons_section:
         table = cons_section.find_parent("table")
@@ -121,7 +122,7 @@ def parse_outerbox(box, company_key):
                         cons_numbers.append(num)
             data["consolation"] = cons_numbers
 
-    # ---------- 特殊公司标记（仅用于前端识别）----------
+    # 特殊公司标记
     if company_key in ["sportstoto_5d", "sportstoto_6d", "sportstoto_lotto", "singapore_toto", "magnum_jackpot_gold", "magnum_life"]:
         data["type"] = company_key
 
@@ -129,6 +130,7 @@ def parse_outerbox(box, company_key):
 
 def save_json(company, data):
     if not data:
+        print(f"❌ {company} 数据为空，跳过保存")
         return
     base_dir = "docs/data"
     os.makedirs(base_dir, exist_ok=True)
@@ -178,14 +180,9 @@ def main():
         return
     soup = BeautifulSoup(html, "html.parser")
 
-    # 可选的全局文件
-    first_company = next(iter(COMPANY_CONFIG))
-    first_data = extract_company_data(soup, first_company)
-    if first_data and first_data.get("draw_date"):
-        with open("docs/data/latest.json", "w", encoding="utf-8") as f:
-            json.dump({"draw_date": first_data["draw_date"], "draw_no": first_data.get("draw_no", "")}, f)
-
+    # 逐个提取并保存
     for company in COMPANY_CONFIG:
+        print(f"正在处理 {company}...")
         data = extract_company_data(soup, company)
         save_json(company, data)
 
