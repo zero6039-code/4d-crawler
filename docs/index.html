@@ -99,11 +99,119 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0.3; }
         }
+
+        /* 🔧 新增：日期选择器样式 */
+        .date-selector {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .date-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .date-btn {
+            background: #ffffffcc;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255,255,255,0.8);
+            border-radius: 25px;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #2c3e50;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transition: all 0.2s;
+        }
+        
+        .date-btn:hover {
+            background: #ffffff;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+        }
+        
+        .date-btn .arrow {
+            font-size: 0.8rem;
+            transition: transform 0.2s;
+        }
+        
+        .date-btn.active .arrow {
+            transform: rotate(180deg);
+        }
+        
+        .date-dropdown-content {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            min-width: 200px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            margin-top: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .date-dropdown.show .date-dropdown-content {
+            display: block;
+        }
+        
+        .date-option {
+            padding: 10px 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .date-option:hover {
+            background: #f0f2f5;
+        }
+        
+        .date-option.active {
+            background: #e6f0ff;
+            color: #3182ce;
+            font-weight: 600;
+        }
+        
+        .date-option .draw-no {
+            font-size: 0.75rem;
+            color: #7c8b9c;
+        }
+        
+        .loading-history {
+            text-align: center;
+            padding: 20px;
+            color: #7c8b9c;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🇲🇾 4D RESULT MALAYSIA</h1>
+        
+        <!-- 🔧 新增：日期选择器 -->
+        <div class="date-selector">
+            <div class="date-dropdown" id="date-dropdown">
+                <button class="date-btn" id="date-btn" onclick="toggleDateDropdown()">
+                    <span id="selected-date">Loading...</span>
+                    <span class="arrow">▼</span>
+                </button>
+                <div class="date-dropdown-content" id="date-dropdown-content">
+                    <div class="loading-history">🔄 加载历史数据...</div>
+                </div>
+            </div>
+        </div>
+        
         <div class="draw-info">
             <strong>日期：</strong> <span id="draw_date">Loading...</span> &nbsp; | &nbsp; 
             <strong>开彩期号：</strong> <span id="global_draw_no">Loading...</span>
@@ -149,8 +257,145 @@
             'sarawak_cashsweep': 'SARAWAK CASHSWEEP'
         };
 
+        // 🔧 历史数据相关
+        let damacaiHistoryData = [];
+        let selectedDrawDate = null;
         let requestCounter = 0;
-        
+
+        // ==================== 日期选择器功能 ====================
+        function toggleDateDropdown() {
+            const dropdown = document.getElementById('date-dropdown');
+            const btn = document.getElementById('date-btn');
+            dropdown.classList.toggle('show');
+            btn.classList.toggle('active');
+        }
+
+        async function loadDamacaiHistory() {
+            try {
+                const response = await fetch(`data/damacai_all.json?t=${Date.now()}`, {
+                    cache: 'no-store'
+                });
+                
+                if (response.ok) {
+                    damacaiHistoryData = await response.json();
+                    renderDateDropdown();
+                }
+            } catch (err) {
+                console.log('加载历史数据失败:', err);
+            }
+        }
+
+        function renderDateDropdown() {
+            const content = document.getElementById('date-dropdown-content');
+            
+            if (!damacaiHistoryData || damacaiHistoryData.length === 0) {
+                content.innerHTML = '<div class="loading-history">暂无历史数据</div>';
+                return;
+            }
+            
+            let html = '';
+            damacaiHistoryData.forEach((data, index) => {
+                const isActive = index === 0 ? 'active' : '';
+                const isSelected = selectedDrawDate === data.draw_date ? 'active' : '';
+                html += `
+                    <div class="date-option ${isActive} ${isSelected}" onclick="selectDrawDate('${data.draw_date}', ${index})">
+                        <div>${data.draw_info || data.draw_date}</div>
+                        <div class="draw-no">${data.global_draw_no || ''}</div>
+                    </div>
+                `;
+            });
+            
+            content.innerHTML = html;
+            
+            // 设置默认选择最新一期
+            if (!selectedDrawDate && damacaiHistoryData.length > 0) {
+                selectDrawDate(damacaiHistoryData[0].draw_date, 0);
+            }
+        }
+
+        function selectDrawDate(drawDate, index) {
+            selectedDrawDate = drawDate;
+            
+            // 更新按钮显示
+            document.getElementById('selected-date').innerText = drawDate;
+            
+            // 更新下拉菜单选中状态
+            const options = document.querySelectorAll('.date-option');
+            options.forEach((opt, i) => {
+                opt.classList.toggle('active', i === index);
+            });
+            
+            // 关闭下拉菜单
+            document.getElementById('date-dropdown').classList.remove('show');
+            document.getElementById('date-btn').classList.remove('active');
+            
+            // 加载选定日期的数据
+            loadCompanyDataForDate('damacai', index);
+            
+            // 更新顶部日期显示
+            const data = damacaiHistoryData[index];
+            if (data) {
+                document.getElementById('draw_date').innerText = data.draw_date;
+                document.getElementById('global_draw_no').innerText = data.global_draw_no || '----';
+            }
+        }
+
+        async function loadCompanyDataForDate(companyKey, historyIndex) {
+            if (companyKey !== 'damacai' || !damacaiHistoryData[historyIndex]) {
+                return;
+            }
+            
+            const data = damacaiHistoryData[historyIndex];
+            const section = document.querySelector('.company-section[data-company="damacai"]');
+            
+            if (section) {
+                // 更新开奖信息
+                section.querySelector('.draw-date')?.remove();
+                
+                if (data.draw_info) {
+                    const drawDateDiv = document.createElement('div');
+                    drawDateDiv.className = 'draw-date';
+                    drawDateDiv.innerText = data.draw_info;
+                    const prizeGrid = section.querySelector('.prize-grid');
+                    if (prizeGrid) {
+                        section.insertBefore(drawDateDiv, prizeGrid);
+                    }
+                }
+                
+                // 更新奖项号码
+                const prizeCards = section.querySelectorAll('.prize-card .number');
+                if (prizeCards.length >= 3) {
+                    prizeCards[0].innerText = data['1st'] || '----';
+                    prizeCards[1].innerText = data['2nd'] || '----';
+                    prizeCards[2].innerText = data['3rd'] || '----';
+                }
+                
+                // 更新特别奖和安慰奖
+                const subsections = section.querySelectorAll('.subsection');
+                if (subsections.length >= 2) {
+                    // 特别奖
+                    const specialList = subsections[0]?.querySelectorAll('.number-item');
+                    if (specialList) {
+                        data.special?.forEach((num, i) => {
+                            if (specialList[i]) {
+                                specialList[i].innerText = num || '----';
+                            }
+                        });
+                    }
+                    
+                    // 安慰奖
+                    const consolationList = subsections[1]?.querySelectorAll('.number-item');
+                    if (consolationList) {
+                        data.consolation?.forEach((num, i) => {
+                            if (consolationList[i]) {
+                                consolationList[i].innerText = num || '----';
+                            }
+                        });
+                    }
+                }
+            }
+        }
+
         // ==================== 数据加载 ====================
         async function loadCompanyData(companyKey) {
             const retryCount = 3;
@@ -217,6 +462,9 @@
             if (statusText) statusText.innerHTML = '<span class="status-indicator loading"></span>正在加载...';
             
             try {
+                // 🔧 先加载历史数据
+                await loadDamacaiHistory();
+                
                 const promises = COMPANY_LIST.map(company => 
                     loadCompanyData(company).then(result => ({ company, ...result }))
                 );
@@ -234,19 +482,12 @@
                     }
                 });
 
-                const damacaiData = dataMap['damacai'];
-                if (damacaiData && damacaiData.draw_date && damacaiData.draw_date !== "----") {
-                    document.getElementById('draw_date').innerText = damacaiData.draw_date;
-                    document.getElementById('global_draw_no').innerText = damacaiData.global_draw_no || "----";
-                } else {
-                    const firstValid = results.find(r => r.success && r.data.draw_date && r.data.draw_date !== "----");
-                    if (firstValid) {
-                        document.getElementById('draw_date').innerText = firstValid.data.draw_date;
-                        document.getElementById('global_draw_no').innerText = firstValid.data.global_draw_no || "----";
-                    } else {
-                        document.getElementById('draw_date').innerText = "----";
-                        document.getElementById('global_draw_no').innerText = "----";
-                    }
+                // 🔧 使用选中的日期或最新日期
+                const displayData = damacaiHistoryData[0] || dataMap['damacai'];
+                if (displayData && displayData.draw_date && displayData.draw_date !== "----") {
+                    document.getElementById('draw_date').innerText = displayData.draw_date;
+                    document.getElementById('global_draw_no').innerText = displayData.global_draw_no || "----";
+                    document.getElementById('selected-date').innerText = displayData.draw_date;
                 }
 
                 grid.innerHTML = '';
@@ -279,6 +520,9 @@
             if ('caches' in window) {
                 caches.keys().then(names => names.forEach(name => caches.delete(name)));
             }
+            
+            damacaiHistoryData = [];
+            selectedDrawDate = null;
             
             loadAllCompanies().then(() => {
                 if (refreshBtn) {
@@ -318,7 +562,6 @@
             }
 
             if (!companyData.type) {
-                // 🔧 关键修改：始终显示奖项网格（即使数据是 "----"）
                 section.appendChild(createPrizeGrid(companyData));
                 
                 if (companyKey === 'sabah' && companyData['3d']) {
@@ -353,7 +596,6 @@
             setTimeout(() => section.classList.remove('loading'), 100);
         }
 
-        // 🔧 已优化：1st 在上，2nd/3rd 并列在下
         function createPrizeGrid(companyData) {
             const prizeGrid = document.createElement('div');
             prizeGrid.className = 'prize-grid';
@@ -363,7 +605,6 @@
             prizeGrid.style.gap = '8px';
             prizeGrid.style.margin = '12px 0 16px';
             
-            // 第一行：1st Prize（独占一行，较宽）
             const firstRow = document.createElement('div');
             firstRow.style.display = 'flex';
             firstRow.style.justifyContent = 'center';
@@ -376,7 +617,6 @@
                 </div>
             `;
             
-            // 第二行：2nd 和 3rd Prize（并列）
             const secondRow = document.createElement('div');
             secondRow.style.display = 'flex';
             secondRow.style.justifyContent = 'center';
@@ -585,6 +825,15 @@
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden) {
                 loadAllCompanies();
+            }
+        });
+
+        // 🔧 点击外部关闭下拉菜单
+        document.addEventListener('click', (e) => {
+            const dropdown = document.getElementById('date-dropdown');
+            if (dropdown && !dropdown.contains(e.target)) {
+                dropdown.classList.remove('show');
+                document.getElementById('date-btn')?.classList.remove('active');
             }
         });
     </script>
