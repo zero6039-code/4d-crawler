@@ -2,7 +2,7 @@ name: Update DAMACAI Results
 
 on:
   schedule:
-    - cron: '* 11 * * *'  # 马来西亚时间 19:00-19:59，每分钟一次（UTC 11:00-11:59）
+    - cron: '* 11 * * *'  # 马来西亚时间 19:00-19:59，每分钟一次
   workflow_dispatch:       # 允许手动触发
 
 jobs:
@@ -22,7 +22,8 @@ jobs:
       
       - name: Install dependencies
         run: |
-          npm install node-fetch@2
+          cd scripts
+          npm install  # 安装 package.json 中的所有依赖
       
       - name: Fetch DAMACAI Data
         run: |
