@@ -63,7 +63,7 @@ async function fetchDamacaiResults() {
       throw new Error('没有获取到结果链接');
     }
     
-    console.log(`🔗 结果链接：${resultUrl}`);
+    console.log(`🔗 结果链接：${resultUrl.substring(0, 80)}...`);
     
     console.log('🔄 步骤 3: 获取 API 数据（特别奖/安慰奖）...');
     const resultResponse = await fetch(resultUrl, {
@@ -79,6 +79,8 @@ async function fetchDamacaiResults() {
     
     const resultData = await resultResponse.json();
     console.log('✅ API 数据获取成功');
+    console.log('📊 API 特别奖:', resultData.starterList || resultData.starterHorseList);
+    console.log('📊 API 安慰奖:', resultData.consolidateList);
     
     console.log('🔄 步骤 4: 从官网页面获取 4D 号码...');
     const webPrizes = await fetchPrizesFromWeb();
@@ -94,6 +96,7 @@ async function fetchDamacaiResults() {
 async function fetchPrizesFromWeb() {
   try {
     const url = 'https://www.damacai.com.my/past-draw-result';
+    console.log('🌐 请求 URL:', url);
     
     const response = await fetch(url, {
       headers: {
@@ -102,12 +105,16 @@ async function fetchPrizesFromWeb() {
       }
     });
     
+    console.log('📡 响应状态:', response.status);
+    
     if (!response.ok) {
       console.log('⚠️ 网页获取失败');
       return null;
     }
     
     const html = await response.text();
+    console.log('📄 HTML 长度:', html.length);
+    
     const dom = new JSDOM(html);
     const doc = dom.window.document;
     
@@ -115,103 +122,56 @@ async function fetchPrizesFromWeb() {
     let secondPrize = null;
     let thirdPrize = null;
     
-    // 🔍 方法 1: 只查找 1+3D 区域，排除 SUPER 1+3D
-    const game1Plus3D = doc.querySelector('.game1Plus3D, [class*="1+3D"], [class*="1-3D"]');
+    // 🔍 方法 1: 查找所有 prize-number 元素
+    const prizeNumbers = doc.querySelectorAll('.prize-number');
+    console.log('🔍 找到 .prize-number 元素数量:', prizeNumbers.length);
     
-    if (game1Plus3D) {
-      console.log('✅ 找到 1+3D 游戏区域');
+    for (let i = 0; i < prizeNumbers.length; i++) {
+      const el = prizeNumbers[i];
+      const number = el.textContent?.trim();
+      const classList = el.className;
+      const hasHistory = el.hasAttribute('data-history-prize');
       
-      const labels = game1Plus3D.querySelectorAll('.prize-label');
+      console.log(`  [${i}] 号码: ${number}, class: ${classList}, 历史数据: ${hasHistory}`);
       
-      for (const label of labels) {
-        const labelText = label.textContent?.trim().toLowerCase() || '';
-        const parent = label.parentElement;
-        
-        let numberEl = parent?.querySelector('.prize-number');
-        
-        if (!numberEl) {
-          const row = parent?.closest('.row');
-          if (row) {
-            numberEl = row.querySelector('.prize-number');
-          }
-        }
-        
-        if (!numberEl) continue;
-        
-        const number = numberEl.textContent?.trim();
-        
-        if (!/^\d{4}$/.test(number)) continue;
-        
-        console.log('📍 找到:', labelText, '=', number);
-        
-        if (!firstPrize && labelText.includes('1st')) {
-          firstPrize = number;
-        } else if (!secondPrize && labelText.includes('2nd')) {
-          secondPrize = number;
-        } else if (!thirdPrize && labelText.includes('3rd')) {
-          thirdPrize = number;
-        }
+      // 跳过非 4 位数字
+      if (!/^\d{4}$/.test(number)) continue;
+      
+      // 跳过历史数据
+      if (hasHistory) {
+        console.log(`    ⚠️ 跳过历史数据`);
+        continue;
+      }
+      
+      // 获取附近的 label 文字
+      const parent = el.parentElement;
+      const nearbyText = (parent?.textContent || '').toLowerCase();
+      console.log(`    附近文字: ${nearbyText.substring(0, 50)}...`);
+      
+      if (!firstPrize && (nearbyText.includes('1st') || nearbyText.includes('first'))) {
+        firstPrize = number;
+        console.log(`    ✅ 设为 1st Prize`);
+      } else if (!secondPrize && (nearbyText.includes('2nd') || nearbyText.includes('second'))) {
+        secondPrize = number;
+        console.log(`    ✅ 设为 2nd Prize`);
+      } else if (!thirdPrize && (nearbyText.includes('3rd') || nearbyText.includes('third'))) {
+        thirdPrize = number;
+        console.log(`    ✅ 设为 3rd Prize`);
       }
     }
     
-    // 🔍 方法 2: 查找 topPrize_0 容器（排除 SUPER 区域）
+    // 🔍 方法 2: 直接取前 3 个有效的 4 位数字
     if (!firstPrize || !secondPrize || !thirdPrize) {
-      const topPrizeRows = doc.querySelectorAll('.topPrize_0');
+      console.log('🔍 方法 2: 尝试直接取前 3 个 4 位数字');
       
-      console.log('🔍 找到 topPrize_0 容器数量:', topPrizeRows.length);
-      
-      for (const row of topPrizeRows) {
-        const superArea = row.closest('[class*="super"], [class*="SUPER"]');
-        if (superArea) {
-          console.log('⚠️ 跳过 SUPER 区域');
-          continue;
-        }
-        
-        const labelEl = row.querySelector('.prize-label');
-        const numberEl = row.querySelector('.prize-number');
-        
-        if (!labelEl || !numberEl) continue;
-        
-        const labelText = labelEl.textContent?.trim().toLowerCase() || '';
-        const number = numberEl.textContent?.trim();
-        
-        if (!/^\d{4}$/.test(number)) continue;
-        
-        console.log('📍 topPrize_0 找到:', labelText, '=', number);
-        
-        if (!firstPrize && labelText.includes('1st')) {
-          firstPrize = number;
-        } else if (!secondPrize && labelText.includes('2nd')) {
-          secondPrize = number;
-        } else if (!thirdPrize && labelText.includes('3rd')) {
-          thirdPrize = number;
-        }
-      }
-    }
-    
-    // 🔍 方法 3: 按页面顺序查找前 3 个 prize-number（排除 SUPER 区域）
-    if (!firstPrize || !secondPrize || !thirdPrize) {
-      const prizeNumbers = doc.querySelectorAll('.prize-number');
       let index = 0;
-      
-      console.log('🔍 方法 3: 找到 prize-number 总数:', prizeNumbers.length);
-      
       for (const el of prizeNumbers) {
-        const superArea = el.closest('[class*="super"], [class*="SUPER"]');
-        if (superArea) {
-          console.log('⚠️ 跳过 SUPER 区域的号码:', el.textContent?.trim());
-          continue;
-        }
-        
-        if (el.hasAttribute('data-history-prize')) {
-          console.log('⚠️ 跳过历史数据:', el.textContent?.trim());
-          continue;
-        }
-        
         const number = el.textContent?.trim();
-        if (!/^\d{4}$/.test(number)) continue;
         
-        console.log('📍 方法 3 找到:', number);
+        if (!/^\d{4}$/.test(number)) continue;
+        if (el.hasAttribute('data-history-prize')) continue;
+        
+        console.log(`  方法 2 找到: ${number}`);
         
         if (index === 0 && !firstPrize) firstPrize = number;
         else if (index === 1 && !secondPrize) secondPrize = number;
@@ -220,6 +180,29 @@ async function fetchPrizesFromWeb() {
         index++;
         if (index >= 3) break;
       }
+    }
+    
+    // 🔍 方法 3: 从 HTML 文本中提取所有 4 位数字
+    if (!firstPrize || !secondPrize || !thirdPrize) {
+      console.log('🔍 方法 3: 从 HTML 文本提取 4 位数字');
+      
+      const allText = doc.body.textContent || '';
+      const fourDigitNumbers = allText.match(/\b\d{4}\b/g) || [];
+      console.log(`  找到 ${fourDigitNumbers.length} 个 4 位数字`);
+      console.log(`  前 20 个: ${fourDigitNumbers.slice(0, 20)}`);
+      
+      // 过滤掉年份
+      const currentYear = new Date().getFullYear();
+      const validNumbers = fourDigitNumbers.filter(n => {
+        const num = parseInt(n);
+        return num < 1900 || num > (currentYear + 1);
+      });
+      
+      console.log(`  过滤后: ${validNumbers.slice(0, 20)}`);
+      
+      if (!firstPrize && validNumbers[0]) firstPrize = validNumbers[0];
+      if (!secondPrize && validNumbers[1]) secondPrize = validNumbers[1];
+      if (!thirdPrize && validNumbers[2]) thirdPrize = validNumbers[2];
     }
     
     console.log('📊 网页爬取结果:', { firstPrize, secondPrize, thirdPrize });
