@@ -32,7 +32,7 @@ async function fetchDamacaiResults() {
     const datesData = await datesResponse.json();
     let drawDates = datesData.drawdate.trim().split(' ');
     
-    // 🔧 关键：按日期降序排序（最新的在前面）
+    // 按日期降序排序（最新的在前面）
     drawDates = drawDates.sort((a, b) => b.localeCompare(a));
     
     console.log(`📅 前 5 个日期：${drawDates.slice(0, 5).join(', ')}`);
@@ -64,7 +64,7 @@ async function fetchDamacaiResults() {
       throw new Error('没有获取到结果链接');
     }
     
-    console.log(`🔗 结果链接：${resultUrl.substring(0, 50)}...`);
+    console.log(`🔗 结果链接：${resultUrl}`);
     
     console.log('🔄 步骤 3: 获取开奖数据...');
     const resultResponse = await fetch(resultUrl, {
@@ -93,16 +93,43 @@ async function fetchDamacaiResults() {
 function parseDamacaiData(data, drawDate) {
   const formattedDate = `${drawDate.substring(6,8)}-${drawDate.substring(4,6)}-${drawDate.substring(0,4)}`;
   
+  // 🔧 关键修复：使用正确的字段名称
+  // 头奖、二奖、三奖
+  const firstPrize = data.p1HorseNo || data.FirstPrize || data.firstPrize || "----";
+  const secondPrize = data.p2HorseNo || data.SecondPrize || data.secondPrize || "----";
+  const thirdPrize = data.p3HorseNo || data.ThirdPrize || data.thirdPrize || "----";
+  
+  // 特别奖 (starterList)
+  let special = data.starterList || data.starterHorseList || data.Special || data.special || [];
+  if (!Array.isArray(special)) special = [];
+  
+  // 安慰奖 (consolidateList)
+  let consolation = data.consolidateList || data.Consolation || data.consolation || [];
+  if (!Array.isArray(consolation)) consolation = [];
+  
+  // 🔧 过滤掉 "-" 并填充到 10 个
+  special = special.filter(s => s && s !== "-" && s !== "null").slice(0, 10);
+  consolation = consolation.filter(c => c && c !== "-" && c !== "null").slice(0, 10);
+  
+  while (special.length < 10) special.push("----");
+  while (consolation.length < 10) consolation.push("----");
+  
+  console.log('📊 解析后的头奖:', firstPrize);
+  console.log('📊 解析后的二奖:', secondPrize);
+  console.log('📊 解析后的三奖:', thirdPrize);
+  console.log('📊 解析后的特别奖:', special);
+  console.log('📊 解析后的安慰奖:', consolation);
+  
   return {
     draw_date: formattedDate,
-    global_draw_no: data.DrawNo || data.drawNo || "----",
-    "1st": data.FirstPrize || data.firstPrize || "----",
-    "2nd": data.SecondPrize || data.secondPrize || "----",
-    "3rd": data.ThirdPrize || data.thirdPrize || "----",
-    special: data.Special || data.special || Array(10).fill("----"),
-    consolation: data.Consolation || data.consolation || Array(10).fill("----"),
-    draw_info: (data.DrawNo || data.drawNo) 
-      ? `(${getDayName(formattedDate)}) ${formattedDate} #${data.DrawNo || data.drawNo}`
+    global_draw_no: data.drawNo || data.DrawNo || data.draw_no || "----",
+    "1st": firstPrize,
+    "2nd": secondPrize,
+    "3rd": thirdPrize,
+    special: special,
+    consolation: consolation,
+    draw_info: (data.drawNo || data.DrawNo || data.draw_no) 
+      ? `(${getDayName(formattedDate)}) ${formattedDate} #${data.drawNo || data.DrawNo || data.draw_no}`
       : "----"
   };
 }
