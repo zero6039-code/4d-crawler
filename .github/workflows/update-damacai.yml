@@ -1,0 +1,41 @@
+name: Update DAMACAI Results
+
+on:
+  schedule:
+    - cron: '* 11 * * *'  # 马来西亚时间 19:00-19:59，每分钟一次（UTC 11:00-11:59）
+  workflow_dispatch:       # 允许手动触发
+
+jobs:
+  update-damacai:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Install dependencies
+        run: |
+          npm install node-fetch@2
+      
+      - name: Fetch DAMACAI Data
+        run: |
+          node scripts/scraper/damacai.js
+      
+      - name: Commit and Push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/data/damacai.json
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore: update DAMACAI results $(date '+%Y-%m-%d %H:%M:%S')"
+            git push
+          fi
