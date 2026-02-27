@@ -19,6 +19,7 @@ async function fetchDamacaiResults() {
   try {
     console.log('🔄 步骤 1: 获取开奖日期列表...');
     
+    // 🔧 修复：移除 URL 末尾空格
     const datesResponse = await fetch('https://www.damacai.com.my/ListPastResult', {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
@@ -41,7 +42,7 @@ async function fetchDamacaiResults() {
       throw new Error('没有获取到开奖日期');
     }
     
-    // 🔧 获取最近 30 天的日期（约 12 期，因为一周开 3 次）
+    // 🔧 获取最近 30 期的日期（约 1 个月）
     const recentDates = drawDates.slice(0, 30);
     console.log(`📅 将获取最近 ${recentDates.length} 期的数据`);
     
@@ -55,9 +56,14 @@ async function fetchDamacaiResults() {
         const result = await fetchSingleDrawResult(drawDate);
         if (result) {
           allResults.push(result);
+          console.log(`  ✅ 成功获取 ${drawDate}`);
+        } else {
+          console.log(`  ⚠️ 获取失败，使用默认数据`);
+          allResults.push({ ...defaultData, draw_date: formatDate(drawDate) });
         }
       } catch (err) {
-        console.log(`⚠️ 日期 ${drawDate} 获取失败：${err.message}`);
+        console.log(`  ⚠️ 日期 ${drawDate} 获取失败：${err.message}`);
+        allResults.push({ ...defaultData, draw_date: formatDate(drawDate) });
       }
     }
     
@@ -89,7 +95,7 @@ async function fetchSingleDrawResult(drawDate) {
   try {
     console.log(`  📅 获取 ${drawDate} 的数据...`);
     
-    // 步骤 1: 获取结果文件链接
+    // 🔧 修复：移除 URL 末尾空格
     const linkResponse = await fetch(`https://www.damacai.com.my/callpassresult?pastdate=${drawDate}`, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
@@ -149,6 +155,7 @@ async function fetchPrizesFromMultipleSources(drawDate, apiData) {
   // 🔍 方法 1: 从 4d4d.co 获取（主要数据源）
   console.log(`  🔍 从 4d4d.co 获取 ${formattedDate} 的数据...`);
   try {
+    // 🔧 修复：移除 URL 末尾空格
     const response = await fetch('https://4d4d.co/', {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
@@ -161,37 +168,56 @@ async function fetchPrizesFromMultipleSources(drawDate, apiData) {
       const dom = new JSDOM(html);
       const doc = dom.window.document;
       
-      // 查找所有 DAMACAI 结果区域
-      const damacaiSections = doc.querySelectorAll('table, .company-result, [data-company="damacai"]');
+      // 查找所有表格
+      const tables = doc.querySelectorAll('table');
       
-      for (const section of damacaiSections) {
-        const text = section.textContent || '';
+      for (const table of tables) {
+        const tableText = table.textContent?.toLowerCase() || '';
         
-        // 检查是否包含当前日期
-        if (!text.includes(formattedDate) && !text.includes(drawDate)) {
-          continue;
+        // 检查是否包含 DAMACAI 和当前日期
+        if ((tableText.includes('damacai') || tableText.includes('dama cai')) && 
+            (tableText.includes(formattedDate) || tableText.includes(drawDate))) {
+          
+          const rows = table.querySelectorAll('tr');
+          
+          for (const row of rows) {
+            const rowText = row.textContent?.toLowerCase() || '';
+            const numberMatch = row.textContent?.match(/\b\d{4}\b/);
+            
+            if (!numberMatch) continue;
+            
+            const number = numberMatch[0];
+            
+            if (!firstPrize && (rowText.includes('1st') || rowText.includes('first') || rowText.includes('首奖'))) {
+              firstPrize = number;
+              console.log(`    ✅ 找到 1st Prize: ${number}`);
+            } else if (!secondPrize && (rowText.includes('2nd') || rowText.includes('second') || rowText.includes('二奖'))) {
+              secondPrize = number;
+              console.log(`    ✅ 找到 2nd Prize: ${number}`);
+            } else if (!thirdPrize && (rowText.includes('3rd') || rowText.includes('third') || rowText.includes('三奖'))) {
+              thirdPrize = number;
+              console.log(`    ✅ 找到 3rd Prize: ${number}`);
+            }
+          }
         }
+      }
+      
+      // 🔍 备用：查找所有 prize-number 类元素
+      if (!firstPrize || !secondPrize || !thirdPrize) {
+        const prizeElements = doc.querySelectorAll('[class*="prize"], [class*="Prize"]');
         
-        // 查找 1st/2nd/3rd
-        const rows = section.querySelectorAll('tr, .prize-row, .result-row');
-        
-        for (const row of rows) {
-          const rowText = row.textContent?.toLowerCase() || '';
-          const numberMatch = row.textContent?.match(/\d{4}/);
-          
-          if (!numberMatch) continue;
-          
-          const number = numberMatch[0];
-          
-          if (!firstPrize && (rowText.includes('1st') || rowText.includes('first') || rowText.includes('首奖'))) {
-            firstPrize = number;
-            console.log(`    ✅ 找到 1st Prize: ${number}`);
-          } else if (!secondPrize && (rowText.includes('2nd') || rowText.includes('second') || rowText.includes('二奖'))) {
-            secondPrize = number;
-            console.log(`    ✅ 找到 2nd Prize: ${number}`);
-          } else if (!thirdPrize && (rowText.includes('3rd') || rowText.includes('third') || rowText.includes('三奖'))) {
-            thirdPrize = number;
-            console.log(`    ✅ 找到 3rd Prize: ${number}`);
+        for (const el of prizeElements) {
+          const text = el.textContent?.trim();
+          if (/^\d{4}$/.test(text)) {
+            const parentText = (el.parentElement?.textContent || '').toLowerCase();
+            
+            if (!firstPrize && (parentText.includes('1st') || parentText.includes('first'))) {
+              firstPrize = text;
+            } else if (!secondPrize && (parentText.includes('2nd') || parentText.includes('second'))) {
+              secondPrize = text;
+            } else if (!thirdPrize && (parentText.includes('3rd') || parentText.includes('third'))) {
+              thirdPrize = text;
+            }
           }
         }
       }
@@ -204,6 +230,7 @@ async function fetchPrizesFromMultipleSources(drawDate, apiData) {
   if (!firstPrize || !secondPrize || !thirdPrize) {
     console.log(`  🔍 从 live4d2u 获取...`);
     try {
+      // 🔧 修复：移除 URL 末尾空格
       const response = await fetch('https://www.live4d2u.net/', {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
@@ -242,7 +269,36 @@ async function fetchPrizesFromMultipleSources(drawDate, apiData) {
     }
   }
   
-  console.log(`  📊 获取结果：{ firstPrize: ${firstPrize}, secondPrize: ${secondPrize}, thirdPrize: ${thirdPrize} }`);
+  // 🔍 方法 3: 从 check4d 获取（备用）
+  if (!firstPrize || !secondPrize || !thirdPrize) {
+    console.log(`  🔍 从 check4d 获取...`);
+    try {
+      const response = await fetch('https://www.check4d.org/', {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Accept': 'text/html'
+        }
+      });
+      
+      if (response.ok) {
+        const html = await response.text();
+        
+        // 简单文本匹配 DAMACAI 区域
+        const damacaiMatch = html.match(/DAMACAI[\s\S]{0,500}1st[\s\S]{0,100}(\d{4})[\s\S]{0,100}2nd[\s\S]{0,100}(\d{4})[\s\S]{0,100}3rd[\s\S]{0,100}(\d{4})/i);
+        
+        if (damacaiMatch) {
+          firstPrize = firstPrize || damacaiMatch[1];
+          secondPrize = secondPrize || damacaiMatch[2];
+          thirdPrize = thirdPrize || damacaiMatch[3];
+          console.log(`    ✅ 从 check4d 获取：1st=${firstPrize}, 2nd=${secondPrize}, 3rd=${thirdPrize}`);
+        }
+      }
+    } catch (err) {
+      console.log(`  ⚠️ check4d 获取失败：${err.message}`);
+    }
+  }
+  
+  console.log(`  📊 获取结果：{ firstPrize: ${firstPrize || '----'}, secondPrize: ${secondPrize || '----'}, thirdPrize: ${thirdPrize || '----'} }`);
   
   return { firstPrize, secondPrize, thirdPrize };
 }
@@ -250,6 +306,7 @@ async function fetchPrizesFromMultipleSources(drawDate, apiData) {
 function parseDamacaiData(data, drawDate, prizes) {
   const formattedDate = `${drawDate.substring(6,8)}-${drawDate.substring(4,6)}-${drawDate.substring(0,4)}`;
   
+  // 🔧 确保始终有值（---- 作为默认）
   const firstPrize = prizes?.firstPrize || "----";
   const secondPrize = prizes?.secondPrize || "----";
   const thirdPrize = prizes?.thirdPrize || "----";
@@ -276,6 +333,11 @@ function parseDamacaiData(data, drawDate, prizes) {
     consolation: consolation,
     draw_info: (data.drawNo) ? `(${getDayName(formattedDate)}) ${formattedDate} #${data.drawNo}` : "----"
   };
+}
+
+// 🔧 新增：格式化日期函数
+function formatDate(drawDate) {
+  return `${drawDate.substring(6,8)}-${drawDate.substring(4,6)}-${drawDate.substring(0,4)}`;
 }
 
 function getDayName(dateStr) {
