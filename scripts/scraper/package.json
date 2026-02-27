@@ -1,17 +1,13 @@
 {
-  "name": "4d-scraper",
+  "name": "damacai-scraper",
   "version": "1.0.0",
-  "description": "Malaysia 4D Results Scraper",
+  "description": "DAMACAI 4D Results Scraper",
   "main": "scraper/damacai.js",
   "scripts": {
-    "damacai": "node scraper/damacai.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "damacai": "node scraper/damacai.js"
   },
   "dependencies": {
-    "jsdom": "^23.0.0",
-    "node-fetch": "^2.7.0"
-  },
-  "keywords": ["4d", "malaysia", "damacai", "scraper"],
-  "author": "",
-  "license": "ISC"
+    "node-fetch": "^2.7.0",
+    "jsdom": "^22.1.0"
+  }
 }
