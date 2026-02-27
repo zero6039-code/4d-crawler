@@ -318,9 +318,8 @@
             }
 
             if (!companyData.type) {
-                if (companyData['1st'] && companyData['1st'] !== "----") {
-                    section.appendChild(createPrizeGrid(companyData));
-                }
+                // 🔧 关键修改：始终显示奖项网格（即使数据是 "----"）
+                section.appendChild(createPrizeGrid(companyData));
                 
                 if (companyKey === 'sabah' && companyData['3d']) {
                     const title3d = document.createElement('div');
