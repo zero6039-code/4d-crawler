@@ -80,7 +80,6 @@ async function fetchDamacaiResults() {
     const resultData = await resultResponse.json();
     console.log('✅ API 数据获取成功');
     
-    // 🔧 步骤 4: 尝试从第三方获取 1st/2nd/3rd 号码
     console.log('🔄 步骤 4: 获取 1st/2nd/3rd 号码...');
     const prizes = await fetchPrizesFromMultipleSources(latestDate, resultData);
     
@@ -98,29 +97,105 @@ async function fetchPrizesFromMultipleSources(drawDate, apiData) {
   let secondPrize = null;
   let thirdPrize = null;
   
-  // 🔍 方法 1: 检查 API 数据中是否有 4D 号码字段
-  console.log('🔍 方法 1: 检查 API 数据字段...');
-  console.log('📋 API 所有字段:', Object.keys(apiData));
-  
-  // 尝试各种可能的字段名
-  const possibleFields = [
-    'firstPrize', 'FirstPrize', 'first_prize', '1st',
-    'secondPrize', 'SecondPrize', 'second_prize', '2nd',
-    'thirdPrize', 'ThirdPrize', 'third_prize', '3rd',
-    'p1', 'p2', 'p3',
-    'top1', 'top2', 'top3'
-  ];
-  
-  for (const field of possibleFields) {
-    if (!firstPrize && apiData[field] && /^\d{4}$/.test(apiData[field])) {
-      firstPrize = apiData[field];
-      console.log(`✅ 从 API 字段 ${field} 获取 1st: ${firstPrize}`);
+  // 🔍 方法 1: 从 4d4d.co 获取（主要数据源）
+  console.log('🔍 方法 1: 从 4d4d.co 获取 DAMACAI 数据...');
+  try {
+    const response = await fetch('https://4d4d.co/', {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'text/html'
+      }
+    });
+    
+    if (response.ok) {
+      const html = await response.text();
+      const dom = new JSDOM(html);
+      const doc = dom.window.document;
+      
+      // 查找 DAMACAI 区域
+      const damacaiSections = doc.querySelectorAll('.company-result, [data-company="damacai"], .damacai-result');
+      
+      console.log('📍 找到 DAMACAI 区域数量:', damacaiSections.length);
+      
+      for (const section of damacaiSections) {
+        // 查找 1st/2nd/3rd Prize
+        const prizeRows = section.querySelectorAll('.prize-row, .result-row, [class*="prize"], [class*="Prize"]');
+        
+        for (const row of prizeRows) {
+          const text = row.textContent?.toLowerCase() || '';
+          const numberMatch = row.textContent?.match(/\d{4}/);
+          
+          if (!numberMatch) continue;
+          
+          const number = numberMatch[0];
+          
+          if (text.includes('1st') || text.includes('first')) {
+            firstPrize = number;
+            console.log(`✅ 找到 1st Prize: ${number}`);
+          } else if (text.includes('2nd') || text.includes('second')) {
+            secondPrize = number;
+            console.log(`✅ 找到 2nd Prize: ${number}`);
+          } else if (text.includes('3rd') || text.includes('third')) {
+            thirdPrize = number;
+            console.log(`✅ 找到 3rd Prize: ${number}`);
+          }
+        }
+      }
+      
+      // 🔍 备用：直接查找包含 DAMACAI 和号码的表格
+      if (!firstPrize || !secondPrize || !thirdPrize) {
+        const tables = doc.querySelectorAll('table');
+        
+        for (const table of tables) {
+          const tableText = table.textContent?.toLowerCase() || '';
+          
+          if (tableText.includes('damacai') || tableText.includes('damacai')) {
+            const rows = table.querySelectorAll('tr');
+            
+            for (const row of rows) {
+              const rowText = row.textContent?.toLowerCase() || '';
+              const numberMatch = row.textContent?.match(/\d{4}/);
+              
+              if (!numberMatch) continue;
+              
+              const number = numberMatch[0];
+              
+              if (!firstPrize && (rowText.includes('1st') || rowText.includes('first'))) {
+                firstPrize = number;
+              } else if (!secondPrize && (rowText.includes('2nd') || rowText.includes('second'))) {
+                secondPrize = number;
+              } else if (!thirdPrize && (rowText.includes('3rd') || rowText.includes('third'))) {
+                thirdPrize = number;
+              }
+            }
+          }
+        }
+      }
+      
+      // 🔍 备用：查找所有 4 位数字，按顺序取前 3 个（DAMACAI 区域）
+      if (!firstPrize || !secondPrize || !thirdPrize) {
+        const allNumbers = doc.querySelectorAll('[class*="number"], [class*="result"], .prize');
+        let index = 0;
+        
+        for (const el of allNumbers) {
+          const text = el.textContent?.trim();
+          if (/^\d{4}$/.test(text)) {
+            if (index === 0 && !firstPrize) firstPrize = text;
+            else if (index === 1 && !secondPrize) secondPrize = text;
+            else if (index === 2 && !thirdPrize) thirdPrize = text;
+            index++;
+          }
+          if (index >= 3) break;
+        }
+      }
     }
+  } catch (err) {
+    console.log('⚠️ 4d4d.co 获取失败:', err.message);
   }
   
-  // 🔍 方法 2: 尝试从 live4d2u 获取（第三方聚合网站）
+  // 🔍 方法 2: 从 live4d2u 获取（备用）
   if (!firstPrize || !secondPrize || !thirdPrize) {
-    console.log('🔍 方法 2: 尝试从 live4d2u 获取...');
+    console.log('🔍 方法 2: 从 live4d2u 获取...');
     try {
       const response = await fetch('https://www.live4d2u.net/', {
         headers: {
@@ -138,10 +213,11 @@ async function fetchPrizesFromMultipleSources(drawDate, apiData) {
         const damacaiSection = doc.querySelector('[data-company="damacai"], .damacai, [class*="damacai"]');
         
         if (damacaiSection) {
-          const numbers = damacaiSection.querySelectorAll('[class*="prize"], [class*="Prize"]');
+          const prizeElements = damacaiSection.querySelectorAll('[class*="prize"], [class*="Prize"]');
           let index = 0;
-          for (const num of numbers) {
-            const text = num.textContent?.trim();
+          
+          for (const el of prizeElements) {
+            const text = el.textContent?.trim();
             if (/^\d{4}$/.test(text)) {
               if (index === 0 && !firstPrize) firstPrize = text;
               else if (index === 1 && !secondPrize) secondPrize = text;
@@ -149,10 +225,10 @@ async function fetchPrizesFromMultipleSources(drawDate, apiData) {
               index++;
             }
           }
-        }
-        
-        if (firstPrize) {
-          console.log(`✅ 从 live4d2u 获取：1st=${firstPrize}, 2nd=${secondPrize}, 3rd=${thirdPrize}`);
+          
+          if (firstPrize) {
+            console.log(`✅ 从 live4d2u 获取：1st=${firstPrize}, 2nd=${secondPrize}, 3rd=${thirdPrize}`);
+          }
         }
       }
     } catch (err) {
@@ -160,9 +236,9 @@ async function fetchPrizesFromMultipleSources(drawDate, apiData) {
     }
   }
   
-  // 🔍 方法 3: 从 check4d 获取
+  // 🔍 方法 3: 从 check4d 获取（备用）
   if (!firstPrize || !secondPrize || !thirdPrize) {
-    console.log('🔍 方法 3: 尝试从 check4d 获取...');
+    console.log('🔍 方法 3: 从 check4d 获取...');
     try {
       const response = await fetch('https://www.check4d.org/', {
         headers: {
@@ -173,8 +249,9 @@ async function fetchPrizesFromMultipleSources(drawDate, apiData) {
       
       if (response.ok) {
         const html = await response.text();
-        // 简单文本匹配
-        const damacaiMatch = html.match(/DAMACAI[\s\S]*?1st[\s\S]*?(\d{4})[\s\S]*?2nd[\s\S]*?(\d{4})[\s\S]*?3rd[\s\S]*?(\d{4})/i);
+        
+        // 简单文本匹配 DAMACAI 区域
+        const damacaiMatch = html.match(/DAMACAI[\s\S]{0,500}1st[\s\S]{0,100}(\d{4})[\s\S]{0,100}2nd[\s\S]{0,100}(\d{4})[\s\S]{0,100}3rd[\s\S]{0,100}(\d{4})/i);
         
         if (damacaiMatch) {
           firstPrize = firstPrize || damacaiMatch[1];
@@ -186,12 +263,6 @@ async function fetchPrizesFromMultipleSources(drawDate, apiData) {
     } catch (err) {
       console.log('⚠️ check4d 获取失败:', err.message);
     }
-  }
-  
-  // 🔍 方法 4: 使用特别奖的第一个号码作为临时替代（仅用于测试）
-  if (!firstPrize && apiData.starterList && apiData.starterList.length > 0) {
-    console.log('⚠️ 使用特别奖第一个号码作为临时替代');
-    // 不推荐，但比显示 ---- 好
   }
   
   console.log('📊 最终获取结果:', { firstPrize, secondPrize, thirdPrize });
