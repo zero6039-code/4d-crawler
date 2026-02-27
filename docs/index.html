@@ -8,138 +8,28 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <style>
+        /* 样式保持与您之前提供的完全一致，此处省略以节省篇幅，实际使用时请保留原样 */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
         body { background: #f0f2f5; padding: 15px 10px; }
         .container { max-width: 1300px; margin: 0 auto; }
-        /* 主标题 - 完全按图2：MY 4D RESULT MALAYSIA 无图标 */
         h1 { font-size: 2.2rem; font-weight: 800; text-align: center; margin-bottom: 15px; background: linear-gradient(135deg, #0b1c2f, #2c3e50); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1px; }
-        
-        /* 日期选择器 - 仿图2样式 */
-        .date-selector {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-        .date-dropdown {
-            position: relative;
-            display: inline-block;
-        }
-        .date-btn {
-            background: #ffffffcc;
-            backdrop-filter: blur(4px);
-            border: 1px solid rgba(255,255,255,0.8);
-            border-radius: 25px;
-            padding: 8px 20px;
-            font-size: 1rem;
-            font-weight: 500;
-            color: #2c3e50;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            transition: all 0.2s;
-        }
-        .date-btn:hover {
-            background: #ffffff;
-            box-shadow: 0 6px 16px rgba(0,0,0,0.1);
-        }
-        .date-btn .arrow {
-            font-size: 0.8rem;
-            transition: transform 0.2s;
-        }
-        .date-btn.active .arrow {
-            transform: rotate(180deg);
-        }
-        .date-dropdown-content {
-            display: none;
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-            min-width: 220px;
-            max-height: 300px;
-            overflow-y: auto;
-            z-index: 1000;
-            margin-top: 8px;
-            border: 1px solid #e2e8f0;
-        }
-        .date-dropdown.show .date-dropdown-content {
-            display: block;
-        }
-        .date-option {
-            padding: 10px 16px;
-            cursor: pointer;
-            transition: background 0.2s;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        .date-option:hover {
-            background: #f0f2f5;
-        }
-        .date-option.active {
-            background: #e6f0ff;
-            color: #3182ce;
-            font-weight: 600;
-        }
-        .date-option .draw-no {
-            font-size: 0.75rem;
-            color: #7c8b9c;
-        }
-        .loading-history {
-            text-align: center;
-            padding: 20px;
-            color: #7c8b9c;
-        }
-
-        /* 日期条 - 仿图2：日期： 25-02-2026 刷新 */
-        .draw-info {
-            background: #ffffffcc;
-            backdrop-filter: blur(4px);
-            border-radius: 40px;
-            padding: 6px 20px 6px 25px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 20px;
-            margin: 0 auto 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            font-weight: 500;
-            color: #2c3e50;
-            border: 1px solid rgba(255,255,255,0.8);
-            left: 50%;
-            position: relative;
-            transform: translateX(-50%);
-            white-space: nowrap;
-        }
-        .draw-info strong {
-            color: #d32f2f;
-            font-weight: 600;
-            margin-right: 4px;
-        }
-        .refresh-btn {
-            background: linear-gradient(135deg, #3182ce, #2c5282);
-            color: white;
-            border: none;
-            padding: 5px 16px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            font-weight: 600;
-            transition: all 0.2s;
-            box-shadow: 0 2px 8px rgba(49,130,206,0.3);
-            line-height: 1.4;
-        }
-        .refresh-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(49,130,206,0.4);
-        }
-
-        /* 公司卡片网格（原样不变） */
+        .date-selector { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; }
+        .date-dropdown { position: relative; display: inline-block; }
+        .date-btn { background: #ffffffcc; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.8); border-radius: 25px; padding: 8px 20px; font-size: 1rem; font-weight: 500; color: #2c3e50; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: all 0.2s; }
+        .date-btn:hover { background: #ffffff; box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
+        .date-btn .arrow { font-size: 0.8rem; transition: transform 0.2s; }
+        .date-btn.active .arrow { transform: rotate(180deg); }
+        .date-dropdown-content { display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); background: white; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); min-width: 220px; max-height: 300px; overflow-y: auto; z-index: 1000; margin-top: 8px; border: 1px solid #e2e8f0; }
+        .date-dropdown.show .date-dropdown-content { display: block; }
+        .date-option { padding: 10px 16px; cursor: pointer; transition: background 0.2s; border-bottom: 1px solid #f0f0f0; }
+        .date-option:hover { background: #f0f2f5; }
+        .date-option.active { background: #e6f0ff; color: #3182ce; font-weight: 600; }
+        .date-option .draw-no { font-size: 0.75rem; color: #7c8b9c; }
+        .loading-history { text-align: center; padding: 20px; color: #7c8b9c; }
+        .draw-info { background: #ffffffcc; backdrop-filter: blur(4px); border-radius: 40px; padding: 6px 20px 6px 25px; display: inline-flex; align-items: center; justify-content: center; gap: 20px; margin: 0 auto 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); font-weight: 500; color: #2c3e50; border: 1px solid rgba(255,255,255,0.8); left: 50%; position: relative; transform: translateX(-50%); white-space: nowrap; }
+        .draw-info strong { color: #d32f2f; font-weight: 600; margin-right: 4px; }
+        .refresh-btn { background: linear-gradient(135deg, #3182ce, #2c5282); color: white; border: none; padding: 5px 16px; border-radius: 20px; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.2s; box-shadow: 0 2px 8px rgba(49,130,206,0.3); line-height: 1.4; }
+        .refresh-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(49,130,206,0.4); }
         .companies-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
         .company-section { background: white; border-radius: 24px; box-shadow: 0 8px 20px rgba(0,20,30,0.1); margin-bottom: 0; padding: 14px 12px; border: 1px solid rgba(255,255,255,0.5); transition: transform 0.15s ease; }
         .company-section:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(0,0,0,0.12); }
@@ -166,8 +56,6 @@
         footer { text-align: center; margin-top: 30px; color: #7c8b9c; font-size: 0.8rem; border-top: 1px solid #dbe1ea; padding-top: 16px; }
         @media (max-width: 900px) { .companies-grid { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 600px) { .companies-grid { grid-template-columns: 1fr; } .company-title { font-size: 1.5rem; } .prize-card .number { font-size: 1.6rem; } .number-item { font-size: 1.0rem; padding: 5px 8px; min-width: 45px; } }
-        
-        /* 公司专属渐变色 */
         .company-section[data-company="damacai"] .company-title { background: linear-gradient(145deg, #1e5620, #2a7a2d); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .company-section[data-company="magnum"] .company-title { background: linear-gradient(145deg, #aa4a1e, #c95f2a); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .company-section[data-company="toto"] .company-title { background: linear-gradient(145deg, #b71c1c, #d32f2f); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
@@ -185,14 +73,7 @@
         .company-section[data-company="sportstoto_5d"] .company-title { background: linear-gradient(145deg, #1e4a6b, #2c6b96); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .company-section[data-company="sportstoto_6d"] .company-title { background: linear-gradient(145deg, #1e4a6b, #2c6b96); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .company-section[data-company="magnum_life"] .company-title { background: linear-gradient(145deg, #1e4a6b, #2c6b96); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        
-        .status-indicator {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            margin-right: 6px;
-        }
+        .status-indicator { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
         .status-indicator.success { background: #48bb78; }
         .status-indicator.error { background: #f56565; }
         .status-indicator.loading { background: #ecc94b; animation: blink 1s infinite; }
@@ -201,14 +82,13 @@
 </head>
 <body>
     <div class="container">
-        <!-- 主标题：MY 4D RESULT MALAYSIA （无图标） -->
         <h1>MY 4D RESULT MALAYSIA</h1>
         
         <!-- 日期选择器（下拉按钮） -->
         <div class="date-selector">
             <div class="date-dropdown" id="date-dropdown">
                 <button class="date-btn" id="date-btn" onclick="toggleDateDropdown()">
-                    <span id="selected-date">25-02-2026 (Wed)</span>
+                    <span id="selected-date">加载中...</span>
                     <span class="arrow">▼</span>
                 </button>
                 <div class="date-dropdown-content" id="date-dropdown-content">
@@ -219,7 +99,7 @@
         
         <!-- 日期条（日期+刷新按钮） -->
         <div class="draw-info">
-            <span><strong>日期：</strong> <span id="draw_date">25-02-2026 (Wed)</span></span>
+            <span><strong>日期：</strong> <span id="draw_date">--</span></span>
             <button class="refresh-btn" id="refresh-btn" onclick="forceRefresh()">刷新</button>
         </div>
 
@@ -268,9 +148,15 @@
             'magnum_life': 'MAGNUM LIFE'
         };
 
-        let damacaiHistoryData = [];
-        let selectedDrawDate = null;
-        let requestCounter = 0;
+        // 特殊公司列表（用于决定渲染方式）
+        const SPECIAL_COMPANIES = [
+            'sportstoto_fireball', 'sportstoto_lotto', 'singapore_toto',
+            'magnum_jackpot_gold', 'sportstoto_5d', 'sportstoto_6d', 'magnum_life'
+        ];
+
+        let availableDates = [];          // 从 dates.json 加载的日期列表
+        let selectedDate = null;          // 当前选中的日期（YYYY-MM-DD 格式）
+        let currentDataMode = 'latest';    // 'latest' 或 'historical'
 
         // ==================== 日期选择器功能 ====================
         function toggleDateDropdown() {
@@ -280,159 +166,123 @@
             btn.classList.toggle('active');
         }
 
-        async function loadDamacaiHistory() {
+        // 加载历史日期列表
+        async function loadDateIndex() {
             try {
-                const response = await fetch(`data/damacai_all.json?t=${Date.now()}`, { cache: 'no-store' });
-                if (response.ok) {
-                    damacaiHistoryData = await response.json();
+                const res = await fetch(`data/dates.json?t=${Date.now()}`, { cache: 'no-store' });
+                if (res.ok) {
+                    availableDates = await res.json();
                 } else {
-                    // 模拟历史数据
-                    damacaiHistoryData = [
-                        { draw_date: "25-02-2026 (Wed)", global_draw_no: "6043-26", draw_info: "25-02-2026 (Wed) Draw:6043-26", "1st": "7238", "2nd": "3170", "3rd": "9720", special: ["9912","7215","2971","7267","2532","5168","6057","7473","8816","7055"], consolation: ["1598","9711","2774","1236","3698","5533","4025","3729","6545","3766"] },
-                        { draw_date: "22-02-2026 (Sun)", global_draw_no: "6022-26", draw_info: "22-02-2026 (Sun) Draw:6022-26", "1st": "1234", "2nd": "5678", "3rd": "9012", special: ["1111","2222","3333","4444","5555","6666","7777","8888","9999","0000"], consolation: ["1212","2323","3434","4545","5656","6767","7878","8989","9090","1112"] }
-                    ];
+                    availableDates = [];
                 }
-                renderDateDropdown();
-            } catch (err) {
-                console.log('加载历史数据失败，使用模拟数据', err);
-                damacaiHistoryData = [
-                    { draw_date: "25-02-2026 (Wed)", global_draw_no: "6043-26", draw_info: "25-02-2026 (Wed) Draw:6043-26", "1st": "7238", "2nd": "3170", "3rd": "9720", special: ["9912","7215","2971","7267","2532","5168","6057","7473","8816","7055"], consolation: ["1598","9711","2774","1236","3698","5533","4025","3729","6545","3766"] }
-                ];
-                renderDateDropdown();
+            } catch (e) {
+                console.warn('无法加载 dates.json', e);
+                availableDates = [];
             }
+            renderDateDropdown();
         }
 
         function renderDateDropdown() {
             const content = document.getElementById('date-dropdown-content');
-            if (!damacaiHistoryData || damacaiHistoryData.length === 0) {
+            const btnSpan = document.getElementById('selected-date');
+            
+            if (!availableDates || availableDates.length === 0) {
                 content.innerHTML = '<div class="loading-history">暂无历史数据</div>';
+                btnSpan.innerText = '最新数据';
                 return;
             }
+
             let html = '';
-            damacaiHistoryData.forEach((data, index) => {
-                const isActive = index === 0 ? 'active' : '';
-                const isSelected = selectedDrawDate === data.draw_date ? 'active' : '';
-                html += `
-                    <div class="date-option ${isActive} ${isSelected}" onclick="selectDrawDate('${data.draw_date}', ${index})">
-                        <div>${data.draw_info || data.draw_date}</div>
-                        <div class="draw-no">${data.global_draw_no || ''}</div>
-                    </div>
-                `;
+            // 添加一个“最新数据”选项
+            html += `<div class="date-option ${!selectedDate ? 'active' : ''}" onclick="selectDate(null)">
+                        <div>📌 最新数据</div>
+                    </div>`;
+            availableDates.forEach(date => {
+                const isActive = (selectedDate === date) ? 'active' : '';
+                html += `<div class="date-option ${isActive}" onclick="selectDate('${date}')">
+                            <div>📅 ${date}</div>
+                        </div>`;
             });
             content.innerHTML = html;
-            if (!selectedDrawDate && damacaiHistoryData.length > 0) {
-                selectDrawDate(damacaiHistoryData[0].draw_date, 0);
+
+            // 如果当前没有选中日期，默认选中最新数据
+            if (!selectedDate && availableDates.length > 0) {
+                // 不自动选中，让用户选择
             }
         }
 
-        function selectDrawDate(drawDate, index) {
-            selectedDrawDate = drawDate;
-            document.getElementById('selected-date').innerText = drawDate;
-            document.getElementById('draw_date').innerText = drawDate; // 同步日期条
-            const options = document.querySelectorAll('.date-option');
-            options.forEach((opt, i) => opt.classList.toggle('active', i === index));
+        function selectDate(date) {
+            selectedDate = date; // null 表示最新数据
+            document.getElementById('selected-date').innerText = date ? date : '最新数据';
             document.getElementById('date-dropdown').classList.remove('show');
             document.getElementById('date-btn').classList.remove('active');
+
+            // 重新加载所有公司数据（根据 selectedDate 决定从哪个目录加载）
+            loadAllCompanies();
         }
 
         // ==================== 数据加载 ====================
         async function loadCompanyData(companyKey) {
-            // 模拟数据（包含完整的新加坡TOTO奖金分组）
-            return { success: true, data: getMockData(companyKey) };
+            const basePath = selectedDate ? `data/${selectedDate}` : 'data';
+            const url = `${basePath}/${companyKey}.json?t=${Date.now()}`;
+            const retryCount = 2;
+            const retryDelay = 1000;
+
+            for (let i = 0; i < retryCount; i++) {
+                try {
+                    const res = await fetch(url, {
+                        method: 'GET',
+                        cache: 'no-store',
+                        headers: {
+                            'Cache-Control': 'no-cache',
+                            'Pragma': 'no-cache'
+                        }
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        return { success: true, data };
+                    }
+                    if (i < retryCount - 1) {
+                        await sleep(retryDelay * (i + 1));
+                    }
+                } catch (err) {
+                    console.warn(`${companyKey} 请求失败 (尝试 ${i + 1}/${retryCount})`, err);
+                    if (i < retryCount - 1) {
+                        await sleep(retryDelay * (i + 1));
+                    }
+                }
+            }
+
+            // 返回占位数据
+            return {
+                success: false,
+                data: {
+                    "1st": "----",
+                    "2nd": "----",
+                    "3rd": "----",
+                    "special": [],
+                    "consolation": [],
+                    "draw_info": "加载失败",
+                    "draw_date": "----",
+                    "global_draw_no": "----"
+                }
+            };
         }
 
-        function getMockData(companyKey) {
-            const base = {
-                "1st": "1234", "2nd": "5678", "3rd": "9012",
-                "special": ["1122","3344","5566","7788","9900","2233","4455","6677","8899","1357"],
-                "consolation": ["2468","3579","4680","5791","6802","7913","8024","9135","0246","1357"],
-                "draw_info": "25-02-2026 (Wed) Draw:1234-56",
-                "draw_date": "25-02-2026 (Wed)",
-                "global_draw_no": "1234-56"
-            };
-            if (companyKey === 'sabah') {
-                base['3d'] = { "1st": "323", "2nd": "383", "3rd": "953" };
-            }
-            if (companyKey === 'sportstoto_fireball') {
-                return {
-                    type: 'fireball',
-                    first_prize: ["51452", "02129", "66578"],
-                    second_prize: ["1452", "452", "52"],
-                    third_prize: ["485149"],
-                    special: ["6903","4138","5411","2241","3034"],
-                    consolation: ["9657","1290","3887","7524","6502"],
-                    draw_info: "25-02-2026 (Wed) Draw:6096-26",
-                    draw_date: "25-02-2026 (Wed)",
-                };
-            }
-            if (companyKey === 'sportstoto_lotto') {
-                return {
-                    type: 'lotto',
-                    star: ["4","5","6","9","12","13"],
-                    power: ["13","39","43","46","49","52"],
-                    supreme: ["4","19","29","39","50","54"],
-                    jackpots: ["RM 1,294,634.30", "RM 5,429,979.00", "RM 14,592,909.91"],
-                    draw_info: "25-02-2026 (Wed) Draw:6096-26",
-                };
-            }
-            if (companyKey === 'singapore_toto') {
-                // 按图3补全奖金分组
-                return {
-                    type: 'singapore_toto',
-                    winning_numbers: ["4","5","6","9","12","13","20"],
-                    prize_table: [
-                        ["Group 1", "RM 1,294,634.30", "0"],
-                        ["Group 2", "RM 180,851.08", "4"],
-                        ["Group 3", "RM 2,562", "101"],
-                        ["Group 4", "RM 453", "312"],
-                        ["Group 5", "RM 50", "6,204"],
-                        ["Group 6", "RM 25", "9,583"]
-                    ],
-                    draw_info: "25-02-2026 (Wed) Draw:5449",
-                    draw_date: "25-02-2026 (Wed)",
-                };
-            }
-            if (companyKey === 'magnum_jackpot_gold') {
-                return {
-                    type: 'jackpot_gold',
-                    jackpot1: ["4","5","6","9","12","13","20"],
-                    jackpot2_options: [["48514*","*85149"], ["4851**","**5149"]],
-                    estimated: ["RM 1,294,634.30", "RM 180,851.08"],
-                    draw_info: "25-02-2026 (Wed) Draw:333-26",
-                };
-            }
-            if (companyKey === 'sportstoto_5d') {
-                return {
-                    type: '5d_table',
-                    data: [["1st","51452"], ["2nd","02129"], ["3rd","66578"], ["4th","1452"], ["5th","452"], ["6th","52"]],
-                    draw_info: "25-02-2026 (Wed) Draw:6096-26",
-                };
-            }
-            if (companyKey === 'sportstoto_6d') {
-                return {
-                    type: '6d_table',
-                    data: [["1st","485149",""], ["2nd","48514*","*85149"], ["3rd","4851**","**5149"], ["4th","485***","***149"], ["5th","48****","****49"]],
-                    draw_info: "25-02-2026 (Wed) Draw:6096-26",
-                };
-            }
-            if (companyKey === 'magnum_life') {
-                return {
-                    type: 'magnum_life',
-                    winning: ["4","5","6","9","12","13"],
-                    bonus: ["20","21"],
-                    draw_info: "25-02-2026 (Wed) Draw:333-26",
-                };
-            }
-            return base;
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
         }
 
         async function loadAllCompanies() {
             const grid = document.getElementById('companies-grid');
             const statusText = document.getElementById('status-text');
+            const drawDateSpan = document.getElementById('draw_date');
+            const updateTimeSpan = document.getElementById('update-time');
+
             statusText.innerHTML = '<span class="status-indicator loading"></span>正在加载...';
-            
+            grid.innerHTML = '<p style="text-align: center; grid-column: 1/-1; color: #666;">🔄 正在加载数据...</p>';
+
             try {
-                await loadDamacaiHistory();
                 const promises = COMPANY_LIST.map(company => loadCompanyData(company));
                 const results = await Promise.all(promises);
                 const dataMap = {};
@@ -440,10 +290,12 @@
                     dataMap[COMPANY_LIST[idx]] = result.data;
                 });
 
+                // 尝试从第一个公司获取日期信息（用于显示）
                 const firstCompany = dataMap[COMPANY_LIST[0]];
                 if (firstCompany && firstCompany.draw_date) {
-                    document.getElementById('draw_date').innerText = firstCompany.draw_date;
-                    document.getElementById('selected-date').innerText = firstCompany.draw_date;
+                    drawDateSpan.innerText = firstCompany.draw_date;
+                } else {
+                    drawDateSpan.innerText = selectedDate || '最新数据';
                 }
 
                 grid.innerHTML = '';
@@ -451,9 +303,10 @@
                     renderCompany(companyKey, companyData);
                 }
 
-                statusText.innerHTML = `<span class="status-indicator success"></span>${COMPANY_LIST.length} 家公司加载成功`;
-                document.getElementById('update-time').innerText = new Date().toLocaleString('en-GB', { timeZone: 'Asia/Kuala_Lumpur' });
-                
+                const successCount = results.filter(r => r.success).length;
+                statusText.innerHTML = `<span class="status-indicator ${successCount === COMPANY_LIST.length ? 'success' : 'error'}"></span>${successCount}/${COMPANY_LIST.length} 家公司加载成功`;
+                updateTimeSpan.innerText = new Date().toLocaleString('en-GB', { timeZone: 'Asia/Kuala_Lumpur' });
+
             } catch (err) {
                 grid.innerHTML = `<p style="text-align: center; grid-column: 1/-1; color: #d32f2f;">❌ 加载失败：${err.message}</p>`;
                 statusText.innerHTML = '<span class="status-indicator error"></span>加载失败';
@@ -483,9 +336,13 @@
                 section.appendChild(drawDateDiv);
             }
 
-            if (!companyData.type) {
+            // 根据 companyKey 决定渲染方式，不再依赖 data.type
+            if (SPECIAL_COMPANIES.includes(companyKey)) {
+                renderSpecialType(section, companyKey, companyData);
+            } else {
+                // 普通公司
                 section.appendChild(createPrizeGrid(companyData));
-                
+
                 if (companyKey === 'sabah' && companyData['3d']) {
                     const title3d = document.createElement('div');
                     title3d.className = 'subsection-title';
@@ -508,8 +365,6 @@
                 if (companyData.consolation && companyData.consolation.length > 0 && companyKey !== 'sabah_lotto') {
                     section.appendChild(createNumberListSection('😌 安慰奖 (Consolation)', companyData.consolation));
                 }
-            } else {
-                renderSpecialType(section, companyKey, companyData);
             }
 
             grid.appendChild(section);
@@ -577,22 +432,25 @@
         }
 
         function renderSpecialType(section, companyKey, data) {
-            switch (data.type) {
-                case 'fireball': renderFireball(section, data); break;
+            switch (companyKey) {
+                case 'sportstoto_fireball': renderFireball(section, data); break;
                 case 'singapore_toto': renderSingaporeToto(section, data); break;
-                case 'lotto': renderSportstotoLotto(section, data); break;
-                case 'jackpot_gold': renderMagnumJackpotGold(section, data); break;
-                case '5d_table': render5DTable(section, data); break;
-                case '6d_table': render6DTable(section, data); break;
+                case 'sportstoto_lotto': renderSportstotoLotto(section, data); break;
+                case 'magnum_jackpot_gold': renderMagnumJackpotGold(section, data); break;
+                case 'sportstoto_5d': render5DTable(section, data); break;
+                case 'sportstoto_6d': render6DTable(section, data); break;
                 case 'magnum_life': renderMagnumLife(section, data); break;
+                default: // 普通公司回退
+                    section.appendChild(createPrizeGrid(data));
             }
         }
 
+        // 以下特殊渲染函数与之前一致，但数据可能来自真实 JSON
         function renderFireball(section, data) {
             const prizes = [
-                { title: 'First Prize (RM500)', items: data.first_prize },
-                { title: 'Second Prize (RM200)', items: data.second_prize },
-                { title: 'Third Prize (RM100)', items: data.third_prize }
+                { title: 'First Prize (RM500)', items: data.first_prize || [] },
+                { title: 'Second Prize (RM200)', items: data.second_prize || [] },
+                { title: 'Third Prize (RM100)', items: data.third_prize || [] }
             ];
             prizes.forEach(p => {
                 const title = document.createElement('div');
@@ -603,7 +461,7 @@
                 const list = document.createElement('div');
                 list.className = 'number-list';
                 list.style.marginBottom = '12px';
-                p.items.forEach(num => {
+                (p.items || []).forEach(num => {
                     const span = document.createElement('span');
                     span.className = 'number-item';
                     span.innerText = num;
@@ -611,19 +469,19 @@
                 });
                 section.appendChild(list);
             });
-            section.appendChild(createNumberListSection('💰 Special (RM30)', data.special));
-            section.appendChild(createNumberListSection('💵 Consolation (RM10)', data.consolation));
+            section.appendChild(createNumberListSection('💰 Special (RM30)', data.special || []));
+            section.appendChild(createNumberListSection('💵 Consolation (RM10)', data.consolation || []));
         }
 
         function renderSingaporeToto(section, data) {
-            section.appendChild(createNumberListSection('开奖号码', data.winning_numbers));
+            section.appendChild(createNumberListSection('开奖号码', data.winning_numbers || []));
             const tableDiv = document.createElement('div');
             tableDiv.className = 'subsection';
             tableDiv.innerHTML = '<div class="subsection-title">奖金分配</div>';
             const table = document.createElement('table');
             table.className = 'custom-table';
             table.innerHTML = '<tr><th>Prize Group</th><th>Share Amount (Each)</th><th>No. of Winning Shares</th></tr>';
-            data.prize_table.forEach(row => {
+            (data.prize_table || []).forEach(row => {
                 table.innerHTML += `<tr><td>${row[0]}</td><td>${row[1]}</td><td>${row[2]}</td></tr>`;
             });
             tableDiv.appendChild(table);
@@ -635,9 +493,9 @@
             lottoSection.className = 'subsection';
             lottoSection.innerHTML = '<div class="subsection-title">乐透号码</div>';
             const groups = [
-                { title: 'Star Toto 6/50', items: data.star },
-                { title: 'Power Toto 6/55', items: data.power },
-                { title: 'Supreme Toto 6/58', items: data.supreme }
+                { title: 'Star Toto 6/50', items: data.star || [] },
+                { title: 'Power Toto 6/55', items: data.power || [] },
+                { title: 'Supreme Toto 6/58', items: data.supreme || [] }
             ];
             groups.forEach(g => {
                 const sub = document.createElement('div');
@@ -661,7 +519,7 @@
             jpSection.innerHTML = '<div class="subsection-title">💰 Jackpot</div>';
             const jpList = document.createElement('div');
             jpList.className = 'number-list';
-            data.jackpots.forEach(jp => {
+            (data.jackpots || []).forEach(jp => {
                 const span = document.createElement('span');
                 span.className = 'number-item';
                 span.innerText = jp;
@@ -672,11 +530,11 @@
         }
 
         function renderMagnumJackpotGold(section, data) {
-            section.appendChild(createNumberListSection('Jackpot 1', data.jackpot1));
+            section.appendChild(createNumberListSection('Jackpot 1', data.jackpot1 || []));
             const jp2Section = document.createElement('div');
             jp2Section.className = 'subsection';
             jp2Section.innerHTML = '<div class="subsection-title">Jackpot 2</div>';
-            data.jackpot2_options.forEach((opt, idx) => {
+            (data.jackpot2_options || []).forEach((opt, idx) => {
                 const list = document.createElement('div');
                 list.className = 'number-list';
                 list.style.marginBottom = '8px';
@@ -693,7 +551,7 @@
             const estDiv = document.createElement('div');
             estDiv.className = 'subsection';
             estDiv.innerHTML = '<div class="subsection-title">Estimated Amount</div>';
-            data.estimated.forEach(est => {
+            (data.estimated || []).forEach(est => {
                 const box = document.createElement('div');
                 box.style.background = '#e6f0ff';
                 box.style.borderRadius = '28px';
@@ -713,7 +571,7 @@
         function render5DTable(section, data) {
             const table = document.createElement('table');
             table.className = 'custom-table';
-            data.data.forEach(row => {
+            (data.data || []).forEach(row => {
                 table.innerHTML += `<tr><td style="font-weight:600;">${row[0]}</td><td>${row[1]}</td></tr>`;
             });
             section.appendChild(table);
@@ -723,20 +581,21 @@
             const table = document.createElement('table');
             table.className = 'custom-table';
             table.innerHTML = '<tr><th>奖项</th><th>主号码</th><th>OR</th></tr>';
-            data.data.forEach(row => {
+            (data.data || []).forEach(row => {
                 table.innerHTML += `<tr><td>${row[0]}</td><td>${row[1]}</td><td class="alt-number">${row[2] || ''}</td></tr>`;
             });
             section.appendChild(table);
         }
 
         function renderMagnumLife(section, data) {
-            section.appendChild(createNumberListSection('WINNING NUMBERS', data.winning));
-            section.appendChild(createNumberListSection('BONUS NUMBERS', data.bonus));
+            section.appendChild(createNumberListSection('WINNING NUMBERS', data.winning || []));
+            section.appendChild(createNumberListSection('BONUS NUMBERS', data.bonus || []));
         }
 
         // ==================== 初始化 ====================
-        document.addEventListener('DOMContentLoaded', () => {
-            loadAllCompanies();
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadDateIndex();          // 先加载日期索引
+            await loadAllCompanies();        // 再加载最新数据
             setInterval(loadAllCompanies, 60000);
         });
 
