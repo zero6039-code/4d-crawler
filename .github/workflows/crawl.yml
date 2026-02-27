@@ -1,1 +1,34 @@
+name: Crawl 4D Results
 
+on:
+  schedule:
+    # 每天 19:00 到 20:00 之间每分钟运行一次 (马来西亚时间 UTC+8)
+    # cron 表达式使用 UTC 时间，需换算：19:00 MYT = 11:00 UTC，20:00 MYT = 12:00 UTC
+    - cron: '*/1 11-12 * * *'
+  workflow_dispatch:   # 允许手动触发
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: pip install requests beautifulsoup4
+
+      - name: Run crawler
+        run: python crawler.py
+
+      - name: Commit and push if changes
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add docs/data/
+          git diff --quiet && git diff --staged --quiet || git commit -m "Auto-update 4D results $(date +'%Y-%m-%d %H:%M')"
+          git push
