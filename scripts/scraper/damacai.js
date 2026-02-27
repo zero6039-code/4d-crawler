@@ -80,7 +80,6 @@ async function fetchDamacaiResults() {
     const resultData = await resultResponse.json();
     console.log('✅ API 数据获取成功');
     
-    // 🔧 步骤 4: 从官网页面爬取实际 4D 号码
     console.log('🔄 步骤 4: 从官网页面获取 4D 号码...');
     const webPrizes = await fetchPrizesFromWeb();
     
@@ -92,7 +91,6 @@ async function fetchDamacaiResults() {
   }
 }
 
-// 🔧 从官网页面爬取实际 4D 号码
 async function fetchPrizesFromWeb() {
   try {
     const url = 'https://www.damacai.com.my/past-draw-result';
@@ -117,54 +115,74 @@ async function fetchPrizesFromWeb() {
     let secondPrize = null;
     let thirdPrize = null;
     
-    // 🔍 方法 1: 查找所有 prize-number 元素，根据附近文字判断
-    const prizeElements = doc.querySelectorAll('.prize-number');
+    // 🔍 方法 1: 查找 topPrize_0 容器
+    const topPrizeRows = doc.querySelectorAll('.topPrize_0, .prize-column');
     
-    for (const el of prizeElements) {
-      const number = el.textContent?.trim();
+    console.log('🔍 找到主奖项容器数量:', topPrizeRows.length);
+    
+    for (const row of topPrizeRows) {
+      const labelEl = row.querySelector('.prize-label');
+      const numberEl = row.querySelector('.prize-number');
       
-      // 只处理 4 位数字
+      if (!labelEl || !numberEl) continue;
+      
+      const labelText = labelEl.textContent?.trim().toLowerCase() || '';
+      const number = numberEl.textContent?.trim();
+      
       if (!/^\d{4}$/.test(number)) continue;
       
-      // 获取父元素和附近内容
-      const parent = el.parentElement;
-      const grandParent = parent?.parentElement;
+      console.log('📍 找到:', labelText, '=', number);
       
-      // 查找附近的 "1st", "2nd", "3rd" 文字
-      const nearbyText = (
-        parent?.textContent + 
-        grandParent?.textContent + 
-        el.previousElementSibling?.textContent
-      ).toLowerCase() || '';
-      
-      // 🔧 关键：根据附近文字判断是第几奖
-      if (!firstPrize && (nearbyText.includes('1st') || nearbyText.includes('first'))) {
+      if (!firstPrize && labelText.includes('1st')) {
         firstPrize = number;
-        console.log('✅ 找到 1st Prize:', number);
-      } else if (!secondPrize && (nearbyText.includes('2nd') || nearbyText.includes('second'))) {
+      } else if (!secondPrize && labelText.includes('2nd')) {
         secondPrize = number;
-        console.log('✅ 找到 2nd Prize:', number);
-      } else if (!thirdPrize && (nearbyText.includes('3rd') || nearbyText.includes('third'))) {
+      } else if (!thirdPrize && labelText.includes('3rd')) {
         thirdPrize = number;
-        console.log('✅ 找到 3rd Prize:', number);
       }
     }
     
-    // 🔍 方法 2: 尝试查找包含 "1st Prize" 等的容器
+    // 🔍 方法 2: 查找所有 prize-label + prize-number 组合
     if (!firstPrize || !secondPrize || !thirdPrize) {
-      const allDivs = doc.querySelectorAll('div, span, p');
-      for (const div of allDivs) {
-        const text = div.textContent?.toLowerCase() || '';
-        if (text.includes('1st prize') || text.includes('first prize')) {
-          const match = div.innerHTML.match(/class="prize-number"[^>]*>(\d{4})</);
-          if (match && !firstPrize) firstPrize = match[1];
-        } else if (text.includes('2nd prize') || text.includes('second prize')) {
-          const match = div.innerHTML.match(/class="prize-number"[^>]*>(\d{4})</);
-          if (match && !secondPrize) secondPrize = match[1];
-        } else if (text.includes('3rd prize') || text.includes('third prize')) {
-          const match = div.innerHTML.match(/class="prize-number"[^>]*>(\d{4})</);
-          if (match && !thirdPrize) thirdPrize = match[1];
+      const labels = doc.querySelectorAll('.prize-label');
+      
+      for (const label of labels) {
+        const labelText = label.textContent?.trim().toLowerCase() || '';
+        const parent = label.parentElement;
+        const numberEl = parent?.querySelector('.prize-number');
+        
+        if (!numberEl) continue;
+        
+        const number = numberEl.textContent?.trim();
+        if (!/^\d{4}$/.test(number)) continue;
+        
+        console.log('📍 方法 2 找到:', labelText, '=', number);
+        
+        if (!firstPrize && labelText.includes('1st')) {
+          firstPrize = number;
+        } else if (!secondPrize && labelText.includes('2nd')) {
+          secondPrize = number;
+        } else if (!thirdPrize && labelText.includes('3rd')) {
+          thirdPrize = number;
         }
+      }
+    }
+    
+    // 🔍 方法 3: 直接按顺序查找前 3 个 prize-number
+    if (!firstPrize || !secondPrize || !thirdPrize) {
+      const prizeNumbers = doc.querySelectorAll('.prize-number');
+      let index = 0;
+      
+      for (const el of prizeNumbers) {
+        const number = el.textContent?.trim();
+        if (!/^\d{4}$/.test(number)) continue;
+        
+        if (index === 0 && !firstPrize) firstPrize = number;
+        else if (index === 1 && !secondPrize) secondPrize = number;
+        else if (index === 2 && !thirdPrize) thirdPrize = number;
+        
+        index++;
+        if (index >= 3) break;
       }
     }
     
@@ -180,20 +198,16 @@ async function fetchPrizesFromWeb() {
 function parseDamacaiData(data, drawDate, webPrizes) {
   const formattedDate = `${drawDate.substring(6,8)}-${drawDate.substring(4,6)}-${drawDate.substring(0,4)}`;
   
-  // 🔧 优先使用网页爬取的 4D 号码
   const firstPrize = webPrizes?.firstPrize || "----";
   const secondPrize = webPrizes?.secondPrize || "----";
   const thirdPrize = webPrizes?.thirdPrize || "----";
   
-  // 特别奖 (starterList) - 从 API 获取
   let special = data.starterList || data.starterHorseList || [];
   if (!Array.isArray(special)) special = [];
   
-  // 安慰奖 (consolidateList) - 从 API 获取
   let consolation = data.consolidateList || [];
   if (!Array.isArray(consolation)) consolation = [];
   
-  // 过滤并填充到 10 个
   special = special.filter(s => s && s !== "-" && s !== "null").slice(0, 10);
   consolation = consolation.filter(c => c && c !== "-" && c !== "null").slice(0, 10);
   
