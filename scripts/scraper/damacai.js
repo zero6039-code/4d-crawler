@@ -41,11 +41,9 @@ async function fetchDamacaiResults() {
       throw new Error('没有获取到开奖日期');
     }
     
-    // 🔧 获取最近 30 期的日期
     const recentDates = drawDates.slice(0, 30);
     console.log(`📅 将获取最近 ${recentDates.length} 期的数据`);
     
-    // 🔧 获取所有最近期的数据
     const allResults = [];
     
     for (const drawDate of recentDates) {
@@ -66,14 +64,11 @@ async function fetchDamacaiResults() {
       }
     }
     
-    // 🔧 保存所有期数的数据
+    // 🔧 关键：保存两个文件
     const outputPath = path.join(__dirname, '../../docs/data/damacai.json');
     const allOutputPath = path.join(__dirname, '../../docs/data/damacai_all.json');
     
-    // 最新一期（兼容现有前端）
     fs.writeFileSync(outputPath, JSON.stringify(allResults[0] || defaultData, null, 2));
-    
-    // 所有历史数据（新前端使用）← 关键：生成这个文件
     fs.writeFileSync(allOutputPath, JSON.stringify(allResults, null, 2));
     
     console.log(`\n✅ 共获取 ${allResults.length} 期数据`);
@@ -128,7 +123,10 @@ async function fetchSingleDrawResult(drawDate) {
     
     const resultData = await resultResponse.json();
     console.log(`  ✅ API 数据获取成功`);
+    console.log(`  📊 特别奖：${resultData.starterList ? resultData.starterList.length : 0} 个`);
+    console.log(`  📊 安慰奖：${resultData.consolidateList ? resultData.consolidateList.length : 0} 个`);
     
+    // 🔧 从 API 直接获取 1st/2nd/3rd（如果有的话）
     const prizes = await fetchPrizesFromMultipleSources(drawDate, resultData);
     
     return parseDamacaiData(resultData, drawDate, prizes);
@@ -146,56 +144,77 @@ async function fetchPrizesFromMultipleSources(drawDate, apiData) {
   
   const formattedDate = `${drawDate.substring(6,8)}-${drawDate.substring(4,6)}-${drawDate.substring(0,4)}`;
   
-  console.log(`  🔍 从 4d4d.co 获取 ${formattedDate} 的数据...`);
-  try {
-    const response = await fetch('https://4d4d.co/', {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Accept': 'text/html'
-      }
-    });
-    
-    if (response.ok) {
-      const html = await response.text();
-      const dom = new JSDOM(html);
-      const doc = dom.window.document;
+  // 🔍 方法 1: 检查 API 数据中是否有 4D 号码
+  console.log(`  🔍 检查 API 字段...`);
+  const apiFields = Object.keys(apiData);
+  console.log(`  📋 API 字段：${apiFields.join(', ')}`);
+  
+  // 尝试各种可能的字段名
+  if (apiData.firstPrize4D && /^\d{4}$/.test(apiData.firstPrize4D)) firstPrize = apiData.firstPrize4D;
+  if (apiData.FirstPrize4D && /^\d{4}$/.test(apiData.FirstPrize4D)) firstPrize = apiData.FirstPrize4D;
+  if (apiData.secondPrize4D && /^\d{4}$/.test(apiData.secondPrize4D)) secondPrize = apiData.secondPrize4D;
+  if (apiData.SecondPrize4D && /^\d{4}$/.test(apiData.SecondPrize4D)) secondPrize = apiData.SecondPrize4D;
+  if (apiData.thirdPrize4D && /^\d{4}$/.test(apiData.thirdPrize4D)) thirdPrize = apiData.thirdPrize4D;
+  if (apiData.ThirdPrize4D && /^\d{4}$/.test(apiData.ThirdPrize4D)) thirdPrize = apiData.ThirdPrize4D;
+  
+  if (firstPrize) console.log(`    ✅ 从 API 获取 1st: ${firstPrize}`);
+  if (secondPrize) console.log(`    ✅ 从 API 获取 2nd: ${secondPrize}`);
+  if (thirdPrize) console.log(`    ✅ 从 API 获取 3rd: ${thirdPrize}`);
+  
+  // 🔍 方法 2: 从 4d4d.co 获取
+  if (!firstPrize || !secondPrize || !thirdPrize) {
+    console.log(`  🔍 从 4d4d.co 获取 ${formattedDate} 的数据...`);
+    try {
+      const response = await fetch('https://4d4d.co/', {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Accept': 'text/html'
+        }
+      });
       
-      const tables = doc.querySelectorAll('table');
-      
-      for (const table of tables) {
-        const tableText = table.textContent?.toLowerCase() || '';
+      if (response.ok) {
+        const html = await response.text();
+        const dom = new JSDOM(html);
+        const doc = dom.window.document;
         
-        if ((tableText.includes('damacai') || tableText.includes('dama cai')) && 
-            (tableText.includes(formattedDate) || tableText.includes(drawDate))) {
+        const tables = doc.querySelectorAll('table');
+        
+        for (const table of tables) {
+          const tableText = table.textContent?.toLowerCase() || '';
           
-          const rows = table.querySelectorAll('tr');
-          
-          for (const row of rows) {
-            const rowText = row.textContent?.toLowerCase() || '';
-            const numberMatch = row.textContent?.match(/\b\d{4}\b/);
+          if ((tableText.includes('damacai') || tableText.includes('dama cai')) && 
+              (tableText.includes(formattedDate) || tableText.includes(drawDate))) {
             
-            if (!numberMatch) continue;
+            const rows = table.querySelectorAll('tr');
             
-            const number = numberMatch[0];
-            
-            if (!firstPrize && (rowText.includes('1st') || rowText.includes('first') || rowText.includes('首奖'))) {
-              firstPrize = number;
-              console.log(`    ✅ 找到 1st Prize: ${number}`);
-            } else if (!secondPrize && (rowText.includes('2nd') || rowText.includes('second') || rowText.includes('二奖'))) {
-              secondPrize = number;
-              console.log(`    ✅ 找到 2nd Prize: ${number}`);
-            } else if (!thirdPrize && (rowText.includes('3rd') || rowText.includes('third') || rowText.includes('三奖'))) {
-              thirdPrize = number;
-              console.log(`    ✅ 找到 3rd Prize: ${number}`);
+            for (const row of rows) {
+              const rowText = row.textContent?.toLowerCase() || '';
+              const numberMatch = row.textContent?.match(/\b\d{4}\b/);
+              
+              if (!numberMatch) continue;
+              
+              const number = numberMatch[0];
+              
+              if (!firstPrize && (rowText.includes('1st') || rowText.includes('first') || rowText.includes('首奖'))) {
+                firstPrize = number;
+                console.log(`    ✅ 找到 1st Prize: ${number}`);
+              } else if (!secondPrize && (rowText.includes('2nd') || rowText.includes('second') || rowText.includes('二奖'))) {
+                secondPrize = number;
+                console.log(`    ✅ 找到 2nd Prize: ${number}`);
+              } else if (!thirdPrize && (rowText.includes('3rd') || rowText.includes('third') || rowText.includes('三奖'))) {
+                thirdPrize = number;
+                console.log(`    ✅ 找到 3rd Prize: ${number}`);
+              }
             }
           }
         }
       }
+    } catch (err) {
+      console.log(`  ⚠️ 4d4d.co 获取失败：${err.message}`);
     }
-  } catch (err) {
-    console.log(`  ⚠️ 4d4d.co 获取失败：${err.message}`);
   }
   
+  // 🔍 方法 3: 从 live4d2u 获取
   if (!firstPrize || !secondPrize || !thirdPrize) {
     console.log(`  🔍 从 live4d2u 获取...`);
     try {
@@ -237,7 +256,7 @@ async function fetchPrizesFromMultipleSources(drawDate, apiData) {
     }
   }
   
-  console.log(`  📊 获取结果：{ firstPrize: ${firstPrize || '----'}, secondPrize: ${secondPrize || '----'}, thirdPrize: ${thirdPrize || '----'} }`);
+  console.log(`  📊 最终结果：{ firstPrize: ${firstPrize || '----'}, secondPrize: ${secondPrize || '----'}, thirdPrize: ${thirdPrize || '----'} }`);
   
   return { firstPrize, secondPrize, thirdPrize };
 }
