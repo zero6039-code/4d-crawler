@@ -13,69 +13,75 @@
         .container { max-width: 1300px; margin: 0 auto; }
         h1 { font-size: 1.8rem; font-weight: 700; text-align: center; color: #1e2a3a; margin-bottom: 6px; background: linear-gradient(135deg, #0b1c2f, #2c3e50); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         
-        /* 🔧 修改：顶部日期选择器样式 */
-        .date-selector-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 15px;
+        .draw-info { 
+            background: #ffffffcc; 
+            backdrop-filter: blur(4px); 
+            border-radius: 40px; 
+            padding: 8px 16px; 
+            text-align: center; 
+            display: inline-block; 
+            margin: 0 auto 20px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
+            font-weight: 500; 
+            color: #2c3e50; 
+            border: 1px solid rgba(255,255,255,0.8); 
+            left: 50%; 
+            position: relative; 
+            transform: translateX(-50%); 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
         }
         
-        .date-dropdown {
-            position: relative;
-            display: inline-block;
-        }
+        .companies-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        .company-section { background: white; border-radius: 24px; box-shadow: 0 8px 20px rgba(0,20,30,0.1); margin-bottom: 0; padding: 14px 12px; border: 1px solid rgba(255,255,255,0.5); transition: transform 0.15s ease; position: relative; }
+        .company-section:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(0,0,0,0.12); }
+        .company-section.loading { opacity: 0.6; pointer-events: none; }
+        .company-section.error { border-color: #d32f2f; background: #ffebee; }
+        .company-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        .company-title { font-size: 1.6rem; font-weight: 800; padding-left: 4px; background: linear-gradient(145deg, #1e2b3a, #2b3d55); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+        .company-title::before { content: "🎯"; margin-right: 6px; font-size: 1.4rem; background: none; -webkit-text-fill-color: initial; }
         
-        .date-btn {
-            background: #ffffffcc;
-            backdrop-filter: blur(4px);
-            border: 1px solid rgba(255,255,255,0.8);
-            border-radius: 25px;
-            padding: 8px 16px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: #2c3e50;
+        .history-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 20px;
             cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(102,126,234,0.3);
             display: flex;
             align-items: center;
-            gap: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            transition: all 0.2s;
+            gap: 4px;
         }
         
-        .date-btn:hover {
-            background: #ffffff;
-            box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+        .history-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102,126,234,0.4);
         }
         
-        .date-btn .arrow {
-            font-size: 0.8rem;
-            transition: transform 0.2s;
+        .history-btn.active {
+            background: linear-gradient(135deg, #764ba2, #667eea);
         }
         
-        .date-btn.active .arrow {
-            transform: rotate(180deg);
-        }
-        
-        /* 🔧 月历样式 */
-        .date-dropdown-content {
-            display: none;
+        .history-dropdown {
             position: absolute;
-            top: 100%;
-            left: 50%;
-            transform: translateX(-50%);
+            top: 50px;
+            right: 10px;
             background: white;
             border-radius: 16px;
             box-shadow: 0 8px 24px rgba(0,0,0,0.15);
             min-width: 280px;
             z-index: 1000;
-            margin-top: 8px;
             border: 1px solid #e2e8f0;
+            display: none;
             padding: 15px;
         }
         
-        .date-dropdown.show .date-dropdown-content {
+        .history-dropdown.show {
             display: block;
         }
         
@@ -192,34 +198,6 @@
             color: #7c8b9c;
         }
         
-        /* 🔧 修改：移除开彩期号样式 */
-        .draw-info { 
-            background: #ffffffcc; 
-            backdrop-filter: blur(4px); 
-            border-radius: 40px; 
-            padding: 8px 16px; 
-            text-align: center; 
-            display: inline-block; 
-            margin: 0 auto 20px; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
-            font-weight: 500; 
-            color: #2c3e50; 
-            border: 1px solid rgba(255,255,255,0.8); 
-            left: 50%; 
-            position: relative; 
-            transform: translateX(-50%); 
-            display: flex; 
-            align-items: center; 
-            gap: 10px; 
-        }
-        
-        .companies-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
-        .company-section { background: white; border-radius: 24px; box-shadow: 0 8px 20px rgba(0,20,30,0.1); margin-bottom: 0; padding: 14px 12px; border: 1px solid rgba(255,255,255,0.5); transition: transform 0.15s ease; }
-        .company-section:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(0,0,0,0.12); }
-        .company-section.loading { opacity: 0.6; pointer-events: none; }
-        .company-section.error { border-color: #d32f2f; background: #ffebee; }
-        .company-title { font-size: 1.6rem; font-weight: 800; margin-bottom: 4px; padding-left: 4px; background: linear-gradient(145deg, #1e2b3a, #2b3d55); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
-        .company-title::before { content: "🎯"; margin-right: 6px; font-size: 1.4rem; background: none; -webkit-text-fill-color: initial; }
         .draw-date { font-size: 0.9rem; color: #4a5568; margin-bottom: 10px; padding-left: 4px; font-weight: 500; }
         .prize-grid { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 12px 0 16px; }
         .prize-card { background: #f8fafd; border-radius: 16px; padding: 10px 12px; flex: 1 1 90px; min-width: 80px; text-align: center; box-shadow: inset 0 1px 4px #ffffff, 0 5px 10px rgba(0,0,0,0.04); border: 1px solid #e9ecf0; }
@@ -306,22 +284,7 @@
     <div class="container">
         <h1>🇲🇾 4D RESULT MALAYSIA</h1>
         
-        <!-- 🔧 修改：顶部日期选择器（月历格式） -->
-        <div class="date-selector-container">
-            <div class="date-dropdown" id="date-dropdown">
-                <button class="date-btn" id="date-btn" onclick="toggleDateDropdown()">
-                    <span id="selected-date">Loading...</span>
-                    <span class="arrow">▼</span>
-                </button>
-                <div class="date-dropdown-content" id="date-dropdown-content">
-                    <div class="loading-history">🔄 加载历史数据...</div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- 🔧 修改：移除开彩期号，只保留日期和刷新 -->
         <div class="draw-info">
-            <strong>日期：</strong> <span id="draw_date">Loading...</span>
             <button class="refresh-btn" id="refresh-btn" onclick="forceRefresh()">
                 <span>🔄</span> 刷新
             </button>
@@ -342,7 +305,6 @@
     </div>
 
     <script>
-        // ==================== 配置 ====================
         const COMPANY_LIST = [
             'damacai', 'magnum', 'toto', 'singapore', 'damacai_1p3d',
             'sandakan', 'sarawak_cashsweep', 'sabah', 'sabah_lotto',
@@ -350,6 +312,8 @@
             'sportstoto_lotto', 'magnum_jackpot_gold', 'sportstoto_5d',
             'sportstoto_6d', 'magnum_life'
         ];
+
+        const HISTORY_COMPANY_LIST = ['damacai', 'magnum', 'toto'];
 
         const NAME_MAP = {
             'sabah_lotto': 'SABAH LOTTO',
@@ -366,52 +330,56 @@
             'sarawak_cashsweep': 'SARAWAK CASHSWEEP'
         };
 
-        // 🔧 历史数据相关
-        let damacaiHistoryData = [];
-        let selectedDrawDate = null;
+        let historyDataMap = {};
+        let selectedCompany = 'damacai';
         let selectedDrawIndex = 0;
         let currentCalendarMonth = new Date();
         let requestCounter = 0;
 
-        // ==================== 日期选择器功能（月历） ====================
-        function toggleDateDropdown() {
-            const dropdown = document.getElementById('date-dropdown');
-            const btn = document.getElementById('date-btn');
+        // ==================== 历史数据功能 ====================
+        function toggleHistoryDropdown(companyKey) {
+            const dropdown = document.getElementById(`history-dropdown-${companyKey}`);
+            const btn = document.getElementById(`history-btn-${companyKey}`);
+            
+            document.querySelectorAll('.history-dropdown').forEach(d => {
+                if (d.id !== `history-dropdown-${companyKey}`) {
+                    d.classList.remove('show');
+                }
+            });
+            document.querySelectorAll('.history-btn').forEach(b => {
+                if (b.id !== `history-btn-${companyKey}`) {
+                    b.classList.remove('active');
+                }
+            });
+            
             dropdown.classList.toggle('show');
             btn.classList.toggle('active');
             
-            // 打开时渲染月历
             if (dropdown.classList.contains('show')) {
-                renderCalendar();
+                renderCalendar(companyKey);
             }
         }
 
-        async function loadDamacaiHistory() {
+        async function loadCompanyHistory(companyKey) {
             try {
-                const response = await fetch(`data/damacai_all.json?t=${Date.now()}`, {
+                const response = await fetch(`data/${companyKey}_all.json?t=${Date.now()}`, {
                     cache: 'no-store'
                 });
                 
                 if (response.ok) {
-                    damacaiHistoryData = await response.json();
-                    
-                    // 默认选择最新一期
-                    if (damacaiHistoryData.length > 0 && !selectedDrawDate) {
-                        selectedDrawIndex = 0;
-                        selectedDrawDate = damacaiHistoryData[0].draw_date;
-                        document.getElementById('selected-date').innerText = selectedDrawDate;
-                    }
+                    historyDataMap[companyKey] = await response.json();
+                    console.log(`${companyKey} 历史数据加载成功：${historyDataMap[companyKey].length} 期`);
                 }
             } catch (err) {
-                console.log('加载历史数据失败:', err);
+                console.log(`${companyKey} 历史数据加载失败:`, err);
             }
         }
 
-        // 🔧 渲染月历
-        function renderCalendar() {
-            const content = document.getElementById('date-dropdown-content');
+        function renderCalendar(companyKey) {
+            const content = document.getElementById(`history-dropdown-content-${companyKey}`);
+            const data = historyDataMap[companyKey];
             
-            if (!damacaiHistoryData || damacaiHistoryData.length === 0) {
+            if (!data || data.length === 0) {
                 content.innerHTML = '<div style="padding: 20px; text-align: center; color: #7c8b9c;">暂无历史数据</div>';
                 return;
             }
@@ -422,16 +390,14 @@
             const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
                               'July', 'August', 'September', 'October', 'November', 'December'];
             
-            // 创建有数据的日期映射
             const dataMap = {};
-            damacaiHistoryData.forEach((item, index) => {
+            data.forEach((item, index) => {
                 const dateKey = item.draw_date;
                 if (dateKey && dateKey !== '----') {
                     dataMap[dateKey] = index;
                 }
             });
             
-            // 获取当月第一天和最后一天
             const firstDay = new Date(year, month, 1);
             const lastDay = new Date(year, month + 1, 0);
             const startDay = firstDay.getDay();
@@ -440,15 +406,14 @@
             const today = new Date();
             const todayStr = `${String(today.getDate()).padStart(2, '0')}-${String(today.getMonth() + 1).padStart(2, '0')}-${today.getFullYear()}`;
             
-            // 生成月历 HTML
             let html = `
                 <div class="calendar-header">
                     <div class="calendar-nav">
-                        <button onclick="prevMonth(event)">◀</button>
+                        <button onclick="prevMonth(event, '${companyKey}')">◀</button>
                     </div>
                     <h4>${monthNames[month]} ${year}</h4>
                     <div class="calendar-nav">
-                        <button onclick="nextMonth(event)">▶</button>
+                        <button onclick="nextMonth(event, '${companyKey}')">▶</button>
                     </div>
                 </div>
                 <div class="calendar-grid">
@@ -461,24 +426,22 @@
                     <div class="calendar-day-header">Sat</div>
             `;
             
-            // 空白日期
             for (let i = 0; i < startDay; i++) {
                 html += `<div class="calendar-day empty"></div>`;
             }
             
-            // 实际日期
             for (let day = 1; day <= totalDays; day++) {
                 const dateStr = `${String(day).padStart(2, '0')}-${String(month + 1).padStart(2, '0')}-${year}`;
                 const hasData = dataMap[dateStr] !== undefined;
                 const isToday = dateStr === todayStr;
-                const isSelected = selectedDrawDate === dateStr;
+                const isSelected = selectedCompany === companyKey && selectedDrawIndex === dataMap[dateStr];
                 
                 let classes = 'calendar-day';
                 if (hasData) classes += ' has-data';
                 if (isToday) classes += ' today';
                 if (isSelected) classes += ' selected';
                 
-                const clickAction = hasData ? `onclick="selectDrawDate('${dateStr}', ${dataMap[dateStr]})"` : '';
+                const clickAction = hasData ? `onclick="selectHistoryDraw('${companyKey}', ${dataMap[dateStr]})"` : '';
                 
                 html += `
                     <div class="${classes}" ${clickAction}>
@@ -498,88 +461,72 @@
             content.innerHTML = html;
         }
 
-        // 🔧 切换月份（阻止事件冒泡）
-        function prevMonth(event) {
+        function prevMonth(event, companyKey) {
             event.stopPropagation();
             currentCalendarMonth.setMonth(currentCalendarMonth.getMonth() - 1);
-            renderCalendar();
+            renderCalendar(companyKey);
         }
 
-        function nextMonth(event) {
+        function nextMonth(event, companyKey) {
             event.stopPropagation();
             currentCalendarMonth.setMonth(currentCalendarMonth.getMonth() + 1);
-            renderCalendar();
+            renderCalendar(companyKey);
         }
 
-        function selectDrawDate(drawDate, index) {
-            selectedDrawDate = drawDate;
+        function selectHistoryDraw(companyKey, index) {
+            selectedCompany = companyKey;
             selectedDrawIndex = index;
             
-            // 更新按钮显示
-            document.getElementById('selected-date').innerText = drawDate;
+            const data = historyDataMap[companyKey][index];
+            if (!data) return;
             
-            // 关闭下拉菜单
-            document.getElementById('date-dropdown').classList.remove('show');
-            document.getElementById('date-btn').classList.remove('active');
+            document.getElementById(`history-dropdown-${companyKey}`).classList.remove('show');
+            document.getElementById(`history-btn-${companyKey}`).classList.remove('active');
             
-            // 加载选定日期的数据
-            loadCompanyDataForDate('damacai', index);
-            
-            // 更新顶部日期显示
-            const data = damacaiHistoryData[index];
-            if (data) {
-                document.getElementById('draw_date').innerText = data.draw_date;
-            }
+            updateCompanyCard(companyKey, data);
         }
 
-        async function loadCompanyDataForDate(companyKey, historyIndex) {
-            if (companyKey !== 'damacai' || !damacaiHistoryData[historyIndex]) {
-                return;
+        function updateCompanyCard(companyKey, data) {
+            const section = document.querySelector(`.company-section[data-company="${companyKey}"]`);
+            if (!section) return;
+            
+            section.querySelector('.draw-date')?.remove();
+            
+            if (data.draw_info) {
+                const drawDateDiv = document.createElement('div');
+                drawDateDiv.className = 'draw-date';
+                drawDateDiv.innerText = data.draw_info;
+                const prizeGrid = section.querySelector('.prize-grid');
+                if (prizeGrid) {
+                    section.insertBefore(drawDateDiv, prizeGrid);
+                }
             }
             
-            const data = damacaiHistoryData[historyIndex];
-            const section = document.querySelector('.company-section[data-company="damacai"]');
+            const prizeCards = section.querySelectorAll('.prize-card .number');
+            if (prizeCards.length >= 3) {
+                prizeCards[0].innerText = data['1st'] || '----';
+                prizeCards[1].innerText = data['2nd'] || '----';
+                prizeCards[2].innerText = data['3rd'] || '----';
+            }
             
-            if (section) {
-                // 更新开奖信息
-                section.querySelector('.draw-date')?.remove();
-                
-                if (data.draw_info) {
-                    const drawDateDiv = document.createElement('div');
-                    drawDateDiv.className = 'draw-date';
-                    drawDateDiv.innerText = data.draw_info;
-                    const prizeGrid = section.querySelector('.prize-grid');
-                    if (prizeGrid) {
-                        section.insertBefore(drawDateDiv, prizeGrid);
-                    }
+            const subsections = section.querySelectorAll('.subsection');
+            if (subsections.length >= 2) {
+                const specialList = subsections[0]?.querySelectorAll('.number-item');
+                if (specialList) {
+                    data.special?.forEach((num, i) => {
+                        if (specialList[i]) specialList[i].innerText = num || '----';
+                    });
                 }
                 
-                // 更新奖项号码
-                const prizeCards = section.querySelectorAll('.prize-card .number');
-                if (prizeCards.length >= 3) {
-                    prizeCards[0].innerText = data['1st'] || '----';
-                    prizeCards[1].innerText = data['2nd'] || '----';
-                    prizeCards[2].innerText = data['3rd'] || '----';
-                }
-                
-                // 更新特别奖和安慰奖
-                const subsections = section.querySelectorAll('.subsection');
-                if (subsections.length >= 2) {
-                    const specialList = subsections[0]?.querySelectorAll('.number-item');
-                    if (specialList) {
-                        data.special?.forEach((num, i) => {
-                            if (specialList[i]) specialList[i].innerText = num || '----';
-                        });
-                    }
-                    
-                    const consolationList = subsections[1]?.querySelectorAll('.number-item');
-                    if (consolationList) {
-                        data.consolation?.forEach((num, i) => {
-                            if (consolationList[i]) consolationList[i].innerText = num || '----';
-                        });
-                    }
+                const consolationList = subsections[1]?.querySelectorAll('.number-item');
+                if (consolationList) {
+                    data.consolation?.forEach((num, i) => {
+                        if (consolationList[i]) consolationList[i].innerText = num || '----';
+                    });
                 }
             }
+            
+            renderCalendar(companyKey);
         }
 
         // ==================== 数据加载 ====================
@@ -648,8 +595,9 @@
             if (statusText) statusText.innerHTML = '<span class="status-indicator loading"></span>正在加载...';
             
             try {
-                // 🔧 先加载历史数据
-                await loadDamacaiHistory();
+                for (const company of HISTORY_COMPANY_LIST) {
+                    await loadCompanyHistory(company);
+                }
                 
                 const promises = COMPANY_LIST.map(company => 
                     loadCompanyData(company).then(result => ({ company, ...result }))
@@ -668,13 +616,11 @@
                     }
                 });
 
-                // 🔧 使用选中的日期或最新日期
-                const displayData = damacaiHistoryData[selectedDrawIndex] || damacaiHistoryData[0] || dataMap['damacai'];
-                if (displayData && displayData.draw_date && displayData.draw_date !== "----") {
-                    document.getElementById('draw_date').innerText = displayData.draw_date;
-                    if (!selectedDrawDate) {
-                        document.getElementById('selected-date').innerText = displayData.draw_date;
-                        selectedDrawDate = displayData.draw_date;
+                // 🔧 关键修复：加载完成后恢复选中的历史数据
+                if (selectedCompany && selectedDrawIndex !== null && historyDataMap[selectedCompany]) {
+                    const selectedData = historyDataMap[selectedCompany][selectedDrawIndex];
+                    if (selectedData) {
+                        updateCompanyCard(selectedCompany, selectedData);
                     }
                 }
 
@@ -709,9 +655,7 @@
                 caches.keys().then(names => names.forEach(name => caches.delete(name)));
             }
             
-            damacaiHistoryData = [];
-            selectedDrawDate = null;
-            selectedDrawIndex = 0;
+            // 🔧 不清空历史数据，保留选中状态
             currentCalendarMonth = new Date();
             
             loadAllCompanies().then(() => {
@@ -729,11 +673,36 @@
             section.className = 'company-section loading';
             section.setAttribute('data-company', companyKey);
 
+            const headerDiv = document.createElement('div');
+            headerDiv.className = 'company-header';
+            
             const titleDiv = document.createElement('div');
             titleDiv.className = 'company-title';
             const displayName = NAME_MAP[companyKey] || companyKey.replace(/_/g, ' ').toUpperCase();
             titleDiv.innerText = displayName;
-            section.appendChild(titleDiv);
+            
+            headerDiv.appendChild(titleDiv);
+            
+            if (HISTORY_COMPANY_LIST.includes(companyKey)) {
+                const historyBtn = document.createElement('button');
+                historyBtn.className = 'history-btn';
+                historyBtn.id = `history-btn-${companyKey}`;
+                historyBtn.innerHTML = '📅 历史 <span class="arrow">▼</span>';
+                historyBtn.onclick = () => toggleHistoryDropdown(companyKey);
+                headerDiv.appendChild(historyBtn);
+                
+                const dropdown = document.createElement('div');
+                dropdown.className = 'history-dropdown';
+                dropdown.id = `history-dropdown-${companyKey}`;
+                dropdown.innerHTML = `
+                    <div id="history-dropdown-content-${companyKey}">
+                        <div style="padding: 20px; text-align: center; color: #7c8b9c;">🔄 加载...</div>
+                    </div>
+                `;
+                section.appendChild(dropdown);
+            }
+            
+            section.appendChild(headerDiv);
 
             if (companyData.draw_info && companyData.draw_info !== "----") {
                 const drawDateDiv = document.createElement('div');
@@ -1018,13 +987,13 @@
             }
         });
 
-        // 🔧 点击外部关闭下拉菜单
         document.addEventListener('click', (e) => {
-            const dropdown = document.getElementById('date-dropdown');
-            if (dropdown && !dropdown.contains(e.target)) {
-                dropdown.classList.remove('show');
-                document.getElementById('date-btn')?.classList.remove('active');
-            }
+            document.querySelectorAll('.history-dropdown').forEach(dropdown => {
+                if (dropdown && !dropdown.contains(e.target) && !e.target.classList.contains('history-btn')) {
+                    dropdown.classList.remove('show');
+                    dropdown.previousElementSibling?.classList.remove('active');
+                }
+            });
         });
     </script>
 </body>
