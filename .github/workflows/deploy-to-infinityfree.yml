@@ -1,29 +1,32 @@
-name: Deploy to InfinityFree via FTP
+name: Deploy to InfinityFree
 
 on:
   push:
-    branches: [ "main" ] # 当你推送到main分支时触发
+    branches: [ main ]
 
 jobs:
-  ftp-deploy:
-    name: FTP Deploy
+  deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      # 如果你的网站需要构建（如Hugo、Jekyll等），在此添加构建步骤
-      # 对于你的静态HTML网站，通常不需要构建，可以直接上传
+      - name: Verify Secrets
+        run: |
+          echo "Checking FTP_HOST..."
+          if [ -z "${{ secrets.FTP_HOST }}" ]; then
+            echo "❌ FTP_HOST is not set!"
+            exit 1
+          else
+            echo "✅ FTP_HOST is set"
+          fi
 
-      - name: FTP Upload to InfinityFree
+      - name: FTP Deploy
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ${{ secrets.FTP_HOST }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           port: ${{ secrets.FTP_PORT }}
-          local-dir: ./ # 上传当前目录下的所有文件
-          server-dir: ${{ secrets.REMOTE_DIR }} # 上传到InfinityFree的哪个文件夹
-          dangerous-clean-slate: false # 设置为true会先删除服务器上所有文件再上传，首次部署可设为true，后续改为false以增量更新
- 
+          local-dir: ./
+          server-dir: ${{ secrets.REMOTE_DIR }}
+          dangerous-clean-slate: false
