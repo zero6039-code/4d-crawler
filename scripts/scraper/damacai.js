@@ -32,8 +32,6 @@ async function fetchDamacaiResults() {
     
     const datesData = await datesResponse.json();
     let drawDates = datesData.drawdate.trim().split(' ');
-    
-    // 按日期降序排序（最新的在前面）
     drawDates = drawDates.sort((a, b) => b.localeCompare(a));
     
     console.log(`📅 前 5 个日期：${drawDates.slice(0, 5).join(', ')}`);
@@ -67,7 +65,7 @@ async function fetchDamacaiResults() {
     
     console.log(`🔗 结果链接：${resultUrl}`);
     
-    console.log('🔄 步骤 3: 获取开奖数据...');
+    console.log('🔄 步骤 3: 获取 API 数据（特别奖/安慰奖）...');
     const resultResponse = await fetch(resultUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
@@ -81,11 +79,10 @@ async function fetchDamacaiResults() {
     
     const resultData = await resultResponse.json();
     console.log('✅ API 数据获取成功');
-    console.log('📊 原始数据:', JSON.stringify(resultData, null, 2));
     
-    // 🔧 步骤 4: 从官网页面获取实际 4D 号码
+    // 🔧 步骤 4: 从官网页面爬取实际 4D 号码
     console.log('🔄 步骤 4: 从官网页面获取 4D 号码...');
-    const webPrizes = await fetchPrizesFromWeb(latestDate);
+    const webPrizes = await fetchPrizesFromWeb();
     
     return parseDamacaiData(resultData, latestDate, webPrizes);
     
@@ -95,11 +92,10 @@ async function fetchDamacaiResults() {
   }
 }
 
-// 🔧 新增：从官网页面爬取实际 4D 号码
-async function fetchPrizesFromWeb(drawDate) {
+// 🔧 从官网页面爬取实际 4D 号码
+async function fetchPrizesFromWeb() {
   try {
-    const formattedUrlDate = `${drawDate.substring(6,8)}-${drawDate.substring(4,6)}-${drawDate.substring(0,4)}`;
-    const url = `https://www.damacai.com.my/past-draw-result`;
+    const url = 'https://www.damacai.com.my/past-draw-result';
     
     const response = await fetch(url, {
       headers: {
@@ -109,7 +105,7 @@ async function fetchPrizesFromWeb(drawDate) {
     });
     
     if (!response.ok) {
-      console.log('⚠️ 网页获取失败，使用 API 数据');
+      console.log('⚠️ 网页获取失败');
       return null;
     }
     
@@ -117,48 +113,57 @@ async function fetchPrizesFromWeb(drawDate) {
     const dom = new JSDOM(html);
     const doc = dom.window.document;
     
-    // 🔍 尝试多种选择器获取 4D 号码
     let firstPrize = null;
     let secondPrize = null;
     let thirdPrize = null;
     
-    // 方法 1: 查找包含 prize 或 number 的元素
-    const allElements = doc.querySelectorAll('*');
-    for (const el of allElements) {
-      const text = el.textContent?.trim();
-      // 4D 号码是 4 位数字
-      if (/^\d{4}$/.test(text)) {
-        const parent = el.parentElement;
-        const grandParent = parent?.parentElement;
-        
-        // 检查附近是否有 "1st", "2nd", "3rd" 等文字
-        const nearbyText = (parent?.textContent + grandParent?.textContent || '').toLowerCase();
-        
-        if (nearbyText.includes('1st') || nearbyText.includes('first')) {
-          firstPrize = text;
-        } else if (nearbyText.includes('2nd') || nearbyText.includes('second')) {
-          secondPrize = text;
-        } else if (nearbyText.includes('3rd') || nearbyText.includes('third')) {
-          thirdPrize = text;
-        }
+    // 🔍 方法：查找所有 4 位数字，根据上下文判断是第几奖
+    const allText = doc.body.textContent || '';
+    const fourDigitRegex = /\b\d{4}\b/g;
+    let matches;
+    
+    // 获取所有 4 位数字及其位置
+    const numberPositions = [];
+    while ((matches = fourDigitRegex.exec(allText)) !== null) {
+      // 获取数字前后 100 字符的上下文
+      const start = Math.max(0, matches.index - 100);
+      const end = Math.min(allText.length, matches.index + 100);
+      const context = allText.substring(start, end).toLowerCase();
+      
+      numberPositions.push({
+        number: matches[0],
+        context: context,
+        index: matches.index
+      });
+    }
+    
+    // 根据上下文判断 1st/2nd/3rd
+    for (const item of numberPositions) {
+      if (!firstPrize && (item.context.includes('1st') || item.context.includes('first prize'))) {
+        firstPrize = item.number;
+      } else if (!secondPrize && (item.context.includes('2nd') || item.context.includes('second prize'))) {
+        secondPrize = item.number;
+      } else if (!thirdPrize && (item.context.includes('3rd') || item.context.includes('third prize'))) {
+        thirdPrize = item.number;
       }
     }
     
-    // 方法 2: 尝试常见 class 名
+    // 🔍 备用方法：尝试常见 class 名
     if (!firstPrize) {
-      firstPrize = doc.querySelector('.first-prize')?.textContent?.trim() ||
-                   doc.querySelector('[class*="first"]')?.textContent?.trim() ||
-                   doc.querySelector('[data-prize="1"]')?.textContent?.trim();
-    }
-    if (!secondPrize) {
-      secondPrize = doc.querySelector('.second-prize')?.textContent?.trim() ||
-                    doc.querySelector('[class*="second"]')?.textContent?.trim() ||
-                    doc.querySelector('[data-prize="2"]')?.textContent?.trim();
-    }
-    if (!thirdPrize) {
-      thirdPrize = doc.querySelector('.third-prize')?.textContent?.trim() ||
-                   doc.querySelector('[class*="third"]')?.textContent?.trim() ||
-                   doc.querySelector('[data-prize="3"]')?.textContent?.trim();
+      const prizeElements = doc.querySelectorAll('[class*="prize"], [class*="Prize"], [data-prize]');
+      for (const el of prizeElements) {
+        const text = el.textContent?.trim();
+        if (/^\d{4}$/.test(text)) {
+          const classText = (el.className || '').toLowerCase();
+          if (classText.includes('1st') || classText.includes('first')) {
+            firstPrize = text;
+          } else if (classText.includes('2nd') || classText.includes('second')) {
+            secondPrize = text;
+          } else if (classText.includes('3rd') || classText.includes('third')) {
+            thirdPrize = text;
+          }
+        }
+      }
     }
     
     console.log('📊 网页爬取结果:', { firstPrize, secondPrize, thirdPrize });
@@ -173,17 +178,17 @@ async function fetchPrizesFromWeb(drawDate) {
 function parseDamacaiData(data, drawDate, webPrizes) {
   const formattedDate = `${drawDate.substring(6,8)}-${drawDate.substring(4,6)}-${drawDate.substring(0,4)}`;
   
-  // 🔧 优先使用网页爬取的 4D 号码，如果没有则用 API 数据
-  const firstPrize = webPrizes?.firstPrize || data.firstPrize4D || data.p1HorseNo || "----";
-  const secondPrize = webPrizes?.secondPrize || data.secondPrize4D || data.p2HorseNo || "----";
-  const thirdPrize = webPrizes?.thirdPrize || data.thirdPrize4D || data.p3HorseNo || "----";
+  // 🔧 优先使用网页爬取的 4D 号码
+  const firstPrize = webPrizes?.firstPrize || "----";
+  const secondPrize = webPrizes?.secondPrize || "----";
+  const thirdPrize = webPrizes?.thirdPrize || "----";
   
-  // 特别奖 (starterList)
-  let special = data.starterList || data.starterHorseList || data.Special || data.special || [];
+  // 特别奖 (starterList) - 从 API 获取
+  let special = data.starterList || data.starterHorseList || [];
   if (!Array.isArray(special)) special = [];
   
-  // 安慰奖 (consolidateList)
-  let consolation = data.consolidateList || data.Consolation || data.consolation || [];
+  // 安慰奖 (consolidateList) - 从 API 获取
+  let consolation = data.consolidateList || [];
   if (!Array.isArray(consolation)) consolation = [];
   
   // 过滤并填充到 10 个
@@ -201,15 +206,13 @@ function parseDamacaiData(data, drawDate, webPrizes) {
   
   return {
     draw_date: formattedDate,
-    global_draw_no: data.drawNo || data.DrawNo || data.draw_no || "----",
+    global_draw_no: data.drawNo || "----",
     "1st": firstPrize,
     "2nd": secondPrize,
     "3rd": thirdPrize,
     special: special,
     consolation: consolation,
-    draw_info: (data.drawNo || data.DrawNo || data.draw_no) 
-      ? `(${getDayName(formattedDate)}) ${formattedDate} #${data.drawNo || data.DrawNo || data.draw_no}`
-      : "----"
+    draw_info: (data.drawNo) ? `(${getDayName(formattedDate)}) ${formattedDate} #${data.drawNo}` : "----"
   };
 }
 
