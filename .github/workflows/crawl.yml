@@ -2,24 +2,29 @@ name: Crawl 4D Results
 
 on:
   schedule:
-    # 每天 19:00 到 20:00 之间每分钟运行一次 (马来西亚时间 UTC+8)
-    # cron 表达式使用 UTC 时间，需换算：19:00 MYT = 11:00 UTC，20:00 MYT = 12:00 UTC
-    - cron: '*/1 11-12 * * *'
-  workflow_dispatch:   # 允许手动触发
+    - cron: '*/1 11-12 * * *'  # 马来西亚时间 19:00-20:00
+  workflow_dispatch:
 
 jobs:
   crawl:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      - name: Install dependencies
+      - name: Install Python dependencies
         run: pip install requests beautifulsoup4
 
       - name: Run crawler
