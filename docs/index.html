@@ -11,80 +11,74 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
         body { background: #f0f2f5; padding: 15px 10px; }
         .container { max-width: 1300px; margin: 0 auto; }
-        h1 { font-size: 1.8rem; font-weight: 700; text-align: center; color: #1e2a3a; margin-bottom: 6px; background: linear-gradient(135deg, #0b1c2f, #2c3e50); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        h1 { font-size: 1.8rem; font-weight: 700; text-align: center; color: #1e2a3a; margin-bottom: 15px; background: linear-gradient(135deg, #0b1c2f, #2c3e50); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         
-        .draw-info { 
-            background: #ffffffcc; 
-            backdrop-filter: blur(4px); 
-            border-radius: 40px; 
-            padding: 8px 16px; 
-            text-align: center; 
-            display: inline-block; 
-            margin: 0 auto 20px; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
-            font-weight: 500; 
-            color: #2c3e50; 
-            border: 1px solid rgba(255,255,255,0.8); 
-            left: 50%; 
-            position: relative; 
-            transform: translateX(-50%); 
-            display: flex; 
-            align-items: center; 
-            gap: 10px; 
-        }
-        
-        .companies-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
-        .company-section { background: white; border-radius: 24px; box-shadow: 0 8px 20px rgba(0,20,30,0.1); margin-bottom: 0; padding: 14px 12px; border: 1px solid rgba(255,255,255,0.5); transition: transform 0.15s ease; position: relative; }
-        .company-section:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(0,0,0,0.12); }
-        .company-section.loading { opacity: 0.6; pointer-events: none; }
-        .company-section.error { border-color: #d32f2f; background: #ffebee; }
-        .company-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-        .company-title { font-size: 1.6rem; font-weight: 800; padding-left: 4px; background: linear-gradient(145deg, #1e2b3a, #2b3d55); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
-        .company-title::before { content: "🎯"; margin-right: 6px; font-size: 1.4rem; background: none; -webkit-text-fill-color: initial; }
-        
-        .history-btn {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 0.75rem;
-            font-weight: 600;
-            transition: all 0.2s;
-            box-shadow: 0 2px 8px rgba(102,126,234,0.3);
+        /* 🔧 顶部日期选择器 */
+        .date-selector {
             display: flex;
             align-items: center;
-            gap: 4px;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
         }
         
-        .history-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102,126,234,0.4);
+        .date-dropdown {
+            position: relative;
+            display: inline-block;
         }
         
-        .history-btn.active {
-            background: linear-gradient(135deg, #764ba2, #667eea);
+        .date-btn {
+            background: #ffffffcc;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255,255,255,0.8);
+            border-radius: 25px;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #2c3e50;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transition: all 0.2s;
         }
         
-        .history-dropdown {
+        .date-btn:hover {
+            background: #ffffff;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+        }
+        
+        .date-btn .arrow {
+            font-size: 0.8rem;
+            transition: transform 0.2s;
+        }
+        
+        .date-btn.active .arrow {
+            transform: rotate(180deg);
+        }
+        
+        .date-dropdown-content {
+            display: none;
             position: absolute;
-            top: 50px;
-            right: 10px;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
             background: white;
             border-radius: 16px;
             box-shadow: 0 8px 24px rgba(0,0,0,0.15);
             min-width: 280px;
             z-index: 1000;
+            margin-top: 8px;
             border: 1px solid #e2e8f0;
-            display: none;
             padding: 15px;
         }
         
-        .history-dropdown.show {
+        .date-dropdown.show .date-dropdown-content {
             display: block;
         }
         
+        /* 月历样式 */
         .calendar-header {
             display: flex;
             justify-content: space-between;
@@ -198,6 +192,78 @@
             color: #7c8b9c;
         }
         
+        /* 🔧 日期 + 刷新按钮栏（居中） */
+        .draw-info { 
+            background: #ffffffcc; 
+            backdrop-filter: blur(4px); 
+            border-radius: 40px; 
+            padding: 8px 16px; 
+            text-align: center; 
+            display: inline-flex; 
+            margin: 0 auto 20px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
+            font-weight: 500; 
+            color: #2c3e50; 
+            border: 1px solid rgba(255,255,255,0.8); 
+            align-items: center; 
+            gap: 15px;
+            position: relative;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .companies-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        .company-section { background: white; border-radius: 24px; box-shadow: 0 8px 20px rgba(0,20,30,0.1); margin-bottom: 0; padding: 14px 12px; border: 1px solid rgba(255,255,255,0.5); transition: transform 0.15s ease; position: relative; }
+        .company-section:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(0,0,0,0.12); }
+        .company-section.loading { opacity: 0.6; pointer-events: none; }
+        .company-section.error { border-color: #d32f2f; background: #ffebee; }
+        .company-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        .company-title { font-size: 1.6rem; font-weight: 800; padding-left: 4px; background: linear-gradient(145deg, #1e2b3a, #2b3d55); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+        .company-title::before { content: "🎯"; margin-right: 6px; font-size: 1.4rem; background: none; -webkit-text-fill-color: initial; }
+        
+        .history-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(102,126,234,0.3);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .history-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102,126,234,0.4);
+        }
+        
+        .history-btn.active {
+            background: linear-gradient(135deg, #764ba2, #667eea);
+        }
+        
+        .company-history-dropdown {
+            position: absolute;
+            top: 50px;
+            right: 10px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            min-width: 280px;
+            z-index: 1000;
+            border: 1px solid #e2e8f0;
+            display: none;
+            padding: 15px;
+        }
+        
+        .company-history-dropdown.show {
+            display: block;
+        }
+        
         .draw-date { font-size: 0.9rem; color: #4a5568; margin-bottom: 10px; padding-left: 4px; font-weight: 500; }
         .prize-grid { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 12px 0 16px; }
         .prize-card { background: #f8fafd; border-radius: 16px; padding: 10px 12px; flex: 1 1 90px; min-width: 80px; text-align: center; box-shadow: inset 0 1px 4px #ffffff, 0 5px 10px rgba(0,0,0,0.04); border: 1px solid #e9ecf0; }
@@ -220,19 +286,6 @@
         .company-section[data-company="damacai"] .company-title { background: linear-gradient(145deg, #1e5620, #2a7a2d); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .company-section[data-company="magnum"] .company-title { background: linear-gradient(145deg, #aa4a1e, #c95f2a); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .company-section[data-company="toto"] .company-title { background: linear-gradient(145deg, #b71c1c, #d32f2f); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        
-        .loading-spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 2px solid #e2e8f0;
-            border-top-color: #3182ce;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
         
         .refresh-btn {
             background: linear-gradient(135deg, #3182ce, #2c5282);
@@ -284,24 +337,39 @@
     <div class="container">
         <h1>🇲🇾 4D RESULT MALAYSIA</h1>
         
+        <!-- 🔧 顶部日期选择器（月历） -->
+        <div class="date-selector">
+            <div class="date-dropdown" id="top-date-dropdown">
+                <button class="date-btn" id="top-date-btn" onclick="toggleTopDateDropdown()">
+                    <span id="top-selected-date">25-02-2026</span>
+                    <span class="arrow">▼</span>
+                </button>
+                <div class="date-dropdown-content" id="top-date-dropdown-content">
+                    <div style="padding: 20px; text-align: center; color: #7c8b9c;">🔄 加载...</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 🔧 日期 + 刷新按钮（居中，删除开彩期号） -->
         <div class="draw-info">
+            <strong>日期：</strong> <span id="draw_date">25-02-2026</span>
             <button class="refresh-btn" id="refresh-btn" onclick="forceRefresh()">
                 <span>🔄</span> 刷新
             </button>
         </div>
 
-        <!-- 🔧 修改：直接预置卡片 HTML，避免 Loading 白屏 -->
+        <!-- 🔧 预置所有公司卡片结构 -->
         <div id="companies-grid" class="companies-grid">
             <!-- DAMACAI -->
             <div class="company-section" data-company="damacai">
                 <div class="company-header">
                     <div class="company-title">DAMACAI</div>
-                    <button class="history-btn" id="history-btn-damacai" onclick="toggleHistoryDropdown('damacai')">
+                    <button class="history-btn" id="history-btn-damacai" onclick="toggleCompanyHistory('damacai')">
                         📅 历史 <span class="arrow">▼</span>
                     </button>
                 </div>
-                <div class="history-dropdown" id="history-dropdown-damacai">
-                    <div id="history-dropdown-content-damacai">
+                <div class="company-history-dropdown" id="company-history-dropdown-damacai">
+                    <div id="company-history-content-damacai">
                         <div style="padding: 20px; text-align: center; color: #7c8b9c;">🔄 加载...</div>
                     </div>
                 </div>
@@ -334,12 +402,12 @@
             <div class="company-section" data-company="magnum">
                 <div class="company-header">
                     <div class="company-title">MAGNUM</div>
-                    <button class="history-btn" id="history-btn-magnum" onclick="toggleHistoryDropdown('magnum')">
+                    <button class="history-btn" id="history-btn-magnum" onclick="toggleCompanyHistory('magnum')">
                         📅 历史 <span class="arrow">▼</span>
                     </button>
                 </div>
-                <div class="history-dropdown" id="history-dropdown-magnum">
-                    <div id="history-dropdown-content-magnum">
+                <div class="company-history-dropdown" id="company-history-dropdown-magnum">
+                    <div id="company-history-content-magnum">
                         <div style="padding: 20px; text-align: center; color: #7c8b9c;">🔄 加载...</div>
                     </div>
                 </div>
@@ -372,12 +440,12 @@
             <div class="company-section" data-company="toto">
                 <div class="company-header">
                     <div class="company-title">TOTO</div>
-                    <button class="history-btn" id="history-btn-toto" onclick="toggleHistoryDropdown('toto')">
+                    <button class="history-btn" id="history-btn-toto" onclick="toggleCompanyHistory('toto')">
                         📅 历史 <span class="arrow">▼</span>
                     </button>
                 </div>
-                <div class="history-dropdown" id="history-dropdown-toto">
-                    <div id="history-dropdown-content-toto">
+                <div class="company-history-dropdown" id="company-history-dropdown-toto">
+                    <div id="company-history-content-toto">
                         <div style="padding: 20px; text-align: center; color: #7c8b9c;">🔄 加载...</div>
                     </div>
                 </div>
@@ -403,6 +471,316 @@
                 <div class="subsection">
                     <div class="subsection-title">😌 安慰奖 (Consolation)</div>
                     <div class="number-list" id="toto-consolation"></div>
+                </div>
+            </div>
+
+            <!-- SINGAPORE -->
+            <div class="company-section" data-company="singapore">
+                <div class="company-header">
+                    <div class="company-title">SINGAPORE 4D</div>
+                </div>
+                <div class="draw-date" id="draw-date-singapore">Loading...</div>
+                <div class="prize-grid">
+                    <div class="prize-card" style="flex: 0 0 220px; max-width: 220px; min-width: 180px;">
+                        <div class="label">1st Prize</div>
+                        <div class="number" id="singapore-1st">----</div>
+                    </div>
+                    <div class="prize-card" style="flex: 1; min-width: 90px; max-width: 150px;">
+                        <div class="label">2nd Prize</div>
+                        <div class="number" id="singapore-2nd">----</div>
+                    </div>
+                    <div class="prize-card" style="flex: 1; min-width: 90px; max-width: 150px;">
+                        <div class="label">3rd Prize</div>
+                        <div class="number" id="singapore-3rd">----</div>
+                    </div>
+                </div>
+                <div class="subsection">
+                    <div class="subsection-title">🎁 特别奖 (Special)</div>
+                    <div class="number-list" id="singapore-special"></div>
+                </div>
+                <div class="subsection">
+                    <div class="subsection-title">😌 安慰奖 (Consolation)</div>
+                    <div class="number-list" id="singapore-consolation"></div>
+                </div>
+            </div>
+
+            <!-- DAMACAI 1+3D -->
+            <div class="company-section" data-company="damacai_1p3d">
+                <div class="company-header">
+                    <div class="company-title">DAMACAI 1+3D</div>
+                </div>
+                <div class="draw-date" id="draw-date-damacai_1p3d">Loading...</div>
+                <div class="prize-grid">
+                    <div class="prize-card" style="flex: 0 0 220px; max-width: 220px; min-width: 180px;">
+                        <div class="label">1st Prize</div>
+                        <div class="number" id="damacai_1p3d-1st">----</div>
+                    </div>
+                    <div class="prize-card" style="flex: 1; min-width: 90px; max-width: 150px;">
+                        <div class="label">2nd Prize</div>
+                        <div class="number" id="damacai_1p3d-2nd">----</div>
+                    </div>
+                    <div class="prize-card" style="flex: 1; min-width: 90px; max-width: 150px;">
+                        <div class="label">3rd Prize</div>
+                        <div class="number" id="damacai_1p3d-3rd">----</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SANDAKAN -->
+            <div class="company-section" data-company="sandakan">
+                <div class="company-header">
+                    <div class="company-title">SANDAKAN</div>
+                </div>
+                <div class="draw-date" id="draw-date-sandakan">Loading...</div>
+                <div class="prize-grid">
+                    <div class="prize-card" style="flex: 0 0 220px; max-width: 220px; min-width: 180px;">
+                        <div class="label">1st Prize</div>
+                        <div class="number" id="sandakan-1st">----</div>
+                    </div>
+                    <div class="prize-card" style="flex: 1; min-width: 90px; max-width: 150px;">
+                        <div class="label">2nd Prize</div>
+                        <div class="number" id="sandakan-2nd">----</div>
+                    </div>
+                    <div class="prize-card" style="flex: 1; min-width: 90px; max-width: 150px;">
+                        <div class="label">3rd Prize</div>
+                        <div class="number" id="sandakan-3rd">----</div>
+                    </div>
+                </div>
+                <div class="subsection">
+                    <div class="subsection-title">🎁 特别奖 (Special)</div>
+                    <div class="number-list" id="sandakan-special"></div>
+                </div>
+                <div class="subsection">
+                    <div class="subsection-title">😌 安慰奖 (Consolation)</div>
+                    <div class="number-list" id="sandakan-consolation"></div>
+                </div>
+            </div>
+
+            <!-- SARAWAK CASHSWEEP -->
+            <div class="company-section" data-company="sarawak_cashsweep">
+                <div class="company-header">
+                    <div class="company-title">SARAWAK CASHSWEEP</div>
+                </div>
+                <div class="draw-date" id="draw-date-sarawak_cashsweep">Loading...</div>
+                <div class="prize-grid">
+                    <div class="prize-card" style="flex: 0 0 220px; max-width: 220px; min-width: 180px;">
+                        <div class="label">1st Prize</div>
+                        <div class="number" id="sarawak_cashsweep-1st">----</div>
+                    </div>
+                    <div class="prize-card" style="flex: 1; min-width: 90px; max-width: 150px;">
+                        <div class="label">2nd Prize</div>
+                        <div class="number" id="sarawak_cashsweep-2nd">----</div>
+                    </div>
+                    <div class="prize-card" style="flex: 1; min-width: 90px; max-width: 150px;">
+                        <div class="label">3rd Prize</div>
+                        <div class="number" id="sarawak_cashsweep-3rd">----</div>
+                    </div>
+                </div>
+                <div class="subsection">
+                    <div class="subsection-title">🎁 特别奖 (Special)</div>
+                    <div class="number-list" id="sarawak_cashsweep-special"></div>
+                </div>
+                <div class="subsection">
+                    <div class="subsection-title">😌 安慰奖 (Consolation)</div>
+                    <div class="number-list" id="sarawak_cashsweep-consolation"></div>
+                </div>
+            </div>
+
+            <!-- SABAH -->
+            <div class="company-section" data-company="sabah">
+                <div class="company-header">
+                    <div class="company-title">SABAH</div>
+                </div>
+                <div class="draw-date" id="draw-date-sabah">Loading...</div>
+                <div class="prize-grid">
+                    <div class="prize-card" style="flex: 0 0 220px; max-width: 220px; min-width: 180px;">
+                        <div class="label">1st Prize</div>
+                        <div class="number" id="sabah-1st">----</div>
+                    </div>
+                    <div class="prize-card" style="flex: 1; min-width: 90px; max-width: 150px;">
+                        <div class="label">2nd Prize</div>
+                        <div class="number" id="sabah-2nd">----</div>
+                    </div>
+                    <div class="prize-card" style="flex: 1; min-width: 90px; max-width: 150px;">
+                        <div class="label">3rd Prize</div>
+                        <div class="number" id="sabah-3rd">----</div>
+                    </div>
+                </div>
+                <div class="subsection">
+                    <div class="subsection-title">🎁 特别奖 (Special)</div>
+                    <div class="number-list" id="sabah-special"></div>
+                </div>
+                <div class="subsection">
+                    <div class="subsection-title">😌 安慰奖 (Consolation)</div>
+                    <div class="number-list" id="sabah-consolation"></div>
+                </div>
+            </div>
+
+            <!-- SABAH LOTTO -->
+            <div class="company-section" data-company="sabah_lotto">
+                <div class="company-header">
+                    <div class="company-title">SABAH LOTTO</div>
+                </div>
+                <div class="draw-date" id="draw-date-sabah_lotto">Loading...</div>
+                <div class="prize-grid">
+                    <div class="prize-card" style="flex: 0 0 220px; max-width: 220px; min-width: 180px;">
+                        <div class="label">1st Prize</div>
+                        <div class="number" id="sabah_lotto-1st">----</div>
+                    </div>
+                    <div class="prize-card" style="flex: 1; min-width: 90px; max-width: 150px;">
+                        <div class="label">2nd Prize</div>
+                        <div class="number" id="sabah_lotto-2nd">----</div>
+                    </div>
+                    <div class="prize-card" style="flex: 1; min-width: 90px; max-width: 150px;">
+                        <div class="label">3rd Prize</div>
+                        <div class="number" id="sabah_lotto-3rd">----</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SPORTSTOTO FIREBALL -->
+            <div class="company-section" data-company="sportstoto_fireball">
+                <div class="company-header">
+                    <div class="company-title">SPORTSTOTO FIREBALL</div>
+                </div>
+                <div class="draw-date" id="draw-date-sportstoto_fireball">Loading...</div>
+                <div class="prize-grid">
+                    <div class="prize-card" style="flex: 0 0 220px; max-width: 220px; min-width: 180px;">
+                        <div class="label">1st Prize</div>
+                        <div class="number" id="sportstoto_fireball-1st">----</div>
+                    </div>
+                    <div class="prize-card" style="flex: 1; min-width: 90px; max-width: 150px;">
+                        <div class="label">2nd Prize</div>
+                        <div class="number" id="sportstoto_fireball-2nd">----</div>
+                    </div>
+                    <div class="prize-card" style="flex: 1; min-width: 90px; max-width: 150px;">
+                        <div class="label">3rd Prize</div>
+                        <div class="number" id="sportstoto_fireball-3rd">----</div>
+                    </div>
+                </div>
+                <div class="subsection">
+                    <div class="subsection-title">🎁 特别奖 (Special)</div>
+                    <div class="number-list" id="sportstoto_fireball-special"></div>
+                </div>
+                <div class="subsection">
+                    <div class="subsection-title">😌 安慰奖 (Consolation)</div>
+                    <div class="number-list" id="sportstoto_fireball-consolation"></div>
+                </div>
+            </div>
+
+            <!-- GRAND DRAGON -->
+            <div class="company-section" data-company="grand_dragon">
+                <div class="company-header">
+                    <div class="company-title">GRAND DRAGON</div>
+                </div>
+                <div class="draw-date" id="draw-date-grand_dragon">Loading...</div>
+                <div class="prize-grid">
+                    <div class="prize-card" style="flex: 0 0 220px; max-width: 220px; min-width: 180px;">
+                        <div class="label">1st Prize</div>
+                        <div class="number" id="grand_dragon-1st">----</div>
+                    </div>
+                    <div class="prize-card" style="flex: 1; min-width: 90px; max-width: 150px;">
+                        <div class="label">2nd Prize</div>
+                        <div class="number" id="grand_dragon-2nd">----</div>
+                    </div>
+                    <div class="prize-card" style="flex: 1; min-width: 90px; max-width: 150px;">
+                        <div class="label">3rd Prize</div>
+                        <div class="number" id="grand_dragon-3rd">----</div>
+                    </div>
+                </div>
+                <div class="subsection">
+                    <div class="subsection-title">🎁 特别奖 (Special)</div>
+                    <div class="number-list" id="grand_dragon-special"></div>
+                </div>
+                <div class="subsection">
+                    <div class="subsection-title">😌 安慰奖 (Consolation)</div>
+                    <div class="number-list" id="grand_dragon-consolation"></div>
+                </div>
+            </div>
+
+            <!-- SINGAPORE TOTO -->
+            <div class="company-section" data-company="singapore_toto">
+                <div class="company-header">
+                    <div class="company-title">SINGAPORE TOTO</div>
+                </div>
+                <div class="draw-date" id="draw-date-singapore_toto">Loading...</div>
+                <div class="subsection">
+                    <div class="subsection-title">开奖号码</div>
+                    <div class="number-list" id="singapore_toto-winning"></div>
+                </div>
+                <div class="subsection">
+                    <div class="subsection-title">奖金分配</div>
+                    <table class="custom-table" id="singapore_toto-table"></table>
+                </div>
+            </div>
+
+            <!-- SPORTSTOTO LOTTO -->
+            <div class="company-section" data-company="sportstoto_lotto">
+                <div class="company-header">
+                    <div class="company-title">SPORTSTOTO LOTTO</div>
+                </div>
+                <div class="draw-date" id="draw-date-sportstoto_lotto">Loading...</div>
+                <div class="subsection">
+                    <div class="subsection-title">乐透号码</div>
+                    <div id="sportstoto_lotto-groups"></div>
+                </div>
+                <div class="subsection">
+                    <div class="subsection-title">💰 Jackpot</div>
+                    <div class="number-list" id="sportstoto_lotto-jackpot"></div>
+                </div>
+            </div>
+
+            <!-- MAGNUM JACKPOT GOLD -->
+            <div class="company-section" data-company="magnum_jackpot_gold">
+                <div class="company-header">
+                    <div class="company-title">MAGNUM JACKPOT GOLD</div>
+                </div>
+                <div class="draw-date" id="draw-date-magnum_jackpot_gold">Loading...</div>
+                <div class="subsection">
+                    <div class="subsection-title">Jackpot 1</div>
+                    <div class="number-list" id="magnum_jackpot_gold-jp1"></div>
+                </div>
+                <div class="subsection">
+                    <div class="subsection-title">Jackpot 2</div>
+                    <div id="magnum_jackpot_gold-jp2"></div>
+                </div>
+                <div class="subsection">
+                    <div class="subsection-title">Estimated Amount</div>
+                    <div id="magnum_jackpot_gold-est"></div>
+                </div>
+            </div>
+
+            <!-- SPORTSTOTO 5D -->
+            <div class="company-section" data-company="sportstoto_5d">
+                <div class="company-header">
+                    <div class="company-title">SPORTSTOTO 5D</div>
+                </div>
+                <div class="draw-date" id="draw-date-sportstoto_5d">Loading...</div>
+                <table class="custom-table" id="sportstoto_5d-table"></table>
+            </div>
+
+            <!-- SPORTSTOTO 6D -->
+            <div class="company-section" data-company="sportstoto_6d">
+                <div class="company-header">
+                    <div class="company-title">SPORTSTOTO 6D</div>
+                </div>
+                <div class="draw-date" id="draw-date-sportstoto_6d">Loading...</div>
+                <table class="custom-table" id="sportstoto_6d-table"></table>
+            </div>
+
+            <!-- MAGNUM LIFE -->
+            <div class="company-section" data-company="magnum_life">
+                <div class="company-header">
+                    <div class="company-title">MAGNUM LIFE</div>
+                </div>
+                <div class="draw-date" id="draw-date-magnum_life">Loading...</div>
+                <div class="subsection">
+                    <div class="subsection-title">WINNING NUMBERS</div>
+                    <div class="number-list" id="magnum_life-winning"></div>
+                </div>
+                <div class="subsection">
+                    <div class="subsection-title">BONUS NUMBERS</div>
+                    <div class="number-list" id="magnum_life-bonus"></div>
                 </div>
             </div>
         </div>
@@ -447,15 +825,135 @@
         let selectedCompany = 'damacai';
         let selectedDrawIndex = 0;
         let currentCalendarMonth = new Date();
+        let topCalendarMonth = new Date();
         let requestCounter = 0;
 
-        // ==================== 历史数据功能 ====================
-        function toggleHistoryDropdown(companyKey) {
-            const dropdown = document.getElementById(`history-dropdown-${companyKey}`);
+        // ==================== 顶部日期选择器 ====================
+        function toggleTopDateDropdown() {
+            const dropdown = document.getElementById('top-date-dropdown');
+            const btn = document.getElementById('top-date-btn');
+            const content = document.getElementById('top-date-dropdown-content');
+            
+            dropdown.classList.toggle('show');
+            btn.classList.toggle('active');
+            
+            if (dropdown.classList.contains('show')) {
+                renderTopCalendar(content);
+            }
+        }
+
+        function renderTopCalendar(content) {
+            const data = historyDataMap['damacai'];
+            
+            if (!data || data.length === 0) {
+                content.innerHTML = '<div style="padding: 20px; text-align: center; color: #7c8b9c;">暂无历史数据</div>';
+                return;
+            }
+            
+            const year = topCalendarMonth.getFullYear();
+            const month = topCalendarMonth.getMonth();
+            
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                              'July', 'August', 'September', 'October', 'November', 'December'];
+            
+            const dataMap = {};
+            data.forEach((item, index) => {
+                const dateKey = item.draw_date;
+                if (dateKey && dateKey !== '----') {
+                    dataMap[dateKey] = index;
+                }
+            });
+            
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startDay = firstDay.getDay();
+            const totalDays = lastDay.getDate();
+            
+            let html = `
+                <div class="calendar-header">
+                    <div class="calendar-nav">
+                        <button onclick="prevTopMonth(event)">◀</button>
+                    </div>
+                    <h4>${monthNames[month]} ${year}</h4>
+                    <div class="calendar-nav">
+                        <button onclick="nextTopMonth(event)">▶</button>
+                    </div>
+                </div>
+                <div class="calendar-grid">
+                    <div class="calendar-day-header">Sun</div>
+                    <div class="calendar-day-header">Mon</div>
+                    <div class="calendar-day-header">Tue</div>
+                    <div class="calendar-day-header">Wed</div>
+                    <div class="calendar-day-header">Thu</div>
+                    <div class="calendar-day-header">Fri</div>
+                    <div class="calendar-day-header">Sat</div>
+            `;
+            
+            for (let i = 0; i < startDay; i++) {
+                html += `<div class="calendar-day empty"></div>`;
+            }
+            
+            for (let day = 1; day <= totalDays; day++) {
+                const dateStr = `${String(day).padStart(2, '0')}-${String(month + 1).padStart(2, '0')}-${year}`;
+                const hasData = dataMap[dateStr] !== undefined;
+                const isSelected = selectedDrawIndex === dataMap[dateStr];
+                
+                let classes = 'calendar-day';
+                if (hasData) classes += ' has-data';
+                if (isSelected) classes += ' selected';
+                
+                const clickAction = hasData ? `onclick="selectTopDate('${dateStr}', ${dataMap[dateStr]})"` : '';
+                
+                html += `
+                    <div class="${classes}" ${clickAction}>
+                        <span class="date-num">${day}</span>
+                        ${hasData ? '<span class="draw-indicator">📊</span>' : ''}
+                    </div>
+                `;
+            }
+            
+            html += `
+                </div>
+                <div class="calendar-footer">
+                    📊 有开奖数据 &nbsp;|&nbsp; 点击选择日期
+                </div>
+            `;
+            
+            content.innerHTML = html;
+        }
+
+        function prevTopMonth(event) {
+            event.stopPropagation();
+            topCalendarMonth.setMonth(topCalendarMonth.getMonth() - 1);
+            renderTopCalendar(document.getElementById('top-date-dropdown-content'));
+        }
+
+        function nextTopMonth(event) {
+            event.stopPropagation();
+            topCalendarMonth.setMonth(topCalendarMonth.getMonth() + 1);
+            renderTopCalendar(document.getElementById('top-date-dropdown-content'));
+        }
+
+        function selectTopDate(dateStr, index) {
+            selectedDrawIndex = index;
+            document.getElementById('top-selected-date').innerText = dateStr;
+            document.getElementById('draw_date').innerText = dateStr;
+            document.getElementById('top-date-dropdown').classList.remove('show');
+            document.getElementById('top-date-btn').classList.remove('active');
+            
+            const data = historyDataMap['damacai'][index];
+            if (data) {
+                updateCompanyCard('damacai', data);
+            }
+        }
+
+        // ==================== 公司历史按钮 ====================
+        function toggleCompanyHistory(companyKey) {
+            const dropdown = document.getElementById(`company-history-dropdown-${companyKey}`);
             const btn = document.getElementById(`history-btn-${companyKey}`);
             
-            document.querySelectorAll('.history-dropdown').forEach(d => {
-                if (d.id !== `history-dropdown-${companyKey}`) {
+            document.querySelectorAll('.company-history-dropdown').forEach(d => {
+                if (d.id !== `company-history-dropdown-${companyKey}`) {
                     d.classList.remove('show');
                 }
             });
@@ -469,7 +967,7 @@
             btn.classList.toggle('active');
             
             if (dropdown.classList.contains('show')) {
-                renderCalendar(companyKey);
+                renderCompanyCalendar(companyKey);
             }
         }
 
@@ -488,8 +986,8 @@
             }
         }
 
-        function renderCalendar(companyKey) {
-            const content = document.getElementById(`history-dropdown-content-${companyKey}`);
+        function renderCompanyCalendar(companyKey) {
+            const content = document.getElementById(`company-history-content-${companyKey}`);
             const data = historyDataMap[companyKey];
             
             if (!data || data.length === 0) {
@@ -516,17 +1014,14 @@
             const startDay = firstDay.getDay();
             const totalDays = lastDay.getDate();
             
-            const today = new Date();
-            const todayStr = `${String(today.getDate()).padStart(2, '0')}-${String(today.getMonth() + 1).padStart(2, '0')}-${today.getFullYear()}`;
-            
             let html = `
                 <div class="calendar-header">
                     <div class="calendar-nav">
-                        <button onclick="prevMonth(event, '${companyKey}')">◀</button>
+                        <button onclick="prevCompanyMonth(event, '${companyKey}')">◀</button>
                     </div>
                     <h4>${monthNames[month]} ${year}</h4>
                     <div class="calendar-nav">
-                        <button onclick="nextMonth(event, '${companyKey}')">▶</button>
+                        <button onclick="nextCompanyMonth(event, '${companyKey}')">▶</button>
                     </div>
                 </div>
                 <div class="calendar-grid">
@@ -546,15 +1041,13 @@
             for (let day = 1; day <= totalDays; day++) {
                 const dateStr = `${String(day).padStart(2, '0')}-${String(month + 1).padStart(2, '0')}-${year}`;
                 const hasData = dataMap[dateStr] !== undefined;
-                const isToday = dateStr === todayStr;
                 const isSelected = selectedCompany === companyKey && selectedDrawIndex === dataMap[dateStr];
                 
                 let classes = 'calendar-day';
                 if (hasData) classes += ' has-data';
-                if (isToday) classes += ' today';
                 if (isSelected) classes += ' selected';
                 
-                const clickAction = hasData ? `onclick="selectHistoryDraw('${companyKey}', ${dataMap[dateStr]})"` : '';
+                const clickAction = hasData ? `onclick="selectCompanyHistoryDraw('${companyKey}', ${dataMap[dateStr]})"` : '';
                 
                 html += `
                     <div class="${classes}" ${clickAction}>
@@ -574,42 +1067,43 @@
             content.innerHTML = html;
         }
 
-        function prevMonth(event, companyKey) {
+        function prevCompanyMonth(event, companyKey) {
             event.stopPropagation();
             currentCalendarMonth.setMonth(currentCalendarMonth.getMonth() - 1);
-            renderCalendar(companyKey);
+            renderCompanyCalendar(companyKey);
         }
 
-        function nextMonth(event, companyKey) {
+        function nextCompanyMonth(event, companyKey) {
             event.stopPropagation();
             currentCalendarMonth.setMonth(currentCalendarMonth.getMonth() + 1);
-            renderCalendar(companyKey);
+            renderCompanyCalendar(companyKey);
         }
 
-        function selectHistoryDraw(companyKey, index) {
+        function selectCompanyHistoryDraw(companyKey, index) {
             selectedCompany = companyKey;
             selectedDrawIndex = index;
             
             const data = historyDataMap[companyKey][index];
             if (!data) return;
             
-            document.getElementById(`history-dropdown-${companyKey}`).classList.remove('show');
+            document.getElementById(`company-history-dropdown-${companyKey}`).classList.remove('show');
             document.getElementById(`history-btn-${companyKey}`).classList.remove('active');
             
             updateCompanyCard(companyKey, data);
+            
+            document.getElementById('top-selected-date').innerText = data.draw_date;
+            document.getElementById('draw_date').innerText = data.draw_date;
         }
 
         function updateCompanyCard(companyKey, data) {
             const section = document.querySelector(`.company-section[data-company="${companyKey}"]`);
             if (!section) return;
             
-            // 更新开奖信息
             const drawDateEl = section.querySelector('.draw-date');
             if (drawDateEl) {
                 drawDateEl.innerText = data.draw_info || data.draw_date || '----';
             }
             
-            // 更新奖项号码
             const prize1st = section.querySelector(`#${companyKey}-1st`);
             const prize2nd = section.querySelector(`#${companyKey}-2nd`);
             const prize3rd = section.querySelector(`#${companyKey}-3rd`);
@@ -618,7 +1112,6 @@
             if (prize2nd) prize2nd.innerText = data['2nd'] || '----';
             if (prize3rd) prize3rd.innerText = data['3rd'] || '----';
             
-            // 更新特别奖
             const specialList = section.querySelector(`#${companyKey}-special`);
             if (specialList && data.special) {
                 specialList.innerHTML = data.special.map(num => 
@@ -626,7 +1119,6 @@
                 ).join('');
             }
             
-            // 更新安慰奖
             const consolationList = section.querySelector(`#${companyKey}-consolation`);
             if (consolationList && data.consolation) {
                 consolationList.innerHTML = data.consolation.map(num => 
@@ -634,7 +1126,7 @@
                 ).join('');
             }
             
-            renderCalendar(companyKey);
+            renderCompanyCalendar(companyKey);
         }
 
         // ==================== 数据加载 ====================
@@ -689,7 +1181,6 @@
             if (statusText) statusText.innerHTML = '<span class="status-indicator loading"></span>更新中...';
             
             try {
-                // 先加载历史数据
                 for (const company of HISTORY_COMPANY_LIST) {
                     await loadCompanyHistory(company);
                 }
@@ -711,7 +1202,7 @@
                     }
                 });
 
-                // 🔧 关键修复：加载完成后恢复选中的历史数据
+                // 恢复选中的历史数据
                 if (selectedCompany && selectedDrawIndex !== null && historyDataMap[selectedCompany]) {
                     const selectedData = historyDataMap[selectedCompany][selectedDrawIndex];
                     if (selectedData) {
@@ -719,20 +1210,18 @@
                     }
                 }
                 
-                // 🔧 更新其他公司的数据（不重新渲染整个卡片，只更新内容）
+                // 更新其他公司数据
                 for (const [companyKey, companyData] of Object.entries(dataMap)) {
                     if (!companyData) continue;
                     
                     const section = document.querySelector(`.company-section[data-company="${companyKey}"]`);
                     if (!section) continue;
                     
-                    // 更新开奖日期
                     const drawDateEl = section.querySelector('.draw-date');
                     if (drawDateEl && companyData.draw_info) {
                         drawDateEl.innerText = companyData.draw_info;
                     }
                     
-                    // 更新奖项
                     const prize1st = section.querySelector(`#${companyKey}-1st`);
                     const prize2nd = section.querySelector(`#${companyKey}-2nd`);
                     const prize3rd = section.querySelector(`#${companyKey}-3rd`);
@@ -741,7 +1230,6 @@
                     if (prize2nd) prize2nd.innerText = companyData['2nd'] || '----';
                     if (prize3rd) prize3rd.innerText = companyData['3rd'] || '----';
                     
-                    // 更新特别奖
                     const specialList = section.querySelector(`#${companyKey}-special`);
                     if (specialList && companyData.special) {
                         specialList.innerHTML = companyData.special.map(num => 
@@ -749,7 +1237,6 @@
                         ).join('');
                     }
                     
-                    // 更新安慰奖
                     const consolationList = section.querySelector(`#${companyKey}-consolation`);
                     if (consolationList && companyData.consolation) {
                         consolationList.innerHTML = companyData.consolation.map(num => 
@@ -785,6 +1272,7 @@
             }
             
             currentCalendarMonth = new Date();
+            topCalendarMonth = new Date();
             
             loadAllCompanies().then(() => {
                 if (refreshBtn) {
@@ -796,8 +1284,6 @@
 
         // ==================== 初始化 ====================
         document.addEventListener('DOMContentLoaded', () => {
-            // 页面加载时立即显示内容（HTML 已预置）
-            // 然后异步加载最新数据
             loadAllCompanies();
             setInterval(loadAllCompanies, 60000);
         });
@@ -809,7 +1295,13 @@
         });
 
         document.addEventListener('click', (e) => {
-            document.querySelectorAll('.history-dropdown').forEach(dropdown => {
+            const topDropdown = document.getElementById('top-date-dropdown');
+            if (topDropdown && !topDropdown.contains(e.target)) {
+                topDropdown.classList.remove('show');
+                document.getElementById('top-date-btn')?.classList.remove('active');
+            }
+            
+            document.querySelectorAll('.company-history-dropdown').forEach(dropdown => {
                 if (dropdown && !dropdown.contains(e.target) && !e.target.classList.contains('history-btn')) {
                     dropdown.classList.remove('show');
                     dropdown.previousElementSibling?.classList.remove('active');
