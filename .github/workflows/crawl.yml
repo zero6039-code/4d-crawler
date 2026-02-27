@@ -3,7 +3,7 @@ name: Crawl 4D Results
 on:
   schedule:
   # 马来西亚时间 19:00–19:59 = UTC 11:00–11:59，每分钟运行一次
-    - cron: '*/1 11 * * *'
+    - cron: '*/5 11 * * *'
   workflow_dispatch:
 
 jobs:
