@@ -46,10 +46,8 @@ def fetch_html():
 def extract_company_data(soup, company_key):
     """根据公司标识从soup中提取数据"""
     config = COMPANY_CONFIG[company_key]
-    # 找到包含该公司数据的 outerbox (通过公司名称或表格特征)
     outer_boxes = soup.find_all("div", class_="outerbox")
     for box in outer_boxes:
-        # 尝试通过公司名称匹配
         name_td = box.find("td", class_=config["table_class"])
         if name_td and config["name"] in name_td.get_text():
             return parse_outerbox(box, company_key)
@@ -65,18 +63,16 @@ def parse_outerbox(box, company_key):
         "3rd": "",
         "special": [],
         "consolation": [],
-        "type": None  # 用于特殊公司如5D/6D/Lotto等
+        "type": None
     }
 
     # 提取开奖日期和期号
     draw_row = box.find("td", class_="resultdrawdate")
     if draw_row:
         date_text = draw_row.get_text(strip=True)
-        # 示例: "Date: 25-02-2026 (Wed)" 或 "25-02-2026 (Wed)"
         match = re.search(r"(\d{2}-\d{2}-\d{4})", date_text)
         if match:
             data["draw_date"] = match.group(1)
-        # 提取期号 (通常在相邻的td)
         next_td = draw_row.find_next("td", class_="resultdrawdate")
         if next_td:
             data["draw_no"] = next_td.get_text(strip=True).replace("Draw No:", "").strip()
@@ -88,14 +84,14 @@ def parse_outerbox(box, company_key):
         data["2nd"] = prize_tds[1].get_text(strip=True)
         data["3rd"] = prize_tds[2].get_text(strip=True)
 
-    # 提取特别奖 (Special)
+    # 特别奖
     special_section = box.find("td", string=re.compile("Special|特別獎"))
     if special_section:
         table = special_section.find_parent("table")
         if table:
             rows = table.find_all("tr")
             special_numbers = []
-            for row in rows[1:]:  # 跳过标题行
+            for row in rows[1:]:
                 tds = row.find_all("td", class_="resultbottom")
                 for td in tds:
                     num = td.get_text(strip=True)
@@ -103,7 +99,7 @@ def parse_outerbox(box, company_key):
                         special_numbers.append(num)
             data["special"] = special_numbers
 
-    # 提取安慰奖 (Consolation)
+    # 安慰奖
     cons_section = box.find("td", string=re.compile("Consolation|安慰獎"))
     if cons_section:
         table = cons_section.find_parent("table")
@@ -118,23 +114,61 @@ def parse_outerbox(box, company_key):
                         cons_numbers.append(num)
             data["consolation"] = cons_numbers
 
-    # 针对特殊公司增加类型标记和额外解析（可扩展）
+    # 特殊公司类型标记
     if company_key in ["sportstoto_5d", "sportstoto_6d", "sportstoto_lotto", "singapore_toto", "magnum_jackpot_gold", "magnum_life"]:
         data["type"] = company_key
-        # 这里可以添加更详细的解析，如5D表格、6D表格、乐透号码等
-        # 为简化，本示例仅保留基础字段，您可根据需要扩展
 
     return data
 
 def save_json(company, data):
-    """将数据保存为 docs/data/公司.json"""
+    """将数据保存为最新文件，并归档到日期子目录"""
     if not data:
         return
-    os.makedirs("docs/data", exist_ok=True)
-    filepath = f"docs/data/{company}.json"
-    with open(filepath, "w", encoding="utf-8") as f:
+
+    base_dir = "docs/data"
+    os.makedirs(base_dir, exist_ok=True)
+
+    # 1. 保存最新文件（覆盖）
+    latest_path = os.path.join(base_dir, f"{company}.json")
+    with open(latest_path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
-    print(f"✅ 已保存 {company}.json")
+    print(f"✅ 已更新最新文件: {latest_path}")
+
+    # 2. 获取开奖日期（用于归档目录）
+    draw_date = data.get("draw_date", "")
+    if not draw_date or draw_date == "----":
+        draw_date = datetime.now().strftime("%Y-%m-%d")
+    else:
+        try:
+            # 假设 draw_date 格式为 DD-MM-YYYY
+            d = datetime.strptime(draw_date, "%d-%m-%Y")
+            draw_date = d.strftime("%Y-%m-%d")
+        except:
+            draw_date = datetime.now().strftime("%Y-%m-%d")
+
+    # 3. 归档到日期目录
+    archive_dir = os.path.join(base_dir, draw_date)
+    os.makedirs(archive_dir, exist_ok=True)
+    archive_path = os.path.join(archive_dir, f"{company}.json")
+    with open(archive_path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    print(f"📁 已归档至: {archive_path}")
+
+def update_dates_index():
+    """更新 dates.json 索引文件，列出所有归档日期目录"""
+    base_dir = "docs/data"
+    if not os.path.exists(base_dir):
+        return
+    dates = []
+    for item in os.listdir(base_dir):
+        item_path = os.path.join(base_dir, item)
+        if os.path.isdir(item_path) and re.match(r"\d{4}-\d{2}-\d{2}", item):
+            dates.append(item)
+    dates.sort(reverse=True)  # 最新的靠前
+    index_path = os.path.join(base_dir, "dates.json")
+    with open(index_path, "w", encoding="utf-8") as f:
+        json.dump(dates, f)
+    print(f"📋 已更新日期索引，共 {len(dates)} 个历史日期")
 
 def main():
     html = fetch_html()
@@ -142,14 +176,12 @@ def main():
         return
     soup = BeautifulSoup(html, "html.parser")
 
-    # 先提取所有公司公共信息（如全局日期）
-    # 可选：从第一个公司获取全局日期
+    # 从第一个公司获取全局日期（可选）
     first_company = next(iter(COMPANY_CONFIG))
     first_data = extract_company_data(soup, first_company)
     if first_data:
         global_date = first_data["draw_date"]
         global_draw_no = first_data["draw_no"]
-        # 可以额外保存一个全局文件
         with open("docs/data/latest.json", "w", encoding="utf-8") as f:
             json.dump({"draw_date": global_date, "draw_no": global_draw_no}, f)
 
@@ -157,6 +189,9 @@ def main():
     for company in COMPANY_CONFIG:
         data = extract_company_data(soup, company)
         save_json(company, data)
+
+    # 最后更新日期索引
+    update_dates_index()
 
 if __name__ == "__main__":
     main()
