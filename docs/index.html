@@ -44,7 +44,6 @@
         .company-section[data-company="magnum"] .company-title { background: linear-gradient(145deg, #aa4a1e, #c95f2a); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .company-section[data-company="toto"] .company-title { background: linear-gradient(145deg, #b71c1c, #d32f2f); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         
-        /* 🔧 新增：加载动画 */
         .loading-spinner {
             display: inline-block;
             width: 20px;
@@ -58,7 +57,6 @@
             to { transform: rotate(360deg); }
         }
         
-        /* 🔧 新增：刷新按钮 */
         .refresh-btn {
             background: linear-gradient(135deg, #3182ce, #2c5282);
             color: white;
@@ -87,7 +85,6 @@
             50% { opacity: 0.6; }
         }
         
-        /* 🔧 新增：状态指示器 */
         .status-indicator {
             display: inline-block;
             width: 8px;
@@ -152,7 +149,6 @@
             'sarawak_cashsweep': 'SARAWAK CASHSWEEP'
         };
 
-        // 🔧 缓存控制：每次请求都添加唯一参数
         let requestCounter = 0;
         
         // ==================== 数据加载 ====================
@@ -162,7 +158,6 @@
             
             for (let i = 0; i < retryCount; i++) {
                 try {
-                    // 🔧 强制刷新：时间戳 + 随机数 + 计数器
                     const cacheBuster = `?t=${Date.now()}&r=${Math.random()}&c=${++requestCounter}`;
                     const url = `data/${companyKey}.json${cacheBuster}`;
                     
@@ -213,30 +208,25 @@
             };
         }
 
-        // 🔧 并行加载所有公司数据（而不是串行）
         async function loadAllCompanies() {
             const grid = document.getElementById('companies-grid');
             const refreshBtn = document.getElementById('refresh-btn');
             const statusText = document.getElementById('status-text');
             
-            // 设置加载状态
             if (refreshBtn) refreshBtn.classList.add('refreshing');
             if (statusText) statusText.innerHTML = '<span class="status-indicator loading"></span>正在加载...';
             
             try {
-                // 🔧 并行请求所有数据
                 const promises = COMPANY_LIST.map(company => 
                     loadCompanyData(company).then(result => ({ company, ...result }))
                 );
                 
                 const results = await Promise.all(promises);
                 
-                // 转换为对象
                 const dataMap = {};
                 results.forEach(({ company, success, data }) => {
                     dataMap[company] = data;
                     
-                    // 更新公司卡片状态
                     const section = document.querySelector(`.company-section[data-company="${company}"]`);
                     if (section) {
                         section.classList.remove('loading', 'error');
@@ -244,13 +234,11 @@
                     }
                 });
 
-                // 🔧 使用 DAMACAI 的日期（如果有）
                 const damacaiData = dataMap['damacai'];
                 if (damacaiData && damacaiData.draw_date && damacaiData.draw_date !== "----") {
                     document.getElementById('draw_date').innerText = damacaiData.draw_date;
                     document.getElementById('global_draw_no').innerText = damacaiData.global_draw_no || "----";
                 } else {
-                    // 备用：使用第一个有有效数据的日期
                     const firstValid = results.find(r => r.success && r.data.draw_date && r.data.draw_date !== "----");
                     if (firstValid) {
                         document.getElementById('draw_date').innerText = firstValid.data.draw_date;
@@ -261,13 +249,11 @@
                     }
                 }
 
-                // 渲染所有公司
                 grid.innerHTML = '';
                 for (const [companyKey, companyData] of Object.entries(dataMap)) {
                     renderCompany(companyKey, companyData);
                 }
 
-                // 更新状态
                 const successCount = results.filter(r => r.success).length;
                 if (statusText) {
                     statusText.innerHTML = `<span class="status-indicator ${successCount === COMPANY_LIST.length ? 'success' : 'error'}"></span>${successCount}/${COMPANY_LIST.length} 加载成功`;
@@ -283,7 +269,6 @@
             }
         }
 
-        // 🔧 强制刷新功能
         function forceRefresh() {
             const refreshBtn = document.getElementById('refresh-btn');
             if (refreshBtn) {
@@ -291,12 +276,10 @@
                 refreshBtn.innerText = '🔄 刷新中...';
             }
             
-            // 清除所有缓存
             if ('caches' in window) {
                 caches.keys().then(names => names.forEach(name => caches.delete(name)));
             }
             
-            // 重新加载数据
             loadAllCompanies().then(() => {
                 if (refreshBtn) {
                     refreshBtn.innerText = '🔄 刷新';
@@ -312,14 +295,12 @@
             section.className = 'company-section loading';
             section.setAttribute('data-company', companyKey);
 
-            // 标题
             const titleDiv = document.createElement('div');
             titleDiv.className = 'company-title';
             const displayName = NAME_MAP[companyKey] || companyKey.replace(/_/g, ' ').toUpperCase();
             titleDiv.innerText = displayName;
             section.appendChild(titleDiv);
 
-            // 开奖信息
             if (companyData.draw_info && companyData.draw_info !== "----") {
                 const drawDateDiv = document.createElement('div');
                 drawDateDiv.className = 'draw-date';
@@ -327,7 +308,6 @@
                 section.appendChild(drawDateDiv);
             }
 
-            // Fireball 特殊处理
             if (companyKey === 'sportstoto_fireball') {
                 const fbDiv = document.createElement('div');
                 fbDiv.style.display = 'flex';
@@ -337,13 +317,11 @@
                 section.appendChild(fbDiv);
             }
 
-            // 根据类型渲染
             if (!companyData.type) {
                 if (companyData['1st'] && companyData['1st'] !== "----") {
                     section.appendChild(createPrizeGrid(companyData));
                 }
                 
-                // Sabah 3D
                 if (companyKey === 'sabah' && companyData['3d']) {
                     const title3d = document.createElement('div');
                     title3d.className = 'subsection-title';
@@ -361,7 +339,6 @@
                     section.appendChild(prizeGrid3d);
                 }
 
-                // Special & Consolation
                 if (companyData.special && companyData.special.length > 0) {
                     section.appendChild(createNumberListSection(companyKey === 'sabah_lotto' ? 'Lotto 6/45' : '🎁 特别奖 (Special)', companyData.special));
                 }
@@ -374,18 +351,52 @@
 
             grid.appendChild(section);
             
-            // 移除加载状态
             setTimeout(() => section.classList.remove('loading'), 100);
         }
 
+        // 🔧 已优化：1st 在上，2nd/3rd 并列在下
         function createPrizeGrid(companyData) {
             const prizeGrid = document.createElement('div');
             prizeGrid.className = 'prize-grid';
-            prizeGrid.innerHTML = `
-                <div class="prize-card"><div class="label">1st Prize</div><div class="number">${companyData['1st'] || '----'}</div></div>
-                <div class="prize-card"><div class="label">2nd Prize</div><div class="number">${companyData['2nd'] || '----'}</div></div>
-                <div class="prize-card"><div class="label">3rd Prize</div><div class="number">${companyData['3rd'] || '----'}</div></div>
+            prizeGrid.style.display = 'flex';
+            prizeGrid.style.flexDirection = 'column';
+            prizeGrid.style.alignItems = 'center';
+            prizeGrid.style.gap = '8px';
+            prizeGrid.style.margin = '12px 0 16px';
+            
+            // 第一行：1st Prize（独占一行，较宽）
+            const firstRow = document.createElement('div');
+            firstRow.style.display = 'flex';
+            firstRow.style.justifyContent = 'center';
+            firstRow.style.width = '100%';
+            firstRow.style.marginBottom = '4px';
+            firstRow.innerHTML = `
+                <div class="prize-card" style="flex: 0 0 220px; max-width: 220px; min-width: 180px;">
+                    <div class="label">1st Prize</div>
+                    <div class="number">${companyData['1st'] || '----'}</div>
+                </div>
             `;
+            
+            // 第二行：2nd 和 3rd Prize（并列）
+            const secondRow = document.createElement('div');
+            secondRow.style.display = 'flex';
+            secondRow.style.justifyContent = 'center';
+            secondRow.style.gap = '8px';
+            secondRow.style.width = '100%';
+            secondRow.innerHTML = `
+                <div class="prize-card" style="flex: 1; min-width: 90px; max-width: 150px;">
+                    <div class="label">2nd Prize</div>
+                    <div class="number">${companyData['2nd'] || '----'}</div>
+                </div>
+                <div class="prize-card" style="flex: 1; min-width: 90px; max-width: 150px;">
+                    <div class="label">3rd Prize</div>
+                    <div class="number">${companyData['3rd'] || '----'}</div>
+                </div>
+            `;
+            
+            prizeGrid.appendChild(firstRow);
+            prizeGrid.appendChild(secondRow);
+            
             return prizeGrid;
         }
 
@@ -569,11 +580,9 @@
         // ==================== 初始化 ====================
         document.addEventListener('DOMContentLoaded', () => {
             loadAllCompanies();
-            // 🔧 延长自动刷新间隔（减少服务器压力）
-            setInterval(loadAllCompanies, 60000); // 每 60 秒刷新（原 30 秒）
+            setInterval(loadAllCompanies, 60000);
         });
 
-        // 🔧 页面可见时自动刷新
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden) {
                 loadAllCompanies();
