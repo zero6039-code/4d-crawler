@@ -15,12 +15,81 @@
         .draw-info { background: #ffffffcc; backdrop-filter: blur(4px); border-radius: 40px; padding: 8px 16px; text-align: center; display: inline-block; margin: 0 auto 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); font-weight: 500; color: #2c3e50; border: 1px solid rgba(255,255,255,0.8); left: 50%; position: relative; transform: translateX(-50%); }
         .draw-info strong { color: #d32f2f; }
         .companies-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
-        .company-section { background: white; border-radius: 24px; box-shadow: 0 8px 20px rgba(0,20,30,0.1); margin-bottom: 0; padding: 14px 12px; border: 1px solid rgba(255,255,255,0.5); transition: transform 0.15s ease; }
+        .company-section { background: white; border-radius: 24px; box-shadow: 0 8px 20px rgba(0,20,30,0.1); margin-bottom: 0; padding: 14px 12px; border: 1px solid rgba(255,255,255,0.5); transition: transform 0.15s ease; position: relative; }
         .company-section:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(0,0,0,0.12); }
         .company-section.loading { opacity: 0.6; pointer-events: none; }
         .company-section.error { border-color: #d32f2f; background: #ffebee; }
-        .company-title { font-size: 1.6rem; font-weight: 800; margin-bottom: 4px; padding-left: 4px; background: linear-gradient(145deg, #1e2b3a, #2b3d55); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+        .company-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        .company-title { font-size: 1.6rem; font-weight: 800; padding-left: 4px; background: linear-gradient(145deg, #1e2b3a, #2b3d55); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
         .company-title::before { content: "🎯"; margin-right: 6px; font-size: 1.4rem; background: none; -webkit-text-fill-color: initial; }
+        
+        /* 🔧 新增：历史按钮样式 */
+        .history-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(102,126,234,0.3);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .history-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102,126,234,0.4);
+        }
+        
+        .history-btn.active {
+            background: linear-gradient(135deg, #764ba2, #667eea);
+        }
+        
+        .history-dropdown {
+            position: absolute;
+            top: 50px;
+            right: 10px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            min-width: 200px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            border: 1px solid #e2e8f0;
+            display: none;
+        }
+        
+        .history-dropdown.show {
+            display: block;
+        }
+        
+        .history-option {
+            padding: 10px 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .history-option:hover {
+            background: #f0f2f5;
+        }
+        
+        .history-option.active {
+            background: #e6f0ff;
+            color: #3182ce;
+            font-weight: 600;
+        }
+        
+        .history-option .draw-no {
+            font-size: 0.75rem;
+            color: #7c8b9c;
+        }
+        
         .draw-date { font-size: 0.9rem; color: #4a5568; margin-bottom: 10px; padding-left: 4px; font-weight: 500; }
         .prize-grid { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 12px 0 16px; }
         .prize-card { background: #f8fafd; border-radius: 16px; padding: 10px 12px; flex: 1 1 90px; min-width: 80px; text-align: center; box-shadow: inset 0 1px 4px #ffffff, 0 5px 10px rgba(0,0,0,0.04); border: 1px solid #e9ecf0; }
@@ -99,122 +168,15 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0.3; }
         }
-
-        /* 🔧 新增：日期选择器样式 */
-        .date-selector {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        
-        .date-dropdown {
-            position: relative;
-            display: inline-block;
-        }
-        
-        .date-btn {
-            background: #ffffffcc;
-            backdrop-filter: blur(4px);
-            border: 1px solid rgba(255,255,255,0.8);
-            border-radius: 25px;
-            padding: 8px 16px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: #2c3e50;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            transition: all 0.2s;
-        }
-        
-        .date-btn:hover {
-            background: #ffffff;
-            box-shadow: 0 6px 16px rgba(0,0,0,0.1);
-        }
-        
-        .date-btn .arrow {
-            font-size: 0.8rem;
-            transition: transform 0.2s;
-        }
-        
-        .date-btn.active .arrow {
-            transform: rotate(180deg);
-        }
-        
-        .date-dropdown-content {
-            display: none;
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-            min-width: 200px;
-            max-height: 300px;
-            overflow-y: auto;
-            z-index: 1000;
-            margin-top: 8px;
-            border: 1px solid #e2e8f0;
-        }
-        
-        .date-dropdown.show .date-dropdown-content {
-            display: block;
-        }
-        
-        .date-option {
-            padding: 10px 16px;
-            cursor: pointer;
-            transition: background 0.2s;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        
-        .date-option:hover {
-            background: #f0f2f5;
-        }
-        
-        .date-option.active {
-            background: #e6f0ff;
-            color: #3182ce;
-            font-weight: 600;
-        }
-        
-        .date-option .draw-no {
-            font-size: 0.75rem;
-            color: #7c8b9c;
-        }
-        
-        .loading-history {
-            text-align: center;
-            padding: 20px;
-            color: #7c8b9c;
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🇲🇾 4D RESULT MALAYSIA</h1>
         
-        <!-- 🔧 新增：日期选择器 -->
-        <div class="date-selector">
-            <div class="date-dropdown" id="date-dropdown">
-                <button class="date-btn" id="date-btn" onclick="toggleDateDropdown()">
-                    <span id="selected-date">Loading...</span>
-                    <span class="arrow">▼</span>
-                </button>
-                <div class="date-dropdown-content" id="date-dropdown-content">
-                    <div class="loading-history">🔄 加载历史数据...</div>
-                </div>
-            </div>
-        </div>
-        
         <div class="draw-info">
-            <strong>日期：</strong> <span id="draw_date">Loading...</span> &nbsp; | &nbsp; 
-            <strong>开彩期号：</strong> <span id="global_draw_no">Loading...</span>
+            <strong>最新开奖：</strong> <span id="draw_date">Loading...</span> &nbsp; | &nbsp; 
+            <strong>期号：</strong> <span id="global_draw_no">Loading...</span>
             <button class="refresh-btn" id="refresh-btn" onclick="forceRefresh()">🔄 刷新</button>
         </div>
 
@@ -242,6 +204,9 @@
             'sportstoto_6d', 'magnum_life'
         ];
 
+        // 🔧 支持历史数据的公司
+        const HISTORY_COMPANY_LIST = ['damacai', 'magnum', 'toto'];
+
         const NAME_MAP = {
             'sabah_lotto': 'SABAH LOTTO',
             'sportstoto_fireball': 'SPORTSTOTO FIREBALL',
@@ -258,140 +223,130 @@
         };
 
         // 🔧 历史数据相关
-        let damacaiHistoryData = [];
-        let selectedDrawDate = null;
+        let historyDataMap = {};
+        let selectedCompany = null;
+        let selectedDrawIndex = null;
         let requestCounter = 0;
 
-        // ==================== 日期选择器功能 ====================
-        function toggleDateDropdown() {
-            const dropdown = document.getElementById('date-dropdown');
-            const btn = document.getElementById('date-btn');
+        // ==================== 历史数据功能 ====================
+        function toggleHistoryDropdown(companyKey) {
+            const dropdown = document.getElementById(`history-dropdown-${companyKey}`);
+            const btn = document.getElementById(`history-btn-${companyKey}`);
+            
+            // 关闭其他公司的下拉菜单
+            document.querySelectorAll('.history-dropdown').forEach(d => {
+                if (d.id !== `history-dropdown-${companyKey}`) {
+                    d.classList.remove('show');
+                }
+            });
+            document.querySelectorAll('.history-btn').forEach(b => {
+                if (b.id !== `history-btn-${companyKey}`) {
+                    b.classList.remove('active');
+                }
+            });
+            
             dropdown.classList.toggle('show');
             btn.classList.toggle('active');
         }
 
-        async function loadDamacaiHistory() {
+        async function loadCompanyHistory(companyKey) {
             try {
-                const response = await fetch(`data/damacai_all.json?t=${Date.now()}`, {
+                const response = await fetch(`data/${companyKey}_all.json?t=${Date.now()}`, {
                     cache: 'no-store'
                 });
                 
                 if (response.ok) {
-                    damacaiHistoryData = await response.json();
-                    renderDateDropdown();
+                    historyDataMap[companyKey] = await response.json();
+                    renderHistoryDropdown(companyKey);
                 }
             } catch (err) {
-                console.log('加载历史数据失败:', err);
+                console.log(`${companyKey} 历史数据加载失败:`, err);
             }
         }
 
-        function renderDateDropdown() {
-            const content = document.getElementById('date-dropdown-content');
+        function renderHistoryDropdown(companyKey) {
+            const content = document.getElementById(`history-dropdown-content-${companyKey}`);
+            const data = historyDataMap[companyKey];
             
-            if (!damacaiHistoryData || damacaiHistoryData.length === 0) {
-                content.innerHTML = '<div class="loading-history">暂无历史数据</div>';
+            if (!data || data.length === 0) {
+                content.innerHTML = '<div class="history-option">暂无历史数据</div>';
                 return;
             }
             
             let html = '';
-            damacaiHistoryData.forEach((data, index) => {
+            data.forEach((item, index) => {
                 const isActive = index === 0 ? 'active' : '';
-                const isSelected = selectedDrawDate === data.draw_date ? 'active' : '';
+                const isSelected = selectedCompany === companyKey && selectedDrawIndex === index ? 'active' : '';
                 html += `
-                    <div class="date-option ${isActive} ${isSelected}" onclick="selectDrawDate('${data.draw_date}', ${index})">
-                        <div>${data.draw_info || data.draw_date}</div>
-                        <div class="draw-no">${data.global_draw_no || ''}</div>
+                    <div class="history-option ${isActive} ${isSelected}" onclick="selectHistoryDraw('${companyKey}', ${index})">
+                        <div>${item.draw_info || item.draw_date}</div>
+                        <div class="draw-no">${item.global_draw_no || ''}</div>
                     </div>
                 `;
             });
             
             content.innerHTML = html;
-            
-            // 设置默认选择最新一期
-            if (!selectedDrawDate && damacaiHistoryData.length > 0) {
-                selectDrawDate(damacaiHistoryData[0].draw_date, 0);
-            }
         }
 
-        function selectDrawDate(drawDate, index) {
-            selectedDrawDate = drawDate;
+        function selectHistoryDraw(companyKey, index) {
+            selectedCompany = companyKey;
+            selectedDrawIndex = index;
             
-            // 更新按钮显示
-            document.getElementById('selected-date').innerText = drawDate;
-            
-            // 更新下拉菜单选中状态
-            const options = document.querySelectorAll('.date-option');
-            options.forEach((opt, i) => {
-                opt.classList.toggle('active', i === index);
-            });
+            const data = historyDataMap[companyKey][index];
+            if (!data) return;
             
             // 关闭下拉菜单
-            document.getElementById('date-dropdown').classList.remove('show');
-            document.getElementById('date-btn').classList.remove('active');
+            document.getElementById(`history-dropdown-${companyKey}`).classList.remove('show');
+            document.getElementById(`history-btn-${companyKey}`).classList.remove('active');
             
-            // 加载选定日期的数据
-            loadCompanyDataForDate('damacai', index);
+            // 更新公司卡片显示
+            updateCompanyCard(companyKey, data);
             
-            // 更新顶部日期显示
-            const data = damacaiHistoryData[index];
-            if (data) {
-                document.getElementById('draw_date').innerText = data.draw_date;
-                document.getElementById('global_draw_no').innerText = data.global_draw_no || '----';
-            }
+            // 更新顶部显示
+            document.getElementById('draw_date').innerText = data.draw_date;
+            document.getElementById('global_draw_no').innerText = data.global_draw_no || '----';
         }
 
-        async function loadCompanyDataForDate(companyKey, historyIndex) {
-            if (companyKey !== 'damacai' || !damacaiHistoryData[historyIndex]) {
-                return;
+        function updateCompanyCard(companyKey, data) {
+            const section = document.querySelector(`.company-section[data-company="${companyKey}"]`);
+            if (!section) return;
+            
+            // 更新开奖信息
+            section.querySelector('.draw-date')?.remove();
+            
+            if (data.draw_info) {
+                const drawDateDiv = document.createElement('div');
+                drawDateDiv.className = 'draw-date';
+                drawDateDiv.innerText = data.draw_info;
+                const prizeGrid = section.querySelector('.prize-grid');
+                if (prizeGrid) {
+                    section.insertBefore(drawDateDiv, prizeGrid);
+                }
             }
             
-            const data = damacaiHistoryData[historyIndex];
-            const section = document.querySelector('.company-section[data-company="damacai"]');
+            // 更新奖项号码
+            const prizeCards = section.querySelectorAll('.prize-card .number');
+            if (prizeCards.length >= 3) {
+                prizeCards[0].innerText = data['1st'] || '----';
+                prizeCards[1].innerText = data['2nd'] || '----';
+                prizeCards[2].innerText = data['3rd'] || '----';
+            }
             
-            if (section) {
-                // 更新开奖信息
-                section.querySelector('.draw-date')?.remove();
-                
-                if (data.draw_info) {
-                    const drawDateDiv = document.createElement('div');
-                    drawDateDiv.className = 'draw-date';
-                    drawDateDiv.innerText = data.draw_info;
-                    const prizeGrid = section.querySelector('.prize-grid');
-                    if (prizeGrid) {
-                        section.insertBefore(drawDateDiv, prizeGrid);
-                    }
+            // 更新特别奖和安慰奖
+            const subsections = section.querySelectorAll('.subsection');
+            if (subsections.length >= 2) {
+                const specialList = subsections[0]?.querySelectorAll('.number-item');
+                if (specialList) {
+                    data.special?.forEach((num, i) => {
+                        if (specialList[i]) specialList[i].innerText = num || '----';
+                    });
                 }
                 
-                // 更新奖项号码
-                const prizeCards = section.querySelectorAll('.prize-card .number');
-                if (prizeCards.length >= 3) {
-                    prizeCards[0].innerText = data['1st'] || '----';
-                    prizeCards[1].innerText = data['2nd'] || '----';
-                    prizeCards[2].innerText = data['3rd'] || '----';
-                }
-                
-                // 更新特别奖和安慰奖
-                const subsections = section.querySelectorAll('.subsection');
-                if (subsections.length >= 2) {
-                    // 特别奖
-                    const specialList = subsections[0]?.querySelectorAll('.number-item');
-                    if (specialList) {
-                        data.special?.forEach((num, i) => {
-                            if (specialList[i]) {
-                                specialList[i].innerText = num || '----';
-                            }
-                        });
-                    }
-                    
-                    // 安慰奖
-                    const consolationList = subsections[1]?.querySelectorAll('.number-item');
-                    if (consolationList) {
-                        data.consolation?.forEach((num, i) => {
-                            if (consolationList[i]) {
-                                consolationList[i].innerText = num || '----';
-                            }
-                        });
-                    }
+                const consolationList = subsections[1]?.querySelectorAll('.number-item');
+                if (consolationList) {
+                    data.consolation?.forEach((num, i) => {
+                        if (consolationList[i]) consolationList[i].innerText = num || '----';
+                    });
                 }
             }
         }
@@ -462,8 +417,10 @@
             if (statusText) statusText.innerHTML = '<span class="status-indicator loading"></span>正在加载...';
             
             try {
-                // 🔧 先加载历史数据
-                await loadDamacaiHistory();
+                // 🔧 先加载支持历史数据的公司
+                for (const company of HISTORY_COMPANY_LIST) {
+                    await loadCompanyHistory(company);
+                }
                 
                 const promises = COMPANY_LIST.map(company => 
                     loadCompanyData(company).then(result => ({ company, ...result }))
@@ -482,12 +439,11 @@
                     }
                 });
 
-                // 🔧 使用选中的日期或最新日期
-                const displayData = damacaiHistoryData[0] || dataMap['damacai'];
-                if (displayData && displayData.draw_date && displayData.draw_date !== "----") {
-                    document.getElementById('draw_date').innerText = displayData.draw_date;
-                    document.getElementById('global_draw_no').innerText = displayData.global_draw_no || "----";
-                    document.getElementById('selected-date').innerText = displayData.draw_date;
+                // 使用 DAMACAI 的日期作为顶部显示
+                const damacaiData = dataMap['damacai'];
+                if (damacaiData && damacaiData.draw_date && damacaiData.draw_date !== "----") {
+                    document.getElementById('draw_date').innerText = damacaiData.draw_date;
+                    document.getElementById('global_draw_no').innerText = damacaiData.global_draw_no || "----";
                 }
 
                 grid.innerHTML = '';
@@ -521,8 +477,9 @@
                 caches.keys().then(names => names.forEach(name => caches.delete(name)));
             }
             
-            damacaiHistoryData = [];
-            selectedDrawDate = null;
+            historyDataMap = {};
+            selectedCompany = null;
+            selectedDrawIndex = null;
             
             loadAllCompanies().then(() => {
                 if (refreshBtn) {
@@ -539,11 +496,39 @@
             section.className = 'company-section loading';
             section.setAttribute('data-company', companyKey);
 
+            // 🔧 公司头部（标题 + 历史按钮）
+            const headerDiv = document.createElement('div');
+            headerDiv.className = 'company-header';
+            
             const titleDiv = document.createElement('div');
             titleDiv.className = 'company-title';
             const displayName = NAME_MAP[companyKey] || companyKey.replace(/_/g, ' ').toUpperCase();
             titleDiv.innerText = displayName;
-            section.appendChild(titleDiv);
+            
+            headerDiv.appendChild(titleDiv);
+            
+            // 🔧 历史按钮（仅支持的公司显示）
+            if (HISTORY_COMPANY_LIST.includes(companyKey)) {
+                const historyBtn = document.createElement('button');
+                historyBtn.className = 'history-btn';
+                historyBtn.id = `history-btn-${companyKey}`;
+                historyBtn.innerHTML = '📅 历史 <span class="arrow">▼</span>';
+                historyBtn.onclick = () => toggleHistoryDropdown(companyKey);
+                headerDiv.appendChild(historyBtn);
+                
+                // 历史下拉菜单
+                const dropdown = document.createElement('div');
+                dropdown.className = 'history-dropdown';
+                dropdown.id = `history-dropdown-${companyKey}`;
+                dropdown.innerHTML = `
+                    <div class="history-option" id="history-dropdown-content-${companyKey}">
+                        <div class="loading-history">🔄 加载...</div>
+                    </div>
+                `;
+                section.appendChild(dropdown);
+            }
+            
+            section.appendChild(headerDiv);
 
             if (companyData.draw_info && companyData.draw_info !== "----") {
                 const drawDateDiv = document.createElement('div');
@@ -830,11 +815,16 @@
 
         // 🔧 点击外部关闭下拉菜单
         document.addEventListener('click', (e) => {
-            const dropdown = document.getElementById('date-dropdown');
-            if (dropdown && !dropdown.contains(e.target)) {
-                dropdown.classList.remove('show');
-                document.getElementById('date-btn')?.classList.remove('active');
-            }
+            document.querySelectorAll('.history-dropdown').forEach(dropdown => {
+                if (dropdown && !dropdown.contains(e.target) && !e.target.classList.contains('history-btn')) {
+                    dropdown.classList.remove('show');
+                }
+            });
+            document.querySelectorAll('.history-btn').forEach(btn => {
+                if (btn && !btn.contains(e.target)) {
+                    btn.classList.remove('active');
+                }
+            });
         });
     </script>
 </body>
