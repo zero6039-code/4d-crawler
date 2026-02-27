@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>4D 成绩 Malaysia · 实时更新</title>
     <style>
-        /* 原样保留您的所有样式 */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
         body { background: #f0f2f5; padding: 15px 10px; }
         .container { max-width: 1300px; margin: 0 auto; }
@@ -45,254 +44,161 @@
     <div class="container">
         <h1>🇲🇾 4D RESULT MALAYSIA</h1>
         <div class="draw-info">
-            <strong>日期：</strong> <span id="draw_date">22-02-2026 (Sun)</span> &nbsp; | &nbsp; 
-            <strong>开彩期号：</strong> <span id="global_draw_no">6042-26</span> (通用)
+            <strong>日期：</strong> <span id="draw_date">Loading...</span> &nbsp; | &nbsp; 
+            <strong>开彩期号：</strong> <span id="global_draw_no">Loading...</span>
         </div>
 
-        <!-- 公司卡片容器，由 JavaScript 动态生成 -->
-        <div id="companies-grid" class="companies-grid"></div>
+        <div id="companies-grid" class="companies-grid">
+            <p style="text-align: center; grid-column: 1/-1; color: #666;">🔄 正在加载数据...</p>
+        </div>
 
         <footer>
             ⚠️ 数据仅供参考，请以官方公告为准。<br>
-            更新于 <span id="update-time"><?php echo date('Y-m-d H:i:s'); ?></span>
+            更新于 <span id="update-time">-</span>
         </footer>
     </div>
 
     <script>
-        // ==================== 内嵌初始数据 ====================
-        window.initialData = {
-            "draw_date": "22-02-2026 (Sun)",
-            "global_draw_no": "6042-26",
-            "results": {
-                // 🔴 DAMACAI - 成绩已改为 ----（专注排查用）
-                "damacai": {
-                    "1st": "----", "2nd": "----", "3rd": "----",
-                    "special": ["----", "----", "----", "----", "----", "----", "----", "----", "----", "----"],
-                    "consolation": ["----", "----", "----", "----", "----", "----", "----", "----", "----", "----"],
-                    "draw_info": "(Sun) 22-Feb-2026 #6042-26"
-                },
-                // 🔴 DAMACAI 1+3D - 成绩已改为 ----
-                "damacai_1p3d": {
-                    "1st": "----", "2nd": "----", "3rd": "----",
-                    "special": ["----", "----", "----", "----", "----", "----", "----", "----", "----", "----"],
-                    "consolation": ["----", "----", "----", "----", "----", "----", "----", "----", "----", "----"],
-                    "draw_info": "(Sun) 22-Feb-2026 #6042-26"
-                },
-                // 🟢 其他公司 - 数据原样保留
-                "magnum": {
-                    "1st": "7674", "2nd": "0531", "3rd": "2579",
-                    "special": ["9691", "7172", "9248", "8786", "6509", "5749", "4802", "0774", "6939", "1035"],
-                    "consolation": ["8582", "5530", "4589", "2827", "7016", "9130", "4682", "6669", "1262", "3987"],
-                    "draw_info": "(Sun) 22-Feb-2026 #332-26"
-                },
-                "toto": {
-                    "1st": "3294", "2nd": "6710", "3rd": "7919",
-                    "special": ["3543", "8142", "0712", "7493", "9645", "0134", "3733", "3361", "6240", ""],
-                    "consolation": ["1927", "5797", "1468", "6862", "2022", "8886", "6717", "6476", "2022", "8896"],
-                    "draw_info": "(Sun) 22-Feb-2026 #6095-26"
-                },
-                "singapore": {
-                    "1st": "1903", "2nd": "7215", "3rd": "3568",
-                    "special": ["0041", "1203", "1695", "3950", "6410", "6540", "7219", "7440", "", ""],
-                    "consolation": ["1376", "1790", "2634", "3301", "5217", "5685", "7875", "9419", "4698", "9984"],
-                    "draw_info": "(Sun) 22-Feb-2026 #5448"
-                },
-                "sandakan": {
-                    "1st": "4670", "2nd": "7431", "3rd": "0590",
-                    "special": ["3659", "4792", "1665", "0771", "9686", "2931", "8112", "8212", "1338", "0070"],
-                    "consolation": ["0382", "1110", "4315", "6633", "6896", "0600", "7449", "7929", "7582", "5070"],
-                    "draw_info": "(Sun) 22-Feb-2026 #026-26"
-                },
-                "sarawak_cashsweep": {
-                    "1st": "0739", "2nd": "5365", "3rd": "5825",
-                    "special": ["2920", "6131", "0585", "5279", "8878", "9663", "8388", "0087", "8429", "7250"],
-                    "consolation": ["1350", "2604", "8717", "4444", "3067", "6084", "2191", "2699", "4274", "0426"],
-                    "draw_info": "(Sun) 22-Feb-2026 #5254-26"
-                },
-                "sabah": {
-                    "1st": "4971", "2nd": "1333", "3rd": "1360",
-                    "special": ["2813", "5060", "9576", "3170", "5425", "1227", "0436", "7208", "9349", "6696"],
-                    "consolation": ["1522", "9419", "5334", "1283", "2559", "9234", "6040", "3135", "9904", "9832"],
-                    "draw_info": "(Sun) 22-Feb-2026 #4161-26",
-                    "3d": { "1st": "686", "2nd": "741", "3rd": "554" }
-                },
-                "sabah_lotto": {
-                    "1st": "", "2nd": "", "3rd": "",
-                    "special": ["03", "12", "29", "32", "34", "44", "+", "16"],
-                    "consolation": ["Jackpot1: RM732,609.85", "Jackpot2: RM16,515.20"],
-                    "draw_info": "(Sun) 22-Feb-2026 #4161-26"
-                },
-                "sportstoto_fireball": {
-                    "type": "fireball",
-                    "first_prize": ["3294", "5294", "3594", "3254", "3295"],
-                    "second_prize": ["6710", "5710", "6510", "6750", "6715"],
-                    "third_prize": ["7919", "5919", "7519", "7959", "7915"],
-                    "special": ["0134", "0135", "0154", "0512", "0534", "0712", "0715", "0752", "3351", "3361", "3365", "3533", "3543", "3543", "3545", "3553", "3561", "3733", "3735", "3753", "5091", "5134", "5142", "5240", "5361", "5493", "5543", "5645", "5712", "5733", "6240", "6245", "6250", "6540", "7453", "7493", "7495", "7593", "8051", "8091", "8095", "8142", "8145", "8152", "8542", "8591", "9545", "9645", "9645", "9655"],
-                    "consolation": ["1125", "1125", "1155", "1458", "1465", "1468", "1525", "1527", "1568", "1925", "1927", "1957", "2022", "2025", "2052", "2522", "5022", "5125", "5419", "5468", "5476", "5597", "5717", "5757", "5795", "5797", "5797", "5862", "5886", "5927", "6456", "6475", "6476", "6517", "6562", "6576", "6715", "6717", "6757", "6852", "6862", "6865", "7415", "7419", "7459", "7519", "8586", "8856", "8885", "8886"],
-                    "draw_info": "(Sun) 22-Feb-2026 #6095-26"
-                },
-                "grand_dragon": {
-                    "1st": "9044", "2nd": "7457", "3rd": "3820",
-                    "special": ["9175", "2085", "3562", "5441", "9147", "9137", "3432", "9584", "7663", "4464"],
-                    "consolation": ["3753", "9812", "1956", "4459", "9527", "1052", "0745", "7707", "1812", "6503"],
-                    "draw_info": "(Tue) 24-Feb-2026"
-                },
-                "singapore_toto": {
-                    "type": "singapore_toto",
-                    "winning_numbers": ["24", "26", "30", "32", "37", "47", "+", "2"],
-                    "prize_table": [
-                        ["Group 1", "$893,718", "2"],
-                        ["Group 2", "$188,152", "2"],
-                        ["Group 3", "$2,562", "101"],
-                        ["Group 4", "$453", "312"],
-                        ["Group 5", "$50", "6,204"],
-                        ["Group 6", "$25", "9,583"]
-                    ],
-                    "draw_info": "(Mon) 23-Feb-2026 #4159"
-                },
-                "sportstoto_lotto": {
-                    "type": "lotto",
-                    "star": ["20", "21", "23", "26", "34", "49", "+", "12"],
-                    "power": ["9", "14", "16", "26", "37", "46"],
-                    "supreme": ["14", "19", "36", "40", "52", "53"],
-                    "jackpots": [
-                        "Star JP1: RM1,244,229.88",
-                        "Star JP2: RM168,249.97",
-                        "Power JP: RM5,338,888.36",
-                        "Supreme JP: RM14,145,385.69"
-                    ],
-                    "draw_info": "(Sun) 22-Feb-2026 #6095-26"
-                },
-                "magnum_jackpot_gold": {
-                    "type": "jackpot_gold",
-                    "jackpot1": ["74", "+", "31", "+", "79", "+", "16"],
-                    "jackpot2_options": [
-                        ["74", "+", "31", "+", "7", "+", "16"],
-                        ["or", "4", "+", "31", "+", "79", "+", "16"]
-                    ],
-                    "estimated": [
-                        "Jackpot 1: RM 12,027,000",
-                        "Jackpot 2: RM 187,000"
-                    ],
-                    "draw_info": "(Sun) 22-Feb-2026 #332-26"
-                },
-                "sportstoto_5d": {
-                    "type": "5d_table",
-                    "data": [
-                        ["1st Prize", "50787"],
-                        ["2nd Prize", "11292"],
-                        ["3rd Prize", "03460"],
-                        ["4th Prize", "0787"],
-                        ["5th Prize", "787"],
-                        ["6th Prize", "87"]
-                    ],
-                    "draw_info": "(Sun) 22-Feb-2026 #6095-26"
-                },
-                "sportstoto_6d": {
-                    "type": "6d_table",
-                    "data": [
-                        ["1st", "215818", ""],
-                        ["2nd", "21581*", "*15818"],
-                        ["3rd", "2158**", "**5818"],
-                        ["4th", "215***", "***818"],
-                        ["5th", "21****", "****18"]
-                    ],
-                    "draw_info": "(Sun) 22-Feb-2026 #6095-26"
-                },
-                "magnum_life": {
-                    "type": "magnum_life",
-                    "winning": ["05", "06", "10", "16", "21", "25", "26", "32"],
-                    "bonus": ["11", "22"],
-                    "draw_info": "(Sun) 22-Feb-2026 #332-26"
-                }
-            }
+        // ==================== 配置 ====================
+        const COMPANY_LIST = [
+            'damacai', 'magnum', 'toto', 'singapore', 'damacai_1p3d',
+            'sandakan', 'sarawak_cashsweep', 'sabah', 'sabah_lotto',
+            'sportstoto_fireball', 'grand_dragon', 'singapore_toto',
+            'sportstoto_lotto', 'magnum_jackpot_gold', 'sportstoto_5d',
+            'sportstoto_6d', 'magnum_life'
+        ];
+
+        const NAME_MAP = {
+            'sabah_lotto': 'SABAH LOTTO',
+            'sportstoto_fireball': 'SPORTSTOTO FIREBALL',
+            'sportstoto_5d': 'SPORTSTOTO 5D',
+            'sportstoto_6d': 'SPORTSTOTO 6D',
+            'sportstoto_lotto': 'SPORTSTOTO LOTTO',
+            'singapore_toto': 'SINGAPORE TOTO',
+            'magnum_jackpot_gold': 'MAGNUM JACKPOT GOLD',
+            'magnum_life': 'MAGNUM LIFE',
+            'grand_dragon': 'GRAND DRAGON',
+            'singapore': 'SINGAPORE 4D',
+            'damacai_1p3d': 'DAMACAI 1+3D',
+            'sarawak_cashsweep': 'SARAWAK CASHSWEEP'
         };
 
-        // ==================== 动态渲染函数（原样保留） ====================
-        function renderCompanies(data) {
-            const grid = document.getElementById('companies-grid');
-            grid.innerHTML = '';
-
-            document.getElementById('draw_date').innerText = data.draw_date || '';
-            document.getElementById('global_draw_no').innerText = data.global_draw_no || '';
-
-            for (const [companyKey, companyData] of Object.entries(data.results)) {
-                const section = document.createElement('div');
-                section.className = 'company-section';
-                section.setAttribute('data-company', companyKey);
-
-                const titleDiv = document.createElement('div');
-                titleDiv.className = 'company-title';
-                let displayName = companyKey.replace(/_/g, ' ').toUpperCase();
-                const nameMap = {
-                    'sabah_lotto': 'SABAH LOTTO',
-                    'sportstoto_fireball': 'SPORTSTOTO FIREBALL',
-                    'sportstoto_5d': 'SPORTSTOTO 5D',
-                    'sportstoto_6d': 'SPORTSTOTO 6D',
-                    'sportstoto_lotto': 'SPORTSTOTO LOTTO',
-                    'singapore_toto': 'SINGAPORE TOTO',
-                    'magnum_jackpot_gold': 'MAGNUM JACKPOT GOLD',
-                    'magnum_life': 'MAGNUM LIFE',
-                    'grand_dragon': 'GRAND DRAGON',
-                    'singapore': 'SINGAPORE 4D'
-                };
-                displayName = nameMap[companyKey] || displayName;
-                titleDiv.innerText = displayName;
-                section.appendChild(titleDiv);
-
-                if (companyData.draw_info) {
-                    const drawDateDiv = document.createElement('div');
-                    drawDateDiv.className = 'draw-date';
-                    drawDateDiv.innerText = companyData.draw_info;
-                    section.appendChild(drawDateDiv);
+        // ==================== 数据加载 ====================
+        async function loadCompanyData(companyKey) {
+            try {
+                const res = await fetch(`data/${companyKey}.json?t=${Date.now()}`);
+                if (res.ok) {
+                    return await res.json();
                 }
-
-                if (companyKey === 'sportstoto_fireball') {
-                    const fbDiv = document.createElement('div');
-                    fbDiv.style.display = 'flex'; fbDiv.style.justifyContent = 'center'; fbDiv.style.marginBottom = '8px';
-                    fbDiv.innerHTML = `<div class="prize-card" style="flex:0 0 auto;padding:6px 16px;"><div class="label">Fireball</div><div class="number" style="font-size:2rem;">5</div></div>`;
-                    section.appendChild(fbDiv);
-                }
-
-                if (!companyData.type) {
-                    if (companyData['1st'] && companyData['1st'] !== '-') {
-                        section.appendChild(createPrizeGrid(companyData));
-                    }
-                    if (companyKey === 'sabah' && companyData['3d']) {
-                        const title3d = document.createElement('div');
-                        title3d.className = 'subsection-title';
-                        title3d.style.marginTop = '8px'; title3d.style.fontSize = '1.0rem';
-                        title3d.innerText = '🎯 3D Prize';
-                        section.appendChild(title3d);
-                        const prizeGrid3d = document.createElement('div');
-                        prizeGrid3d.className = 'prize-grid';
-                        prizeGrid3d.innerHTML = `
-                            <div class="prize-card"><div class="label">1st Prize</div><div class="number">${companyData['3d']['1st'] || ''}</div></div>
-                            <div class="prize-card"><div class="label">2nd Prize</div><div class="number">${companyData['3d']['2nd'] || ''}</div></div>
-                            <div class="prize-card"><div class="label">3rd Prize</div><div class="number">${companyData['3d']['3rd'] || ''}</div></div>
-                        `;
-                        section.appendChild(prizeGrid3d);
-                    }
-                    if (companyData.special && companyData.special.length > 0) {
-                        section.appendChild(createNumberListSection(companyKey === 'sabah_lotto' ? 'Lotto 6/45' : '🎁 特别奖 (Special)', companyData.special));
-                    }
-                    if (companyData.consolation && companyData.consolation.length > 0 && companyKey !== 'sabah_lotto') {
-                        section.appendChild(createNumberListSection('😌 安慰奖 (Consolation)', companyData.consolation));
-                    }
-                } else {
-                    switch (companyData.type) {
-                        case 'fireball': renderFireball(section, companyData); break;
-                        case 'singapore_toto': renderSingaporeToto(section, companyData); break;
-                        case 'lotto': renderSportstotoLotto(section, companyData); break;
-                        case 'jackpot_gold': renderMagnumJackpotGold(section, companyData); break;
-                        case '5d_table': render5DTable(section, companyData); break;
-                        case '6d_table': render6DTable(section, companyData); break;
-                        case 'magnum_life': renderMagnumLife(section, companyData); break;
-                    }
-                }
-                grid.appendChild(section);
+            } catch (err) {
+                console.warn(`${companyKey} 加载失败`, err);
             }
-            document.getElementById('update-time').innerText = new Date().toLocaleString('en-GB', { timeZone: 'Asia/Kuala_Lumpur' });
+            return getPlaceholderData(companyKey);
+        }
+
+        function getPlaceholderData(companyKey) {
+            return {
+                "1st": "----", "2nd": "----", "3rd": "----",
+                "special": Array(10).fill("----"),
+                "consolation": Array(10).fill("----"),
+                "draw_info": "等待更新"
+            };
+        }
+
+        async function loadAllCompanies() {
+            const grid = document.getElementById('companies-grid');
+            
+            try {
+                const results = {};
+                for (const company of COMPANY_LIST) {
+                    results[company] = await loadCompanyData(company);
+                }
+
+                // 使用第一个有数据的日期
+                const firstCompany = results[COMPANY_LIST[0]];
+                document.getElementById('draw_date').innerText = firstCompany.draw_date || "22-02-2026 (Sun)";
+                document.getElementById('global_draw_no').innerText = firstCompany.global_draw_no || "6042-26";
+
+                // 渲染所有公司
+                grid.innerHTML = '';
+                for (const [companyKey, companyData] of Object.entries(results)) {
+                    renderCompany(companyKey, companyData);
+                }
+
+                document.getElementById('update-time').innerText = new Date().toLocaleString('en-GB', { timeZone: 'Asia/Kuala_Lumpur' });
+            } catch (err) {
+                grid.innerHTML = `<p style="text-align: center; grid-column: 1/-1; color: #d32f2f;">❌ 加载失败: ${err.message}</p>`;
+            }
+        }
+
+        // ==================== 渲染函数 ====================
+        function renderCompany(companyKey, companyData) {
+            const grid = document.getElementById('companies-grid');
+            const section = document.createElement('div');
+            section.className = 'company-section';
+            section.setAttribute('data-company', companyKey);
+
+            // 标题
+            const titleDiv = document.createElement('div');
+            titleDiv.className = 'company-title';
+            const displayName = NAME_MAP[companyKey] || companyKey.replace(/_/g, ' ').toUpperCase();
+            titleDiv.innerText = displayName;
+            section.appendChild(titleDiv);
+
+            // 开奖信息
+            if (companyData.draw_info) {
+                const drawDateDiv = document.createElement('div');
+                drawDateDiv.className = 'draw-date';
+                drawDateDiv.innerText = companyData.draw_info;
+                section.appendChild(drawDateDiv);
+            }
+
+            // Fireball 特殊处理
+            if (companyKey === 'sportstoto_fireball') {
+                const fbDiv = document.createElement('div');
+                fbDiv.style.display = 'flex';
+                fbDiv.style.justifyContent = 'center';
+                fbDiv.style.marginBottom = '8px';
+                fbDiv.innerHTML = `<div class="prize-card" style="flex:0 0 auto;padding:6px 16px;"><div class="label">Fireball</div><div class="number" style="font-size:2rem;">5</div></div>`;
+                section.appendChild(fbDiv);
+            }
+
+            // 根据类型渲染
+            if (!companyData.type) {
+                if (companyData['1st']) {
+                    section.appendChild(createPrizeGrid(companyData));
+                }
+                
+                // Sabah 3D
+                if (companyKey === 'sabah' && companyData['3d']) {
+                    const title3d = document.createElement('div');
+                    title3d.className = 'subsection-title';
+                    title3d.style.marginTop = '8px';
+                    title3d.style.fontSize = '1.0rem';
+                    title3d.innerText = '🎯 3D Prize';
+                    section.appendChild(title3d);
+                    const prizeGrid3d = document.createElement('div');
+                    prizeGrid3d.className = 'prize-grid';
+                    prizeGrid3d.innerHTML = `
+                        <div class="prize-card"><div class="label">1st Prize</div><div class="number">${companyData['3d']['1st'] || ''}</div></div>
+                        <div class="prize-card"><div class="label">2nd Prize</div><div class="number">${companyData['3d']['2nd'] || ''}</div></div>
+                        <div class="prize-card"><div class="label">3rd Prize</div><div class="number">${companyData['3d']['3rd'] || ''}</div></div>
+                    `;
+                    section.appendChild(prizeGrid3d);
+                }
+
+                // Special & Consolation
+                if (companyData.special && companyData.special.length > 0) {
+                    section.appendChild(createNumberListSection(companyKey === 'sabah_lotto' ? 'Lotto 6/45' : '🎁 特别奖 (Special)', companyData.special));
+                }
+                if (companyData.consolation && companyData.consolation.length > 0 && companyKey !== 'sabah_lotto') {
+                    section.appendChild(createNumberListSection('😌 安慰奖 (Consolation)', companyData.consolation));
+                }
+            } else {
+                renderSpecialType(section, companyKey, companyData);
+            }
+
+            grid.appendChild(section);
         }
 
         function createPrizeGrid(companyData) {
@@ -323,6 +229,32 @@
             });
             section.appendChild(listDiv);
             return section;
+        }
+
+        function renderSpecialType(section, companyKey, data) {
+            switch (data.type) {
+                case 'fireball':
+                    renderFireball(section, data);
+                    break;
+                case 'singapore_toto':
+                    renderSingaporeToto(section, data);
+                    break;
+                case 'lotto':
+                    renderSportstotoLotto(section, data);
+                    break;
+                case 'jackpot_gold':
+                    renderMagnumJackpotGold(section, data);
+                    break;
+                case '5d_table':
+                    render5DTable(section, data);
+                    break;
+                case '6d_table':
+                    render6DTable(section, data);
+                    break;
+                case 'magnum_life':
+                    renderMagnumLife(section, data);
+                    break;
+            }
         }
 
         function renderFireball(section, data) {
@@ -471,26 +403,11 @@
             section.appendChild(createNumberListSection('BONUS NUMBERS', data.bonus));
         }
 
-        // ==================== 数据加载与轮询 ====================
-        async function loadAndRender() {
-            try {
-                const res = await fetch('data.json?t=' + Date.now());
-                if (res.ok) {
-                    const remoteData = await res.json();
-                    renderCompanies(remoteData);
-                } else {
-                    console.warn('远程数据加载失败，使用上次渲染的数据');
-                }
-            } catch (err) {
-                console.error('请求出错', err);
-            }
-        }
-
-        // 首次使用内嵌数据渲染
-        renderCompanies(window.initialData);
-
-        // 每30秒尝试更新
-        setInterval(loadAndRender, 30000);
+        // ==================== 初始化 ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAllCompanies();
+            setInterval(loadAllCompanies, 30000); // 每30秒刷新
+        });
     </script>
 </body>
 </html>
