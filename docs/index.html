@@ -148,25 +148,20 @@
             'magnum_life': 'MAGNUM LIFE'
         };
 
-        // 特殊公司列表（用于决定渲染方式）
         const SPECIAL_COMPANIES = [
             'sportstoto_fireball', 'sportstoto_lotto', 'singapore_toto',
             'magnum_jackpot_gold', 'sportstoto_5d', 'sportstoto_6d', 'magnum_life'
         ];
 
-        let availableDates = [];          // 从 dates.json 加载的日期列表
-        let selectedDate = null;          // 当前选中的日期（YYYY-MM-DD 格式）
-        let currentDataMode = 'latest';    // 'latest' 或 'historical'
+        let availableDates = [];
+        let selectedDate = null;
 
         // ==================== 日期选择器功能 ====================
         function toggleDateDropdown() {
-            const dropdown = document.getElementById('date-dropdown');
-            const btn = document.getElementById('date-btn');
-            dropdown.classList.toggle('show');
-            btn.classList.toggle('active');
+            document.getElementById('date-dropdown').classList.toggle('show');
+            document.getElementById('date-btn').classList.toggle('active');
         }
 
-        // 加载历史日期列表
         async function loadDateIndex() {
             try {
                 const res = await fetch(`data/dates.json?t=${Date.now()}`, { cache: 'no-store' });
@@ -185,39 +180,24 @@
         function renderDateDropdown() {
             const content = document.getElementById('date-dropdown-content');
             const btnSpan = document.getElementById('selected-date');
-            
             if (!availableDates || availableDates.length === 0) {
                 content.innerHTML = '<div class="loading-history">暂无历史数据</div>';
                 btnSpan.innerText = '最新数据';
                 return;
             }
-
-            let html = '';
-            // 添加一个“最新数据”选项
-            html += `<div class="date-option ${!selectedDate ? 'active' : ''}" onclick="selectDate(null)">
-                        <div>📌 最新数据</div>
-                    </div>`;
+            let html = '<div class="date-option" onclick="selectDate(null)">📌 最新数据</div>';
             availableDates.forEach(date => {
-                const isActive = (selectedDate === date) ? 'active' : '';
-                html += `<div class="date-option ${isActive}" onclick="selectDate('${date}')">
-                            <div>📅 ${date}</div>
-                        </div>`;
+                const activeClass = (selectedDate === date) ? 'active' : '';
+                html += `<div class="date-option ${activeClass}" onclick="selectDate('${date}')">📅 ${date}</div>`;
             });
             content.innerHTML = html;
-
-            // 如果当前没有选中日期，默认选中最新数据
-            if (!selectedDate && availableDates.length > 0) {
-                // 不自动选中，让用户选择
-            }
         }
 
         function selectDate(date) {
-            selectedDate = date; // null 表示最新数据
+            selectedDate = date;
             document.getElementById('selected-date').innerText = date ? date : '最新数据';
             document.getElementById('date-dropdown').classList.remove('show');
             document.getElementById('date-btn').classList.remove('active');
-
-            // 重新加载所有公司数据（根据 selectedDate 决定从哪个目录加载）
             loadAllCompanies();
         }
 
@@ -225,91 +205,153 @@
         async function loadCompanyData(companyKey) {
             const basePath = selectedDate ? `data/${selectedDate}` : 'data';
             const url = `${basePath}/${companyKey}.json?t=${Date.now()}`;
-            const retryCount = 2;
-            const retryDelay = 1000;
+            try {
+                const res = await fetch(url, { cache: 'no-store' });
+                if (res.ok) {
+                    return await res.json();
+                }
+            } catch (err) {
+                console.warn(`${companyKey} 请求失败`, err);
+            }
+            return null;
+        }
 
-            for (let i = 0; i < retryCount; i++) {
-                try {
-                    const res = await fetch(url, {
-                        method: 'GET',
-                        cache: 'no-store',
-                        headers: {
-                            'Cache-Control': 'no-cache',
-                            'Pragma': 'no-cache'
-                        }
+        // ==================== 创建卡片骨架（首次加载）====================
+        function createCompanySkeletons() {
+            const grid = document.getElementById('companies-grid');
+            grid.innerHTML = '';
+            COMPANY_LIST.forEach(companyKey => {
+                const section = document.createElement('div');
+                section.className = 'company-section';
+                section.id = `company-${companyKey}`;
+                section.setAttribute('data-company', companyKey);
+
+                const titleDiv = document.createElement('div');
+                titleDiv.className = 'company-title';
+                titleDiv.innerText = NAME_MAP[companyKey] || companyKey.replace(/_/g, ' ').toUpperCase();
+                section.appendChild(titleDiv);
+
+                const metaDiv = document.createElement('div');
+                metaDiv.className = 'draw-date';
+                metaDiv.id = `meta-${companyKey}`;
+                metaDiv.innerText = '📅 日期: -- | 🎟️ 期号: --';
+                section.appendChild(metaDiv);
+
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'company-content';
+                contentDiv.id = `content-${companyKey}`;
+                contentDiv.innerHTML = '<p style="text-align:center;color:#999;">加载中...</p>';
+                section.appendChild(contentDiv);
+
+                grid.appendChild(section);
+            });
+        }
+
+        // ==================== 更新单个公司卡片 ====================
+        function updateCompanyCard(companyKey, data) {
+            const contentDiv = document.getElementById(`content-${companyKey}`);
+            const metaDiv = document.getElementById(`meta-${companyKey}`);
+            if (!contentDiv || !metaDiv) return;
+
+            if (!data) {
+                contentDiv.innerHTML = '<p style="text-align:center;color:#d32f2f;">加载失败</p>';
+                metaDiv.innerText = '📅 日期: -- | 🎟️ 期号: --';
+                return;
+            }
+
+            const drawDate = data.draw_date || '--';
+            const drawNo = data.draw_no || '--';
+            metaDiv.innerText = `📅 日期: ${drawDate} | 🎟️ 期号: ${drawNo}`;
+
+            let html = '';
+
+            if (SPECIAL_COMPANIES.includes(companyKey)) {
+                if (companyKey === 'sportstoto_5d' && data.data) {
+                    html += '<div class="custom-table">';
+                    data.data.forEach(row => {
+                        html += `<div style="display:flex;justify-content:space-between;padding:4px 0;"><span>${row[0]}</span><span class="number-item">${row[1]}</span></div>`;
                     });
-                    if (res.ok) {
-                        const data = await res.json();
-                        return { success: true, data };
+                    html += '</div>';
+                } else if (companyKey === 'sportstoto_6d' && data.data) {
+                    html += '<div class="custom-table">';
+                    data.data.forEach(row => {
+                        html += `<div style="display:flex;justify-content:space-between;padding:4px 0;"><span>${row[0]}</span><span class="number-item">${row[1]}</span><span class="alt-number">${row[2] || ''}</span></div>`;
+                    });
+                    html += '</div>';
+                } else if (companyKey === 'singapore_toto' && data.winning_numbers) {
+                    html += `<div class="subsection-title">开奖号码</div>`;
+                    html += `<div class="number-list">${data.winning_numbers.map(n => `<span class="number-item">${n}</span>`).join('')}</div>`;
+                    if (data.prize_table) {
+                        html += `<div class="subsection-title">奖金分配</div>`;
+                        html += `<table class="custom-table"><tr><th>Prize Group</th><th>Amount</th><th>Winners</th></tr>`;
+                        data.prize_table.forEach(row => {
+                            html += `<tr><td>${row[0]}</td><td>${row[1]}</td><td>${row[2]}</td></tr>`;
+                        });
+                        html += `</table>`;
                     }
-                    if (i < retryCount - 1) {
-                        await sleep(retryDelay * (i + 1));
-                    }
-                } catch (err) {
-                    console.warn(`${companyKey} 请求失败 (尝试 ${i + 1}/${retryCount})`, err);
-                    if (i < retryCount - 1) {
-                        await sleep(retryDelay * (i + 1));
-                    }
+                } else {
+                    html = '<p style="text-align:center;">特殊数据格式</p>';
+                }
+            } else {
+                html = `
+                    <div class="prize-grid" style="flex-direction:column;align-items:center;">
+                        <div style="display:flex;justify-content:center;width:100%;margin-bottom:4px;">
+                            <div class="prize-card" style="flex:0 0 220px;"><div class="label">1st Prize</div><div class="number">${data['1st'] || '----'}</div></div>
+                        </div>
+                        <div style="display:flex;justify-content:center;gap:8px;width:100%;">
+                            <div class="prize-card" style="flex:1;"><div class="label">2nd Prize</div><div class="number">${data['2nd'] || '----'}</div></div>
+                            <div class="prize-card" style="flex:1;"><div class="label">3rd Prize</div><div class="number">${data['3rd'] || '----'}</div></div>
+                        </div>
+                    </div>
+                `;
+
+                if (data.special && data.special.length > 0) {
+                    html += `<div class="subsection"><div class="subsection-title">🎁 特别奖 (Special)</div><div class="number-list">`;
+                    data.special.forEach(num => { html += `<span class="number-item">${num}</span>`; });
+                    html += `</div></div>`;
+                }
+
+                if (data.consolation && data.consolation.length > 0) {
+                    html += `<div class="subsection"><div class="subsection-title">😌 安慰奖 (Consolation)</div><div class="number-list">`;
+                    data.consolation.forEach(num => { html += `<span class="number-item">${num}</span>`; });
+                    html += `</div></div>`;
                 }
             }
 
-            // 返回占位数据
-            return {
-                success: false,
-                data: {
-                    "1st": "----",
-                    "2nd": "----",
-                    "3rd": "----",
-                    "special": [],
-                    "consolation": [],
-                    "draw_info": "加载失败",
-                    "draw_date": "----",
-                    "global_draw_no": "----"
-                }
-            };
-        }
-
-        function sleep(ms) {
-            return new Promise(resolve => setTimeout(resolve, ms));
+            contentDiv.innerHTML = html;
         }
 
         async function loadAllCompanies() {
-            const grid = document.getElementById('companies-grid');
             const statusText = document.getElementById('status-text');
             const drawDateSpan = document.getElementById('draw_date');
             const updateTimeSpan = document.getElementById('update-time');
 
-            statusText.innerHTML = '<span class="status-indicator loading"></span>正在加载...';
-            grid.innerHTML = '<p style="text-align: center; grid-column: 1/-1; color: #666;">🔄 正在加载数据...</p>';
+            statusText.innerHTML = '<span class="status-indicator loading"></span>正在更新...';
 
             try {
-                const promises = COMPANY_LIST.map(company => loadCompanyData(company));
+                const promises = COMPANY_LIST.map(key => loadCompanyData(key));
                 const results = await Promise.all(promises);
-                const dataMap = {};
-                results.forEach((result, idx) => {
-                    dataMap[COMPANY_LIST[idx]] = result.data;
+
+                let successCount = 0;
+                results.forEach((data, idx) => {
+                    const companyKey = COMPANY_LIST[idx];
+                    updateCompanyCard(companyKey, data);
+                    if (data) successCount++;
                 });
 
-                // 尝试从第一个公司获取日期信息（用于显示）
-                const firstCompany = dataMap[COMPANY_LIST[0]];
-                if (firstCompany && firstCompany.draw_date) {
-                    drawDateSpan.innerText = firstCompany.draw_date;
+                const firstValid = results.find(d => d && d.draw_date);
+                if (firstValid) {
+                    drawDateSpan.innerText = firstValid.draw_date;
                 } else {
-                    drawDateSpan.innerText = selectedDate || '最新数据';
+                    drawDateSpan.innerText = selectedDate || '--';
                 }
 
-                grid.innerHTML = '';
-                for (const [companyKey, companyData] of Object.entries(dataMap)) {
-                    renderCompany(companyKey, companyData);
-                }
-
-                const successCount = results.filter(r => r.success).length;
-                statusText.innerHTML = `<span class="status-indicator ${successCount === COMPANY_LIST.length ? 'success' : 'error'}"></span>${successCount}/${COMPANY_LIST.length} 家公司加载成功`;
+                statusText.innerHTML = `<span class="status-indicator ${successCount === COMPANY_LIST.length ? 'success' : 'error'}"></span>${successCount}/${COMPANY_LIST.length} 家公司更新成功`;
                 updateTimeSpan.innerText = new Date().toLocaleString('en-GB', { timeZone: 'Asia/Kuala_Lumpur' });
 
             } catch (err) {
-                grid.innerHTML = `<p style="text-align: center; grid-column: 1/-1; color: #d32f2f;">❌ 加载失败：${err.message}</p>`;
-                statusText.innerHTML = '<span class="status-indicator error"></span>加载失败';
+                console.error(err);
+                statusText.innerHTML = '<span class="status-indicator error"></span>更新失败';
             }
         }
 
@@ -317,285 +359,11 @@
             loadAllCompanies();
         }
 
-        // ==================== 渲染函数 ====================
-        function renderCompany(companyKey, companyData) {
-            const grid = document.getElementById('companies-grid');
-            const section = document.createElement('div');
-            section.className = 'company-section';
-            section.setAttribute('data-company', companyKey);
-
-            const titleDiv = document.createElement('div');
-            titleDiv.className = 'company-title';
-            titleDiv.innerText = NAME_MAP[companyKey] || companyKey.replace(/_/g, ' ').toUpperCase();
-            section.appendChild(titleDiv);
-
-            if (companyData.draw_info && companyData.draw_info !== "----") {
-                const drawDateDiv = document.createElement('div');
-                drawDateDiv.className = 'draw-date';
-                drawDateDiv.innerText = companyData.draw_info;
-                section.appendChild(drawDateDiv);
-            }
-
-            // 根据 companyKey 决定渲染方式，不再依赖 data.type
-            if (SPECIAL_COMPANIES.includes(companyKey)) {
-                renderSpecialType(section, companyKey, companyData);
-            } else {
-                // 普通公司
-                section.appendChild(createPrizeGrid(companyData));
-
-                if (companyKey === 'sabah' && companyData['3d']) {
-                    const title3d = document.createElement('div');
-                    title3d.className = 'subsection-title';
-                    title3d.style.marginTop = '8px';
-                    title3d.innerText = '🎯 3D Prize';
-                    section.appendChild(title3d);
-                    const prizeGrid3d = document.createElement('div');
-                    prizeGrid3d.className = 'prize-grid';
-                    prizeGrid3d.innerHTML = `
-                        <div class="prize-card"><div class="label">1st Prize</div><div class="number">${companyData['3d']['1st'] || '----'}</div></div>
-                        <div class="prize-card"><div class="label">2nd Prize</div><div class="number">${companyData['3d']['2nd'] || '----'}</div></div>
-                        <div class="prize-card"><div class="label">3rd Prize</div><div class="number">${companyData['3d']['3rd'] || '----'}</div></div>
-                    `;
-                    section.appendChild(prizeGrid3d);
-                }
-
-                if (companyData.special && companyData.special.length > 0) {
-                    section.appendChild(createNumberListSection(companyKey === 'sabah_lotto' ? 'Lotto 6/45' : '🎁 特别奖 (Special)', companyData.special));
-                }
-                if (companyData.consolation && companyData.consolation.length > 0 && companyKey !== 'sabah_lotto') {
-                    section.appendChild(createNumberListSection('😌 安慰奖 (Consolation)', companyData.consolation));
-                }
-            }
-
-            grid.appendChild(section);
-        }
-
-        function createPrizeGrid(companyData) {
-            const prizeGrid = document.createElement('div');
-            prizeGrid.className = 'prize-grid';
-            prizeGrid.style.display = 'flex';
-            prizeGrid.style.flexDirection = 'column';
-            prizeGrid.style.alignItems = 'center';
-            prizeGrid.style.gap = '8px';
-            prizeGrid.style.margin = '12px 0 16px';
-            
-            const firstRow = document.createElement('div');
-            firstRow.style.display = 'flex';
-            firstRow.style.justifyContent = 'center';
-            firstRow.style.width = '100%';
-            firstRow.style.marginBottom = '4px';
-            firstRow.innerHTML = `
-                <div class="prize-card" style="flex: 0 0 220px; max-width: 220px; min-width: 180px;">
-                    <div class="label">1st Prize</div>
-                    <div class="number">${companyData['1st'] || '----'}</div>
-                </div>
-            `;
-            
-            const secondRow = document.createElement('div');
-            secondRow.style.display = 'flex';
-            secondRow.style.justifyContent = 'center';
-            secondRow.style.gap = '8px';
-            secondRow.style.width = '100%';
-            secondRow.innerHTML = `
-                <div class="prize-card" style="flex: 1; min-width: 90px; max-width: 150px;">
-                    <div class="label">2nd Prize</div>
-                    <div class="number">${companyData['2nd'] || '----'}</div>
-                </div>
-                <div class="prize-card" style="flex: 1; min-width: 90px; max-width: 150px;">
-                    <div class="label">3rd Prize</div>
-                    <div class="number">${companyData['3rd'] || '----'}</div>
-                </div>
-            `;
-            
-            prizeGrid.appendChild(firstRow);
-            prizeGrid.appendChild(secondRow);
-            return prizeGrid;
-        }
-
-        function createNumberListSection(title, numbers) {
-            const section = document.createElement('div');
-            section.className = 'subsection';
-            const titleDiv = document.createElement('div');
-            titleDiv.className = 'subsection-title';
-            titleDiv.innerText = title;
-            section.appendChild(titleDiv);
-            const listDiv = document.createElement('div');
-            listDiv.className = 'number-list';
-            numbers.forEach(num => {
-                const span = document.createElement('span');
-                span.className = 'number-item';
-                span.innerText = num || '—';
-                listDiv.appendChild(span);
-            });
-            section.appendChild(listDiv);
-            return section;
-        }
-
-        function renderSpecialType(section, companyKey, data) {
-            switch (companyKey) {
-                case 'sportstoto_fireball': renderFireball(section, data); break;
-                case 'singapore_toto': renderSingaporeToto(section, data); break;
-                case 'sportstoto_lotto': renderSportstotoLotto(section, data); break;
-                case 'magnum_jackpot_gold': renderMagnumJackpotGold(section, data); break;
-                case 'sportstoto_5d': render5DTable(section, data); break;
-                case 'sportstoto_6d': render6DTable(section, data); break;
-                case 'magnum_life': renderMagnumLife(section, data); break;
-                default: // 普通公司回退
-                    section.appendChild(createPrizeGrid(data));
-            }
-        }
-
-        // 以下特殊渲染函数与之前一致，但数据可能来自真实 JSON
-        function renderFireball(section, data) {
-            const prizes = [
-                { title: 'First Prize (RM500)', items: data.first_prize || [] },
-                { title: 'Second Prize (RM200)', items: data.second_prize || [] },
-                { title: 'Third Prize (RM100)', items: data.third_prize || [] }
-            ];
-            prizes.forEach(p => {
-                const title = document.createElement('div');
-                title.className = 'subsection-title';
-                title.style.marginTop = '8px';
-                title.innerText = p.title;
-                section.appendChild(title);
-                const list = document.createElement('div');
-                list.className = 'number-list';
-                list.style.marginBottom = '12px';
-                (p.items || []).forEach(num => {
-                    const span = document.createElement('span');
-                    span.className = 'number-item';
-                    span.innerText = num;
-                    list.appendChild(span);
-                });
-                section.appendChild(list);
-            });
-            section.appendChild(createNumberListSection('💰 Special (RM30)', data.special || []));
-            section.appendChild(createNumberListSection('💵 Consolation (RM10)', data.consolation || []));
-        }
-
-        function renderSingaporeToto(section, data) {
-            section.appendChild(createNumberListSection('开奖号码', data.winning_numbers || []));
-            const tableDiv = document.createElement('div');
-            tableDiv.className = 'subsection';
-            tableDiv.innerHTML = '<div class="subsection-title">奖金分配</div>';
-            const table = document.createElement('table');
-            table.className = 'custom-table';
-            table.innerHTML = '<tr><th>Prize Group</th><th>Share Amount (Each)</th><th>No. of Winning Shares</th></tr>';
-            (data.prize_table || []).forEach(row => {
-                table.innerHTML += `<tr><td>${row[0]}</td><td>${row[1]}</td><td>${row[2]}</td></tr>`;
-            });
-            tableDiv.appendChild(table);
-            section.appendChild(tableDiv);
-        }
-
-        function renderSportstotoLotto(section, data) {
-            const lottoSection = document.createElement('div');
-            lottoSection.className = 'subsection';
-            lottoSection.innerHTML = '<div class="subsection-title">乐透号码</div>';
-            const groups = [
-                { title: 'Star Toto 6/50', items: data.star || [] },
-                { title: 'Power Toto 6/55', items: data.power || [] },
-                { title: 'Supreme Toto 6/58', items: data.supreme || [] }
-            ];
-            groups.forEach(g => {
-                const sub = document.createElement('div');
-                sub.className = 'group-subtitle';
-                sub.innerText = g.title;
-                lottoSection.appendChild(sub);
-                const list = document.createElement('div');
-                list.className = 'number-list';
-                g.items.forEach(num => {
-                    const span = document.createElement('span');
-                    span.className = 'number-item';
-                    span.innerText = num;
-                    list.appendChild(span);
-                });
-                lottoSection.appendChild(list);
-            });
-            section.appendChild(lottoSection);
-
-            const jpSection = document.createElement('div');
-            jpSection.className = 'subsection';
-            jpSection.innerHTML = '<div class="subsection-title">💰 Jackpot</div>';
-            const jpList = document.createElement('div');
-            jpList.className = 'number-list';
-            (data.jackpots || []).forEach(jp => {
-                const span = document.createElement('span');
-                span.className = 'number-item';
-                span.innerText = jp;
-                jpList.appendChild(span);
-            });
-            jpSection.appendChild(jpList);
-            section.appendChild(jpSection);
-        }
-
-        function renderMagnumJackpotGold(section, data) {
-            section.appendChild(createNumberListSection('Jackpot 1', data.jackpot1 || []));
-            const jp2Section = document.createElement('div');
-            jp2Section.className = 'subsection';
-            jp2Section.innerHTML = '<div class="subsection-title">Jackpot 2</div>';
-            (data.jackpot2_options || []).forEach((opt, idx) => {
-                const list = document.createElement('div');
-                list.className = 'number-list';
-                list.style.marginBottom = '8px';
-                opt.forEach(part => {
-                    const span = document.createElement('span');
-                    span.className = 'number-item';
-                    span.innerText = part;
-                    list.appendChild(span);
-                });
-                jp2Section.appendChild(list);
-            });
-            section.appendChild(jp2Section);
-
-            const estDiv = document.createElement('div');
-            estDiv.className = 'subsection';
-            estDiv.innerHTML = '<div class="subsection-title">Estimated Amount</div>';
-            (data.estimated || []).forEach(est => {
-                const box = document.createElement('div');
-                box.style.background = '#e6f0ff';
-                box.style.borderRadius = '28px';
-                box.style.padding = '8px 12px';
-                box.style.marginBottom = '4px';
-                box.style.fontSize = '1rem';
-                box.style.fontWeight = '600';
-                box.style.color = '#1e40af';
-                box.style.border = '1px solid #a5b4fc';
-                box.style.textAlign = 'center';
-                box.innerText = est;
-                estDiv.appendChild(box);
-            });
-            section.appendChild(estDiv);
-        }
-
-        function render5DTable(section, data) {
-            const table = document.createElement('table');
-            table.className = 'custom-table';
-            (data.data || []).forEach(row => {
-                table.innerHTML += `<tr><td style="font-weight:600;">${row[0]}</td><td>${row[1]}</td></tr>`;
-            });
-            section.appendChild(table);
-        }
-
-        function render6DTable(section, data) {
-            const table = document.createElement('table');
-            table.className = 'custom-table';
-            table.innerHTML = '<tr><th>奖项</th><th>主号码</th><th>OR</th></tr>';
-            (data.data || []).forEach(row => {
-                table.innerHTML += `<tr><td>${row[0]}</td><td>${row[1]}</td><td class="alt-number">${row[2] || ''}</td></tr>`;
-            });
-            section.appendChild(table);
-        }
-
-        function renderMagnumLife(section, data) {
-            section.appendChild(createNumberListSection('WINNING NUMBERS', data.winning || []));
-            section.appendChild(createNumberListSection('BONUS NUMBERS', data.bonus || []));
-        }
-
         // ==================== 初始化 ====================
         document.addEventListener('DOMContentLoaded', async () => {
-            await loadDateIndex();          // 先加载日期索引
-            await loadAllCompanies();        // 再加载最新数据
+            await loadDateIndex();
+            createCompanySkeletons();
+            await loadAllCompanies();
             setInterval(loadAllCompanies, 60000);
         });
 
