@@ -117,51 +117,53 @@ async function fetchPrizesFromWeb() {
     let secondPrize = null;
     let thirdPrize = null;
     
-    // 🔍 方法：查找所有 4 位数字，根据上下文判断是第几奖
-    const allText = doc.body.textContent || '';
-    const fourDigitRegex = /\b\d{4}\b/g;
-    let matches;
+    // 🔍 方法 1: 查找所有 prize-number 元素，根据附近文字判断
+    const prizeElements = doc.querySelectorAll('.prize-number');
     
-    // 获取所有 4 位数字及其位置
-    const numberPositions = [];
-    while ((matches = fourDigitRegex.exec(allText)) !== null) {
-      // 获取数字前后 100 字符的上下文
-      const start = Math.max(0, matches.index - 100);
-      const end = Math.min(allText.length, matches.index + 100);
-      const context = allText.substring(start, end).toLowerCase();
+    for (const el of prizeElements) {
+      const number = el.textContent?.trim();
       
-      numberPositions.push({
-        number: matches[0],
-        context: context,
-        index: matches.index
-      });
-    }
-    
-    // 根据上下文判断 1st/2nd/3rd
-    for (const item of numberPositions) {
-      if (!firstPrize && (item.context.includes('1st') || item.context.includes('first prize'))) {
-        firstPrize = item.number;
-      } else if (!secondPrize && (item.context.includes('2nd') || item.context.includes('second prize'))) {
-        secondPrize = item.number;
-      } else if (!thirdPrize && (item.context.includes('3rd') || item.context.includes('third prize'))) {
-        thirdPrize = item.number;
+      // 只处理 4 位数字
+      if (!/^\d{4}$/.test(number)) continue;
+      
+      // 获取父元素和附近内容
+      const parent = el.parentElement;
+      const grandParent = parent?.parentElement;
+      
+      // 查找附近的 "1st", "2nd", "3rd" 文字
+      const nearbyText = (
+        parent?.textContent + 
+        grandParent?.textContent + 
+        el.previousElementSibling?.textContent
+      ).toLowerCase() || '';
+      
+      // 🔧 关键：根据附近文字判断是第几奖
+      if (!firstPrize && (nearbyText.includes('1st') || nearbyText.includes('first'))) {
+        firstPrize = number;
+        console.log('✅ 找到 1st Prize:', number);
+      } else if (!secondPrize && (nearbyText.includes('2nd') || nearbyText.includes('second'))) {
+        secondPrize = number;
+        console.log('✅ 找到 2nd Prize:', number);
+      } else if (!thirdPrize && (nearbyText.includes('3rd') || nearbyText.includes('third'))) {
+        thirdPrize = number;
+        console.log('✅ 找到 3rd Prize:', number);
       }
     }
     
-    // 🔍 备用方法：尝试常见 class 名
-    if (!firstPrize) {
-      const prizeElements = doc.querySelectorAll('[class*="prize"], [class*="Prize"], [data-prize]');
-      for (const el of prizeElements) {
-        const text = el.textContent?.trim();
-        if (/^\d{4}$/.test(text)) {
-          const classText = (el.className || '').toLowerCase();
-          if (classText.includes('1st') || classText.includes('first')) {
-            firstPrize = text;
-          } else if (classText.includes('2nd') || classText.includes('second')) {
-            secondPrize = text;
-          } else if (classText.includes('3rd') || classText.includes('third')) {
-            thirdPrize = text;
-          }
+    // 🔍 方法 2: 尝试查找包含 "1st Prize" 等的容器
+    if (!firstPrize || !secondPrize || !thirdPrize) {
+      const allDivs = doc.querySelectorAll('div, span, p');
+      for (const div of allDivs) {
+        const text = div.textContent?.toLowerCase() || '';
+        if (text.includes('1st prize') || text.includes('first prize')) {
+          const match = div.innerHTML.match(/class="prize-number"[^>]*>(\d{4})</);
+          if (match && !firstPrize) firstPrize = match[1];
+        } else if (text.includes('2nd prize') || text.includes('second prize')) {
+          const match = div.innerHTML.match(/class="prize-number"[^>]*>(\d{4})</);
+          if (match && !secondPrize) secondPrize = match[1];
+        } else if (text.includes('3rd prize') || text.includes('third prize')) {
+          const match = div.innerHTML.match(/class="prize-number"[^>]*>(\d{4})</);
+          if (match && !thirdPrize) thirdPrize = match[1];
         }
       }
     }
