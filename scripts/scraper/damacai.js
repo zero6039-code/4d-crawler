@@ -18,7 +18,6 @@ async function fetchDamacaiResults() {
   try {
     console.log('🔄 步骤 1: 获取开奖日期列表...');
     
-    // 步骤 1: 获取开奖日期
     const datesResponse = await fetch('https://www.damacai.com.my/ListPastResult', {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
@@ -33,20 +32,18 @@ async function fetchDamacaiResults() {
     const datesData = await datesResponse.json();
     let drawDates = datesData.drawdate.trim().split(' ');
     
-    // 🔧 关键修复：按日期降序排序（最新的在前面）
+    // 🔧 关键：按日期降序排序（最新的在前面）
     drawDates = drawDates.sort((a, b) => b.localeCompare(a));
     
-    console.log(`📅 所有开奖日期: ${drawDates.slice(0, 5).join(', ')}...`);
+    console.log(`📅 前 5 个日期：${drawDates.slice(0, 5).join(', ')}`);
     
     if (!drawDates || drawDates.length === 0) {
       throw new Error('没有获取到开奖日期');
     }
     
-    // 获取最新开奖日期 (YYYYMMDD 格式)
     const latestDate = drawDates[0];
     console.log(`📅 最新开奖日期：${latestDate}`);
     
-    // 步骤 2: 获取结果文件链接
     console.log('🔄 步骤 2: 获取结果文件链接...');
     const linkResponse = await fetch(`https://www.damacai.com.my/callpassresult?pastdate=${latestDate}`, {
       headers: {
@@ -69,7 +66,6 @@ async function fetchDamacaiResults() {
     
     console.log(`🔗 结果链接：${resultUrl.substring(0, 50)}...`);
     
-    // 步骤 3: 获取实际开奖数据
     console.log('🔄 步骤 3: 获取开奖数据...');
     const resultResponse = await fetch(resultUrl, {
       headers: {
@@ -95,10 +91,8 @@ async function fetchDamacaiResults() {
 }
 
 function parseDamacaiData(data, drawDate) {
-  // 格式化日期：YYYYMMDD → DD-MM-YYYY
   const formattedDate = `${drawDate.substring(6,8)}-${drawDate.substring(4,6)}-${drawDate.substring(0,4)}`;
   
-  // 🔧 关键修复：确保字段名称匹配（大小写敏感）
   return {
     draw_date: formattedDate,
     global_draw_no: data.DrawNo || data.drawNo || "----",
@@ -108,9 +102,16 @@ function parseDamacaiData(data, drawDate) {
     special: data.Special || data.special || Array(10).fill("----"),
     consolation: data.Consolation || data.consolation || Array(10).fill("----"),
     draw_info: (data.DrawNo || data.drawNo) 
-      ? `${formattedDate} #${data.DrawNo || data.drawNo}`
+      ? `(${getDayName(formattedDate)}) ${formattedDate} #${data.DrawNo || data.drawNo}`
       : "----"
   };
+}
+
+function getDayName(dateStr) {
+  const [day, month, year] = dateStr.split('-');
+  const date = new Date(`${year}-${month}-${day}`);
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  return days[date.getDay()];
 }
 
 async function main() {
