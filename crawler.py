@@ -52,7 +52,7 @@ def extract_global_date(soup):
         draw_no = re.sub(r"Draw No:?", "", no_text).strip()
     return date, draw_no
 
-# ---------- 原 4d4d.co 提取函数（保持不变）----------
+# ---------- 4d4d.co 提取函数 ----------
 def extract_damacai(box, global_date, global_draw_no):
     return base_extract(box, global_date, global_draw_no)
 
@@ -314,7 +314,7 @@ def extract_lotto(box):
                     break
     return star, power, supreme, jackpots
 
-# ========== 改进后的 Singapore Toto 提取函数 ==========
+# ---------- 从 4dmoon.com 提取 Singapore Toto ----------
 def extract_singapore_toto_4dmoon(soup):
     """
     专门从 https://www.4dmoon.com/singapore-4d-results/ 的页面解析数据
