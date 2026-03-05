@@ -4,6 +4,7 @@ import json
 import os
 from datetime import datetime
 import re
+import time  # 新增：用于添加延时
 
 # ---------- 配置 ----------
 URL_4D4D = "https://4d4d.co/"
@@ -316,22 +317,43 @@ def extract_lotto(box):
                     break
     return star, power, supreme, jackpots
 
-# ========== 终极优化版 Singapore Toto 提取函数 ==========
-def extract_singapore_toto_4dmoon(soup):
+# ========== 新增：从 JSON API 获取 Singapore Toto 数据 ==========
+def fetch_singapore_toto_json():
     """
-    终极优化版：输出整个页面的关键信息，并采用多重策略定位数据
+    从 feedsg.json API 获取 Singapore Toto 的原始 JSON 数据
+    添加时间戳参数避免缓存，并增加礼貌延时
     """
-    print("🔍 开始解析 Singapore Toto 页面...")
-    if soup.title:
-        print(f"📄 页面标题: {soup.title.get_text(strip=True)}")
-    else:
-        print("⚠️ 页面无标题")
+    url = "https://www.4dmoon.com/feedsg.json"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "Accept": "application/json, text/javascript, */*; q=0.01",
+        "Referer": "https://www.4dmoon.com/singapore-4d-results/",
+        "X-Requested-With": "XMLHttpRequest",
+    }
+    # 添加时间戳参数避免缓存
+    timestamp = int(time.time() * 1000)
+    url_with_param = f"{url}?_={timestamp}"
 
-    # ----- 输出页面中所有表格的摘要，用于调试 -----
-    tables = soup.find_all("table")
-    print(f"📊 页面中共找到 {len(tables)} 个表格")
-    for i, tbl in enumerate(tables):
-        print(f"  表格 {i}: 前100字符: {tbl.get_text()[:100].replace(chr(10), ' ')}")
+    try:
+        print(f"🌐 正在请求 Singapore Toto API: {url_with_param}")
+        r = requests.get(url_with_param, headers=headers, timeout=15)
+        print(f"  状态码: {r.status_code}")
+        r.raise_for_status()
+        return r.json()  # 直接返回解析后的 JSON
+    except Exception as e:
+        print(f"❌ 抓取 Singapore Toto API 失败: {e}")
+        return None
+
+def extract_singapore_toto_from_api(api_data):
+    """
+    将 API 返回的 JSON 数据转换为前端所需的格式
+    根据实际返回的 JSON 结构调整
+    """
+    print("🔍 解析 Singapore Toto API 数据...")
+
+    # 打印 API 返回的数据结构以便调试
+    print("📄 API 返回数据预览:")
+    print(json.dumps(api_data, indent=2, ensure_ascii=False)[:1000])
 
     data = {
         "draw_date": "",
@@ -340,119 +362,36 @@ def extract_singapore_toto_4dmoon(soup):
         "prize_table": []
     }
 
-    # ----- 策略1：查找包含 "Singapore Toto" 且包含 "+" 的表格（号码表）-----
-    number_table = None
-    for table in tables:
-        table_text = table.get_text()
-        if "Singapore Toto" in table_text and "+" in table_text:
-            number_table = table
-            print("✅ 策略1成功：找到同时包含 Singapore Toto 和 + 的表格")
-            break
+    # 根据从浏览器开发者工具观察到的实际结构进行解析
+    # 假设返回的是对象，包含 date, drawNo, winningNumbers, prizeTable 等字段
+    # 如果返回的是数组，取第一个元素
+    if isinstance(api_data, list) and len(api_data) > 0:
+        api_data = api_data[0]
 
-    # ----- 策略2：如果策略1失败，查找所有包含 "Singapore Toto" 的表格，再在其中找 "+" -----
-    if not number_table:
-        toto_tables = [t for t in tables if "Singapore Toto" in t.get_text()]
-        print(f"🔍 策略2：找到 {len(toto_tables)} 个包含 Singapore Toto 的表格")
-        for table in toto_tables:
-            if "+" in table.get_text():
-                number_table = table
-                print("✅ 策略2成功：在包含 Singapore Toto 的表格中找到 +")
-                break
+    if isinstance(api_data, dict):
+        # 提取日期
+        if 'date' in api_data:
+            raw_date = api_data['date']
+            data["draw_date"] = parse_4dmoon_date(raw_date) or ""
+        # 提取期号
+        if 'drawNo' in api_data:
+            data["draw_no"] = str(api_data['drawNo'])
+        # 提取开奖号码
+        if 'winningNumbers' in api_data and isinstance(api_data['winningNumbers'], list):
+            data["winning_numbers"] = [str(n) for n in api_data['winningNumbers']]
+        # 提取奖金表
+        if 'prizeTable' in api_data and isinstance(api_data['prizeTable'], list):
+            data["prize_table"] = api_data['prizeTable']
+        # 如果字段名不同，尝试其他常见命名
+        elif 'prizes' in api_data:
+            data["prize_table"] = api_data['prizes']
+        elif 'results' in api_data:
+            data["prize_table"] = api_data['results']
 
-    # ----- 策略3：如果还找不到，就输出所有包含数字和加号的表格供分析 -----
-    if not number_table:
-        print("⚠️ 策略1和2均失败，尝试查找任何包含 + 的表格")
-        for table in tables:
-            if "+" in table.get_text():
-                number_table = table
-                print("✅ 策略3成功：找到包含 + 的表格")
-                break
-
-    if not number_table:
-        print("❌ 所有策略均失败，无法找到号码表格")
-        # 输出页面前2000字符帮助分析
-        print("📄 页面HTML预览:\n", soup.prettify()[:2000])
-        return None
-
-    # ----- 从号码表提取日期和期号 -----
-    # 首先尝试从整个表格的文本中提取
-    full_table_text = number_table.get_text(" ", strip=True)
-    print(f"📅 号码表格完整文本: {full_table_text}")
-
-    # 尝试多种日期格式
-    date_match = re.search(r"(\d{2}-[A-Za-z]{3}-\d{4})", full_table_text)
-    if not date_match:
-        date_match = re.search(r"(\d{2}\s+[A-Za-z]{3}\s+\d{4})", full_table_text)
-    if date_match:
-        parsed = parse_4dmoon_date(date_match.group(1))
-        if parsed:
-            data["draw_date"] = parsed
-            print(f"  提取到日期: {data['draw_date']}")
-
-    # 尝试期号
-    no_match = re.search(r"#(\d+)", full_table_text)
-    if no_match:
-        data["draw_no"] = no_match.group(1)
-        print(f"  提取到期号: {data['draw_no']}")
-
-    # ----- 提取开奖号码 -----
-    rows = number_table.find_all("tr")
-    for row in rows:
-        row_text = row.get_text()
-        if "+" in row_text:
-            cells = row.find_all("td")
-            numbers = []
-            for cell in cells:
-                text = cell.get_text(strip=True)
-                if text.isdigit():
-                    numbers.append(text)
-                elif text == "+":
-                    pass
-            if numbers:
-                data["winning_numbers"] = numbers
-                print(f"✅ 提取到开奖号码: {' '.join(numbers)}")
-                break
-    if not data["winning_numbers"]:
-        print("⚠️ 未找到开奖号码行")
-
-    # ----- 定位奖金表格 -----
-    prize_table = None
-    # 策略1：查找包含 "Share Amount" 或 "Prize Group" 且不同于号码表的表格
-    for table in tables:
-        if table == number_table:
-            continue
-        table_text = table.get_text()
-        if "Share Amount" in table_text or "Prize Group" in table_text:
-            prize_table = table
-            print("✅ 找到奖金表格")
-            break
-    # 策略2：如果没找到，尝试在包含 "Group 1" 的表格中查找
-    if not prize_table:
-        for table in tables:
-            if "Group 1" in table.get_text():
-                prize_table = table
-                print("✅ 通过 Group 1 找到奖金表格")
-                break
-
-    if prize_table:
-        prize_rows = prize_table.find_all("tr")
-        # 跳过表头行（通常第一行包含文字，第二行可能是空或实际数据）
-        # 我们尝试收集所有非空的数据行
-        for row in prize_rows:
-            cells = row.find_all("td")
-            if len(cells) >= 3:
-                group = cells[0].get_text(strip=True)
-                amount = cells[1].get_text(strip=True)
-                winners = cells[2].get_text(strip=True)
-                # 过滤掉明显是表头的行（包含 "Prize Group" 或 "Share Amount"）
-                if "Prize Group" in group or "Share Amount" in group:
-                    continue
-                # 过滤掉空行
-                if group or amount or winners:
-                    data["prize_table"].append([group, amount, winners])
-        print(f"✅ 提取到 {len(data['prize_table'])} 行奖金数据")
-    else:
-        print("⚠️ 未找到奖金表格")
+    # 如果数据仍然为空，打印完整结构以便手动分析
+    if not data["winning_numbers"] and not data["prize_table"]:
+        print("⚠️ 未能解析出有效数据，完整 API 响应如下：")
+        print(json.dumps(api_data, indent=2, ensure_ascii=False))
 
     return data
 
@@ -567,18 +506,19 @@ def main():
         if missing:
             print(f"ℹ️ 以下公司当天无数据: {', '.join(missing)}")
 
-    # 2. 从 4dmoon.com 抓取 Singapore Toto
-    print("\n🌙 正在从 4dmoon.com 抓取 Singapore Toto...")
-    html_moon = fetch_html("https://www.4dmoon.com/singapore-4d-results/")
-    if html_moon:
-        soup_moon = BeautifulSoup(html_moon, "html.parser")
-        toto_data = extract_singapore_toto_4dmoon(soup_moon)
-        if toto_data:
+    # 2. 从 API 获取 Singapore Toto
+    print("\n🌙 正在从 API 抓取 Singapore Toto...")
+    # 添加礼貌延时，避免请求过快
+    time.sleep(1)
+    toto_json = fetch_singapore_toto_json()
+    if toto_json:
+        toto_data = extract_singapore_toto_from_api(toto_json)
+        if toto_data and (toto_data['winning_numbers'] or toto_data['prize_table']):
             save_json('singapore_toto', toto_data)
         else:
-            print("⚠️ Singapore Toto 无有效数据")
+            print("⚠️ Singapore Toto 数据为空")
     else:
-        print("❌ 无法获取 4dmoon.com 页面")
+        print("❌ 无法获取 Singapore Toto API 数据")
 
     update_dates_index()
 
