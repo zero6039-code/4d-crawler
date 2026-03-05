@@ -442,6 +442,96 @@ def extract_gd_lotto_from_4dlatest(soup):
 
     return data
 
+# ========== 从 4dlatest.org 提取 SABAH88 沙巴万字 LOTTO ==========
+def extract_sabah_lotto_from_4dlatest(soup):
+    """
+    从 https://4dlatest.org/ 提取 "SABAH88 沙巴万字 LOTTO" 数据
+    返回包含 draw_date, draw_no, winning_numbers (列表), jackpot1, jackpot2 的字典
+    """
+    print("🔍 正在从 4dlatest.org 提取 SABAH88 沙巴万字 LOTTO 数据...")
+    data = {
+        "draw_date": "",
+        "draw_no": "",
+        "winning_numbers": [],
+        "jackpot1": "",
+        "jackpot2": ""
+    }
+
+    # 定位到包含 "SABAH88 沙巴万字 LOTTO" 的标题
+    header = soup.find(string=re.compile(r"SABAH88 沙巴万字 LOTTO"))
+    if not header:
+        print("⚠️ 未找到 'SABAH88 沙巴万字 LOTTO' 标题")
+        return None
+
+    # 找到最近的表格
+    table = header.find_parent("table")
+    if not table:
+        print("⚠️ 未找到 SABAH88 LOTTO 数据表格")
+        return None
+
+    # 提取日期和期号（通常在标题行中）
+    header_text = header.get_text()
+    print(f"📅 标题文本: {header_text}")
+
+    # 匹配日期，例如 04/03/2026
+    date_match = re.search(r"(\d{2}/\d{2}/\d{4})", header_text)
+    if date_match:
+        try:
+            d = datetime.strptime(date_match.group(1), "%d/%m/%Y")
+            data["draw_date"] = d.strftime("%d-%m-%Y")
+            print(f"  提取到日期: {data['draw_date']}")
+        except:
+            pass
+
+    # 匹配期号，例如 4165/26
+    no_match = re.search(r"(\d+/\d+)", header_text)
+    if no_match:
+        data["draw_no"] = no_match.group(1)
+        print(f"  提取到期号: {data['draw_no']}")
+
+    rows = table.find_all("tr")
+    for row in rows:
+        row_text = row.get_text()
+        cells = row.find_all("td")
+
+        # 提取开奖号码行（包含 "+"）
+        if "+" in row_text:
+            numbers = []
+            for cell in cells:
+                text = cell.get_text(strip=True)
+                if text.isdigit():
+                    numbers.append(text)
+                elif text == "+":
+                    pass
+            if numbers:
+                data["winning_numbers"] = numbers
+                print(f"✅ 提取到开奖号码: {' '.join(numbers)}")
+
+        # 提取 Jackpot 1
+        if "Jackpot 1" in row_text:
+            for cell in cells:
+                text = cell.get_text(strip=True)
+                if "RM" in text or "RM" in row_text:
+                    # 尝试提取金额数字
+                    amount_match = re.search(r'([\d,]+(?:\.\d+)?)', text)
+                    if amount_match:
+                        data["jackpot1"] = amount_match.group(1)
+                        print(f"  Jackpot 1: {data['jackpot1']}")
+                    break
+
+        # 提取 Jackpot 2
+        if "Jackpot 2" in row_text:
+            for cell in cells:
+                text = cell.get_text(strip=True)
+                if "RM" in text or "RM" in row_text:
+                    amount_match = re.search(r'([\d,]+(?:\.\d+)?)', text)
+                    if amount_match:
+                        data["jackpot2"] = amount_match.group(1)
+                        print(f"  Jackpot 2: {data['jackpot2']}")
+                    break
+
+    return data
+
 # ---------- 保存 JSON 和索引更新 ----------
 def save_json(company, data):
     if not data:
@@ -559,12 +649,22 @@ def main():
     html_4dlatest = fetch_html(URL_4DLATEST)
     if html_4dlatest:
         soup_4dlatest = BeautifulSoup(html_4dlatest, "html.parser")
+        
+        # 2.1 抓取 GDLOTTO 豪龙
         gd_data = extract_gd_lotto_from_4dlatest(soup_4dlatest)
         if gd_data and gd_data.get('1st'):
-            # 覆盖保存 grand_dragon 数据
             save_json('grand_dragon', gd_data)
         else:
             print("⚠️ GDLOTTO 豪龙数据为空，保留原有数据")
+        
+        # 2.2 抓取 SABAH88 沙巴万字 LOTTO
+        print("\n🌕 正在从 4dlatest.org 抓取 SABAH88 沙巴万字 LOTTO 数据...")
+        sabah_data = extract_sabah_lotto_from_4dlatest(soup_4dlatest)
+        if sabah_data and sabah_data.get('winning_numbers'):
+            save_json('sabah_lotto', sabah_data)
+        else:
+            print("⚠️ SABAH88 沙巴万字 LOTTO 数据为空")
+            
     else:
         print("❌ 无法获取 4dlatest.org 页面")
 
