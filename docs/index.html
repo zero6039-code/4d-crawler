@@ -8,7 +8,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <style>
-        /* 样式保持不变，仅追加/修改部分 */
+        /* 基础样式保持不变 */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
         body { background: #f0f2f5; padding: 15px 10px; }
         .container { max-width: 1300px; margin: 0 auto; }
@@ -188,11 +188,19 @@
         .calendar-table td.today.has-data {
             background: #a0c4ff;
         }
+        /* 鼠标悬停高亮光圈 */
+        .calendar-table td:hover {
+            background: #e2e8f0 !important;  /* 覆盖其他背景，但保留优先级？使用!important确保悬停效果可见 */
+        }
+        /* 保留特殊状态下的悬停颜色微调 */
+        .calendar-table td.has-data:hover { background: #a9c9f0 !important; }
+        .calendar-table td.today:hover { background: #c8d9f0 !important; }
+        .calendar-table td.selected:hover { background: #2b6cb0 !important; color: white; }
         .calendar-month-year {
             font-size: 1.1rem;
         }
         .calendar-footer {
-            display: none; /* 完全隐藏底部注释 */
+            display: none;
         }
     </style>
 </head>
@@ -331,8 +339,9 @@
                 content.innerHTML = '<div class="loading-history">暂无历史数据</div>';
                 return;
             }
-            // 只显示最近5天（最新在前，取前5个）
-            const recentDates = availableDates.slice(0, 5);
+            // 再次排序确保最新在上
+            const sorted = sortDatesDesc(availableDates.slice()); // 复制并排序
+            const recentDates = sorted.slice(0, 5); // 取最新的5个
             let html = '<div class="date-option" onclick="selectDate(null)">📌 最新数据</div>';
             recentDates.forEach(date => {
                 const activeClass = (selectedDate === date) ? 'active' : '';
@@ -390,9 +399,9 @@
 
             let html = `
                 <div class="calendar-header">
-                    <button class="calendar-nav" onclick="changeMonth(-1)">◀</button>
+                    <button class="calendar-nav" onclick="window.changeMonth(-1)">◀</button>
                     <span class="calendar-month-year">${monthNamesEn[month-1]} ${monthNamesZh[month-1]} ${year}</span>
-                    <button class="calendar-nav" onclick="changeMonth(1)">▶</button>
+                    <button class="calendar-nav" onclick="window.changeMonth(1)">▶</button>
                 </div>
                 <table class="calendar-table">
                     <thead><tr>${weekdaysEn.map(d => `<th>${d}</th>`).join('')}</tr></thead>
@@ -421,11 +430,12 @@
             }
 
             html += '</tbody></table>';
-            html += '<div class="calendar-footer"></div>'; // 完全隐藏
+            html += '<div class="calendar-footer"></div>';
             popup.innerHTML = html;
         }
 
-        function changeMonth(delta) {
+        // 将changeMonth绑定到window对象，确保内联onclick能调用
+        window.changeMonth = function(delta) {
             currentCalendarMonth += delta;
             if (currentCalendarMonth > 12) {
                 currentCalendarMonth = 1;
@@ -435,7 +445,7 @@
                 currentCalendarYear--;
             }
             renderCalendar();
-        }
+        };
 
         function calendarDateClick(dateStr) {
             if (availableDatesSet.has(dateStr)) {
@@ -454,7 +464,6 @@
                 if (res.ok) {
                     return await res.json();
                 } else {
-                    // 如果请求失败（如404），返回null
                     return null;
                 }
             } catch (err) {
@@ -499,7 +508,6 @@
             if (!contentDiv || !metaDiv) return;
 
             if (!data) {
-                // 明确显示加载失败，而不是显示旧数据
                 contentDiv.innerHTML = '<p style="text-align:center;color:#d32f2f;">无数据</p>';
                 metaDiv.innerText = '📅 日期: -- | 🎟️ 期号: --';
                 return;
