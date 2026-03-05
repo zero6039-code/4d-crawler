@@ -317,11 +317,11 @@ def extract_lotto(box):
                     break
     return star, power, supreme, jackpots
 
-# ========== 从 4dlatest.org 提取 GDLOTTO 豪龙数据 ==========
+# ========== 改进后的 GDLOTTO 豪龙提取函数 ==========
 def extract_gd_lotto_from_4dlatest(soup):
     """
     从 https://4dlatest.org/ 提取 GDLOTTO 豪龙数据
-    返回包含 draw_date, 1st, 2nd, 3rd, special (列表), jackpot 的字典
+    正确区分特别奖和安慰奖
     """
     print("🔍 正在从 4dlatest.org 提取 GDLOTTO 豪龙数据...")
     data = {
@@ -331,7 +331,7 @@ def extract_gd_lotto_from_4dlatest(soup):
         "2nd": "",
         "3rd": "",
         "special": [],
-        "consolation": [],  # 暂时留空
+        "consolation": [],
         "jackpot": ""
     }
 
@@ -347,7 +347,6 @@ def extract_gd_lotto_from_4dlatest(soup):
         print("⚠️ 未找到 GDLOTTO 数据表格")
         return None
 
-    rows = table.find_all("tr")
     # 提取日期（通常在标题行中）
     header_text = header.get_text()
     date_match = re.search(r"(\d{2}/\d{2}/\d{4})", header_text)
@@ -359,36 +358,86 @@ def extract_gd_lotto_from_4dlatest(soup):
         except:
             pass
 
-    # 遍历行，提取数字
-    all_numbers = []
-    for row in rows:
-        cells = row.find_all("td")
-        for cell in cells:
-            text = cell.get_text(strip=True)
-            # 如果单元格内容是数字且长度合适（通常4位），加入列表
-            if text.isdigit() and len(text) >= 3:
-                all_numbers.append(text)
-            # 如果是 "Jackpot" 或 "CONSOLATION"，尝试提取金额
-            if "Jackpot" in text or "CONSOLATION" in text:
-                # 查找同一行或下一单元格的金额
-                amount_cell = cell.find_next_sibling("td")
-                if amount_cell:
-                    amount_text = amount_cell.get_text(strip=True)
-                    if "USD" in amount_text or "$" in amount_text:
-                        data["jackpot"] = amount_text
+    rows = table.find_all("tr")
+    special_mode = False
+    consolation_mode = False
+    special_list = []
+    consolation_list = []
 
-    # 从所有数字中分离前三名
-    # 根据截图，前三名应该是 9446, 5226, 5836（但需要按顺序）
-    # 假设前三个数字就是前三名（顺序：1ST,2ND,3RD）
-    if len(all_numbers) >= 3:
-        data["1st"] = all_numbers[0]
-        data["2nd"] = all_numbers[1]
-        data["3rd"] = all_numbers[2]
-        # 剩余数字作为特别奖
-        data["special"] = all_numbers[3:]
+    for row in rows:
+        row_text = row.get_text().upper()
+        cells = row.find_all("td")
+
+        # 检查是否进入 SPECIAL 区域
+        if "SPECIAL" in row_text:
+            special_mode = True
+            consolation_mode = False
+            # 提取该行中 SPECIAL 后面的数字
+            for cell in cells:
+                text = cell.get_text(strip=True)
+                if text.isdigit() and len(text) >= 3:
+                    special_list.append(text)
+            continue
+
+        # 检查是否进入 CONSOLATION 区域
+        if "CONSOLATION" in row_text:
+            special_mode = False
+            consolation_mode = True
+            for cell in cells:
+                text = cell.get_text(strip=True)
+                if text.isdigit() and len(text) >= 3:
+                    consolation_list.append(text)
+            continue
+
+        # 检查是否进入 Jackpot 区域
+        if "JACKPOT" in row_text or "USD" in row_text or "$" in row_text:
+            # 提取金额
+            amount_match = re.search(r'([\d,]+(?:\.\d+)?)', row.get_text())
+            if amount_match:
+                data["jackpot"] = amount_match.group(1)
+            continue
+
+        # 如果在 SPECIAL 模式中，收集数字
+        if special_mode:
+            for cell in cells:
+                text = cell.get_text(strip=True)
+                if text.isdigit() and len(text) >= 3:
+                    special_list.append(text)
+
+        # 如果在 CONSOLATION 模式中，收集数字
+        if consolation_mode:
+            for cell in cells:
+                text = cell.get_text(strip=True)
+                if text.isdigit() and len(text) >= 3:
+                    consolation_list.append(text)
+
+        # 提取前三名（独立处理）
+        if "1ST" in row_text:
+            for cell in cells:
+                text = cell.get_text(strip=True)
+                if text.isdigit() and len(text) >= 3:
+                    data["1st"] = text
+                    break
+        if "2ND" in row_text:
+            for cell in cells:
+                text = cell.get_text(strip=True)
+                if text.isdigit() and len(text) >= 3:
+                    data["2nd"] = text
+                    break
+        if "3RD" in row_text:
+            for cell in cells:
+                text = cell.get_text(strip=True)
+                if text.isdigit() and len(text) >= 3:
+                    data["3rd"] = text
+                    break
+
+    # 去重并限制数量（各最多10个）
+    data["special"] = list(dict.fromkeys(special_list))[:10]
+    data["consolation"] = list(dict.fromkeys(consolation_list))[:10]
 
     print(f"  提取到前三: {data['1st']}, {data['2nd']}, {data['3rd']}")
     print(f"  特别奖数量: {len(data['special'])}")
+    print(f"  安慰奖数量: {len(data['consolation'])}")
     print(f"  Jackpot: {data['jackpot']}")
 
     return data
