@@ -34,6 +34,24 @@ def parse_4dmoon_date(date_str):
     except:
         return None
 
+def extract_global_date(soup):
+    """从第一个 outerbox 中提取全局日期和期号"""
+    first_box = soup.find("div", class_="outerbox")
+    if not first_box:
+        return None, None
+    draw_row = first_box.find("td", class_="resultdrawdate")
+    if not draw_row:
+        return None, None
+    date_text = draw_row.get_text(strip=True)
+    match = re.search(r"(\d{2}-\d{2}-\d{4})", date_text)
+    date = match.group(1) if match else None
+    next_td = draw_row.find_next("td", class_="resultdrawdate")
+    draw_no = None
+    if next_td:
+        no_text = next_td.get_text(strip=True)
+        draw_no = re.sub(r"Draw No:?", "", no_text).strip()
+    return date, draw_no
+
 # ---------- 原 4d4d.co 提取函数（保持不变）----------
 def extract_damacai(box, global_date, global_draw_no):
     return base_extract(box, global_date, global_draw_no)
@@ -296,18 +314,16 @@ def extract_lotto(box):
                     break
     return star, power, supreme, jackpots
 
-# ---------- 新增：从 4dmoon.com 提取 Singapore Toto ----------
+# ---------- 从 4dmoon.com 提取 Singapore Toto ----------
 def extract_singapore_toto_4dmoon(soup):
     """从 4dmoon.com/singapore-4d-results/ 提取 Singapore Toto 数据"""
     print("🔍 定位 Singapore Toto...")
-    # 查找包含 "Singapore Toto" 的单元格
     section = soup.find("td", string=re.compile(r"Singapore Toto", re.I))
     if not section:
         print("⚠️ 未找到 Singapore Toto 标题")
         return None
     print(f"✅ 找到标题: {section.get_text(strip=True)}")
 
-    # 提取日期和期号（在标题所在行或其父元素中）
     parent_text = section.find_parent("td").get_text(" ", strip=True)
     date_match = re.search(r"(\d{2}-[A-Za-z]{3}-\d{4})", parent_text)
     draw_date = parse_4dmoon_date(date_match.group(1)) if date_match else None
@@ -321,31 +337,25 @@ def extract_singapore_toto_4dmoon(soup):
         "prize_table": []
     }
 
-    # 找到包含号码的表格（通常是标题所在的表格）
     table = find_parent_table(section)
     if not table:
         print("⚠️ Singapore Toto 未找到主表格")
         return data
 
-    # 提取开奖号码（假设号码在第二行）
     rows = table.find_all("tr")
     if len(rows) >= 2:
-        num_row = rows[1]  # 第二行
+        num_row = rows[1]
         tds = num_row.find_all("td")
-        # 提取所有数字，忽略 "+"
         for td in tds:
             text = td.get_text(strip=True)
             if text and text != '+':
                 data["winning_numbers"].append(text)
 
-    # 提取奖金分配表（通常位于另一个表格，或同一表格的后续部分）
-    # 查找包含 "Prize Group" 的单元格
     prize_section = soup.find("td", string=re.compile(r"Prize Group", re.I))
     if prize_section:
         prize_table = find_parent_table(prize_section)
         if prize_table:
             prize_rows = prize_table.find_all("tr")
-            # 跳过表头（第一行）
             for row in prize_rows[1:]:
                 cells = row.find_all("td")
                 if len(cells) >= 3:
@@ -401,7 +411,7 @@ def update_dates_index():
         json.dump(dates, f)
     print(f"📋 已更新日期索引，共 {len(dates)} 个历史日期")
 
-# ---------- 主流程（整合两个数据源）----------
+# ---------- 主流程 ----------
 def main():
     # 1. 抓取 4d4d.co 数据
     html_4d4d = fetch_html(URL_4D4D)
