@@ -234,12 +234,14 @@ def extract_6d_table(box):
                 data.append([rank, main_num, ""])
     return data
 
+# ========== 修复后的 Lotto 提取函数（包含 Power 和 Supreme 的奖池）==========
 def extract_lotto(box):
     star = []
     power = []
     supreme = []
     jackpots = []
 
+    # ----- Star Toto 6/50 -----
     star_section = box.find("td", string=re.compile("Star Toto 6/50"))
     if star_section:
         table = star_section.find_parent("table")
@@ -249,11 +251,13 @@ def extract_lotto(box):
                 num_row = rows[1]
                 tds = num_row.find_all("td", class_="resultbottomtoto2")
                 star = [td.get_text(strip=True) for td in tds if td.get_text(strip=True) not in ['+', '']]
+            # 提取 Star 的奖池
             for row in rows[2:]:
                 jp_tds = row.find_all("td", class_="resultbottomtotojpval")
                 if jp_tds:
                     jackpots.append(jp_tds[0].get_text(strip=True))
 
+    # ----- Power Toto 6/55 -----
     power_section = box.find("td", string=re.compile("Power Toto 6/55"))
     if power_section:
         table = power_section.find_parent("table")
@@ -263,7 +267,19 @@ def extract_lotto(box):
                 num_row = rows[1]
                 tds = num_row.find_all("td", class_="resultbottomtoto2")
                 power = [td.get_text(strip=True) for td in tds]
+            # 提取 Power 的奖池（通常在包含 "Jackpot" 的行之后的单元格）
+            for row in rows:
+                if "Jackpot" in row.get_text():
+                    jp_tds = row.find_all("td")
+                    # 寻找包含 "RM" 的单元格
+                    for td in jp_tds:
+                        text = td.get_text(strip=True)
+                        if text.startswith("RM"):
+                            jackpots.append(text)
+                            break
+                    break
 
+    # ----- Supreme Toto 6/58 -----
     supreme_section = box.find("td", string=re.compile("Supreme Toto 6/58"))
     if supreme_section:
         table = supreme_section.find_parent("table")
@@ -273,6 +289,16 @@ def extract_lotto(box):
                 num_row = rows[1]
                 tds = num_row.find_all("td", class_="resultbottomtoto2")
                 supreme = [td.get_text(strip=True) for td in tds]
+            # 提取 Supreme 的奖池
+            for row in rows:
+                if "Jackpot" in row.get_text():
+                    jp_tds = row.find_all("td")
+                    for td in jp_tds:
+                        text = td.get_text(strip=True)
+                        if text.startswith("RM"):
+                            jackpots.append(text)
+                            break
+                    break
 
     return star, power, supreme, jackpots
 
