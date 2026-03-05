@@ -8,12 +8,12 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <style>
-        /* 样式保持与您之前提供的完全一致，此处省略以节省篇幅，实际使用时请保留原样 */
+        /* 原有样式保持完全不变，仅追加日历相关样式 */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
         body { background: #f0f2f5; padding: 15px 10px; }
         .container { max-width: 1300px; margin: 0 auto; }
         h1 { font-size: 2.2rem; font-weight: 800; text-align: center; margin-bottom: 15px; background: linear-gradient(135deg, #0b1c2f, #2c3e50); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1px; }
-        .date-selector { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; }
+        .date-selector { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
         .date-dropdown { position: relative; display: inline-block; }
         .date-btn { background: #ffffffcc; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.8); border-radius: 25px; padding: 8px 20px; font-size: 1rem; font-weight: 500; color: #2c3e50; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: all 0.2s; }
         .date-btn:hover { background: #ffffff; box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
@@ -78,13 +78,116 @@
         .status-indicator.error { background: #f56565; }
         .status-indicator.loading { background: #ecc94b; animation: blink 1s infinite; }
         @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+        /* ========== 新增日历样式 ========== */
+        .calendar-btn {
+            background: #ffffffcc;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255,255,255,0.8);
+            border-radius: 25px;
+            padding: 8px 20px;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #2c3e50;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transition: all 0.2s;
+        }
+        .calendar-btn:hover { background: #ffffff; box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
+        .calendar-popup {
+            position: absolute;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.2);
+            padding: 16px;
+            z-index: 2000;
+            width: 320px;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            margin-top: 8px;
+            border: 1px solid #e2e8f0;
+            backdrop-filter: blur(4px);
+        }
+        .calendar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+        .calendar-nav {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f0f2f5;
+            transition: 0.2s;
+        }
+        .calendar-nav:hover { background: #e2e8f0; }
+        .calendar-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+        }
+        .calendar-table th {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #718096;
+            padding: 6px 0;
+        }
+        .calendar-table td {
+            padding: 6px 0;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border-radius: 30px;
+            transition: 0.1s;
+        }
+        .calendar-table td.has-data {
+            background: #c6e0ff;
+            font-weight: 600;
+            color: #1e4a6b;
+            border-radius: 30px;
+        }
+        .calendar-table td.has-data:hover { background: #a9c9f0; }
+        .calendar-table td.empty:hover { background: #f0f2f5; }
+        .calendar-table td.selected {
+            background: #3182ce;
+            color: white;
+            font-weight: 600;
+        }
+        .calendar-table td.selected.has-data { background: #2b6cb0; }
+        .calendar-month-year {
+            font-size: 1.1rem;
+        }
+        .calendar-footer {
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            font-size: 0.8rem;
+            color: #4a5568;
+        }
+        .date-selector {
+            position: relative; /* 为日历弹出层提供锚点 */
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>MY 4D RESULT MALAYSIA</h1>
         
-        <!-- 日期选择器（下拉按钮） -->
+        <!-- 日期选择器（下拉按钮 + 日历按钮） -->
         <div class="date-selector">
             <div class="date-dropdown" id="date-dropdown">
                 <button class="date-btn" id="date-btn" onclick="toggleDateDropdown()">
@@ -95,6 +198,10 @@
                     <div class="loading-history">🔄 加载历史数据...</div>
                 </div>
             </div>
+            <!-- 新增日历按钮 -->
+            <button class="calendar-btn" id="calendar-btn">📅 月历</button>
+            <!-- 日历弹出层 -->
+            <div id="calendar-popup" class="calendar-popup" style="display: none;"></div>
         </div>
         
         <!-- 日期条（日期+刷新按钮） -->
@@ -153,8 +260,22 @@
             'magnum_jackpot_gold', 'sportstoto_5d', 'sportstoto_6d', 'magnum_life'
         ];
 
-        let availableDates = [];
-        let selectedDate = null;
+        let availableDates = [];           // 已排序的日期数组 (DD-MM-YYYY) 从新到旧
+        let availableDatesSet = new Set(); // 快速查找
+        let selectedDate = null;           // 当前选中的日期，null表示最新
+
+        // ==================== 工具函数 ====================
+        function parseDMY(dmy) {
+            let [d, m, y] = dmy.split('-').map(Number);
+            return { year: y, month: m, day: d };
+        }
+        function toSortKey(dmy) {
+            let { year, month, day } = parseDMY(dmy);
+            return year * 10000 + month * 100 + day;
+        }
+        function sortDatesDesc(dates) {
+            return dates.sort((a, b) => toSortKey(b) - toSortKey(a));
+        }
 
         // ==================== 日期选择器功能 ====================
         function toggleDateDropdown() {
@@ -166,23 +287,40 @@
             try {
                 const res = await fetch(`data/dates.json?t=${Date.now()}`, { cache: 'no-store' });
                 if (res.ok) {
-                    availableDates = await res.json();
+                    let dates = await res.json();
+                    availableDates = sortDatesDesc(dates); // 从新到旧
+                    availableDatesSet = new Set(availableDates);
                 } else {
                     availableDates = [];
+                    availableDatesSet.clear();
                 }
             } catch (e) {
                 console.warn('无法加载 dates.json', e);
                 availableDates = [];
+                availableDatesSet.clear();
             }
             renderDateDropdown();
+            updateDateBtnWithLatest(); // 更新按钮显示最新日期
+        }
+
+        function updateDateBtnWithLatest() {
+            const btnSpan = document.getElementById('selected-date');
+            if (availableDates.length > 0) {
+                // 如果未选择任何日期，显示最新日期；否则显示已选日期
+                if (selectedDate === null) {
+                    btnSpan.innerText = availableDates[0]; // 最新
+                } else {
+                    btnSpan.innerText = selectedDate;
+                }
+            } else {
+                btnSpan.innerText = '暂无数据';
+            }
         }
 
         function renderDateDropdown() {
             const content = document.getElementById('date-dropdown-content');
-            const btnSpan = document.getElementById('selected-date');
             if (!availableDates || availableDates.length === 0) {
                 content.innerHTML = '<div class="loading-history">暂无历史数据</div>';
-                btnSpan.innerText = '最新数据';
                 return;
             }
             let html = '<div class="date-option" onclick="selectDate(null)">📌 最新数据</div>';
@@ -195,10 +333,108 @@
 
         function selectDate(date) {
             selectedDate = date;
-            document.getElementById('selected-date').innerText = date ? date : '最新数据';
+            // 更新按钮文字
+            document.getElementById('selected-date').innerText = date ? date : (availableDates.length ? availableDates[0] : '最新数据');
             document.getElementById('date-dropdown').classList.remove('show');
             document.getElementById('date-btn').classList.remove('active');
+            // 关闭日历弹窗（如果有）
+            document.getElementById('calendar-popup').style.display = 'none';
             loadAllCompanies();
+        }
+
+        // ==================== 日历相关 ====================
+        let currentCalendarYear, currentCalendarMonth;
+
+        function showCalendar() {
+            const popup = document.getElementById('calendar-popup');
+            if (popup.style.display === 'block') {
+                popup.style.display = 'none';
+                return;
+            }
+
+            // 确定初始月份：如果有selectedDate，使用它的月份；否则用最新日期；否则当前月
+            let baseDate = selectedDate ? selectedDate : (availableDates.length ? availableDates[0] : null);
+            if (baseDate) {
+                let { year, month } = parseDMY(baseDate);
+                currentCalendarYear = year;
+                currentCalendarMonth = month;
+            } else {
+                let now = new Date();
+                currentCalendarYear = now.getFullYear();
+                currentCalendarMonth = now.getMonth() + 1; // JS month 0-11
+            }
+            renderCalendar();
+            popup.style.display = 'block';
+        }
+
+        function renderCalendar() {
+            const popup = document.getElementById('calendar-popup');
+            if (!popup) return;
+
+            let year = currentCalendarYear;
+            let month = currentCalendarMonth; // 1-12
+
+            // 月份名称
+            const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
+            // 获取当月第一天是星期几 (0 = 星期日，6 = 星期六)
+            let firstDay = new Date(year, month - 1, 1).getDay(); // 返回0-6
+            // 当月总天数
+            let daysInMonth = new Date(year, month, 0).getDate();
+
+            let html = `
+                <div class="calendar-header">
+                    <button class="calendar-nav" onclick="changeMonth(-1)">◀</button>
+                    <span class="calendar-month-year">${monthNames[month-1]} ${year}</span>
+                    <button class="calendar-nav" onclick="changeMonth(1)">▶</button>
+                </div>
+                <table class="calendar-table">
+                    <thead><tr><th>日</th><th>一</th><th>二</th><th>三</th><th>四</th><th>五</th><th>六</th></tr></thead>
+                    <tbody>
+            `;
+
+            let date = 1;
+            for (let i = 0; i < 6; i++) { // 最多6行
+                html += '<tr>';
+                for (let j = 0; j < 7; j++) {
+                    if (i === 0 && j < firstDay) {
+                        html += '<td class="empty"></td>';
+                    } else if (date > daysInMonth) {
+                        html += '<td class="empty"></td>';
+                    } else {
+                        let dateStr = `${date.toString().padStart(2,'0')}-${month.toString().padStart(2,'0')}-${year}`;
+                        let hasData = availableDatesSet.has(dateStr);
+                        let isSelected = (selectedDate === dateStr) ? 'selected' : '';
+                        html += `<td class="${hasData ? 'has-data' : ''} ${isSelected}" data-date="${dateStr}" onclick="calendarDateClick('${dateStr}')">${date}</td>`;
+                        date++;
+                    }
+                }
+                html += '</tr>';
+                if (date > daysInMonth) break;
+            }
+
+            html += '</tbody></table>';
+            html += '<div class="calendar-footer">📌 高亮日期 = 有开彩数据</div>';
+            popup.innerHTML = html;
+        }
+
+        function changeMonth(delta) {
+            currentCalendarMonth += delta;
+            if (currentCalendarMonth > 12) {
+                currentCalendarMonth = 1;
+                currentCalendarYear++;
+            } else if (currentCalendarMonth < 1) {
+                currentCalendarMonth = 12;
+                currentCalendarYear--;
+            }
+            renderCalendar();
+        }
+
+        function calendarDateClick(dateStr) {
+            if (availableDatesSet.has(dateStr)) {
+                selectDate(dateStr);
+            } else {
+                alert('该日期暂无开彩数据');
+            }
         }
 
         // ==================== 数据加载 ====================
@@ -216,7 +452,6 @@
             return null;
         }
 
-        // ==================== 创建卡片骨架（首次加载）====================
         function createCompanySkeletons() {
             const grid = document.getElementById('companies-grid');
             grid.innerHTML = '';
@@ -247,7 +482,6 @@
             });
         }
 
-        // ==================== 更新单个公司卡片 ====================
         function updateCompanyCard(companyKey, data) {
             const contentDiv = document.getElementById(`content-${companyKey}`);
             const metaDiv = document.getElementById(`meta-${companyKey}`);
@@ -293,7 +527,6 @@
                     html = '<p style="text-align:center;">特殊数据格式</p>';
                 }
             } else {
-                // 针对 DAMACAI 1+3D 单独布局：三个奖项各占一行，卡片固定宽度
                 if (companyKey === 'damacai_1p3d') {
                     html = `
                         <div class="prize-grid" style="flex-direction:column;align-items:center;">
@@ -309,7 +542,6 @@
                         </div>
                     `;
                 } else {
-                    // 其他普通公司：1st单独一行大卡片，2nd和3rd并排
                     html = `
                         <div class="prize-grid" style="flex-direction:column;align-items:center;">
                             <div style="display:flex;justify-content:center;width:100%;margin-bottom:4px;">
@@ -323,14 +555,12 @@
                     `;
                 }
 
-                // 特别奖
                 if (data.special && data.special.length > 0) {
                     html += `<div class="subsection"><div class="subsection-title">🎁 特别奖 (Special)</div><div class="number-list">`;
                     data.special.forEach(num => { html += `<span class="number-item">${num}</span>`; });
                     html += `</div></div>`;
                 }
 
-                // 安慰奖
                 if (data.consolation && data.consolation.length > 0) {
                     html += `<div class="subsection"><div class="subsection-title">😌 安慰奖 (Consolation)</div><div class="number-list">`;
                     data.consolation.forEach(num => { html += `<span class="number-item">${num}</span>`; });
@@ -385,6 +615,17 @@
             createCompanySkeletons();
             await loadAllCompanies();
             setInterval(loadAllCompanies, 60000);
+
+            // 日历按钮事件
+            document.getElementById('calendar-btn').addEventListener('click', showCalendar);
+            // 点击其他地方关闭日历
+            document.addEventListener('click', (e) => {
+                const popup = document.getElementById('calendar-popup');
+                const btn = document.getElementById('calendar-btn');
+                if (popup && btn && !btn.contains(e.target) && !popup.contains(e.target)) {
+                    popup.style.display = 'none';
+                }
+            });
         });
 
         document.addEventListener('visibilitychange', () => {
