@@ -8,7 +8,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <style>
-        /* 原有样式保持不变，仅追加/修改部分 */
+        /* 样式保持不变，仅追加/修改部分 */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
         body { background: #f0f2f5; padding: 15px 10px; }
         .container { max-width: 1300px; margin: 0 auto; }
@@ -55,16 +55,16 @@
         .group-subtitle { font-size: 0.95rem; font-weight: 600; margin: 8px 0 4px 0; color: #2c3e50; width: 100%; }
         footer { text-align: center; margin-top: 30px; color: #7c8b9c; font-size: 0.8rem; border-top: 1px solid #dbe1ea; padding-top: 16px; }
         @media (max-width: 900px) { .companies-grid { grid-template-columns: repeat(2, 1fr); } }
-        /* 手机字体优化：特别奖/安慰奖数字变大、允许换行 */
+        /* 手机字体优化 */
         @media (max-width: 600px) {
             .companies-grid { grid-template-columns: 1fr; }
             .company-title { font-size: 1.5rem; }
             .prize-card .number { font-size: 1.6rem; }
             .number-item {
-                font-size: 1.3rem;      /* 调大数字 */
+                font-size: 1.3rem;
                 padding: 6px 12px;
-                min-width: auto;         /* 移除最小宽度限制 */
-                word-break: break-all;   /* 允许长数字换行 */
+                min-width: auto;
+                word-break: break-all;
                 white-space: normal;
             }
         }
@@ -91,7 +91,7 @@
         .status-indicator.loading { background: #ecc94b; animation: blink 1s infinite; }
         @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-        /* ========== 新增日历样式 ========== */
+        /* 日历样式 */
         .calendar-btn {
             background: #ffffffcc;
             backdrop-filter: blur(4px);
@@ -179,22 +179,20 @@
             font-weight: 600;
         }
         .calendar-table td.selected.has-data { background: #2b6cb0; }
-        /* 当天日期样式：浅蓝色圈 */
         .calendar-table td.today {
-            background: #d9eaff;  /* 浅蓝 */
+            background: #d9eaff;
             font-weight: 600;
             border-radius: 30px;
             box-shadow: 0 0 0 2px #a0c4ff;
         }
         .calendar-table td.today.has-data {
-            background: #a0c4ff;   /* 比普通数据稍浅，但保留数据感 */
+            background: #a0c4ff;
         }
         .calendar-month-year {
             font-size: 1.1rem;
         }
-        /* 移除底部注释 */
         .calendar-footer {
-            display: none;
+            display: none; /* 完全隐藏底部注释 */
         }
     </style>
 </head>
@@ -202,7 +200,6 @@
     <div class="container">
         <h1>MY 4D RESULT MALAYSIA</h1>
         
-        <!-- 日期选择器（下拉按钮 + 日历按钮） -->
         <div class="date-selector">
             <div class="date-dropdown" id="date-dropdown">
                 <button class="date-btn" id="date-btn" onclick="toggleDateDropdown()">
@@ -312,7 +309,7 @@
                 availableDatesSet.clear();
             }
             renderDateDropdown();
-            updateDateBtnWithLatest(); // 更新按钮显示最新日期
+            updateDateBtnWithLatest();
         }
 
         function updateDateBtnWithLatest() {
@@ -350,7 +347,7 @@
             document.getElementById('date-dropdown').classList.remove('show');
             document.getElementById('date-btn').classList.remove('active');
             document.getElementById('calendar-popup').style.display = 'none';
-            loadAllCompanies();
+            loadAllCompanies(); // 重新加载所有公司数据
         }
 
         // ==================== 日历相关 ====================
@@ -377,19 +374,15 @@
             if (!popup) return;
 
             let year = currentCalendarYear;
-            let month = currentCalendarMonth; // 1-12
+            let month = currentCalendarMonth;
 
-            // 英文月份缩写
             const monthNamesEn = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            // 中文月份
             const monthNamesZh = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
-            // 星期英文缩写 (从周日开始)
             const weekdaysEn = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-            let firstDay = new Date(year, month - 1, 1).getDay(); // 0 = 周日
+            let firstDay = new Date(year, month - 1, 1).getDay();
             let daysInMonth = new Date(year, month, 0).getDate();
 
-            // 获取当前系统日期 (用于标记今天)
             const now = new Date();
             const todayYear = now.getFullYear();
             const todayMonth = now.getMonth() + 1;
@@ -428,8 +421,7 @@
             }
 
             html += '</tbody></table>';
-            // 完全移除底部文字
-            html += '<div class="calendar-footer"></div>';
+            html += '<div class="calendar-footer"></div>'; // 完全隐藏
             popup.innerHTML = html;
         }
 
@@ -461,11 +453,14 @@
                 const res = await fetch(url, { cache: 'no-store' });
                 if (res.ok) {
                     return await res.json();
+                } else {
+                    // 如果请求失败（如404），返回null
+                    return null;
                 }
             } catch (err) {
                 console.warn(`${companyKey} 请求失败`, err);
+                return null;
             }
-            return null;
         }
 
         function createCompanySkeletons() {
@@ -504,7 +499,8 @@
             if (!contentDiv || !metaDiv) return;
 
             if (!data) {
-                contentDiv.innerHTML = '<p style="text-align:center;color:#d32f2f;">加载失败</p>';
+                // 明确显示加载失败，而不是显示旧数据
+                contentDiv.innerHTML = '<p style="text-align:center;color:#d32f2f;">无数据</p>';
                 metaDiv.innerText = '📅 日期: -- | 🎟️ 期号: --';
                 return;
             }
