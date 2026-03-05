@@ -93,6 +93,10 @@ def extract_sportstoto_lotto(box, global_date, global_draw_no):
     data['star'], data['power'], data['supreme'], data['jackpots'] = extract_lotto(box)
     return data
 
+# 新增 GRAND DRAGON 提取函数（与普通4D相同）
+def extract_grand_dragon(box, global_date, global_draw_no):
+    return base_extract(box, global_date, global_draw_no)
+
 # ---------- 通用基础提取 ----------
 def base_extract(box, global_date, global_draw_no):
     data = {
@@ -352,6 +356,7 @@ def main():
     print(f"📦 找到 {len(outer_boxes)} 个 outerbox")
 
     # 定义每个 outerbox 对应的公司列表（按页面顺序）
+    # 注意：根据实际页面，GRAND DRAGON 可能位于最后，因此添加一项
     box_handlers = [
         [('damacai', extract_damacai)],
         [('magnum', extract_magnum)],
@@ -362,10 +367,12 @@ def main():
             ('sportstoto_lotto', extract_sportstoto_lotto),
         ],
         [('damacai_1p3d', extract_damacai_1p3d)],
-        [('singapore', extract_singapore)],   # 使用改进后的函数
+        [('singapore', extract_singapore)],
         [('sabah', extract_sabah)],
         [('sandakan', extract_sandakan)],
         [('sarawak_cashsweep', extract_cashsweep)],
+        # 新增 GRAND DRAGON
+        [('grand_dragon', extract_grand_dragon)],
     ]
 
     if len(outer_boxes) != len(box_handlers):
