@@ -317,11 +317,11 @@ def extract_lotto(box):
                     break
     return star, power, supreme, jackpots
 
-# ========== 优化后的 GDLOTTO 豪龙提取函数 ==========
+# ========== 最终优化版 GDLOTTO 豪龙提取函数（含增强日期调试） ==========
 def extract_gd_lotto_from_4dlatest(soup):
     """
     从 https://4dlatest.org/ 提取 GDLOTTO 豪龙数据
-    正确区分特别奖和安慰奖，并确保提取日期
+    包含详细的日期调试信息
     """
     print("🔍 正在从 4dlatest.org 提取 GDLOTTO 豪龙数据...")
     data = {
@@ -335,7 +335,7 @@ def extract_gd_lotto_from_4dlatest(soup):
         "jackpot": ""
     }
 
-    # 定位到包含 "GDLOTTO 豪龙" 的表格
+    # 定位到包含 "GDLOTTO 豪龙" 的标签
     header = soup.find(string=re.compile(r"GDLOTTO 豪龙"))
     if not header:
         print("⚠️ 未找到 'GDLOTTO 豪龙' 标题")
@@ -347,26 +347,45 @@ def extract_gd_lotto_from_4dlatest(soup):
         print("⚠️ 未找到 GDLOTTO 数据表格")
         return None
 
-    # 提取日期（通常在标题行中）
-    header_text = header.get_text(" ", strip=True)  # 合并多行文本
-    print(f"📅 标题文本: {header_text}")
+    # 获取标题文本（保留原始格式以便调试）
+    header_text_raw = header.get_text()  # 原始文本，可能包含换行
+    header_text_clean = header.get_text(" ", strip=True)  # 合并空格并去除首尾空白
+    print(f"📅 标题文本 (原始): {repr(header_text_raw)}")
+    print(f"📅 标题文本 (清洗): {header_text_clean}")
 
-    # 尝试多种日期格式：DD/MM/YYYY 或 DD-MM-YYYY
-    date_match = re.search(r"(\d{2}/\d{2}/\d{4})", header_text)
-    if not date_match:
-        date_match = re.search(r"(\d{2}-\d{2}-\d{4})", header_text)
+    # 尝试多种日期格式
+    date_match = None
+    patterns = [
+        r'(\d{2}/\d{2}/\d{4})',      # DD/MM/YYYY
+        r'(\d{2}-\d{2}-\d{4})',      # DD-MM-YYYY
+        r'(\d{2}\.\d{2}\.\d{4})',    # DD.MM.YYYY
+        r'(\d{2}\s+\d{2}\s+\d{4})',  # DD MM YYYY (空格分隔)
+        r'(\d{4}-\d{2}-\d{2})',      # YYYY-MM-DD (备用)
+    ]
+    for pattern in patterns:
+        date_match = re.search(pattern, header_text_clean)
+        if date_match:
+            print(f"  使用模式 {pattern} 匹配成功")
+            break
+
     if date_match:
+        raw_date = date_match.group(1).replace('/', '-').replace('.', '-').replace(' ', '-')
+        # 处理可能的 YYYY-MM-DD 格式
+        if len(raw_date) == 10 and raw_date[4] == '-':
+            # 转换为 DD-MM-YYYY
+            parts = raw_date.split('-')
+            raw_date = f"{parts[2]}-{parts[1]}-{parts[0]}"
         try:
-            # 将日期转换为 DD-MM-YYYY 格式存储
-            raw_date = date_match.group(1).replace('/', '-')
             d = datetime.strptime(raw_date, "%d-%m-%Y")
             data["draw_date"] = d.strftime("%d-%m-%Y")
-            print(f"  提取到日期: {data['draw_date']}")
+            print(f"  ✅ 提取到日期: {data['draw_date']}")
         except Exception as e:
-            print(f"  日期解析失败: {e}")
+            print(f"  ⚠️ 日期解析失败: {e}")
+    else:
+        print("  ❌ 未找到日期")
 
-    # 提取期号（如果有，格式如 #4165/26 或 4165/26）
-    no_match = re.search(r"#?(\d+/\d+)", header_text)
+    # 提取期号（如果有）
+    no_match = re.search(r"#?(\d+/\d+)", header_text_clean)
     if no_match:
         data["draw_no"] = no_match.group(1)
         print(f"  提取到期号: {data['draw_no']}")
@@ -381,18 +400,15 @@ def extract_gd_lotto_from_4dlatest(soup):
         row_text = row.get_text().upper()
         cells = row.find_all("td")
 
-        # 检查是否进入 SPECIAL 区域
         if "SPECIAL" in row_text:
             special_mode = True
             consolation_mode = False
-            # 提取该行中 SPECIAL 后面的数字
             for cell in cells:
                 text = cell.get_text(strip=True)
                 if text.isdigit() and len(text) >= 3:
                     special_list.append(text)
             continue
 
-        # 检查是否进入 CONSOLATION 区域
         if "CONSOLATION" in row_text:
             special_mode = False
             consolation_mode = True
@@ -402,29 +418,24 @@ def extract_gd_lotto_from_4dlatest(soup):
                     consolation_list.append(text)
             continue
 
-        # 检查是否进入 Jackpot 区域
         if "JACKPOT" in row_text or "USD" in row_text or "$" in row_text:
-            # 提取金额
             amount_match = re.search(r'([\d,]+(?:\.\d+)?)', row.get_text())
             if amount_match:
                 data["jackpot"] = amount_match.group(1)
             continue
 
-        # 如果在 SPECIAL 模式中，收集数字
         if special_mode:
             for cell in cells:
                 text = cell.get_text(strip=True)
                 if text.isdigit() and len(text) >= 3:
                     special_list.append(text)
 
-        # 如果在 CONSOLATION 模式中，收集数字
         if consolation_mode:
             for cell in cells:
                 text = cell.get_text(strip=True)
                 if text.isdigit() and len(text) >= 3:
                     consolation_list.append(text)
 
-        # 提取前三名（独立处理）
         if "1ST" in row_text:
             for cell in cells:
                 text = cell.get_text(strip=True)
@@ -444,7 +455,6 @@ def extract_gd_lotto_from_4dlatest(soup):
                     data["3rd"] = text
                     break
 
-    # 去重并限制数量（各最多10个）
     data["special"] = list(dict.fromkeys(special_list))[:10]
     data["consolation"] = list(dict.fromkeys(consolation_list))[:10]
 
@@ -455,10 +465,11 @@ def extract_gd_lotto_from_4dlatest(soup):
 
     return data
 
-# ========== 最终修复版 SABAH88 沙巴万字 LOTTO 提取函数 ==========
+# ========== 最终修复版 SABAH88 沙巴万字 LOTTO 提取函数（通用标签搜索） ==========
 def extract_sabah_lotto_from_4dlatest(soup):
     """
-    从 https://4dlatest.org/ 精确提取 "SABAH88 沙巴萬字 LOTTO" 数据
+    从 https://4dlatest.org/ 提取 "SABAH88 沙巴萬字 LOTTO" 数据
+    使用通用标签搜索
     """
     print("🔍 正在从 4dlatest.org 提取 SABAH88 沙巴萬字 LOTTO 数据...")
     data = {
@@ -469,30 +480,32 @@ def extract_sabah_lotto_from_4dlatest(soup):
         "jackpot2": ""
     }
 
-    # 1. 精确定位标题所在单元格（使用完整标题文本，忽略大小写）
-    header = soup.find('td', string=re.compile(r"SABAH88\s*沙巴萬字\s*LOTTO", re.IGNORECASE))
+    # 搜索任意包含 "SABAH88" 和 "LOTTO" 的标签
+    header = None
+    for tag in soup.find_all(['td', 'th', 'h1', 'h2', 'h3', 'h4', 'div', 'span', 'p']):
+        text = tag.get_text(strip=True)
+        if "SABAH88" in text and "LOTTO" in text.upper():
+            header = tag
+            print(f"✅ 在 <{tag.name}> 中找到标题: {text}")
+            break
+
     if not header:
-        # 备选方案：如果上面没找到，尝试更宽松的匹配
-        header = soup.find('td', string=re.compile(r"SABAH88.*LOTTO", re.IGNORECASE))
-        if header:
-            print("⚠️ 通过宽松匹配找到标题，请确认页面显示是否正确")
-        else:
-            print("❌ 未找到 'SABAH88 沙巴萬字 LOTTO' 标题")
-            return None
-
-    print(f"✅ 找到标题: {header.get_text(strip=True)}")
-
-    # 2. 获取标题所在的表格
-    table = header.find_parent("table")
-    if not table:
-        print("❌ 未找到包含标题的表格")
+        print("❌ 未找到包含 'SABAH88' 和 'LOTTO' 的标题")
         return None
 
-    # 3. 从标题行提取日期和期号
+    # 找到包含标题的表格
+    table = header.find_parent("table")
+    if not table:
+        table = header.find_next("table")
+    if not table:
+        print("❌ 未找到相关数据表格")
+        return None
+
+    # 从标题行提取日期和期号
     header_text = header.get_text(" ", strip=True)
     print(f"📅 标题文本: {header_text}")
 
-    # 匹配日期 (格式: DD/MM/YYYY)
+    # 匹配日期
     date_match = re.search(r"(\d{2}/\d{2}/\d{4})", header_text)
     if date_match:
         try:
@@ -502,19 +515,17 @@ def extract_sabah_lotto_from_4dlatest(soup):
         except Exception as e:
             print(f"  ⚠️ 日期解析失败: {e}")
 
-    # 匹配期号 (格式: 4165/26)
+    # 匹配期号
     no_match = re.search(r"(\d+/\d+)", header_text)
     if no_match:
         data["draw_no"] = no_match.group(1)
         print(f"  ✅ 提取到期号: {data['draw_no']}")
 
-    # 4. 遍历表格行提取开奖号码和奖池
     rows = table.find_all("tr")
     for row in rows:
         row_text = row.get_text()
         cells = row.find_all("td")
 
-        # 提取开奖号码行（包含 "+"）
         if "+" in row_text:
             numbers = []
             for cell in cells:
@@ -526,9 +537,8 @@ def extract_sabah_lotto_from_4dlatest(soup):
             if numbers:
                 data["winning_numbers"] = numbers
                 print(f"✅ 提取到开奖号码: {' '.join(numbers)}")
-            continue  # 号码行处理完后继续下一行
+            continue
 
-        # 提取 Jackpot 1
         if "Jackpot 1" in row_text:
             for cell in cells:
                 text = cell.get_text(strip=True)
@@ -549,7 +559,6 @@ def extract_sabah_lotto_from_4dlatest(soup):
                             print(f"  ✅ Jackpot 1 (下一行): {data['jackpot1']}")
                             break
 
-        # 提取 Jackpot 2
         if "Jackpot 2" in row_text:
             for cell in cells:
                 text = cell.get_text(strip=True)
