@@ -389,6 +389,7 @@
             });
         }
 
+        // ==================== 核心：更新公司卡片 ====================
         function updateCompanyCard(companyKey, data) {
             const contentDiv = document.getElementById(`content-${companyKey}`);
             const metaDiv = document.getElementById(`meta-${companyKey}`);
@@ -411,45 +412,57 @@
                         });
                         html += `</table></div>`;
                     }
-                } else if (companyKey === 'sportstoto_lotto') {
-                    // 将 Star Toto 的号码和它的 jackpots 放在一起
-                    // 假设 data.jackpots 数组按顺序对应：Star 的两个 jackpot, Power 的一个 jackpot, Supreme 的一个 jackpot
-                    // 如果数据不足，则留空
+                } 
+                else if (companyKey === 'sportstoto_lotto') {
+                    // 按顺序提取 jackpots
+                    // 假设 data.jackpots 是一个数组，顺序为：[star1, star2, power, supreme]
                     let starJackpots = [];
                     let powerJackpot = '';
                     let supremeJackpot = '';
                     if (data.jackpots && data.jackpots.length >= 4) {
-                        starJackpots = data.jackpots.slice(0, 2);
+                        starJackpots = [data.jackpots[0], data.jackpots[1]];
                         powerJackpot = data.jackpots[2];
                         supremeJackpot = data.jackpots[3];
                     } else if (data.jackpots && data.jackpots.length === 2) {
                         starJackpots = data.jackpots;
                     } else if (data.jackpots && data.jackpots.length === 1) {
-                        starJackpots = data.jackpots;
+                        starJackpots = [data.jackpots[0]];
                     }
 
+                    // Star Toto
                     if (data.star && data.star.length) {
-                        html += `<div class="subsection"><div class="subsection-title">Star Toto</div><div class="number-list">${data.star.map(n => `<span class="number-item">${n}</span>`).join('')}</div>`;
-                        if (starJackpots.length) {
-                            html += `<div class="number-list" style="margin-top:5px;">${starJackpots.map(j => `<span class="number-item">${j}</span>`).join('')}</div>`;
+                        html += `<div class="subsection"><div class="subsection-title">Star Toto</div>`;
+                        html += `<div class="number-list">${data.star.map(n => `<span class="number-item">${n}</span>`).join('')}</div>`;
+                        if (starJackpots.length >= 1) {
+                            html += `<div style="margin-top: 8px;"><span class="number-item">Jackpot 1 ${starJackpots[0]}</span></div>`;
+                        }
+                        if (starJackpots.length >= 2) {
+                            html += `<div style="margin-top: 4px;"><span class="number-item">Jackpot 2 ${starJackpots[1]}</span></div>`;
                         }
                         html += `</div>`;
                     }
+
+                    // Power Toto
                     if (data.power && data.power.length) {
-                        html += `<div class="subsection"><div class="subsection-title">Power Toto</div><div class="number-list">${data.power.map(n => `<span class="number-item">${n}</span>`).join('')}</div>`;
+                        html += `<div class="subsection"><div class="subsection-title">Power Toto</div>`;
+                        html += `<div class="number-list">${data.power.map(n => `<span class="number-item">${n}</span>`).join('')}</div>`;
                         if (powerJackpot) {
-                            html += `<div class="number-list" style="margin-top:5px;"><span class="number-item">${powerJackpot}</span></div>`;
+                            html += `<div style="margin-top: 8px;"><span class="number-item">Jackpot ${powerJackpot}</span></div>`;
                         }
                         html += `</div>`;
                     }
+
+                    // Supreme Toto
                     if (data.supreme && data.supreme.length) {
-                        html += `<div class="subsection"><div class="subsection-title">Supreme Toto</div><div class="number-list">${data.supreme.map(n => `<span class="number-item">${n}</span>`).join('')}</div>`;
+                        html += `<div class="subsection"><div class="subsection-title">Supreme Toto</div>`;
+                        html += `<div class="number-list">${data.supreme.map(n => `<span class="number-item">${n}</span>`).join('')}</div>`;
                         if (supremeJackpot) {
-                            html += `<div class="number-list" style="margin-top:5px;"><span class="number-item">${supremeJackpot}</span></div>`;
+                            html += `<div style="margin-top: 8px;"><span class="number-item">Jackpot ${supremeJackpot}</span></div>`;
                         }
                         html += `</div>`;
                     }
-                } else if (data.data && Array.isArray(data.data)) {
+                } 
+                else if (data.data && Array.isArray(data.data)) {
                     // 对于 Fireball, 5D, 6D, Jackpot Gold 等，渲染表格
                     html = data.data.map(row => {
                         if (row.length >= 3) {
