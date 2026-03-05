@@ -359,7 +359,6 @@ def extract_gd_lotto_from_4dlatest(soup):
         try:
             # 将日期转换为 DD-MM-YYYY 格式存储
             raw_date = date_match.group(1).replace('/', '-')
-            # 验证日期有效性
             d = datetime.strptime(raw_date, "%d-%m-%Y")
             data["draw_date"] = d.strftime("%d-%m-%Y")
             print(f"  提取到日期: {data['draw_date']}")
@@ -456,11 +455,11 @@ def extract_gd_lotto_from_4dlatest(soup):
 
     return data
 
-# ========== 从 4dlatest.org 提取 SABAH88 沙巴万字 LOTTO ==========
+# ========== 修复后的 SABAH88 沙巴万字 LOTTO 提取函数 ==========
 def extract_sabah_lotto_from_4dlatest(soup):
     """
     从 https://4dlatest.org/ 提取 "SABAH88 沙巴万字 LOTTO" 数据
-    返回包含 draw_date, draw_no, winning_numbers (列表), jackpot1, jackpot2 的字典
+    修复：准确匹配标题，提取开奖号码和两个 Jackpot
     """
     print("🔍 正在从 4dlatest.org 提取 SABAH88 沙巴万字 LOTTO 数据...")
     data = {
@@ -471,10 +470,10 @@ def extract_sabah_lotto_from_4dlatest(soup):
         "jackpot2": ""
     }
 
-    # 定位到包含 "SABAH88 沙巴万字 LOTTO" 的标题
-    header = soup.find(string=re.compile(r"SABAH88 沙巴万字 LOTTO"))
+    # 更宽松地匹配标题：包含 "SABAH88" 和 "LOTTO"
+    header = soup.find(string=re.compile(r"SABAH88.*LOTTO", re.IGNORECASE))
     if not header:
-        print("⚠️ 未找到 'SABAH88 沙巴万字 LOTTO' 标题")
+        print("⚠️ 未找到 'SABAH88 LOTTO' 标题")
         return None
 
     # 找到最近的表格
@@ -523,26 +522,47 @@ def extract_sabah_lotto_from_4dlatest(soup):
 
         # 提取 Jackpot 1
         if "Jackpot 1" in row_text:
+            # 从当前行或后续单元格中提取金额
             for cell in cells:
                 text = cell.get_text(strip=True)
-                if "RM" in text or "RM" in row_text:
-                    # 尝试提取金额数字
-                    amount_match = re.search(r'([\d,]+(?:\.\d+)?)', text)
-                    if amount_match:
-                        data["jackpot1"] = amount_match.group(1)
-                        print(f"  Jackpot 1: {data['jackpot1']}")
+                amount_match = re.search(r'([\d,]+(?:\.\d+)?)', text)
+                if amount_match:
+                    data["jackpot1"] = amount_match.group(1)
+                    print(f"  Jackpot 1: {data['jackpot1']}")
                     break
+            # 如果当前行没找到，尝试在下一行查找
+            if not data["jackpot1"]:
+                next_row = row.find_next_sibling("tr")
+                if next_row:
+                    next_cells = next_row.find_all("td")
+                    for cell in next_cells:
+                        text = cell.get_text(strip=True)
+                        amount_match = re.search(r'([\d,]+(?:\.\d+)?)', text)
+                        if amount_match:
+                            data["jackpot1"] = amount_match.group(1)
+                            print(f"  Jackpot 1 (下一行): {data['jackpot1']}")
+                            break
 
         # 提取 Jackpot 2
         if "Jackpot 2" in row_text:
             for cell in cells:
                 text = cell.get_text(strip=True)
-                if "RM" in text or "RM" in row_text:
-                    amount_match = re.search(r'([\d,]+(?:\.\d+)?)', text)
-                    if amount_match:
-                        data["jackpot2"] = amount_match.group(1)
-                        print(f"  Jackpot 2: {data['jackpot2']}")
+                amount_match = re.search(r'([\d,]+(?:\.\d+)?)', text)
+                if amount_match:
+                    data["jackpot2"] = amount_match.group(1)
+                    print(f"  Jackpot 2: {data['jackpot2']}")
                     break
+            if not data["jackpot2"]:
+                next_row = row.find_next_sibling("tr")
+                if next_row:
+                    next_cells = next_row.find_all("td")
+                    for cell in next_cells:
+                        text = cell.get_text(strip=True)
+                        amount_match = re.search(r'([\d,]+(?:\.\d+)?)', text)
+                        if amount_match:
+                            data["jackpot2"] = amount_match.group(1)
+                            print(f"  Jackpot 2 (下一行): {data['jackpot2']}")
+                            break
 
     return data
 
@@ -657,8 +677,8 @@ def main():
         if missing:
             print(f"ℹ️ 以下公司当天无数据: {', '.join(missing)}")
 
-    # 2. 从 4dlatest.org 抓取 GDLOTTO 豪龙数据
-    print("\n🌕 正在从 4dlatest.org 抓取 GDLOTTO 豪龙数据...")
+    # 2. 从 4dlatest.org 抓取 GDLOTTO 和 SABAH LOTTO
+    print("\n🌕 正在从 4dlatest.org 抓取补充数据...")
     time.sleep(1)
     html_4dlatest = fetch_html(URL_4DLATEST)
     if html_4dlatest:
@@ -672,7 +692,6 @@ def main():
             print("⚠️ GDLOTTO 豪龙数据为空，保留原有数据")
         
         # 2.2 抓取 SABAH88 沙巴万字 LOTTO
-        print("\n🌕 正在从 4dlatest.org 抓取 SABAH88 沙巴万字 LOTTO 数据...")
         sabah_data = extract_sabah_lotto_from_4dlatest(soup_4dlatest)
         if sabah_data and sabah_data.get('winning_numbers'):
             save_json('sabah_lotto', sabah_data)
