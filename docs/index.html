@@ -79,7 +79,7 @@
         .status-indicator.loading { background: #ecc94b; animation: blink 1s infinite; }
         @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-        /* ========== 日历样式（已按需求调整） ========== */
+        /* 日历样式 */
         .calendar-btn { background: #ffffffcc; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.8); border-radius: 25px; padding: 8px 20px; font-size: 1rem; font-weight: 500; color: #2c3e50; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: all 0.2s; }
         .calendar-btn:hover { background: #ffffff; box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
         .calendar-popup { position: absolute; background: white; border-radius: 20px; box-shadow: 0 12px 30px rgba(0,0,0,0.2); padding: 16px; z-index: 2000; width: 320px; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 8px; border: 1px solid #e2e8f0; backdrop-filter: blur(4px); }
@@ -87,64 +87,19 @@
         .calendar-nav { background: none; border: none; font-size: 1.2rem; cursor: pointer; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #f0f2f5; transition: 0.2s; }
         .calendar-nav:hover { background: #e2e8f0; }
         .calendar-table { width: 100%; border-collapse: collapse; text-align: center; table-layout: fixed; }
-        /* 统一列宽与单元格大小（略微缩小） */
         .calendar-table th,
-        .calendar-table td {
-            width: 36px;
-        }
-        .calendar-table th {
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: #718096;
-            padding: 6px 0;
-        }
-        .calendar-table td {
-            padding: 0;
-            height: 36px;
-            line-height: 36px;
-            font-size: 0.9rem;
-            cursor: pointer;
-            border-radius: 50%;
-            transition: 0.1s;
-            text-align: center;
-            vertical-align: middle;
-        }
-        /* 有开彩数据的日期：填充背景（尺寸已随单元格缩小） */
-        .calendar-table td.has-data {
-            background: #c6e0ff;
-            font-weight: 600;
-            color: #1e4a6b;
-        }
-        /* 当天日期：无背景，浅蓝色外圈 */
-        .calendar-table td.today {
-            background: transparent;
-            box-shadow: 0 0 0 2px #a0c4ff;
-            font-weight: 600;
-        }
-        /* 选中日期 */
-        .calendar-table td.selected {
-            background: #3182ce !important;
-            color: white !important;
-            font-weight: 600;
-        }
-        /* 悬停效果 */
-        .calendar-table td:hover {
-            background: #e2e8f0 !important;
-        }
-        .calendar-table td.has-data:hover {
-            background: #a9c9f0 !important;
-        }
-        .calendar-month-year {
-            font-size: 1.1rem;
-        }
+        .calendar-table td { width: 36px; }
+        .calendar-table th { font-size: 0.8rem; font-weight: 600; color: #718096; padding: 6px 0; }
+        .calendar-table td { padding: 0; height: 36px; line-height: 36px; font-size: 0.9rem; cursor: pointer; border-radius: 50%; transition: 0.1s; text-align: center; vertical-align: middle; }
+        .calendar-table td.has-data { background: #c6e0ff; font-weight: 600; color: #1e4a6b; }
+        .calendar-table td.today { background: transparent; box-shadow: 0 0 0 2px #a0c4ff; font-weight: 600; }
+        .calendar-table td.selected { background: #3182ce !important; color: white !important; font-weight: 600; }
+        .calendar-table td:hover { background: #e2e8f0 !important; }
+        .calendar-table td.has-data:hover { background: #a9c9f0 !important; }
+        .calendar-month-year { font-size: 1.1rem; }
 
-        /* 新增样式：用于 Jackpot 标签（普通文本，加粗） */
-        .jackpot-label {
-            font-weight: 600;
-            margin: 4px 0 2px 0;
-            color: #2c3e50;
-            font-size: 0.95rem;
-        }
+        /* Jackpot 标签 */
+        .jackpot-label { font-weight: 600; margin: 4px 0 2px 0; color: #2c3e50; font-size: 0.95rem; }
     </style>
 </head>
 <body>
@@ -214,35 +169,31 @@
             'sabah_lotto'
         ];
 
-        let availableDates = [];           // 存储 YYYY-MM-DD 格式的日期数组（从新到旧）
+        let availableDates = [];           
         let availableDatesSet = new Set(); 
         let selectedDate = null;           
 
-        // ==================== 工具函数 (日期转换) ====================
+        // ==================== 工具函数 ====================
         function ymdToDmy(ymd) {
             if (!ymd) return '';
             let parts = ymd.split('-');
-            if (parts.length === 3) {
-                return `${parts[2]}-${parts[1]}-${parts[0]}`;
-            }
+            if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
             return ymd;
         }
 
         function dmyToYmd(dmy) {
             if (!dmy) return '';
             let parts = dmy.split('-');
-            if (parts.length === 3) {
-                return `${parts[2]}-${parts[1]}-${parts[0]}`;
-            }
+            if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
             return dmy;
         }
 
         function parseDMY(dateStr) {
             let parts = dateStr.split('-');
             let d, m, y;
-            if (parts[0].length === 4) { // YYYY-MM-DD
+            if (parts[0].length === 4) {
                 [y, m, d] = parts.map(Number);
-            } else { // DD-MM-YYYY
+            } else {
                 [d, m, y] = parts.map(Number);
             }
             return { year: y, month: m, day: d };
@@ -257,7 +208,7 @@
             return dates.sort((a, b) => toSortKey(b) - toSortKey(a));
         }
 
-        // ==================== 日期选择器功能 ====================
+        // ==================== 日期选择器 ====================
         function toggleDateDropdown() {
             document.getElementById('date-dropdown').classList.toggle('show');
             document.getElementById('date-btn').classList.toggle('active');
@@ -268,7 +219,7 @@
                 const res = await fetch(`data/dates.json?t=${Date.now()}`, { cache: 'no-store' });
                 if (res.ok) {
                     let dates = await res.json();
-                    availableDates = sortDatesDesc(dates); // YYYY-MM-DD 格式
+                    availableDates = sortDatesDesc(dates);
                     availableDatesSet = new Set(availableDates);
                 }
             } catch (e) { console.warn('无法加载 dates.json', e); }
@@ -279,7 +230,6 @@
         function updateDateBtnWithLatest() {
             const btnSpan = document.getElementById('selected-date');
             if (availableDates.length > 0) {
-                // 按钮上显示当前选中的日期（转换为 DD-MM-YYYY）
                 btnSpan.innerText = selectedDate ? ymdToDmy(selectedDate) : ymdToDmy(availableDates[0]);
             } else {
                 btnSpan.innerText = '暂无数据';
@@ -296,7 +246,6 @@
             let html = '<div class="date-option" onclick="selectDate(null)">📌 最新数据</div>';
             recentDates.forEach(date => {
                 const activeClass = (selectedDate === date) ? 'active' : '';
-                // 下拉选项中显示 DD-MM-YYYY
                 const displayDate = ymdToDmy(date);
                 html += `<div class="date-option ${activeClass}" onclick="selectDate('${date}')">📅 ${displayDate}</div>`;
             });
@@ -304,7 +253,7 @@
         }
 
         function selectDate(date) {
-            selectedDate = date; // 内部保持 YYYY-MM-DD
+            selectedDate = date;
             updateDateBtnWithLatest();
             document.getElementById('date-dropdown').classList.remove('show');
             document.getElementById('date-btn').classList.remove('active');
@@ -312,7 +261,7 @@
             loadAllCompanies(); 
         }
 
-        // ==================== 日历相关 ====================
+        // ==================== 日历 ====================
         let currentCalendarYear, currentCalendarMonth;
 
         function showCalendar() {
@@ -331,18 +280,15 @@
         function renderCalendar() {
             const popup = document.getElementById('calendar-popup');
             if (!popup) return;
-
             let year = currentCalendarYear;
             let month = currentCalendarMonth;
             const monthNamesEn = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             const monthNamesZh = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
             const weekdaysEn = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
             let firstDay = new Date(year, month - 1, 1).getDay();
             let daysInMonth = new Date(year, month, 0).getDate();
             const now = new Date();
             const todayYmd = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,'0')}-${now.getDate().toString().padStart(2,'0')}`;
-
             let html = `
                 <div class="calendar-header">
                     <button class="calendar-nav" id="prev-month">◀</button>
@@ -353,7 +299,6 @@
                     <thead><tr>${weekdaysEn.map(d => `<th>${d}</th>`).join('')}</tr></thead>
                     <tbody>
             `;
-
             let date = 1;
             for (let i = 0; i < 6; i++) {
                 html += '<tr>';
@@ -374,8 +319,6 @@
             }
             html += '</tbody></table>';
             popup.innerHTML = html;
-
-            // 绑定事件
             document.getElementById('prev-month').onclick = (e) => { e.stopPropagation(); changeMonth(-1); };
             document.getElementById('next-month').onclick = (e) => { e.stopPropagation(); changeMonth(1); };
         }
@@ -388,33 +331,26 @@
         }
 
         function calendarDateClick(dateYmd) {
-            if (dateYmd) {
-                selectDate(dateYmd);
-            } else {
-                alert('该日期暂无开彩数据');
-            }
+            if (dateYmd) selectDate(dateYmd);
+            else alert('该日期暂无开彩数据');
         }
 
-        // ==================== 数据加载（改进：支持后备最新数据）====================
+        // ==================== 数据加载 ====================
         async function loadCompanyData(companyKey) {
             const basePath = selectedDate ? `data/${selectedDate}` : 'data';
             const url = `${basePath}/${companyKey}.json?t=${Date.now()}`;
             try {
                 const res = await fetch(url, { cache: 'no-store' });
-                if (res.ok) {
-                    return await res.json();
-                } else {
-                    // 所选日期无数据，尝试加载最新数据
+                if (res.ok) return await res.json();
+                else {
                     console.log(`${companyKey} 在 ${selectedDate} 无数据，尝试加载最新数据`);
                     const latestUrl = `data/${companyKey}.json?t=${Date.now()}`;
                     const latestRes = await fetch(latestUrl, { cache: 'no-store' });
                     if (latestRes.ok) {
                         const data = await latestRes.json();
-                        data._isFallback = true;  // 标记为后备数据
+                        data._isFallback = true;
                         return data;
-                    } else {
-                        return null;
-                    }
+                    } else return null;
                 }
             } catch (err) {
                 console.warn(`${companyKey} 请求失败，尝试加载最新数据`, err);
@@ -444,7 +380,7 @@
             });
         }
 
-        // ==================== 核心：更新公司卡片 ====================
+        // ==================== 核心：更新卡片 ====================
         function updateCompanyCard(companyKey, data) {
             const contentDiv = document.getElementById(`content-${companyKey}`);
             const metaDiv = document.getElementById(`meta-${companyKey}`);
@@ -454,28 +390,18 @@
                 return;
             }
             
-            // 调试输出，查看数据内容
-            console.log(`更新 ${companyKey}:`, data);
-
             let html = '';
-            // 构建日期显示，如果数据是后备数据，添加标记
             let dateStr = data.draw_date || '';
             let drawNoStr = data.draw_no || '';
-            // 如果 grand_dragon 的日期为空，尝试从其他字段获取（备用）
             if (companyKey === 'grand_dragon' && !dateStr) {
                 dateStr = data.date || data.drawDate || data.drawdate || '';
-                if (!dateStr) {
-                    console.warn('GRAND DRAGON 数据缺少 draw_date 字段', data);
-                }
+                if (!dateStr) console.warn('GRAND DRAGON 数据缺少 draw_date', data);
             }
             let metaText = `📅 日期: ${dateStr || '--'} | 🎟️ 期号: ${drawNoStr || '--'}`;
-            if (data._isFallback && selectedDate) {
-                metaText += ` (最近一期)`;
-            }
+            if (data._isFallback && selectedDate) metaText += ` (最近一期)`;
             metaDiv.innerText = metaText;
 
             if (SPECIAL_COMPANIES.includes(companyKey)) {
-                // 特殊公司渲染
                 if (companyKey === 'singapore_toto' && data.winning_numbers) {
                     html = `<div class="subsection"><div class="subsection-title">开奖号码</div><div class="number-list">${data.winning_numbers.map(n => `<span class="number-item">${n}</span>`).join('')}</div></div>`;
                     if (data.prize_table && data.prize_table.length > 0) {
@@ -487,28 +413,21 @@
                     }
                 } 
                 else if (companyKey === 'sportstoto_lotto') {
-                    // 按顺序提取 jackpots
-                    let starJackpots = [];
-                    let powerJackpot = '';
-                    let supremeJackpot = '';
-                    if (data.jackpots && data.jackpots.length >= 4) {
-                        starJackpots = [data.jackpots[0], data.jackpots[1]];
-                        powerJackpot = data.jackpots[2];
-                        supremeJackpot = data.jackpots[3];
-                    } else if (data.jackpots && data.jackpots.length === 2) {
-                        starJackpots = data.jackpots;
-                    } else if (data.jackpots && data.jackpots.length === 1) {
-                        starJackpots = [data.jackpots[0]];
-                    }
+                    // 确保 jackpots 至少有 4 个元素，缺失则设为空字符串
+                    let jackpots = data.jackpots || [];
+                    while (jackpots.length < 4) jackpots.push("");
+                    let starJackpots = [jackpots[0], jackpots[1]];
+                    let powerJackpot = jackpots[2];
+                    let supremeJackpot = jackpots[3];
 
                     if (data.star && data.star.length) {
                         html += `<div class="subsection"><div class="subsection-title">Star Toto</div>`;
                         html += `<div class="number-list">${data.star.map(n => `<span class="number-item">${n}</span>`).join('')}</div>`;
-                        if (starJackpots.length >= 1) {
+                        if (starJackpots[0]) {
                             html += `<div class="jackpot-label">Jackpot 1</div>`;
                             html += `<div class="number-list"><span class="number-item">${starJackpots[0]}</span></div>`;
                         }
-                        if (starJackpots.length >= 2) {
+                        if (starJackpots[1]) {
                             html += `<div class="jackpot-label">Jackpot 2</div>`;
                             html += `<div class="number-list"><span class="number-item">${starJackpots[1]}</span></div>`;
                         }
@@ -562,7 +481,7 @@
                     html = '<p style="text-align:center; padding:10px;">特殊开彩详见官网</p>';
                 }
             } else {
-                // 普通公司渲染（包括 grand_dragon）
+                // 普通公司
                 html = `
                     <div class="prize-grid" style="flex-direction:column;align-items:center;">
                         <div class="prize-card" style="width:220px;margin-bottom:8px;"><div class="label">1st Prize</div><div class="number">${data['1st'] || '----'}</div></div>
@@ -602,7 +521,6 @@
                 if (data) successCount++;
             });
             const firstValid = results.find(d => d?.draw_date);
-            // 顶部 draw_date 显示当前所选日期（如果有 selectedDate）或最新日期，格式为 DD-MM-YYYY
             if (selectedDate) {
                 document.getElementById('draw_date').innerText = ymdToDmy(selectedDate);
             } else if (availableDates.length > 0) {
