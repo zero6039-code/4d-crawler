@@ -2,18 +2,18 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>4D 成绩 Malaysia · 实时更新</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <style>
-        /* 原有样式保持完全不变，仅追加日历相关样式 */
+        /* 原有样式保持不变，仅追加/修改部分 */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
         body { background: #f0f2f5; padding: 15px 10px; }
         .container { max-width: 1300px; margin: 0 auto; }
         h1 { font-size: 2.2rem; font-weight: 800; text-align: center; margin-bottom: 15px; background: linear-gradient(135deg, #0b1c2f, #2c3e50); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1px; }
-        .date-selector { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+        .date-selector { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; position: relative; }
         .date-dropdown { position: relative; display: inline-block; }
         .date-btn { background: #ffffffcc; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.8); border-radius: 25px; padding: 8px 20px; font-size: 1rem; font-weight: 500; color: #2c3e50; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: all 0.2s; }
         .date-btn:hover { background: #ffffff; box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
@@ -55,7 +55,19 @@
         .group-subtitle { font-size: 0.95rem; font-weight: 600; margin: 8px 0 4px 0; color: #2c3e50; width: 100%; }
         footer { text-align: center; margin-top: 30px; color: #7c8b9c; font-size: 0.8rem; border-top: 1px solid #dbe1ea; padding-top: 16px; }
         @media (max-width: 900px) { .companies-grid { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 600px) { .companies-grid { grid-template-columns: 1fr; } .company-title { font-size: 1.5rem; } .prize-card .number { font-size: 1.6rem; } .number-item { font-size: 1.0rem; padding: 5px 8px; min-width: 45px; } }
+        /* 手机字体优化：特别奖/安慰奖数字变大、允许换行 */
+        @media (max-width: 600px) {
+            .companies-grid { grid-template-columns: 1fr; }
+            .company-title { font-size: 1.5rem; }
+            .prize-card .number { font-size: 1.6rem; }
+            .number-item {
+                font-size: 1.3rem;      /* 调大数字 */
+                padding: 6px 12px;
+                min-width: auto;         /* 移除最小宽度限制 */
+                word-break: break-all;   /* 允许长数字换行 */
+                white-space: normal;
+            }
+        }
         .company-section[data-company="damacai"] .company-title { background: linear-gradient(145deg, #1e5620, #2a7a2d); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .company-section[data-company="magnum"] .company-title { background: linear-gradient(145deg, #aa4a1e, #c95f2a); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .company-section[data-company="toto"] .company-title { background: linear-gradient(145deg, #b71c1c, #d32f2f); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
@@ -167,6 +179,16 @@
             font-weight: 600;
         }
         .calendar-table td.selected.has-data { background: #2b6cb0; }
+        /* 当天日期样式：浅蓝色圈 */
+        .calendar-table td.today {
+            background: #d9eaff;  /* 浅蓝 */
+            font-weight: 600;
+            border-radius: 30px;
+            box-shadow: 0 0 0 2px #a0c4ff; /* 可选外圈 */
+        }
+        .calendar-table td.today.has-data {
+            background: #a0c4ff;   /* 比普通数据稍浅，但保留数据感 */
+        }
         .calendar-month-year {
             font-size: 1.1rem;
         }
@@ -177,9 +199,6 @@
             gap: 8px;
             font-size: 0.8rem;
             color: #4a5568;
-        }
-        .date-selector {
-            position: relative; /* 为日历弹出层提供锚点 */
         }
     </style>
 </head>
@@ -198,19 +217,15 @@
                     <div class="loading-history">🔄 加载历史数据...</div>
                 </div>
             </div>
-            <!-- 新增日历按钮 -->
             <button class="calendar-btn" id="calendar-btn">📅 月历</button>
-            <!-- 日历弹出层 -->
             <div id="calendar-popup" class="calendar-popup" style="display: none;"></div>
         </div>
         
-        <!-- 日期条（日期+刷新按钮） -->
         <div class="draw-info">
             <span><strong>日期：</strong> <span id="draw_date">--</span></span>
             <button class="refresh-btn" id="refresh-btn" onclick="forceRefresh()">刷新</button>
         </div>
 
-        <!-- 公司卡片网格 -->
         <div id="companies-grid" class="companies-grid">
             <p style="text-align: center; grid-column: 1/-1; color: #666;">🔄 正在加载数据...</p>
         </div>
@@ -306,7 +321,6 @@
         function updateDateBtnWithLatest() {
             const btnSpan = document.getElementById('selected-date');
             if (availableDates.length > 0) {
-                // 如果未选择任何日期，显示最新日期；否则显示已选日期
                 if (selectedDate === null) {
                     btnSpan.innerText = availableDates[0]; // 最新
                 } else {
@@ -323,8 +337,10 @@
                 content.innerHTML = '<div class="loading-history">暂无历史数据</div>';
                 return;
             }
+            // 只显示最近5天（最新在前，取前5个）
+            const recentDates = availableDates.slice(0, 5);
             let html = '<div class="date-option" onclick="selectDate(null)">📌 最新数据</div>';
-            availableDates.forEach(date => {
+            recentDates.forEach(date => {
                 const activeClass = (selectedDate === date) ? 'active' : '';
                 html += `<div class="date-option ${activeClass}" onclick="selectDate('${date}')">📅 ${date}</div>`;
             });
@@ -333,11 +349,9 @@
 
         function selectDate(date) {
             selectedDate = date;
-            // 更新按钮文字
             document.getElementById('selected-date').innerText = date ? date : (availableDates.length ? availableDates[0] : '最新数据');
             document.getElementById('date-dropdown').classList.remove('show');
             document.getElementById('date-btn').classList.remove('active');
-            // 关闭日历弹窗（如果有）
             document.getElementById('calendar-popup').style.display = 'none';
             loadAllCompanies();
         }
@@ -352,7 +366,6 @@
                 return;
             }
 
-            // 确定初始月份：如果有selectedDate，使用它的月份；否则用最新日期；否则当前月
             let baseDate = selectedDate ? selectedDate : (availableDates.length ? availableDates[0] : null);
             if (baseDate) {
                 let { year, month } = parseDMY(baseDate);
@@ -361,7 +374,7 @@
             } else {
                 let now = new Date();
                 currentCalendarYear = now.getFullYear();
-                currentCalendarMonth = now.getMonth() + 1; // JS month 0-11
+                currentCalendarMonth = now.getMonth() + 1;
             }
             renderCalendar();
             popup.style.display = 'block';
@@ -374,26 +387,33 @@
             let year = currentCalendarYear;
             let month = currentCalendarMonth; // 1-12
 
-            // 月份名称
-            const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
-            // 获取当月第一天是星期几 (0 = 星期日，6 = 星期六)
-            let firstDay = new Date(year, month - 1, 1).getDay(); // 返回0-6
-            // 当月总天数
+            // 英文月份缩写
+            const monthNamesEn = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            // 星期英文缩写 (从周日开始)
+            const weekdaysEn = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+            let firstDay = new Date(year, month - 1, 1).getDay(); // 0 = 周日
             let daysInMonth = new Date(year, month, 0).getDate();
+
+            // 获取当前系统日期 (用于标记今天)
+            const now = new Date();
+            const todayYear = now.getFullYear();
+            const todayMonth = now.getMonth() + 1;
+            const todayDay = now.getDate();
 
             let html = `
                 <div class="calendar-header">
                     <button class="calendar-nav" onclick="changeMonth(-1)">◀</button>
-                    <span class="calendar-month-year">${monthNames[month-1]} ${year}</span>
+                    <span class="calendar-month-year">${monthNamesEn[month-1]} ${year}</span>
                     <button class="calendar-nav" onclick="changeMonth(1)">▶</button>
                 </div>
                 <table class="calendar-table">
-                    <thead><tr><th>日</th><th>一</th><th>二</th><th>三</th><th>四</th><th>五</th><th>六</th></tr></thead>
+                    <thead><tr>${weekdaysEn.map(d => `<th>${d}</th>`).join('')}</tr></thead>
                     <tbody>
             `;
 
             let date = 1;
-            for (let i = 0; i < 6; i++) { // 最多6行
+            for (let i = 0; i < 6; i++) {
                 html += '<tr>';
                 for (let j = 0; j < 7; j++) {
                     if (i === 0 && j < firstDay) {
@@ -404,7 +424,8 @@
                         let dateStr = `${date.toString().padStart(2,'0')}-${month.toString().padStart(2,'0')}-${year}`;
                         let hasData = availableDatesSet.has(dateStr);
                         let isSelected = (selectedDate === dateStr) ? 'selected' : '';
-                        html += `<td class="${hasData ? 'has-data' : ''} ${isSelected}" data-date="${dateStr}" onclick="calendarDateClick('${dateStr}')">${date}</td>`;
+                        let isToday = (year === todayYear && month === todayMonth && date === todayDay) ? 'today' : '';
+                        html += `<td class="${hasData ? 'has-data' : ''} ${isSelected} ${isToday}" data-date="${dateStr}" onclick="calendarDateClick('${dateStr}')">${date}</td>`;
                         date++;
                     }
                 }
@@ -413,7 +434,7 @@
             }
 
             html += '</tbody></table>';
-            html += '<div class="calendar-footer">📌 高亮日期 = 有开彩数据</div>';
+            html += '<div class="calendar-footer">📌 高亮日期 = 有开彩数据 | 浅蓝圈 = 今天</div>';
             popup.innerHTML = html;
         }
 
@@ -616,9 +637,7 @@
             await loadAllCompanies();
             setInterval(loadAllCompanies, 60000);
 
-            // 日历按钮事件
             document.getElementById('calendar-btn').addEventListener('click', showCalendar);
-            // 点击其他地方关闭日历
             document.addEventListener('click', (e) => {
                 const popup = document.getElementById('calendar-popup');
                 const btn = document.getElementById('calendar-btn');
