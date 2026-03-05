@@ -4,7 +4,7 @@ import json
 import os
 from datetime import datetime
 import re
-import time  # 新增：用于添加延时
+import time
 
 # ---------- 配置 ----------
 URL_4D4D = "https://4d4d.co/"
@@ -317,7 +317,7 @@ def extract_lotto(box):
                     break
     return star, power, supreme, jackpots
 
-# ========== 新增：从 JSON API 获取 Singapore Toto 数据 ==========
+# ========== 从 JSON API 获取 Singapore Toto 数据 ==========
 def fetch_singapore_toto_json():
     """
     从 feedsg.json API 获取 Singapore Toto 的原始 JSON 数据
@@ -339,7 +339,7 @@ def fetch_singapore_toto_json():
         r = requests.get(url_with_param, headers=headers, timeout=15)
         print(f"  状态码: {r.status_code}")
         r.raise_for_status()
-        return r.json()  # 直接返回解析后的 JSON
+        return r.json()
     except Exception as e:
         print(f"❌ 抓取 Singapore Toto API 失败: {e}")
         return None
@@ -347,7 +347,7 @@ def fetch_singapore_toto_json():
 def extract_singapore_toto_from_api(api_data):
     """
     将 API 返回的 JSON 数据转换为前端所需的格式
-    根据实际返回的 JSON 结构调整
+    根据实际返回的 JSON 结构调整：顶层包含 "G" 对象，其内部有 P1-P7, JP1-JP6, JPW1-JPW6
     """
     print("🔍 解析 Singapore Toto API 数据...")
 
@@ -362,31 +362,40 @@ def extract_singapore_toto_from_api(api_data):
         "prize_table": []
     }
 
-    # 根据从浏览器开发者工具观察到的实际结构进行解析
-    # 假设返回的是对象，包含 date, drawNo, winningNumbers, prizeTable 等字段
-    # 如果返回的是数组，取第一个元素
-    if isinstance(api_data, list) and len(api_data) > 0:
-        api_data = api_data[0]
-
-    if isinstance(api_data, dict):
-        # 提取日期
-        if 'date' in api_data:
-            raw_date = api_data['date']
-            data["draw_date"] = parse_4dmoon_date(raw_date) or ""
-        # 提取期号
-        if 'drawNo' in api_data:
-            data["draw_no"] = str(api_data['drawNo'])
-        # 提取开奖号码
-        if 'winningNumbers' in api_data and isinstance(api_data['winningNumbers'], list):
-            data["winning_numbers"] = [str(n) for n in api_data['winningNumbers']]
+    # 从 "G" 对象中提取 Singapore Toto 数据
+    if isinstance(api_data, dict) and "G" in api_data:
+        g = api_data["G"]
+        # 提取日期，例如 "(Thu) 05-Mar-2026"
+        if "DD" in g:
+            raw_date = g["DD"]
+            date_match = re.search(r"(\d{2}-[A-Za-z]{3}-\d{4})", raw_date)
+            if date_match:
+                data["draw_date"] = parse_4dmoon_date(date_match.group(1)) or ""
+        # 提取期号，例如 "#4162"
+        if "DN" in g:
+            raw_no = g["DN"]
+            data["draw_no"] = raw_no.lstrip('#')
+        # 提取开奖号码 P1 到 P7
+        winning_numbers = []
+        for i in range(1, 8):
+            key = f"P{i}"
+            if key in g and g[key]:
+                winning_numbers.append(str(g[key]))
+        if winning_numbers:
+            data["winning_numbers"] = winning_numbers
         # 提取奖金表
-        if 'prizeTable' in api_data and isinstance(api_data['prizeTable'], list):
-            data["prize_table"] = api_data['prizeTable']
-        # 如果字段名不同，尝试其他常见命名
-        elif 'prizes' in api_data:
-            data["prize_table"] = api_data['prizes']
-        elif 'results' in api_data:
-            data["prize_table"] = api_data['results']
+        prize_table = []
+        for i in range(1, 7):  # Group 1 到 Group 6
+            amount_key = f"JP{i}"
+            winners_key = f"JPW{i}"
+            amount = g.get(amount_key, "")
+            winners = g.get(winners_key, "")
+            # 即使为空也添加行，以保持表格结构
+            prize_table.append([f"Group {i}", amount, winners])
+        if prize_table:
+            data["prize_table"] = prize_table
+    else:
+        print("⚠️ API 返回数据中未找到 'G' 对象")
 
     # 如果数据仍然为空，打印完整结构以便手动分析
     if not data["winning_numbers"] and not data["prize_table"]:
