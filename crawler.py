@@ -7,49 +7,77 @@ import re
 
 URL = "https://4d4d.co/"
 
-# 定义需要提取的最终公司及其对应的解析函数
-# 每个键值对表示一个输出文件，值是一个元组：(outerbox索引, 提取函数, 公司显示名)
-# 提取函数将接收 outerbox 的 soup 和全局日期，返回该公司的数据字典
-
+# ---------- 公司专用提取函数 ----------
 def extract_damacai(box, global_date, global_draw_no):
-    data = base_extract(box, global_date, global_draw_no)
-    return data
+    return base_extract(box, global_date, global_draw_no)
 
 def extract_magnum(box, global_date, global_draw_no):
-    data = base_extract(box, global_date, global_draw_no)
-    return data
+    return base_extract(box, global_date, global_draw_no)
 
 def extract_toto(box, global_date, global_draw_no):
-    data = base_extract(box, global_date, global_draw_no)
-    return data
+    return base_extract(box, global_date, global_draw_no)
 
 def extract_singapore(box, global_date, global_draw_no):
-    data = base_extract(box, global_date, global_draw_no)
+    """Singapore 4D 专用提取（不依赖 resultbottom 类）"""
+    data = {
+        "draw_date": global_date,
+        "draw_no": global_draw_no,
+        "1st": "",
+        "2nd": "",
+        "3rd": "",
+        "special": [],
+        "consolation": [],
+        "type": None
+    }
+
+    # 前三名（通常有 resulttop 类）
+    prize_tds = box.find_all("td", class_="resulttop")
+    if len(prize_tds) >= 3:
+        data["1st"] = prize_tds[0].get_text(strip=True)
+        data["2nd"] = prize_tds[1].get_text(strip=True)
+        data["3rd"] = prize_tds[2].get_text(strip=True)
+
+    # 辅助函数：从标题单元格找到对应表格并提取所有数字
+    def extract_numbers_from_section(title_pattern):
+        section = box.find("td", string=re.compile(title_pattern))
+        if not section:
+            return []
+        table = section.find_parent("table")
+        if not table:
+            return []
+        rows = table.find_all("tr")[1:]  # 跳过标题行
+        numbers = []
+        for row in rows:
+            cells = row.find_all("td")
+            for cell in cells:
+                text = cell.get_text(strip=True)
+                # 过滤掉标题文本和无效占位符
+                if text and text not in ["Special", "特別獎", "Consolation", "安慰獎", "----"]:
+                    numbers.append(text)
+        return numbers
+
+    data["special"] = extract_numbers_from_section("Special|特別獎")
+    data["consolation"] = extract_numbers_from_section("Consolation|安慰獎")
+
     return data
 
 def extract_damacai_1p3d(box, global_date, global_draw_no):
-    data = base_extract(box, global_date, global_draw_no)
-    # 需要处理龙虎、奖金等额外字段？可后续扩展
-    return data
+    return base_extract(box, global_date, global_draw_no)
 
 def extract_sandakan(box, global_date, global_draw_no):
-    data = base_extract(box, global_date, global_draw_no)
-    return data
+    return base_extract(box, global_date, global_draw_no)
 
 def extract_cashsweep(box, global_date, global_draw_no):
-    data = base_extract(box, global_date, global_draw_no)
-    return data
+    return base_extract(box, global_date, global_draw_no)
 
 def extract_sabah(box, global_date, global_draw_no):
     data = base_extract(box, global_date, global_draw_no)
-    # 提取 3D 结果
     data['3d'] = extract_3d(box)
     return data
 
 def extract_sportstoto_5d(box, global_date, global_draw_no):
     data = base_extract(box, global_date, global_draw_no)
     data['type'] = '5d_table'
-    # 提取 5D 表格
     data['data'] = extract_5d_table(box)
     return data
 
@@ -65,6 +93,7 @@ def extract_sportstoto_lotto(box, global_date, global_draw_no):
     data['star'], data['power'], data['supreme'], data['jackpots'] = extract_lotto(box)
     return data
 
+# ---------- 通用基础提取 ----------
 def base_extract(box, global_date, global_draw_no):
     data = {
         "draw_date": "",
@@ -102,7 +131,7 @@ def base_extract(box, global_date, global_draw_no):
         data["2nd"] = prize_tds[1].get_text(strip=True)
         data["3rd"] = prize_tds[2].get_text(strip=True)
 
-    # 特别奖
+    # 特别奖（依赖 resultbottom 类，适用于多数公司）
     special_section = box.find("td", string=re.compile("Special|特別獎"))
     if special_section:
         table = special_section.find_parent("table")
@@ -134,9 +163,8 @@ def base_extract(box, global_date, global_draw_no):
 
     return data
 
+# ---------- 特殊表格提取 ----------
 def extract_3d(box):
-    """从 Sabah 的 outerbox 中提取 3D 结果"""
-    # 找到 "3D" 标题后的表格
     h3 = box.find("td", string=re.compile("3D"))
     if not h3:
         return {}
@@ -153,8 +181,6 @@ def extract_3d(box):
     return {}
 
 def extract_5d_table(box):
-    """提取 5D 表格"""
-    # 找到 "5D" 标题后的表格
     h5 = box.find("td", string=re.compile("5D"))
     if not h5:
         return []
@@ -163,16 +189,14 @@ def extract_5d_table(box):
         return []
     rows = table.find_all("tr")
     data = []
-    for row in rows[1:]:  # 跳过标题
+    for row in rows[1:]:
         tds = row.find_all("td")
+        # 5D 表格可能有两列或四列，这里提取第一列标签和第二列数字
         if len(tds) >= 2:
-            # 格式可能是 [label, number] 或 [label, number, label, number]
-            # 我们简单取前两个
             data.append([tds[0].get_text(strip=True), tds[1].get_text(strip=True)])
     return data
 
 def extract_6d_table(box):
-    """提取 6D 表格"""
     h6 = box.find("td", string=re.compile("6D"))
     if not h6:
         return []
@@ -183,6 +207,7 @@ def extract_6d_table(box):
     data = []
     for row in rows[1:]:
         tds = row.find_all("td")
+        # 6D 表格一般有 4 列：排名 | 数字 | "or" | 备选数字
         if len(tds) >= 4:
             data.append([
                 tds[0].get_text(strip=True),
@@ -192,47 +217,52 @@ def extract_6d_table(box):
     return data
 
 def extract_lotto(box):
-    """提取 Star/Power/Supreme 乐透号码和奖池"""
     star = []
     power = []
     supreme = []
     jackpots = []
 
-    # 查找 Star Toto 6/50
+    # Star Toto 6/50
     star_section = box.find("td", string=re.compile("Star Toto 6/50"))
     if star_section:
         table = star_section.find_parent("table")
         if table:
-            # 获取号码行
-            num_row = table.find_all("tr")[1]  # 第二行
-            tds = num_row.find_all("td", class_="resultbottomtoto2")
-            star = [td.get_text(strip=True) for td in tds if td.get_text(strip=True) not in ['+', '']]
+            rows = table.find_all("tr")
+            if len(rows) >= 2:
+                num_row = rows[1]
+                tds = num_row.find_all("td", class_="resultbottomtoto2")
+                star = [td.get_text(strip=True) for td in tds if td.get_text(strip=True) not in ['+', '']]
             # 奖池
-            jp_rows = table.find_all("tr")[2:]  # 第三行开始
-            for jp in jp_rows:
-                jp_tds = jp.find_all("td", class_="resultbottomtotojpval")
+            for row in rows[2:]:
+                jp_tds = row.find_all("td", class_="resultbottomtotojpval")
                 if jp_tds:
                     jackpots.append(jp_tds[0].get_text(strip=True))
 
-    # 类似提取 Power 和 Supreme
+    # Power Toto 6/55
     power_section = box.find("td", string=re.compile("Power Toto 6/55"))
     if power_section:
         table = power_section.find_parent("table")
         if table:
-            num_row = table.find_all("tr")[1]
-            tds = num_row.find_all("td", class_="resultbottomtoto2")
-            power = [td.get_text(strip=True) for td in tds]
+            rows = table.find_all("tr")
+            if len(rows) >= 2:
+                num_row = rows[1]
+                tds = num_row.find_all("td", class_="resultbottomtoto2")
+                power = [td.get_text(strip=True) for td in tds]
 
+    # Supreme Toto 6/58
     supreme_section = box.find("td", string=re.compile("Supreme Toto 6/58"))
     if supreme_section:
         table = supreme_section.find_parent("table")
         if table:
-            num_row = table.find_all("tr")[1]
-            tds = num_row.find_all("td", class_="resultbottomtoto2")
-            supreme = [td.get_text(strip=True) for td in tds]
+            rows = table.find_all("tr")
+            if len(rows) >= 2:
+                num_row = rows[1]
+                tds = num_row.find_all("td", class_="resultbottomtoto2")
+                supreme = [td.get_text(strip=True) for td in tds]
 
     return star, power, supreme, jackpots
 
+# ---------- 网络请求与解析 ----------
 def fetch_html():
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
     try:
@@ -261,6 +291,7 @@ def extract_global_date(soup):
         draw_no = re.sub(r"Draw No:?", "", no_text).strip()
     return date, draw_no
 
+# ---------- 保存 JSON ----------
 def save_json(company, data):
     if not data:
         print(f"❌ {company} 数据为空，跳过保存")
@@ -268,11 +299,13 @@ def save_json(company, data):
     base_dir = "docs/data"
     os.makedirs(base_dir, exist_ok=True)
 
+    # 最新数据（覆盖）
     latest_path = os.path.join(base_dir, f"{company}.json")
     with open(latest_path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
     print(f"✅ 已更新最新文件: {latest_path}")
 
+    # 归档到日期文件夹
     draw_date = data.get("draw_date", "")
     if not draw_date or draw_date == "----":
         draw_date = datetime.now().strftime("%Y-%m-%d")
@@ -305,6 +338,7 @@ def update_dates_index():
         json.dump(dates, f)
     print(f"📋 已更新日期索引，共 {len(dates)} 个历史日期")
 
+# ---------- 主流程 ----------
 def main():
     html = fetch_html()
     if not html:
@@ -317,9 +351,7 @@ def main():
     outer_boxes = soup.find_all("div", class_="outerbox")
     print(f"📦 找到 {len(outer_boxes)} 个 outerbox")
 
-    # 定义每个 outerbox 对应的公司列表（按顺序）
-    # 根据页面内容，顺序应为：0:Damacai, 1:Magnum, 2:Toto, 3:SportsToto (复合), 4:DaMaCai1+3D, 5:Singapore, 6:Sabah, 7:Sandakan, 8:Cashsweep
-    # 我们需要为每个 outerbox 调用相应的提取函数
+    # 定义每个 outerbox 对应的公司列表（按页面顺序）
     box_handlers = [
         [('damacai', extract_damacai)],
         [('magnum', extract_magnum)],
@@ -330,7 +362,7 @@ def main():
             ('sportstoto_lotto', extract_sportstoto_lotto),
         ],
         [('damacai_1p3d', extract_damacai_1p3d)],
-        [('singapore', extract_singapore)],
+        [('singapore', extract_singapore)],   # 使用改进后的函数
         [('sabah', extract_sabah)],
         [('sandakan', extract_sandakan)],
         [('sarawak_cashsweep', extract_cashsweep)],
@@ -346,8 +378,11 @@ def main():
         handlers = box_handlers[idx]
         for company_key, extract_func in handlers:
             print(f"🔍 正在处理 {company_key}...")
-            data = extract_func(box, global_date, global_draw_no)
-            save_json(company_key, data)
+            try:
+                data = extract_func(box, global_date, global_draw_no)
+                save_json(company_key, data)
+            except Exception as e:
+                print(f"❌ 处理 {company_key} 时出错: {e}")
 
     update_dates_index()
 
