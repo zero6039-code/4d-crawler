@@ -8,86 +8,110 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <style>
-        /* ==================== 100% 保留您原本的样式，仅微调奖项布局 ==================== */
+        /* 基础样式保持不变 */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
         body { background: #f0f2f5; padding: 15px 10px; }
         .container { max-width: 1300px; margin: 0 auto; }
         h1 { font-size: 2.2rem; font-weight: 800; text-align: center; margin-bottom: 15px; background: linear-gradient(135deg, #0b1c2f, #2c3e50); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1px; }
-        
         .date-selector { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; position: relative; }
         .date-dropdown { position: relative; display: inline-block; }
         .date-btn { background: #ffffffcc; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.8); border-radius: 25px; padding: 8px 20px; font-size: 1rem; font-weight: 500; color: #2c3e50; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: all 0.2s; }
         .date-btn:hover { background: #ffffff; box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
+        .date-btn .arrow { font-size: 0.8rem; transition: transform 0.2s; }
         .date-btn.active .arrow { transform: rotate(180deg); }
-        
         .date-dropdown-content { display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); background: white; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); min-width: 220px; max-height: 300px; overflow-y: auto; z-index: 1000; margin-top: 8px; border: 1px solid #e2e8f0; }
         .date-dropdown.show .date-dropdown-content { display: block; }
         .date-option { padding: 10px 16px; cursor: pointer; transition: background 0.2s; border-bottom: 1px solid #f0f0f0; }
+        .date-option:hover { background: #f0f2f5; }
         .date-option.active { background: #e6f0ff; color: #3182ce; font-weight: 600; }
-        
+        .date-option .draw-no { font-size: 0.75rem; color: #7c8b9c; }
+        .loading-history { text-align: center; padding: 20px; color: #7c8b9c; }
         .draw-info { background: #ffffffcc; backdrop-filter: blur(4px); border-radius: 40px; padding: 6px 20px 6px 25px; display: inline-flex; align-items: center; justify-content: center; gap: 20px; margin: 0 auto 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); font-weight: 500; color: #2c3e50; border: 1px solid rgba(255,255,255,0.8); left: 50%; position: relative; transform: translateX(-50%); white-space: nowrap; }
-        .refresh-btn { background: linear-gradient(135deg, #3182ce, #2c5282); color: white; border: none; padding: 5px 16px; border-radius: 20px; cursor: pointer; font-size: 0.85rem; font-weight: 600; }
-
+        .draw-info strong { color: #d32f2f; font-weight: 600; margin-right: 4px; }
+        .refresh-btn { background: linear-gradient(135deg, #3182ce, #2c5282); color: white; border: none; padding: 5px 16px; border-radius: 20px; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.2s; box-shadow: 0 2px 8px rgba(49,130,206,0.3); line-height: 1.4; }
+        .refresh-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(49,130,206,0.4); }
         .companies-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
-        .company-section { background: white; border-radius: 24px; box-shadow: 0 8px 20px rgba(0,20,30,0.1); padding: 14px 12px; border: 1px solid rgba(255,255,255,0.5); }
-        .company-title { font-size: 1.6rem; font-weight: 800; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
-        .company-title::before { content: "🎯"; font-size: 1.4rem; }
-        .draw-date { font-size: 0.9rem; color: #4a5568; margin-bottom: 10px; font-weight: 500; }
-
-        /* --- 核心修改：奖项排列逻辑 --- */
-        .prize-grid { 
-            display: flex; 
-            flex-wrap: wrap; 
-            gap: 10px; 
-            justify-content: center; 
-            margin: 12px 0 16px; 
-        }
-        .prize-card { 
-            background: #f8fafd; 
-            border-radius: 16px; 
-            padding: 12px; 
-            text-align: center; 
-            border: 1px solid #e9ecf0;
-            transition: transform 0.2s;
-        }
-        .prize-card:hover { transform: translateY(-2px); background: #ffffff; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        
-        /* 让 1st 占满整行 */
-        .prize-card.first-prize { 
-            width: 100%; 
-            background: #fff5f5; /* 给头奖一个淡淡的底色区分 */
-            border: 1px solid #fed7d7;
-        }
-        /* 让 2nd 和 3rd 平分剩下的行 */
-        .prize-card.secondary-prize { 
-            flex: 1; 
-            min-width: calc(50% - 5px); 
-        }
-
-        .prize-card .label { font-size: 0.8rem; color: #5f6b7a; margin-bottom: 4px; font-weight: bold; text-transform: uppercase; }
-        .prize-card .number { font-size: 1.8rem; font-weight: 800; color: #c62828; font-family: 'Courier New', monospace; }
-        /* -------------------------- */
-
+        .company-section { background: white; border-radius: 24px; box-shadow: 0 8px 20px rgba(0,20,30,0.1); margin-bottom: 0; padding: 14px 12px; border: 1px solid rgba(255,255,255,0.5); transition: transform 0.15s ease; }
+        .company-section:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(0,0,0,0.12); }
+        .company-section.loading { opacity: 0.6; pointer-events: none; }
+        .company-section.error { border-color: #d32f2f; background: #ffebee; }
+        .company-title { font-size: 1.6rem; font-weight: 800; margin-bottom: 4px; padding-left: 4px; background: linear-gradient(145deg, #1e2b3a, #2b3d55); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+        .company-title::before { content: "🎯"; margin-right: 6px; font-size: 1.4rem; background: none; -webkit-text-fill-color: initial; }
+        .draw-date { font-size: 0.9rem; color: #4a5568; margin-bottom: 10px; padding-left: 4px; font-weight: 500; }
+        .prize-grid { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 12px 0 16px; }
+        .prize-card { background: #f8fafd; border-radius: 16px; padding: 10px 12px; flex: 1 1 90px; min-width: 80px; text-align: center; box-shadow: inset 0 1px 4px #ffffff, 0 5px 10px rgba(0,0,0,0.04); border: 1px solid #e9ecf0; }
+        .prize-card .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #5f6b7a; font-weight: 500; margin-bottom: 4px; }
+        .prize-card .number { font-size: 1.7rem; font-weight: 800; color: #c62828; line-height: 1.2; text-shadow: 2px 2px 0 rgba(198,40,40,0.1); font-family: 'Courier New', monospace; }
         .subsection { margin-top: 16px; background: #f9fbfd; border-radius: 16px; padding: 12px 10px; border: 1px solid #e2e8f0; }
-        .subsection-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 10px; color: #1e2f3e; }
-        .number-list { display: flex; flex-wrap: wrap; gap: 8px; }
-        .number-item { background: #ffffff; padding: 6px 10px; border-radius: 28px; font-family: 'Courier New', monospace; font-size: 1.1rem; font-weight: 600; border: 1px solid #d4deec; min-width: 50px; text-align: center; }
-        
+        .subsection-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 4px; color: #1e2f3e; }
+        .subsection-title::before { content: "✨"; font-size: 1.2rem; }
+        .number-list { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-start; }
+        .number-item { background: #ffffff; padding: 6px 10px; border-radius: 28px; font-family: 'Courier New', monospace; font-size: 1.1rem; font-weight: 600; color: #0b2a41; box-shadow: 0 3px 8px rgba(0,0,0,0.03); border: 1px solid #d4deec; min-width: 50px; text-align: center; transition: all 0.1s; white-space: pre-line; line-height: 1.4; }
+        .number-item:hover { background: #e6f0ff; border-color: #8a9cb0; }
+        .custom-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.9rem; }
+        .custom-table th { background: #e2e8f0; padding: 8px 4px; text-align: center; font-weight: 600; color: #2d3748; border: 1px solid #cbd5e0; }
+        .custom-table td { padding: 6px 4px; text-align: center; border: 1px solid #cbd5e0; background: white; }
+        .custom-table .alt-number { color: #3182ce; font-weight: 500; }
+        .group-subtitle { font-size: 0.95rem; font-weight: 600; margin: 8px 0 4px 0; color: #2c3e50; width: 100%; }
         footer { text-align: center; margin-top: 30px; color: #7c8b9c; font-size: 0.8rem; border-top: 1px solid #dbe1ea; padding-top: 16px; }
-
-        /* 月历特定样式：保持您的所有功能 */
-        .calendar-btn { background: #ffffffcc; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.8); border-radius: 25px; padding: 8px 20px; font-size: 1rem; color: #2c3e50; cursor: pointer; display: flex; align-items: center; gap: 6px; }
-        .calendar-popup { position: absolute; background: white; border-radius: 20px; box-shadow: 0 12px 30px rgba(0,0,0,0.2); padding: 16px; z-index: 2000; width: 320px; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 8px; border: 1px solid #e2e8f0; display: none; }
-        .calendar-table td { width: 38px; height: 38px; cursor: pointer; border-radius: 50%; transition: 0.2s; position: relative; }
-        .calendar-table td.has-data { background: #c6e0ff; font-weight: 600; }
-        .calendar-table td.has-data::after { content: ''; position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; background: #3182ce; border-radius: 50%; }
-        .calendar-table td.today { border: 2px solid #3182ce; }
-        .calendar-table td.selected { background: #3182ce !important; color: white; }
-        
+        @media (max-width: 900px) { .companies-grid { grid-template-columns: repeat(2, 1fr); } }
+        /* 手机字体优化 */
+        @media (max-width: 600px) {
+            .companies-grid { grid-template-columns: 1fr; }
+            .company-title { font-size: 1.5rem; }
+            .prize-card .number { font-size: 1.6rem; }
+            .number-item {
+                font-size: 1.3rem;
+                padding: 6px 12px;
+                min-width: auto;
+                word-break: break-all;
+                white-space: normal;
+            }
+        }
+        /* 公司特有颜色 */
+        .company-section[data-company="damacai"] .company-title { background: linear-gradient(145deg, #1e5620, #2a7a2d); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .company-section[data-company="magnum"] .company-title { background: linear-gradient(145deg, #aa4a1e, #c95f2a); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .company-section[data-company="toto"] .company-title { background: linear-gradient(145deg, #b71c1c, #d32f2f); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .company-section[data-company="singapore"] .company-title { background: linear-gradient(145deg, #1e4a6b, #2c6b96); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .status-indicator { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
         .status-indicator.success { background: #48bb78; }
+        .status-indicator.error { background: #f56565; }
         .status-indicator.loading { background: #ecc94b; animation: blink 1s infinite; }
         @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+        /* 日历样式 - 修改为小圆圈 */
+        .calendar-btn { background: #ffffffcc; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.8); border-radius: 25px; padding: 8px 20px; font-size: 1rem; font-weight: 500; color: #2c3e50; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: all 0.2s; }
+        .calendar-btn:hover { background: #ffffff; box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
+        .calendar-popup { position: absolute; background: white; border-radius: 20px; box-shadow: 0 12px 30px rgba(0,0,0,0.2); padding: 16px; z-index: 2000; width: 320px; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 8px; border: 1px solid #e2e8f0; backdrop-filter: blur(4px); }
+        .calendar-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; font-weight: 600; color: #2d3748; }
+        .calendar-nav { background: none; border: none; font-size: 1.2rem; cursor: pointer; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #f0f2f5; transition: 0.2s; }
+        .calendar-nav:hover { background: #e2e8f0; }
+        .calendar-table { width: 100%; border-collapse: collapse; text-align: center; table-layout: fixed; } /* 固定布局使列宽均匀 */
+        .calendar-table th { 
+            font-size: 0.8rem; 
+            font-weight: 600; 
+            color: #718096; 
+            padding: 6px 0; 
+            width: 40px; /* 与单元格宽度一致 */
+        }
+        .calendar-table td { 
+            padding: 0; 
+            width: 40px; 
+            height: 40px; 
+            line-height: 40px; 
+            font-size: 0.9rem; 
+            cursor: pointer; 
+            border-radius: 50%; /* 正圆形 */
+            transition: 0.1s; 
+            text-align: center; 
+            vertical-align: middle;
+        }
+        .calendar-table td.has-data { background: #c6e0ff; font-weight: 600; color: #1e4a6b; }
+        .calendar-table td.selected { background: #3182ce !important; color: white !important; font-weight: 600; }
+        .calendar-table td.today { background: #d9eaff; font-weight: 600; box-shadow: 0 0 0 2px #a0c4ff; }
+        .calendar-table td:hover { background: #e2e8f0 !important; }
+        .calendar-table td.has-data:hover { background: #a9c9f0 !important; }
+        .calendar-month-year { font-size: 1.1rem; }
     </style>
 </head>
 <body>
@@ -100,10 +124,12 @@
                     <span id="selected-date">加载中...</span>
                     <span class="arrow">▼</span>
                 </button>
-                <div class="date-dropdown-content" id="date-dropdown-content"></div>
+                <div class="date-dropdown-content" id="date-dropdown-content">
+                    <div class="loading-history">🔄 加载历史数据...</div>
+                </div>
             </div>
             <button class="calendar-btn" id="calendar-btn">📅 月历</button>
-            <div id="calendar-popup" class="calendar-popup"></div>
+            <div id="calendar-popup" class="calendar-popup" style="display: none;"></div>
         </div>
         
         <div class="draw-info">
@@ -111,30 +137,57 @@
             <button class="refresh-btn" id="refresh-btn" onclick="forceRefresh()">刷新</button>
         </div>
 
-        <div id="companies-grid" class="companies-grid"></div>
+        <div id="companies-grid" class="companies-grid">
+            <p style="text-align: center; grid-column: 1/-1; color: #666;">🔄 正在加载数据...</p>
+        </div>
 
         <footer>
             ⚠️ 数据仅供参考，请以官方公告为准。<br>
-            <span id="status-text">正在加载...</span><br>
+            <span id="status-text">
+                <span class="status-indicator loading"></span>正在加载...
+            </span>
+            <br>
             更新于 <span id="update-time">-</span>
         </footer>
     </div>
 
     <script>
-        const COMPANY_LIST = ['damacai', 'magnum', 'toto', 'singapore', 'damacai_1p3d', 'sandakan', 'sarawak_cashsweep', 'sabah', 'sabah_lotto', 'sportstoto_fireball', 'grand_dragon', 'singapore_toto', 'sportstoto_lotto', 'magnum_jackpot_gold', 'sportstoto_5d', 'sportstoto_6d', 'magnum_life'];
-        const NAME_MAP = { 'damacai': 'DAMACAI 4D', 'magnum': 'MAGNUM 4D', 'toto': 'TOTO 4D', 'singapore': 'SINGAPORE 4D', 'damacai_1p3d': 'DAMACAI 1+3D', 'sandakan': 'SANDAKAN 4D', 'sarawak_cashsweep': 'SARAWAK CASHSWEEP', 'sabah': 'SABAH 88 4D', 'sabah_lotto': 'SABAH LOTTO', 'sportstoto_fireball': 'SPORTSTOTO FIREBALL', 'grand_dragon': 'GRAND DRAGON', 'singapore_toto': 'SINGAPORE TOTO', 'sportstoto_lotto': 'SPORTSTOTO LOTTO', 'magnum_jackpot_gold': 'MAGNUM JACKPOT GOLD', 'sportstoto_5d': 'SPORTSTOTO 5D', 'sportstoto_6d': 'SPORTSTOTO 6D', 'magnum_life': 'MAGNUM LIFE' };
-        const SPECIAL_COMPANIES = ['sportstoto_fireball', 'sportstoto_lotto', 'singapore_toto', 'magnum_jackpot_gold', 'sportstoto_5d', 'sportstoto_6d', 'magnum_life'];
+        // ==================== 配置 ====================
+        const COMPANY_LIST = [
+            'damacai', 'magnum', 'toto', 'singapore', 'damacai_1p3d',
+            'sandakan', 'sarawak_cashsweep', 'sabah', 'sabah_lotto',
+            'sportstoto_fireball', 'grand_dragon', 'singapore_toto',
+            'sportstoto_lotto', 'magnum_jackpot_gold', 'sportstoto_5d',
+            'sportstoto_6d', 'magnum_life'
+        ];
+
+        const NAME_MAP = {
+            'damacai': 'DAMACAI 4D', 'magnum': 'MAGNUM 4D', 'toto': 'TOTO 4D', 'singapore': 'SINGAPORE 4D',
+            'damacai_1p3d': 'DAMACAI 1+3D', 'sandakan': 'SANDAKAN 4D', 'sarawak_cashsweep': 'SARAWAK CASHSWEEP',
+            'sabah': 'SABAH 88 4D', 'sabah_lotto': 'SABAH LOTTO', 'sportstoto_fireball': 'SPORTSTOTO FIREBALL',
+            'grand_dragon': 'GRAND DRAGON', 'singapore_toto': 'SINGAPORE TOTO', 'sportstoto_lotto': 'SPORTSTOTO LOTTO',
+            'magnum_jackpot_gold': 'MAGNUM JACKPOT GOLD', 'sportstoto_5d': 'SPORTSTOTO 5D', 'sportstoto_6d': 'SPORTSTOTO 6D',
+            'magnum_life': 'MAGNUM LIFE'
+        };
+
+        const SPECIAL_COMPANIES = [
+            'sportstoto_fireball', 'sportstoto_lotto', 'singapore_toto',
+            'magnum_jackpot_gold', 'sportstoto_5d', 'sportstoto_6d', 'magnum_life'
+        ];
 
         let availableDates = [];           
         let availableDatesSet = new Set(); 
         let selectedDate = null;           
 
-        // 日期解析逻辑（修复 3 月排序）
+        // ==================== 工具函数 (日期排序) ====================
         function parseDMY(dateStr) {
             let parts = dateStr.split('-');
             let d, m, y;
-            if (parts[0].length === 4) { [y, m, d] = parts.map(Number); } 
-            else { [d, m, y] = parts.map(Number); }
+            if (parts[0].length === 4) { // YYYY-MM-DD
+                [y, m, d] = parts.map(Number);
+            } else { // DD-MM-YYYY
+                [d, m, y] = parts.map(Number);
+            }
             return { year: y, month: m, day: d };
         }
 
@@ -143,46 +196,77 @@
             return year * 10000 + month * 100 + day;
         }
 
-        async function loadDateIndex() {
-            try {
-                const res = await fetch(`data/dates.json?t=${Date.now()}`);
-                if (res.ok) {
-                    const data = await res.json();
-                    availableDates = data.sort((a, b) => toSortKey(b) - toSortKey(a));
-                    availableDatesSet = new Set(availableDates);
-                }
-            } catch (e) { console.error(e); }
-            renderDateDropdown();
-            document.getElementById('selected-date').innerText = selectedDate || (availableDates[0] || '加载中...');
+        function sortDatesDesc(dates) {
+            return dates.sort((a, b) => toSortKey(b) - toSortKey(a));
         }
 
-        function renderDateDropdown() {
-            const content = document.getElementById('date-dropdown-content');
-            let html = '<div class="date-option" onclick="selectDate(null)">📌 最新数据</div>';
-            availableDates.slice(0, 10).forEach(date => {
-                html += `<div class="date-option ${selectedDate === date ? 'active' : ''}" onclick="selectDate('${date}')">📅 ${date}</div>`;
-            });
-            content.innerHTML = html;
+        // 将 DD-MM-YYYY 转换为 YYYY-MM-DD
+        function dmyToYmd(dmy) {
+            let [d, m, y] = dmy.split('-');
+            return `${y}-${m}-${d}`;
         }
 
+        // ==================== 日期选择器功能 ====================
         function toggleDateDropdown() {
             document.getElementById('date-dropdown').classList.toggle('show');
             document.getElementById('date-btn').classList.toggle('active');
         }
 
-        function selectDate(date) {
-            selectedDate = date;
-            document.getElementById('selected-date').innerText = date || availableDates[0];
-            document.getElementById('date-dropdown').classList.remove('show');
-            document.getElementById('calendar-popup').style.display = 'none';
-            loadAllCompanies();
+        async function loadDateIndex() {
+            try {
+                const res = await fetch(`data/dates.json?t=${Date.now()}`, { cache: 'no-store' });
+                if (res.ok) {
+                    let dates = await res.json();
+                    availableDates = sortDatesDesc(dates);
+                    availableDatesSet = new Set(availableDates);
+                }
+            } catch (e) { console.warn('无法加载 dates.json', e); }
+            renderDateDropdown();
+            updateDateBtnWithLatest();
         }
 
-        // 月历逻辑
+        function updateDateBtnWithLatest() {
+            const btnSpan = document.getElementById('selected-date');
+            if (availableDates.length > 0) {
+                btnSpan.innerText = selectedDate || availableDates[0];
+            } else {
+                btnSpan.innerText = '暂无数据';
+            }
+        }
+
+        function renderDateDropdown() {
+            const content = document.getElementById('date-dropdown-content');
+            if (availableDates.length === 0) {
+                content.innerHTML = '<div class="loading-history">暂无历史数据</div>';
+                return;
+            }
+            const recentDates = availableDates.slice(0, 10);
+            let html = '<div class="date-option" onclick="selectDate(null)">📌 最新数据</div>';
+            recentDates.forEach(date => {
+                const activeClass = (selectedDate === date) ? 'active' : '';
+                html += `<div class="date-option ${activeClass}" onclick="selectDate('${date}')">📅 ${date}</div>`;
+            });
+            content.innerHTML = html;
+        }
+
+        function selectDate(date) {
+            selectedDate = date;
+            updateDateBtnWithLatest();
+            document.getElementById('date-dropdown').classList.remove('show');
+            document.getElementById('date-btn').classList.remove('active');
+            document.getElementById('calendar-popup').style.display = 'none';
+            loadAllCompanies(); 
+        }
+
+        // ==================== 日历相关 ====================
         let currentCalendarYear, currentCalendarMonth;
+
         function showCalendar() {
             const popup = document.getElementById('calendar-popup');
-            if (popup.style.display === 'block') { popup.style.display = 'none'; return; }
+            if (popup.style.display === 'block') {
+                popup.style.display = 'none';
+                return;
+            }
             const now = new Date();
             currentCalendarYear = now.getFullYear();
             currentCalendarMonth = now.getMonth() + 1;
@@ -192,41 +276,54 @@
 
         function renderCalendar() {
             const popup = document.getElementById('calendar-popup');
-            let year = currentCalendarYear, month = currentCalendarMonth;
-            const now = new Date();
-            const todayStr = `${now.getDate().toString().padStart(2,'0')}-${(now.getMonth()+1).toString().padStart(2,'0')}-${now.getFullYear()}`;
-            const firstDay = new Date(year, month - 1, 1).getDay();
-            const daysInMonth = new Date(year, month, 0).getDate();
-            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            if (!popup) return;
 
-            let html = `<div class="calendar-header">
-                <button class="calendar-nav" id="cal-prev">◀</button>
-                <span style="font-weight:bold">${monthNames[month-1]} ${year}</span>
-                <button class="calendar-nav" id="cal-next">▶</button>
-            </div><table class="calendar-table"><thead><tr><th>Su</th><th>Mo</th><th>Tu</th><th>We</th><th>Th</th><th>Fr</th><th>Sa</th></tr></thead><tbody>`;
+            let year = currentCalendarYear;
+            let month = currentCalendarMonth;
+            const monthNamesEn = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const monthNamesZh = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
+            const weekdaysEn = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+            let firstDay = new Date(year, month - 1, 1).getDay();
+            let daysInMonth = new Date(year, month, 0).getDate();
+            const now = new Date();
+            const todayYmd = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,'0')}-${now.getDate().toString().padStart(2,'0')}`;
+
+            let html = `
+                <div class="calendar-header">
+                    <button class="calendar-nav" id="prev-month">◀</button>
+                    <span class="calendar-month-year">${monthNamesEn[month-1]} ${monthNamesZh[month-1]} ${year}</span>
+                    <button class="calendar-nav" id="next-month">▶</button>
+                </div>
+                <table class="calendar-table">
+                    <thead><tr>${weekdaysEn.map(d => `<th>${d}</th>`).join('')}</tr></thead>
+                    <tbody>
+            `;
 
             let date = 1;
             for (let i = 0; i < 6; i++) {
                 html += '<tr>';
                 for (let j = 0; j < 7; j++) {
-                    if ((i === 0 && j < firstDay) || date > daysInMonth) { html += '<td class="empty"></td>'; } 
-                    else {
-                        const dStr = `${date.toString().padStart(2,'0')}-${month.toString().padStart(2,'0')}-${year}`;
-                        const isoStr = `${year}-${month.toString().padStart(2,'0')}-${date.toString().padStart(2,'0')}`;
-                        const hasData = availableDatesSet.has(dStr) || availableDatesSet.has(isoStr);
-                        const finalDate = availableDatesSet.has(isoStr) ? isoStr : (availableDatesSet.has(dStr) ? dStr : '');
-                        const isToday = dStr === todayStr ? 'today' : '';
-                        const selClass = selectedDate === finalDate ? 'selected' : '';
-                        const dataClass = hasData ? 'has-data' : '';
-                        html += `<td class="${isToday} ${dataClass} ${selClass}" onclick="calendarDateClick('${finalDate}')">${date}</td>`;
+                    if ((i === 0 && j < firstDay) || date > daysInMonth) {
+                        html += '<td class="empty"></td>';
+                    } else {
+                        let dateYmd = `${year}-${month.toString().padStart(2,'0')}-${date.toString().padStart(2,'0')}`;
+                        let hasData = availableDatesSet.has(dateYmd);
+                        let isSelected = (selectedDate === dateYmd) ? 'selected' : '';
+                        let isToday = (dateYmd === todayYmd) ? 'today' : '';
+                        html += `<td class="${hasData ? 'has-data' : ''} ${isSelected} ${isToday}" onclick="calendarDateClick('${dateYmd}')">${date}</td>`;
                         date++;
                     }
                 }
-                html += '</tr>'; if (date > daysInMonth) break;
+                html += '</tr>';
+                if (date > daysInMonth) break;
             }
-            popup.innerHTML = html + '</tbody></table>';
-            document.getElementById('cal-prev').onclick = (e) => { e.stopPropagation(); changeMonth(-1); };
-            document.getElementById('cal-next').onclick = (e) => { e.stopPropagation(); changeMonth(1); };
+            html += '</tbody></table>';
+            popup.innerHTML = html;
+
+            // 绑定事件
+            document.getElementById('prev-month').onclick = (e) => { e.stopPropagation(); changeMonth(-1); };
+            document.getElementById('next-month').onclick = (e) => { e.stopPropagation(); changeMonth(1); };
         }
 
         function changeMonth(delta) {
@@ -236,64 +333,103 @@
             renderCalendar();
         }
 
-        function calendarDateClick(d) { if(d) selectDate(d); }
+        function calendarDateClick(dateYmd) {
+            if (dateYmd) {
+                selectDate(dateYmd);
+            } else {
+                alert('该日期暂无开彩数据');
+            }
+        }
 
-        // 数据渲染部分（已调整奖项 HTML 结构）
-        async function loadAllCompanies() {
+        // ==================== 数据加载 ====================
+        async function loadCompanyData(companyKey) {
+            const basePath = selectedDate ? `data/${selectedDate}` : 'data';
+            const url = `${basePath}/${companyKey}.json?t=${Date.now()}`;
+            try {
+                const res = await fetch(url, { cache: 'no-store' });
+                return res.ok ? await res.json() : null;
+            } catch (err) { return null; }
+        }
+
+        function createCompanySkeletons() {
             const grid = document.getElementById('companies-grid');
+            grid.innerHTML = '';
+            COMPANY_LIST.forEach(companyKey => {
+                grid.innerHTML += `
+                    <div class="company-section" id="company-${companyKey}" data-company="${companyKey}">
+                        <div class="company-title">${NAME_MAP[companyKey]}</div>
+                        <div class="draw-date" id="meta-${companyKey}">📅 日期: -- | 🎟️ 期号: --</div>
+                        <div class="company-content" id="content-${companyKey}"><p style="text-align:center;color:#999;">加载中...</p></div>
+                    </div>`;
+            });
+        }
+
+        function updateCompanyCard(companyKey, data) {
+            const contentDiv = document.getElementById(`content-${companyKey}`);
+            const metaDiv = document.getElementById(`meta-${companyKey}`);
+            if (!data) {
+                contentDiv.innerHTML = '<p style="text-align:center;color:#d32f2f;">无数据</p>';
+                metaDiv.innerText = '📅 日期: -- | 🎟️ 期号: --';
+                return;
+            }
+            metaDiv.innerText = `📅 日期: ${data.draw_date || '--'} | 🎟️ 期号: ${data.draw_no || '--'}`;
+            
+            let html = '';
+            if (SPECIAL_COMPANIES.includes(companyKey)) {
+                html = '<p style="text-align:center; padding:10px;">特殊开彩详见官网</p>';
+                if (data.data) {
+                    html = data.data.map(row => `<div style="display:flex;justify-content:space-between;padding:4px 0;"><span>${row[0]}</span><span class="number-item">${row[1]}</span></div>`).join('');
+                }
+            } else {
+                html = `
+                    <div class="prize-grid" style="flex-direction:column;align-items:center;">
+                        <div class="prize-card" style="width:220px;margin-bottom:8px;"><div class="label">1st Prize</div><div class="number">${data['1st'] || '----'}</div></div>
+                        <div style="display:flex;gap:8px;width:100%;">
+                            <div class="prize-card" style="flex:1;"><div class="label">2nd Prize</div><div class="number">${data['2nd'] || '----'}</div></div>
+                            <div class="prize-card" style="flex:1;"><div class="label">3rd Prize</div><div class="number">${data['3rd'] || '----'}</div></div>
+                        </div>
+                    </div>`;
+                if (data.special?.length) html += `<div class="subsection"><div class="subsection-title">特别奖</div><div class="number-list">${data.special.map(n => `<span class="number-item">${n}</span>`).join('')}</div></div>`;
+                if (data.consolation?.length) html += `<div class="subsection"><div class="subsection-title">安慰奖</div><div class="number-list">${data.consolation.map(n => `<span class="number-item">${n}</span>`).join('')}</div></div>`;
+            }
+            contentDiv.innerHTML = html;
+        }
+
+        async function loadAllCompanies() {
             const statusText = document.getElementById('status-text');
             statusText.innerHTML = '<span class="status-indicator loading"></span>正在更新...';
-            
-            const promises = COMPANY_LIST.map(async (key) => {
-                const path = selectedDate ? `data/${selectedDate}/${key}.json` : `data/${key}.json`;
-                try {
-                    const res = await fetch(`${path}?t=${Date.now()}`);
-                    return res.ok ? await res.json() : null;
-                } catch { return null; }
-            });
-
+            const promises = COMPANY_LIST.map(key => loadCompanyData(key));
             const results = await Promise.all(promises);
-            grid.innerHTML = '';
-            results.forEach((data, i) => {
-                const key = COMPANY_LIST[i];
-                const card = document.createElement('div');
-                card.className = 'company-section';
-                
-                let contentHtml = '';
-                if (!data) contentHtml = '<p style="text-align:center;color:#999;padding:10px;">暂无数据</p>';
-                else if (SPECIAL_COMPANIES.includes(key)) contentHtml = '<p style="text-align:center;padding:15px;">特殊开彩详见官网</p>';
-                else {
-                    // 修改点：1st 在上方，2nd/3rd 在下方并排
-                    contentHtml = `<div class="prize-grid">
-                        <div class="prize-card first-prize"><div class="label">1st Prize</div><div class="number">${data['1st']||'----'}</div></div>
-                        <div class="prize-card secondary-prize"><div class="label">2nd</div><div class="number">${data['2nd']||'----'}</div></div>
-                        <div class="prize-card secondary-prize"><div class="label">3rd</div><div class="number">${data['3rd']||'----'}</div></div>
-                    </div>`;
-                    if (data.special?.length) contentHtml += `<div class="subsection"><div class="subsection-title">特别奖 Special</div><div class="number-list">${data.special.map(n=>`<span class="number-item">${n}</span>`).join('')}</div></div>`;
-                    if (data.consolation?.length) contentHtml += `<div class="subsection"><div class="subsection-title">安慰奖 Consolation</div><div class="number-list">${data.consolation.map(n=>`<span class="number-item">${n}</span>`).join('')}</div></div>`;
-                }
-
-                card.innerHTML = `<div class="company-title">${NAME_MAP[key]}</div>
-                    <div class="draw-date">📅 日期: ${data?.draw_date || '--'} | 🎟️ 期号: ${data?.draw_no || '--'}</div>
-                    <div class="company-content">${contentHtml}</div>`;
-                grid.appendChild(card);
+            let successCount = 0;
+            results.forEach((data, idx) => {
+                updateCompanyCard(COMPANY_LIST[idx], data);
+                if (data) successCount++;
             });
-
             const firstValid = results.find(d => d?.draw_date);
             document.getElementById('draw_date').innerText = firstValid ? firstValid.draw_date : (selectedDate || '--');
-            statusText.innerHTML = `<span class="status-indicator success"></span>数据已同步`;
+            statusText.innerHTML = `<span class="status-indicator ${successCount > 0 ? 'success' : 'error'}"></span>${successCount}/${COMPANY_LIST.length} 公司已更新`;
             document.getElementById('update-time').innerText = new Date().toLocaleString();
         }
 
         function forceRefresh() { loadAllCompanies(); }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            loadDateIndex().then(() => loadAllCompanies());
+        // ==================== 初始化 ====================
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadDateIndex();
+            createCompanySkeletons();
+            loadAllCompanies();
             document.getElementById('calendar-btn').onclick = showCalendar;
+            
+            // 点击外部关闭弹窗
             document.addEventListener('click', (e) => {
-                const calPopup = document.getElementById('calendar-popup');
-                if (calPopup.style.display === 'block' && !calPopup.contains(e.target) && e.target.id !== 'calendar-btn') {
-                    calPopup.style.display = 'none';
+                const calendarPopup = document.getElementById('calendar-popup');
+                const dateDropdown = document.getElementById('date-dropdown');
+                if (calendarPopup.style.display === 'block' && !calendarPopup.contains(e.target) && e.target.id !== 'calendar-btn') {
+                    calendarPopup.style.display = 'none';
+                }
+                if (dateDropdown.classList.contains('show') && !dateDropdown.contains(e.target)) {
+                    dateDropdown.classList.remove('show');
+                    document.getElementById('date-btn').classList.remove('active');
                 }
             });
         });
