@@ -5,728 +5,136 @@ import os
 from datetime import datetime
 import re
 
-# ---------- 配置 ----------
-URL_4D4D = "https://4d4d.co/"
-URL_4DMOON = "https://www.4dmoon.com"
+URL = "https://4d4d.co/"
 
-# ---------- 辅助函数 ----------
-def fetch_html(url):
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
-    try:
-        r = requests.get(url, headers=headers, timeout=15)
-        r.encoding = "utf-8"
-        r.raise_for_status()
-        return r.text
-    except Exception as e:
-        print(f"❌ 抓取失败 {url}: {e}")
-        return None
-
-def find_parent_table(element):
-    while element and element.name != 'table':
-        element = element.parent
-    return element
-
-def parse_4dmoon_date(date_str):
-    """尝试多种日期格式"""
-    if not date_str:
-        return None
-    date_str = date_str.strip()
-    # 格式: 04-Mar-2026
-    patterns = [
-        r"(\d{2}-[A-Za-z]{3}-\d{4})",
-        r"(\d{2}\s+[A-Za-z]{3}\s+\d{4})",  # 04 Mar 2026
-        r"(\d{4}-\d{2}-\d{2})"  # 2026-03-04
-    ]
-    for pattern in patterns:
-        match = re.search(pattern, date_str)
-        if match:
-            try:
-                # 尝试解析
-                d = datetime.strptime(match.group(1), "%d-%b-%Y")
-                return d.strftime("%d-%m-%Y")
-            except:
-                try:
-                    d = datetime.strptime(match.group(1), "%d %b %Y")
-                    return d.strftime("%d-%m-%Y")
-                except:
-                    try:
-                        d = datetime.strptime(match.group(1), "%Y-%m-%d")
-                        return d.strftime("%d-%m-%Y")
-                    except:
-                        pass
-    return None
-
-def debug_text(element, msg):
-    """打印元素周围文本用于调试"""
-    if element:
-        print(f"{msg}: {element.get_text(strip=True)[:200]}")
-    else:
-        print(f"{msg}: None")
-
-# ---------- 4d4d.co 提取函数（保持不变）----------
-def extract_global_date(soup):
-    first_box = soup.find("div", class_="outerbox")
-    if not first_box:
-        return None, None
-    draw_row = first_box.find("td", class_="resultdrawdate")
-    if not draw_row:
-        return None, None
-    date_text = draw_row.get_text(strip=True)
-    match = re.search(r"(\d{2}-\d{2}-\d{4})", date_text)
-    date = match.group(1) if match else None
-    next_td = draw_row.find_next("td", class_="resultdrawdate")
-    draw_no = None
-    if next_td:
-        no_text = next_td.get_text(strip=True)
-        draw_no = re.sub(r"Draw No:?", "", no_text).strip()
-    return date, draw_no
-
-def base_extract(box, global_date, global_draw_no):
-    data = {
-        "draw_date": "",
-        "draw_no": "",
-        "1st": "",
-        "2nd": "",
-        "3rd": "",
-        "special": [],
-        "consolation": [],
-        "type": None
-    }
-    draw_row = box.find("td", class_="resultdrawdate")
-    if draw_row:
-        date_text = draw_row.get_text(strip=True)
-        match = re.search(r"(\d{2}-\d{2}-\d{4})", date_text)
-        if match:
-            data["draw_date"] = match.group(1)
-        next_td = draw_row.find_next("td", class_="resultdrawdate")
-        if next_td:
-            no_text = next_td.get_text(strip=True)
-            data["draw_no"] = re.sub(r"Draw No:?", "", no_text).strip()
-    if not data["draw_date"] and global_date:
-        data["draw_date"] = global_date
-    if not data["draw_no"] and global_draw_no:
-        data["draw_no"] = global_draw_no
-    prize_tds = box.find_all("td", class_="resulttop")
-    if len(prize_tds) >= 3:
-        data["1st"] = prize_tds[0].get_text(strip=True)
-        data["2nd"] = prize_tds[1].get_text(strip=True)
-        data["3rd"] = prize_tds[2].get_text(strip=True)
-    special_section = box.find("td", string=re.compile("Special|特別獎"))
-    if special_section:
-        table = special_section.find_parent("table")
-        if table:
-            rows = table.find_all("tr")
-            special_numbers = []
-            for row in rows[1:]:
-                tds = row.find_all("td", class_="resultbottom")
-                for td in tds:
-                    num = td.get_text(strip=True)
-                    if num and num != "----":
-                        special_numbers.append(num)
-            data["special"] = special_numbers
-    cons_section = box.find("td", string=re.compile("Consolation|安慰獎"))
-    if cons_section:
-        table = cons_section.find_parent("table")
-        if table:
-            rows = table.find_all("tr")
-            cons_numbers = []
-            for row in rows[1:]:
-                tds = row.find_all("td", class_="resultbottom")
-                for td in tds:
-                    num = td.get_text(strip=True)
-                    if num and num != "----":
-                        cons_numbers.append(num)
-            data["consolation"] = cons_numbers
-    return data
-
-def extract_damacai(box, global_date, global_draw_no):
-    return base_extract(box, global_date, global_draw_no)
-
-def extract_magnum(box, global_date, global_draw_no):
-    return base_extract(box, global_date, global_draw_no)
-
-def extract_toto(box, global_date, global_draw_no):
-    return base_extract(box, global_date, global_draw_no)
-
-def extract_singapore(box, global_date, global_draw_no):
+# ---------- 通用智能提取函数 ----------
+def smart_extract(box, global_date, global_draw_no):
+    """
+    智能解析 4D 盒子，通过单元格位置识别奖项，兼容西马、东马和新加坡
+    """
     data = {
         "draw_date": global_date,
         "draw_no": global_draw_no,
-        "1st": "",
-        "2nd": "",
-        "3rd": "",
-        "special": [],
-        "consolation": [],
-        "type": None
-    }
-    prize_tds = box.find_all("td", class_="resulttop")
-    if len(prize_tds) >= 3:
-        data["1st"] = prize_tds[0].get_text(strip=True)
-        data["2nd"] = prize_tds[1].get_text(strip=True)
-        data["3rd"] = prize_tds[2].get_text(strip=True)
-
-    def extract_numbers_from_section(title_pattern):
-        section = box.find("td", string=re.compile(title_pattern))
-        if not section:
-            return []
-        table = section.find_parent("table")
-        if not table:
-            return []
-        rows = table.find_all("tr")[1:]
-        numbers = []
-        for row in rows:
-            cells = row.find_all("td")
-            for cell in cells:
-                text = cell.get_text(strip=True)
-                if text and text not in ["Special", "特別獎", "Consolation", "安慰獎", "----"]:
-                    numbers.append(text)
-        return numbers
-
-    data["special"] = extract_numbers_from_section("Special|特別獎")
-    data["consolation"] = extract_numbers_from_section("Consolation|安慰獎")
-    return data
-
-def extract_damacai_1p3d(box, global_date, global_draw_no):
-    return base_extract(box, global_date, global_draw_no)
-
-def extract_sandakan(box, global_date, global_draw_no):
-    return base_extract(box, global_date, global_draw_no)
-
-def extract_cashsweep(box, global_date, global_draw_no):
-    return base_extract(box, global_date, global_draw_no)
-
-def extract_sabah(box, global_date, global_draw_no):
-    data = base_extract(box, global_date, global_draw_no)
-    data['3d'] = extract_3d(box)
-    return data
-
-def extract_sportstoto_5d(box, global_date, global_draw_no):
-    data = base_extract(box, global_date, global_draw_no)
-    data['type'] = '5d_table'
-    data['data'] = extract_5d_table(box)
-    return data
-
-def extract_sportstoto_6d(box, global_date, global_draw_no):
-    data = base_extract(box, global_date, global_draw_no)
-    data['type'] = '6d_table'
-    data['data'] = extract_6d_table(box)
-    return data
-
-def extract_sportstoto_lotto(box, global_date, global_draw_no):
-    data = base_extract(box, global_date, global_draw_no)
-    data['type'] = 'lotto'
-    data['star'], data['power'], data['supreme'], data['jackpots'] = extract_lotto(box)
-    return data
-
-def extract_grand_dragon(box, global_date, global_draw_no):
-    return base_extract(box, global_date, global_draw_no)
-
-def extract_3d(box):
-    h3 = box.find("td", string=re.compile("3D"))
-    if not h3:
-        return {}
-    table = h3.find_parent("table")
-    if not table:
-        return {}
-    prize_tds = table.find_all("td", class_="resulttop")
-    if len(prize_tds) >= 3:
-        return {
-            "1st": prize_tds[0].get_text(strip=True),
-            "2nd": prize_tds[1].get_text(strip=True),
-            "3rd": prize_tds[2].get_text(strip=True)
-        }
-    return {}
-
-def extract_5d_table(box):
-    h5 = box.find("td", string=re.compile("5D"))
-    if not h5:
-        return []
-    table = h5.find_parent("table")
-    if not table:
-        return []
-    rows = table.find_all("tr")
-    data = []
-    for row in rows[1:]:
-        tds = row.find_all("td")
-        if len(tds) >= 2:
-            data.append([tds[0].get_text(strip=True), tds[1].get_text(strip=True)])
-    return data
-
-def extract_6d_table(box):
-    h6 = box.find("td", string=re.compile("6D"))
-    if not h6:
-        return []
-    table = h6.find_parent("table")
-    if not table:
-        return []
-    rows = table.find_all("tr")
-    data = []
-    for row in rows[1:]:
-        tds = row.find_all("td")
-        if len(tds) >= 4:
-            data.append([
-                tds[0].get_text(strip=True),
-                tds[1].get_text(strip=True),
-                tds[3].get_text(strip=True) if len(tds) > 3 else ''
-            ])
-    return data
-
-def extract_lotto(box):
-    star = []
-    power = []
-    supreme = []
-    jackpots = []
-    star_section = box.find("td", string=re.compile("Star Toto 6/50"))
-    if star_section:
-        table = star_section.find_parent("table")
-        if table:
-            rows = table.find_all("tr")
-            if len(rows) >= 2:
-                num_row = rows[1]
-                tds = num_row.find_all("td", class_="resultbottomtoto2")
-                star = [td.get_text(strip=True) for td in tds if td.get_text(strip=True) not in ['+', '']]
-            for row in rows[2:]:
-                jp_tds = row.find_all("td", class_="resultbottomtotojpval")
-                if jp_tds:
-                    jackpots.append(jp_tds[0].get_text(strip=True))
-    power_section = box.find("td", string=re.compile("Power Toto 6/55"))
-    if power_section:
-        table = power_section.find_parent("table")
-        if table:
-            rows = table.find_all("tr")
-            if len(rows) >= 2:
-                num_row = rows[1]
-                tds = num_row.find_all("td", class_="resultbottomtoto2")
-                power = [td.get_text(strip=True) for td in tds]
-    supreme_section = box.find("td", string=re.compile("Supreme Toto 6/58"))
-    if supreme_section:
-        table = supreme_section.find_parent("table")
-        if table:
-            rows = table.find_all("tr")
-            if len(rows) >= 2:
-                num_row = rows[1]
-                tds = num_row.find_all("td", class_="resultbottomtoto2")
-                supreme = [td.get_text(strip=True) for td in tds]
-    return star, power, supreme, jackpots
-
-def main_4d4d():
-    html = fetch_html(URL_4D4D)
-    if not html:
-        return None, None
-    soup = BeautifulSoup(html, "html.parser")
-    global_date, global_draw_no = extract_global_date(soup)
-    print(f"🌍 全局日期: {global_date}, 全局期号: {global_draw_no}")
-    outer_boxes = soup.find_all("div", class_="outerbox")
-    print(f"📦 找到 {len(outer_boxes)} 个 outerbox")
-
-    company_matchers = [
-        (re.compile(r'GRAND\s+DRAGON', re.I), 'grand_dragon', extract_grand_dragon),
-        (re.compile(r'DAMACAI.*4D', re.I), 'damacai', extract_damacai),
-        (re.compile(r'MAGNUM.*4D', re.I), 'magnum', extract_magnum),
-        (re.compile(r'TOTO.*4D', re.I), 'toto', extract_toto),
-        (re.compile(r'SINGAPORE.*4D', re.I), 'singapore', extract_singapore),
-        (re.compile(r'DA MA CAI 1\+3D', re.I), 'damacai_1p3d', extract_damacai_1p3d),
-        (re.compile(r'SABAH.*88.*4D', re.I), 'sabah', extract_sabah),
-        (re.compile(r'SANDAKAN.*4D', re.I), 'sandakan', extract_sandakan),
-        (re.compile(r'CASHWEEP.*4D', re.I), 'sarawak_cashsweep', extract_cashsweep),
-        (re.compile(r'SPORTSTOTO.*5D', re.I), 'sportstoto_5d', extract_sportstoto_5d),
-        (re.compile(r'SPORTSTOTO.*6D', re.I), 'sportstoto_6d', extract_sportstoto_6d),
-        (re.compile(r'SPORTSTOTO.*LOTTO', re.I), 'sportstoto_lotto', extract_sportstoto_lotto),
-    ]
-
-    processed_companies = set()
-
-    for idx, box in enumerate(outer_boxes):
-        box_text = box.get_text(" ", strip=True)
-        matched = False
-        for pattern, company_key, extract_func in company_matchers:
-            if pattern.search(box_text):
-                print(f"🔍 处理 {company_key} (outerbox {idx})")
-                data = extract_func(box, global_date, global_draw_no)
-                save_json(company_key, data)
-                processed_companies.add(company_key)
-                matched = True
-        if not matched:
-            if "SPORTSTOTO" in box_text.upper():
-                print(f"🔍 尝试提取 SportsToto 复合数据 (outerbox {idx})")
-                data_5d = extract_sportstoto_5d(box, global_date, global_draw_no)
-                if data_5d.get('data'):
-                    save_json('sportstoto_5d', data_5d)
-                    processed_companies.add('sportstoto_5d')
-                data_6d = extract_sportstoto_6d(box, global_date, global_draw_no)
-                if data_6d.get('data'):
-                    save_json('sportstoto_6d', data_6d)
-                    processed_companies.add('sportstoto_6d')
-                data_lotto = extract_sportstoto_lotto(box, global_date, global_draw_no)
-                if data_lotto.get('star') or data_lotto.get('power') or data_lotto.get('supreme'):
-                    save_json('sportstoto_lotto', data_lotto)
-                    processed_companies.add('sportstoto_lotto')
-            else:
-                print(f"⚠️ 未识别的 outerbox {idx}，内容: {box_text[:100]}...")
-    return processed_companies, global_date
-
-# ---------- 4dmoon.com 提取函数（优化版）----------
-def find_section(soup, patterns):
-    """使用多个模式查找标题，返回找到的 td 和使用的模式"""
-    for pattern in patterns:
-        elem = soup.find("td", string=re.compile(pattern, re.I))
-        if elem:
-            return elem, pattern
-    return None, None
-
-def extract_grand_dragon_4dmoon(soup):
-    patterns = [r"Grand\s*Dragon\s*4D", r"GRAND\s*DRAGON"]
-    section, used_pattern = find_section(soup, patterns)
-    if not section:
-        print("⚠️ 未找到 Grand Dragon 标题")
-        return None
-    print(f"✅ 找到标题 (匹配: {used_pattern}): {section.get_text(strip=True)}")
-
-    parent = section.find_parent("td")
-    parent_text = parent.get_text(" ", strip=True) if parent else ""
-    draw_date = parse_4dmoon_date(parent_text)
-
-    data = {
-        "draw_date": draw_date or "",
-        "draw_no": "",
-        "1st": "",
-        "2nd": "",
-        "3rd": "",
-        "special": [],
-        "consolation": []
+        "1st": "----", "2nd": "----", "3rd": "----",
+        "special": [], "consolation": []
     }
 
-    table = find_parent_table(section)
-    if not table:
-        print("⚠️ Grand Dragon 未找到数据表格")
+    # 1. 尝试从盒子里找期号（如果盒子内有自己的期号则覆盖全局）
+    draw_no_tag = box.find(text=re.compile(r'\d{4,}/\d{2}'))
+    if draw_no_tag:
+        data["draw_no"] = draw_no_tag.strip()
+
+    # 2. 提取所有包含 4 位数字的单元格
+    all_tds = box.find_all("td")
+    four_digit_numbers = []
+    for td in all_tds:
+        txt = td.get_text(strip=True)
+        if len(txt) == 4 and txt.isdigit():
+            four_digit_numbers.append(txt)
+
+    if not four_digit_numbers:
         return data
 
-    prize_cells = table.find_all("td", class_=re.compile(r"resulttop|prize", re.I))
-    if len(prize_cells) >= 3:
-        data["1st"] = prize_cells[0].get_text(strip=True)
-        data["2nd"] = prize_cells[1].get_text(strip=True)
-        data["3rd"] = prize_cells[2].get_text(strip=True)
+    # 3. 按位置分配奖项 (通用的 4D 结构)
+    # 前 3 个是头、二、三奖
+    if len(four_digit_numbers) >= 1: data["1st"] = four_digit_numbers[0]
+    if len(four_digit_numbers) >= 2: data["2nd"] = four_digit_numbers[1]
+    if len(four_digit_numbers) >= 3: data["3rd"] = four_digit_numbers[2]
 
-    # 特别奖和安慰奖
-    special_header = table.find("td", string=re.compile(r"Special|特別獎", re.I))
-    if special_header:
-        row = special_header.find_parent("tr")
-        if row:
-            cells = row.find_all("td")[1:]
-            data["special"] = [c.get_text(strip=True) for c in cells if c.get_text(strip=True) not in ["----", ""]]
-
-    cons_header = table.find("td", string=re.compile(r"Consolation|安慰獎", re.I))
-    if cons_header:
-        row = cons_header.find_parent("tr")
-        if row:
-            cells = row.find_all("td")[1:]
-            data["consolation"] = [c.get_text(strip=True) for c in cells if c.get_text(strip=True) not in ["----", ""]]
+    # 剩余的是特别奖和安慰奖
+    remaining = four_digit_numbers[3:]
+    if len(remaining) > 0:
+        # 典型的 4D 游戏有 10 个特别奖，10 个安慰奖
+        # 如果剩下 20 个，前 10 是 Special，后 10 是 Consolation
+        if len(remaining) == 20:
+            data["special"] = remaining[:10]
+            data["consolation"] = remaining[10:]
+        elif len(remaining) == 13: # 有些公司是 13 个特别奖
+            data["special"] = remaining
+        else:
+            data["special"] = remaining
 
     return data
 
-def extract_sportstoto_fireball_4dmoon(soup):
-    patterns = [r"SportsToto\s*Fireball", r"SPORTSTOTO\s*FIREBALL", r"Fireball"]
-    section, used_pattern = find_section(soup, patterns)
-    if not section:
-        print("⚠️ 未找到 SportsToto Fireball 标题")
-        return None
-    print(f"✅ 找到标题 (匹配: {used_pattern}): {section.get_text(strip=True)}")
+# ---------- 存储函数 ----------
+def save_json(company_name, data):
+    if not data: return
+    
+    # 存入当日文件夹
+    date_str = data.get("draw_date", "unknown")
+    folder = f"data/{date_str}"
+    os.makedirs(folder, exist_ok=True)
+    with open(f"{folder}/{company_name}.json", "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
+    
+    # 同时存一份最新的到根目录供页面默认加载
+    with open(f"data/{company_name}.json", "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
+    print(f"✅ 已保存: {company_name}")
 
-    parent = section.find_parent("td")
-    parent_text = parent.get_text(" ", strip=True) if parent else ""
-    draw_date = parse_4dmoon_date(parent_text)
-    no_match = re.search(r"#(\d+/\d+)", parent_text)
-    draw_no = no_match.group(1) if no_match else ""
-
-    data = {"draw_date": draw_date or "", "draw_no": draw_no, "data": []}
-    table = find_parent_table(section)
-    if not table:
-        print("⚠️ Fireball 未找到数据表格")
-        return data
-
-    rows = table.find_all("tr")
-    for row in rows:
-        cells = row.find_all("td")
-        if len(cells) >= 2:
-            label = cells[0].get_text(strip=True)
-            if "Fireball" in label:
-                continue
-            data["data"].append([label, cells[1].get_text(strip=True)])
-    return data
-
-def extract_sportstoto_5d_4dmoon(soup):
-    patterns = [r"SportsToto\s*5D", r"SPORTSTOTO\s*5D"]
-    section, used_pattern = find_section(soup, patterns)
-    if not section:
-        print("⚠️ 未找到 SportsToto 5D 标题")
-        return None
-    print(f"✅ 找到标题 (匹配: {used_pattern}): {section.get_text(strip=True)}")
-
-    parent = section.find_parent("td")
-    parent_text = parent.get_text(" ", strip=True) if parent else ""
-    draw_date = parse_4dmoon_date(parent_text)
-    no_match = re.search(r"#(\d+/\d+)", parent_text)
-    draw_no = no_match.group(1) if no_match else ""
-
-    data = {"draw_date": draw_date or "", "draw_no": draw_no, "data": []}
-    table = find_parent_table(section)
-    if not table:
-        print("⚠️ 5D 未找到数据表格")
-        return data
-
-    rows = table.find_all("tr")
-    for row in rows:
-        cells = row.find_all("td")
-        if len(cells) >= 2:
-            label = cells[0].get_text(strip=True)
-            if re.search(r"1st|2nd|3rd|4th|5th|6th", label, re.I):
-                data["data"].append([label, cells[1].get_text(strip=True)])
-    return data
-
-def extract_sportstoto_6d_4dmoon(soup):
-    patterns = [r"SportsToto\s*6D", r"SPORTSTOTO\s*6D"]
-    section, used_pattern = find_section(soup, patterns)
-    if not section:
-        print("⚠️ 未找到 SportsToto 6D 标题")
-        return None
-    print(f"✅ 找到标题 (匹配: {used_pattern}): {section.get_text(strip=True)}")
-
-    parent = section.find_parent("td")
-    parent_text = parent.get_text(" ", strip=True) if parent else ""
-    draw_date = parse_4dmoon_date(parent_text)
-    no_match = re.search(r"#(\d+/\d+)", parent_text)
-    draw_no = no_match.group(1) if no_match else ""
-
-    data = {"draw_date": draw_date or "", "draw_no": draw_no, "data": []}
-    table = find_parent_table(section)
-    if not table:
-        print("⚠️ 6D 未找到数据表格")
-        return data
-
-    rows = table.find_all("tr")
-    for row in rows:
-        cells = row.find_all("td")
-        if len(cells) >= 3:
-            values = []
-            for cell in cells:
-                text = cell.get_text(strip=True)
-                if text and text.lower() != "or":
-                    values.append(text)
-            if values:
-                data["data"].append(values[:3])  # 最多三列
-    return data
-
-def extract_sportstoto_lotto_4dmoon(soup):
-    # 使用 Star Toto 6/50 作为入口
-    patterns = [r"Star Toto 6/50", r"STAR TOTO 6/50"]
-    section, used_pattern = find_section(soup, patterns)
-    if not section:
-        print("⚠️ 未找到 Star Toto 6/50")
-        return None
-    print(f"✅ 找到标题 (匹配: {used_pattern}): {section.get_text(strip=True)}")
-
-    parent = section.find_parent("td")
-    parent_text = parent.get_text(" ", strip=True) if parent else ""
-    draw_date = parse_4dmoon_date(parent_text)
-    no_match = re.search(r"#(\d+/\d+)", parent_text)
-    draw_no = no_match.group(1) if no_match else ""
-
-    data = {
-        "draw_date": draw_date or "",
-        "draw_no": draw_no,
-        "star": [],
-        "power": [],
-        "supreme": [],
-        "jackpots": []
-    }
-
-    star_table = find_parent_table(section)
-    if star_table:
-        rows = star_table.find_all("tr")
-        if len(rows) >= 2:
-            num_row = rows[1]
-            tds = num_row.find_all("td")
-            data["star"] = [td.get_text(strip=True) for td in tds if td.get_text(strip=True) not in ['+', '']]
-        for row in rows[2:]:
-            jp_tds = row.find_all("td", class_=re.compile(r"jp|jackpot", re.I))
-            if jp_tds:
-                data["jackpots"].append(jp_tds[0].get_text(strip=True))
-
-    # Power
-    power_section, _ = find_section(soup, [r"Power Toto 6/55", r"POWER TOTO 6/55"])
-    if power_section:
-        power_table = find_parent_table(power_section)
-        if power_table:
-            rows = power_table.find_all("tr")
-            if len(rows) >= 2:
-                num_row = rows[1]
-                tds = num_row.find_all("td")
-                data["power"] = [td.get_text(strip=True) for td in tds]
-
-    # Supreme
-    supreme_section, _ = find_section(soup, [r"Supreme Toto 6/58", r"SUPREME TOTO 6/58"])
-    if supreme_section:
-        supreme_table = find_parent_table(supreme_section)
-        if supreme_table:
-            rows = supreme_table.find_all("tr")
-            if len(rows) >= 2:
-                num_row = rows[1]
-                tds = num_row.find_all("td")
-                data["supreme"] = [td.get_text(strip=True) for td in tds]
-
-    return data
-
-def extract_magnum_jackpot_gold_4dmoon(soup):
-    patterns = [r"4D Jackpot Estimated Amount", r"Jackpot\s*Gold", r"MAGNUM JACKPOT"]
-    section, used_pattern = find_section(soup, patterns)
-    if not section:
-        print("⚠️ 未找到 Magnum Jackpot Gold 标题")
-        return None
-    print(f"✅ 找到标题 (匹配: {used_pattern}): {section.get_text(strip=True)}")
-
-    parent = section.find_parent("td")
-    parent_text = parent.get_text(" ", strip=True) if parent else ""
-    draw_date = parse_4dmoon_date(parent_text)
-    no_match = re.search(r"#(\d+/\d+)", parent_text)
-    draw_no = no_match.group(1) if no_match else ""
-
-    data = {"draw_date": draw_date or "", "draw_no": draw_no, "data": []}
-    table = find_parent_table(section)
-    if not table:
-        print("⚠️ Jackpot Gold 未找到数据表格")
-        return data
-
-    rows = table.find_all("tr")
-    for row in rows:
-        cells = row.find_all("td")
-        if len(cells) >= 2:
-            data["data"].append([cells[0].get_text(strip=True), cells[1].get_text(strip=True)])
-    return data
-
-def extract_singapore_toto_4dmoon(soup):
-    patterns = [r"Singapore Toto", r"SINGAPORE TOTO"]
-    section, used_pattern = find_section(soup, patterns)
-    if not section:
-        print("⚠️ 未找到 Singapore Toto 标题")
-        return None
-    print(f"✅ 找到标题 (匹配: {used_pattern}): {section.get_text(strip=True)}")
-
-    parent = section.find_parent("td")
-    parent_text = parent.get_text(" ", strip=True) if parent else ""
-    draw_date = parse_4dmoon_date(parent_text)
-    no_match = re.search(r"#(\d+)", parent_text)
-    draw_no = no_match.group(1) if no_match else ""
-
-    data = {
-        "draw_date": draw_date or "",
-        "draw_no": draw_no,
-        "winning_numbers": [],
-        "prize_table": []
-    }
-
-    table = find_parent_table(section)
-    if not table:
-        print("⚠️ Singapore Toto 未找到主表格")
-        return data
-
-    rows = table.find_all("tr")
-    if len(rows) >= 2:
-        num_row = rows[1]
-        tds = num_row.find_all("td")
-        data["winning_numbers"] = [td.get_text(strip=True) for td in tds if td.get_text(strip=True) and td.get_text(strip=True) != '+']
-
-    prize_section, _ = find_section(soup, [r"Prize Group", r"PRIZE GROUP"])
-    if prize_section:
-        prize_table = find_parent_table(prize_section)
-        if prize_table:
-            prize_rows = prize_table.find_all("tr")[1:]
-            for row in prize_rows:
-                cells = row.find_all("td")
-                if len(cells) >= 3:
-                    data["prize_table"].append([
-                        cells[0].get_text(strip=True),
-                        cells[1].get_text(strip=True),
-                        cells[2].get_text(strip=True)
-                    ])
-    return data
-
-# ---------- 保存 JSON 和索引更新 ----------
-def save_json(company, data):
-    if not data:
-        print(f"❌ {company} 数据为空，跳过保存")
-        return
-    base_dir = "docs/data"
-    os.makedirs(base_dir, exist_ok=True)
-    latest_path = os.path.join(base_dir, f"{company}.json")
-    with open(latest_path, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-    print(f"✅ 已更新最新文件: {latest_path}")
-    draw_date = data.get("draw_date", "")
-    if not draw_date or draw_date == "----":
-        draw_date = datetime.now().strftime("%Y-%m-%d")
-    else:
-        try:
-            d = datetime.strptime(draw_date, "%d-%m-%Y")
-            draw_date = d.strftime("%Y-%m-%d")
-        except:
-            draw_date = datetime.now().strftime("%Y-%m-%d")
-    archive_dir = os.path.join(base_dir, draw_date)
-    os.makedirs(archive_dir, exist_ok=True)
-    archive_path = os.path.join(archive_dir, f"{company}.json")
-    with open(archive_path, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-    print(f"📁 已归档至: {archive_path}")
-
-def update_dates_index():
-    base_dir = "docs/data"
-    if not os.path.exists(base_dir):
-        return
-    dates = []
-    for item in os.listdir(base_dir):
-        item_path = os.path.join(base_dir, item)
-        if os.path.isdir(item_path) and re.match(r"\d{4}-\d{2}-\d{2}", item):
-            dates.append(item)
-    dates.sort(reverse=True)
-    index_path = os.path.join(base_dir, "dates.json")
-    with open(index_path, "w", encoding="utf-8") as f:
-        json.dump(dates, f)
-    print(f"📋 已更新日期索引，共 {len(dates)} 个历史日期")
-
-# ---------- 主流程 ----------
+# ---------- 主爬虫逻辑 ----------
 def main():
-    # 抓取 4d4d.co 数据
-    processed_from_4d4d, global_date = main_4d4d()
-    if not global_date:
+    try:
+        headers = {'User-Agent': 'Mozilla/5.0'}
+        response = requests.get(URL, headers=headers)
+        response.encoding = 'utf-8'
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        # 提取全局日期
+        date_tag = soup.find("td", class_="drawdate")
         global_date = datetime.now().strftime("%d-%m-%Y")
+        if date_tag:
+            raw_date = date_tag.get_text(strip=True)
+            match = re.search(r'(\d{2}-\d{2}-\d{4})', raw_date)
+            if match: global_date = match.group(1)
 
-    # 抓取 4dmoon.com 数据
-    print("\n🌙 正在从 4dmoon.com 抓取补充数据...")
-    html_moon = fetch_html(URL_4DMOON)
-    if html_moon:
-        soup_moon = BeautifulSoup(html_moon, "html.parser")
-        moon_extractors = [
-            ('grand_dragon', extract_grand_dragon_4dmoon),
-            ('sportstoto_fireball', extract_sportstoto_fireball_4dmoon),
-            ('sportstoto_5d', extract_sportstoto_5d_4dmoon),
-            ('sportstoto_6d', extract_sportstoto_6d_4dmoon),
-            ('sportstoto_lotto', extract_sportstoto_lotto_4dmoon),
-            ('magnum_jackpot_gold', extract_magnum_jackpot_gold_4dmoon),
-            ('singapore_toto', extract_singapore_toto_4dmoon),
-        ]
-        for company_key, extract_func in moon_extractors:
-            print(f"🔍 处理 {company_key} (来自 4dmoon)...")
-            try:
-                data = extract_func(soup_moon)
-                if data and any(v for v in data.values() if v not in ([], "", None)):
-                    save_json(company_key, data)
-                else:
-                    print(f"⚠️ {company_key} 无有效数据")
-            except Exception as e:
-                print(f"❌ 处理 {company_key} 时出错: {e}")
-                import traceback
-                traceback.print_exc()
+        # 提取全局期号
+        draw_no_tag = soup.find("td", class_="drawno")
+        global_draw_no = draw_no_tag.get_text(strip=True) if draw_no_tag else ""
 
-    update_dates_index()
+        outer_boxes = soup.find_all("div", class_="outerbox")
+        print(f"📦 发现 {len(outer_boxes)} 个数据区块，开始解析...")
+
+        for idx, box in enumerate(outer_boxes):
+            box_text = box.get_text(" ", strip=True).upper()
+            
+            # --- 智能匹配公司关键词 ---
+            if "MAGNUM" in box_text:
+                save_json('magnum', smart_extract(box, global_date, global_draw_no))
+            elif "DAMACAI" in box_text and "1+3D" in box_text:
+                save_json('damacai', smart_extract(box, global_date, global_draw_no))
+            elif "TOTO" in box_text and "4D" in box_text and "SPORTSTOTO" not in box_text:
+                save_json('toto', smart_extract(box, global_date, global_draw_no))
+            elif "SINGAPORE" in box_text:
+                save_json('singapore', smart_extract(box, global_date, global_draw_no))
+            elif "SABAH" in box_text:
+                save_json('sabah', smart_extract(box, global_date, global_draw_no))
+            elif "SANDAKAN" in box_text:
+                save_json('sandakan', smart_extract(box, global_date, global_draw_no))
+            elif "SWEEP" in box_text or "CASH SWEEP" in box_text:
+                save_json('sarawak_cashsweep', smart_extract(box, global_date, global_draw_no))
+            elif "GRAND DRAGON" in box_text or "GDBL" in box_text:
+                save_json('grand_dragon', smart_extract(box, global_date, global_draw_no))
+            
+            # 特殊处理 SportsToto 复合盒 (5D/6D/Lotto)
+            elif "SPORTSTOTO" in box_text:
+                # 这里可以保留你原本针对 5D/6D 的 extract_sportstoto 函数逻辑
+                pass
+
+        # 更新日期索引
+        update_dates_index(global_date)
+
+    except Exception as e:
+        print(f"❌ 运行出错: {e}")
+
+def update_dates_index(new_date):
+    index_path = "data/dates.json"
+    dates = []
+    if os.path.exists(index_path):
+        with open(index_path, "r") as f: dates = json.load(f)
+    if new_date not in dates:
+        dates.append(new_date)
+        with open(index_path, "w") as f: json.dump(dates, f)
 
 if __name__ == "__main__":
     main()
