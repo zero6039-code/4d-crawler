@@ -314,55 +314,109 @@ def extract_lotto(box):
                     break
     return star, power, supreme, jackpots
 
-# ---------- 从 4dmoon.com 提取 Singapore Toto ----------
+# ========== 改进后的 Singapore Toto 提取函数 ==========
 def extract_singapore_toto_4dmoon(soup):
-    """从 4dmoon.com/singapore-4d-results/ 提取 Singapore Toto 数据"""
-    print("🔍 定位 Singapore Toto...")
-    section = soup.find("td", string=re.compile(r"Singapore Toto", re.I))
-    if not section:
-        print("⚠️ 未找到 Singapore Toto 标题")
-        return None
-    print(f"✅ 找到标题: {section.get_text(strip=True)}")
-
-    parent_text = section.find_parent("td").get_text(" ", strip=True)
-    date_match = re.search(r"(\d{2}-[A-Za-z]{3}-\d{4})", parent_text)
-    draw_date = parse_4dmoon_date(date_match.group(1)) if date_match else None
-    no_match = re.search(r"#(\d+)", parent_text)
-    draw_no = no_match.group(1) if no_match else ""
-
+    """
+    专门从 https://www.4dmoon.com/singapore-4d-results/ 的页面解析数据
+    """
+    print("🔍 开始解析 Singapore Toto 页面...")
     data = {
-        "draw_date": draw_date or "",
-        "draw_no": draw_no,
+        "draw_date": "",
+        "draw_no": "",
         "winning_numbers": [],
         "prize_table": []
     }
 
-    table = find_parent_table(section)
+    # 1. 定位到包含 "Singapore Toto" 的单元格，这是所有数据的起点
+    toto_header = soup.find("td", string=re.compile(r"Singapore Toto", re.I))
+    if not toto_header:
+        print("❌ 错误：未找到 'Singapore Toto' 标题")
+        return None
+    print(f"✅ 找到标题: {toto_header.get_text(strip=True)}")
+
+    # 2. 提取日期和期号（通常在标题的父级区域）
+    parent_cell = toto_header.find_parent("td")
+    if parent_cell:
+        parent_text = parent_cell.get_text(" ", strip=True)
+        print(f"📅 日期区域文本: {parent_text}")
+
+        # 匹配日期，例如 (Mon) 02-Mar-2026
+        date_match = re.search(r"(\d{2}-[A-Za-z]{3}-\d{4})", parent_text)
+        if date_match:
+            parsed_date = parse_4dmoon_date(date_match.group(1))
+            if parsed_date:
+                data["draw_date"] = parsed_date
+                print(f"  提取到日期: {data['draw_date']}")
+        # 匹配期号，例如 #4161
+        no_match = re.search(r"#(\d+)", parent_text)
+        if no_match:
+            data["draw_no"] = no_match.group(1)
+            print(f"  提取到期号: {data['draw_no']}")
+
+    # 3. 提取开奖号码（在标题下方的表格中）
+    # 先找到包含标题的表格
+    table = toto_header.find_parent("table")
     if not table:
-        print("⚠️ Singapore Toto 未找到主表格")
+        print("⚠️ 警告：未找到包含标题的表格，尝试其他方式...")
+        # 备用方案：查找所有表格，寻找包含数字的
+        all_tables = soup.find_all("table")
+        for t in all_tables:
+            if "6" in t.get_text() and "8" in t.get_text() and "28" in t.get_text():  # 简单的特征匹配
+                table = t
+                print("✅ 通过特征找到号码表格")
+                break
+        if not table:
+            print("❌ 无法找到号码表格")
+            return data
+
+    # 在表格中寻找号码行（通常包含多个数字和 "+"）
+    rows = table.find_all("tr")
+    found_numbers = False
+    for row in rows:
+        cells = row.find_all("td")
+        row_text = row.get_text()
+        # 如果这一行包含数字且数量合理，可能是号码行
+        if len(cells) >= 5 and "+" in row_text:
+            for cell in cells:
+                text = cell.get_text(strip=True)
+                if text and text.isdigit():
+                    data["winning_numbers"].append(text)
+                elif text == "+":
+                    # 忽略加号
+                    pass
+            if data["winning_numbers"]:
+                found_numbers = True
+                print(f"✅ 提取到开奖号码: {' '.join(data['winning_numbers'])}")
+                break
+
+    if not found_numbers:
+        print("⚠️ 未在表格中找到开奖号码")
+
+    # 4. 提取奖金分配表
+    # 查找包含 "Prize Group" 的单元格
+    prize_header = soup.find("td", string=re.compile(r"Prize Group", re.I))
+    if not prize_header:
+        print("⚠️ 未找到 'Prize Group' 标题，跳过奖金表")
         return data
 
-    rows = table.find_all("tr")
-    if len(rows) >= 2:
-        num_row = rows[1]
-        tds = num_row.find_all("td")
-        for td in tds:
-            text = td.get_text(strip=True)
-            if text and text != '+':
-                data["winning_numbers"].append(text)
-
-    prize_section = soup.find("td", string=re.compile(r"Prize Group", re.I))
-    if prize_section:
-        prize_table = find_parent_table(prize_section)
-        if prize_table:
-            prize_rows = prize_table.find_all("tr")
-            for row in prize_rows[1:]:
-                cells = row.find_all("td")
-                if len(cells) >= 3:
-                    group = cells[0].get_text(strip=True)
-                    amount = cells[1].get_text(strip=True)
-                    winners = cells[2].get_text(strip=True)
-                    data["prize_table"].append([group, amount, winners])
+    prize_table = prize_header.find_parent("table")
+    if prize_table:
+        prize_rows = prize_table.find_all("tr")
+        # 跳过表头行（第一行）
+        for row in prize_rows[1:]:
+            cells = row.find_all("td")
+            if len(cells) >= 3:
+                group = cells[0].get_text(strip=True)
+                amount = cells[1].get_text(strip=True)
+                winners = cells[2].get_text(strip=True)
+                # 处理可能为空的 Group 1
+                if not amount and not winners:
+                    amount = ""
+                    winners = ""
+                data["prize_table"].append([group, amount, winners])
+        print(f"✅ 提取到 {len(data['prize_table'])} 行奖金数据")
+    else:
+        print("⚠️ 未找到奖金分配表格")
 
     return data
 
