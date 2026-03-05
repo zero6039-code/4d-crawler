@@ -30,7 +30,7 @@ def find_parent_table(element):
     return element
 
 def parse_4dmoon_date(date_str):
-    """将 02-Mar-2026 转换为 02-03-2026 (保留此函数，可能用于新网站的日期格式)"""
+    """将 02-Mar-2026 转换为 02-03-2026"""
     try:
         d = datetime.strptime(date_str.strip(), "%d-%b-%Y")
         return d.strftime("%d-%m-%Y")
@@ -55,7 +55,7 @@ def extract_global_date(soup):
         draw_no = re.sub(r"Draw No:?", "", no_text).strip()
     return date, draw_no
 
-# ---------- 4d4d.co 提取函数 (完整保留) ----------
+# ---------- 4d4d.co 提取函数 (保持不变) ----------
 def extract_damacai(box, global_date, global_draw_no):
     return base_extract(box, global_date, global_draw_no)
 
@@ -320,10 +320,10 @@ def extract_lotto(box):
 # ========== 从 4dlatest.org 提取 GDLOTTO 豪龙数据 ==========
 def extract_gd_lotto_from_4dlatest(soup):
     """
-    从 https://4dlatest.org/ 的 HTML 中提取 "GDLOTTO 豪龙" 的数据。
+    从 https://4dlatest.org/ 提取 GDLOTTO 豪龙数据
+    返回包含 draw_date, 1st, 2nd, 3rd, special (列表), jackpot 的字典
     """
     print("🔍 正在从 4dlatest.org 提取 GDLOTTO 豪龙数据...")
-
     data = {
         "draw_date": "",
         "draw_no": "",
@@ -331,27 +331,26 @@ def extract_gd_lotto_from_4dlatest(soup):
         "2nd": "",
         "3rd": "",
         "special": [],
-        "consolation": [],
+        "consolation": [],  # 暂时留空
         "jackpot": ""
     }
 
-    # 定位到 "GDLOTTO 豪龙" 部分
-    # 页面中该部分标题可能在一个 <h2> 或 <strong> 标签中
-    header = soup.find(lambda tag: tag.name in ['h2', 'h3', 'strong', 'div'] and "GDLOTTO 豪龙" in tag.get_text())
+    # 定位到包含 "GDLOTTO 豪龙" 的表格
+    header = soup.find(string=re.compile(r"GDLOTTO 豪龙"))
     if not header:
         print("⚠️ 未找到 'GDLOTTO 豪龙' 标题")
         return None
-    print(f"✅ 找到标题: {header.get_text(strip=True)}")
 
-    # 向上找到包含整个公司的容器，通常是一个 <div> 或父级标签
-    parent_section = header.find_parent('div')
-    if not parent_section:
-        parent_section = header.parent
+    # 找到最近的表格
+    table = header.find_parent("table")
+    if not table:
+        print("⚠️ 未找到 GDLOTTO 数据表格")
+        return None
 
-    # 提取日期和期号（通常在标题行中）
+    rows = table.find_all("tr")
+    # 提取日期（通常在标题行中）
     header_text = header.get_text()
-    # 匹配日期格式 DD/MM/YYYY
-    date_match = re.search(r'(\d{2}/\d{2}/\d{4})', header_text)
+    date_match = re.search(r"(\d{2}/\d{2}/\d{4})", header_text)
     if date_match:
         try:
             d = datetime.strptime(date_match.group(1), "%d/%m/%Y")
@@ -360,88 +359,37 @@ def extract_gd_lotto_from_4dlatest(soup):
         except:
             pass
 
-    if parent_section:
-        # 提取前三名、特别奖、安慰奖
-        # 查找表格行
-        rows = parent_section.find_all('tr')
-        for row in rows:
-            cells = row.find_all('td')
-            if len(cells) >= 2:
-                label = cells[0].get_text(strip=True).upper()
-                number = cells[1].get_text(strip=True)
-                if '1ST' in label:
-                    data['1st'] = number
-                elif '2ND' in label:
-                    data['2nd'] = number
-                elif '3RD' in label:
-                    data['3rd'] = number
+    # 遍历行，提取数字
+    all_numbers = []
+    for row in rows:
+        cells = row.find_all("td")
+        for cell in cells:
+            text = cell.get_text(strip=True)
+            # 如果单元格内容是数字且长度合适（通常4位），加入列表
+            if text.isdigit() and len(text) >= 3:
+                all_numbers.append(text)
+            # 如果是 "Jackpot" 或 "CONSOLATION"，尝试提取金额
+            if "Jackpot" in text or "CONSOLATION" in text:
+                # 查找同一行或下一单元格的金额
+                amount_cell = cell.find_next_sibling("td")
+                if amount_cell:
+                    amount_text = amount_cell.get_text(strip=True)
+                    if "USD" in amount_text or "$" in amount_text:
+                        data["jackpot"] = amount_text
 
-        # 提取特别奖
-        special_section = parent_section.find(string=re.compile(r'SPECIAL', re.I))
-        if special_section:
-            special_container = special_section.find_parent()
-            if special_container:
-                # 收集所有数字（可能是 <td> 或 <span>）
-                number_elements = special_container.find_all('td')
-                special_numbers = []
-                for elem in number_elements:
-                    num = elem.get_text(strip=True)
-                    if num.isdigit() and num != '----':
-                        special_numbers.append(num)
-                if special_numbers:
-                    data['special'] = special_numbers
-                else:
-                    # 如果没找到，尝试找相邻的表格
-                    next_table = special_container.find_next('table')
-                    if next_table:
-                        for td in next_table.find_all('td'):
-                            num = td.get_text(strip=True)
-                            if num.isdigit() and num != '----':
-                                special_numbers.append(num)
-                        data['special'] = special_numbers
+    # 从所有数字中分离前三名
+    # 根据截图，前三名应该是 9446, 5226, 5836（但需要按顺序）
+    # 假设前三个数字就是前三名（顺序：1ST,2ND,3RD）
+    if len(all_numbers) >= 3:
+        data["1st"] = all_numbers[0]
+        data["2nd"] = all_numbers[1]
+        data["3rd"] = all_numbers[2]
+        # 剩余数字作为特别奖
+        data["special"] = all_numbers[3:]
 
-        # 提取安慰奖
-        consolation_section = parent_section.find(string=re.compile(r'CONSOLATION', re.I))
-        if consolation_section:
-            consolation_container = consolation_section.find_parent()
-            if consolation_container:
-                number_elements = consolation_container.find_all('td')
-                consolation_numbers = []
-                for elem in number_elements:
-                    num = elem.get_text(strip=True)
-                    if num.isdigit() and num != '----':
-                        consolation_numbers.append(num)
-                if consolation_numbers:
-                    data['consolation'] = consolation_numbers
-                else:
-                    next_table = consolation_container.find_next('table')
-                    if next_table:
-                        for td in next_table.find_all('td'):
-                            num = td.get_text(strip=True)
-                            if num.isdigit() and num != '----':
-                                consolation_numbers.append(num)
-                        data['consolation'] = consolation_numbers
-
-        # 提取 Jackpot
-        jackpot_tag = parent_section.find(string=re.compile(r'Jackpot', re.I))
-        if jackpot_tag:
-            # 尝试从同一行或下一个元素获取金额
-            amount_elem = jackpot_tag.find_next()
-            if amount_elem:
-                amount_text = amount_elem.get_text(strip=True)
-                # 尝试提取金额数字（可能包含 USD, RM 等）
-                amount_match = re.search(r'([\d,\.]+)', amount_text)
-                if amount_match:
-                    data['jackpot'] = amount_match.group(1)
-            else:
-                # 从父级文本中提取
-                jackpot_text = jackpot_tag.parent.get_text()
-                amount_match = re.search(r'Jackpot\s*\|\s*([\d,\.]+)', jackpot_text)
-                if amount_match:
-                    data['jackpot'] = amount_match.group(1)
-
-    else:
-        print("⚠️ 未能定位 GDLOTTO 豪龙的数据容器")
+    print(f"  提取到前三: {data['1st']}, {data['2nd']}, {data['3rd']}")
+    print(f"  特别奖数量: {len(data['special'])}")
+    print(f"  Jackpot: {data['jackpot']}")
 
     return data
 
@@ -563,8 +511,8 @@ def main():
     if html_4dlatest:
         soup_4dlatest = BeautifulSoup(html_4dlatest, "html.parser")
         gd_data = extract_gd_lotto_from_4dlatest(soup_4dlatest)
-        if gd_data:
-            # 合并数据：如果从新网站抓取成功，则覆盖从 4d4d.co 抓取的数据
+        if gd_data and gd_data.get('1st'):
+            # 覆盖保存 grand_dragon 数据
             save_json('grand_dragon', gd_data)
         else:
             print("⚠️ GDLOTTO 豪龙数据为空，保留原有数据")
