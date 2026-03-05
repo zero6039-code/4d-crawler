@@ -73,7 +73,6 @@
         .company-section[data-company="magnum"] .company-title { background: linear-gradient(145deg, #aa4a1e, #c95f2a); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .company-section[data-company="toto"] .company-title { background: linear-gradient(145deg, #b71c1c, #d32f2f); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .company-section[data-company="singapore"] .company-title { background: linear-gradient(145deg, #1e4a6b, #2c6b96); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        /* grand_dragon 使用默认渐变，不设特殊颜色 */
         .status-indicator { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
         .status-indicator.success { background: #48bb78; }
         .status-indicator.error { background: #f56565; }
@@ -212,7 +211,7 @@
         const SPECIAL_COMPANIES = [
             'sportstoto_fireball', 'sportstoto_lotto', 'singapore_toto',
             'magnum_jackpot_gold', 'sportstoto_5d', 'sportstoto_6d', 'magnum_life',
-            'sabah_lotto'  // 确保 sabah_lotto 在特殊公司列表中
+            'sabah_lotto'
         ];
 
         let availableDates = [];           
@@ -381,14 +380,40 @@
             }
         }
 
-        // ==================== 数据加载 ====================
+        // ==================== 数据加载（改进：支持后备最新数据）====================
         async function loadCompanyData(companyKey) {
             const basePath = selectedDate ? `data/${selectedDate}` : 'data';
             const url = `${basePath}/${companyKey}.json?t=${Date.now()}`;
             try {
                 const res = await fetch(url, { cache: 'no-store' });
-                return res.ok ? await res.json() : null;
-            } catch (err) { return null; }
+                if (res.ok) {
+                    return await res.json();
+                } else {
+                    // 所选日期无数据，尝试加载最新数据
+                    console.log(`${companyKey} 在 ${selectedDate} 无数据，尝试加载最新数据`);
+                    const latestUrl = `data/${companyKey}.json?t=${Date.now()}`;
+                    const latestRes = await fetch(latestUrl, { cache: 'no-store' });
+                    if (latestRes.ok) {
+                        const data = await latestRes.json();
+                        data._isFallback = true;  // 标记为后备数据
+                        return data;
+                    } else {
+                        return null;
+                    }
+                }
+            } catch (err) {
+                console.warn(`${companyKey} 请求失败，尝试加载最新数据`, err);
+                try {
+                    const latestUrl = `data/${companyKey}.json?t=${Date.now()}`;
+                    const latestRes = await fetch(latestUrl, { cache: 'no-store' });
+                    if (latestRes.ok) {
+                        const data = await latestRes.json();
+                        data._isFallback = true;
+                        return data;
+                    }
+                } catch (e) {}
+                return null;
+            }
         }
 
         function createCompanySkeletons() {
@@ -415,6 +440,13 @@
             }
             
             let html = '';
+            // 构建日期显示，如果数据是后备数据，添加标记
+            let metaText = `📅 日期: ${data.draw_date || '--'} | 🎟️ 期号: ${data.draw_no || '--'}`;
+            if (data._isFallback && selectedDate) {
+                metaText += ` (最近一期)`;
+            }
+            metaDiv.innerText = metaText;
+
             if (SPECIAL_COMPANIES.includes(companyKey)) {
                 // 特殊公司渲染
                 if (companyKey === 'singapore_toto' && data.winning_numbers) {
@@ -503,13 +535,8 @@
                 } else {
                     html = '<p style="text-align:center; padding:10px;">特殊开彩详见官网</p>';
                 }
-                // 对于特殊公司，原 metaDiv 保留日期显示
-                metaDiv.innerText = `📅 日期: ${data.draw_date || '--'} | 🎟️ 期号: ${data.draw_no || '--'}`;
             } else {
                 // 普通公司渲染（包括 grand_dragon）
-                // 设置日期和期号
-                metaDiv.innerText = `📅 日期: ${data.draw_date || '--'} | 🎟️ 期号: ${data.draw_no || '--'}`;
-
                 // 奖项部分
                 html = `
                     <div class="prize-grid" style="flex-direction:column;align-items:center;">
