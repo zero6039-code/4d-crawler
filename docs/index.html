@@ -412,15 +412,46 @@
                         html += `</table></div>`;
                     }
                 } else if (companyKey === 'sportstoto_lotto') {
-                    if (data.star && data.star.length) html += `<div class="subsection"><div class="subsection-title">Star Toto</div><div class="number-list">${data.star.map(n => `<span class="number-item">${n}</span>`).join('')}</div></div>`;
-                    if (data.power && data.power.length) html += `<div class="subsection"><div class="subsection-title">Power Toto</div><div class="number-list">${data.power.map(n => `<span class="number-item">${n}</span>`).join('')}</div></div>`;
-                    if (data.supreme && data.supreme.length) html += `<div class="subsection"><div class="subsection-title">Supreme Toto</div><div class="number-list">${data.supreme.map(n => `<span class="number-item">${n}</span>`).join('')}</div></div>`;
-                    if (data.jackpots && data.jackpots.length) html += `<div class="subsection"><div class="subsection-title">Jackpots</div><div class="number-list">${data.jackpots.map(j => `<span class="number-item">${j}</span>`).join('')}</div></div>`;
+                    // 将 Star Toto 的号码和它的 jackpots 放在一起
+                    // 假设 data.jackpots 数组按顺序对应：Star 的两个 jackpot, Power 的一个 jackpot, Supreme 的一个 jackpot
+                    // 如果数据不足，则留空
+                    let starJackpots = [];
+                    let powerJackpot = '';
+                    let supremeJackpot = '';
+                    if (data.jackpots && data.jackpots.length >= 4) {
+                        starJackpots = data.jackpots.slice(0, 2);
+                        powerJackpot = data.jackpots[2];
+                        supremeJackpot = data.jackpots[3];
+                    } else if (data.jackpots && data.jackpots.length === 2) {
+                        starJackpots = data.jackpots;
+                    } else if (data.jackpots && data.jackpots.length === 1) {
+                        starJackpots = data.jackpots;
+                    }
+
+                    if (data.star && data.star.length) {
+                        html += `<div class="subsection"><div class="subsection-title">Star Toto</div><div class="number-list">${data.star.map(n => `<span class="number-item">${n}</span>`).join('')}</div>`;
+                        if (starJackpots.length) {
+                            html += `<div class="number-list" style="margin-top:5px;">${starJackpots.map(j => `<span class="number-item">${j}</span>`).join('')}</div>`;
+                        }
+                        html += `</div>`;
+                    }
+                    if (data.power && data.power.length) {
+                        html += `<div class="subsection"><div class="subsection-title">Power Toto</div><div class="number-list">${data.power.map(n => `<span class="number-item">${n}</span>`).join('')}</div>`;
+                        if (powerJackpot) {
+                            html += `<div class="number-list" style="margin-top:5px;"><span class="number-item">${powerJackpot}</span></div>`;
+                        }
+                        html += `</div>`;
+                    }
+                    if (data.supreme && data.supreme.length) {
+                        html += `<div class="subsection"><div class="subsection-title">Supreme Toto</div><div class="number-list">${data.supreme.map(n => `<span class="number-item">${n}</span>`).join('')}</div>`;
+                        if (supremeJackpot) {
+                            html += `<div class="number-list" style="margin-top:5px;"><span class="number-item">${supremeJackpot}</span></div>`;
+                        }
+                        html += `</div>`;
+                    }
                 } else if (data.data && Array.isArray(data.data)) {
-                    // 对于 Fireball, 5D, 6D, Jackpot Gold 等，渲染两列表格（或三列，但这里简化为两列）
-                    // 如果数据是三列（如6D有备选号码），可能需要额外处理
+                    // 对于 Fireball, 5D, 6D, Jackpot Gold 等，渲染表格
                     html = data.data.map(row => {
-                        // 判断row长度，如果长度为3，显示三列；否则两列
                         if (row.length >= 3) {
                             return `<div style="display:flex;justify-content:space-between;padding:4px 0;"><span>${row[0]}</span><span class="number-item">${row[1]}</span><span class="number-item alt-number">${row[2]}</span></div>`;
                         } else {
