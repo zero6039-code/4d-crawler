@@ -79,16 +79,33 @@
         .status-indicator.loading { background: #ecc94b; animation: blink 1s infinite; }
         @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-        /* 日历样式 */
+        /* 日历样式 - 修改为小圆圈 */
         .calendar-btn { background: #ffffffcc; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.8); border-radius: 25px; padding: 8px 20px; font-size: 1rem; font-weight: 500; color: #2c3e50; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: all 0.2s; }
         .calendar-btn:hover { background: #ffffff; box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
         .calendar-popup { position: absolute; background: white; border-radius: 20px; box-shadow: 0 12px 30px rgba(0,0,0,0.2); padding: 16px; z-index: 2000; width: 320px; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 8px; border: 1px solid #e2e8f0; backdrop-filter: blur(4px); }
         .calendar-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; font-weight: 600; color: #2d3748; }
         .calendar-nav { background: none; border: none; font-size: 1.2rem; cursor: pointer; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #f0f2f5; transition: 0.2s; }
         .calendar-nav:hover { background: #e2e8f0; }
-        .calendar-table { width: 100%; border-collapse: collapse; text-align: center; }
-        .calendar-table th { font-size: 0.8rem; font-weight: 600; color: #718096; padding: 6px 0; }
-        .calendar-table td { padding: 6px 0; font-size: 0.9rem; cursor: pointer; border-radius: 30px; transition: 0.1s; }
+        .calendar-table { width: 100%; border-collapse: collapse; text-align: center; table-layout: fixed; } /* 固定布局使列宽均匀 */
+        .calendar-table th { 
+            font-size: 0.8rem; 
+            font-weight: 600; 
+            color: #718096; 
+            padding: 6px 0; 
+            width: 40px; /* 与单元格宽度一致 */
+        }
+        .calendar-table td { 
+            padding: 0; 
+            width: 40px; 
+            height: 40px; 
+            line-height: 40px; 
+            font-size: 0.9rem; 
+            cursor: pointer; 
+            border-radius: 50%; /* 正圆形 */
+            transition: 0.1s; 
+            text-align: center; 
+            vertical-align: middle;
+        }
         .calendar-table td.has-data { background: #c6e0ff; font-weight: 600; color: #1e4a6b; }
         .calendar-table td.selected { background: #3182ce !important; color: white !important; font-weight: 600; }
         .calendar-table td.today { background: #d9eaff; font-weight: 600; box-shadow: 0 0 0 2px #a0c4ff; }
@@ -318,7 +335,6 @@
 
         function calendarDateClick(dateYmd) {
             if (dateYmd) {
-                // 直接使用 YYYY-MM-DD 格式
                 selectDate(dateYmd);
             } else {
                 alert('该日期暂无开彩数据');
