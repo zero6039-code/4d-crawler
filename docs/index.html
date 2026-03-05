@@ -184,7 +184,7 @@
             background: #d9eaff;  /* 浅蓝 */
             font-weight: 600;
             border-radius: 30px;
-            box-shadow: 0 0 0 2px #a0c4ff; /* 可选外圈 */
+            box-shadow: 0 0 0 2px #a0c4ff;
         }
         .calendar-table td.today.has-data {
             background: #a0c4ff;   /* 比普通数据稍浅，但保留数据感 */
@@ -192,13 +192,9 @@
         .calendar-month-year {
             font-size: 1.1rem;
         }
+        /* 移除底部注释 */
         .calendar-footer {
-            margin-top: 10px;
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-            font-size: 0.8rem;
-            color: #4a5568;
+            display: none;
         }
     </style>
 </head>
@@ -303,7 +299,8 @@
                 const res = await fetch(`data/dates.json?t=${Date.now()}`, { cache: 'no-store' });
                 if (res.ok) {
                     let dates = await res.json();
-                    availableDates = sortDatesDesc(dates); // 从新到旧
+                    // 确保排序：从新到旧
+                    availableDates = sortDatesDesc(dates);
                     availableDatesSet = new Set(availableDates);
                 } else {
                     availableDates = [];
@@ -366,16 +363,11 @@
                 return;
             }
 
-            let baseDate = selectedDate ? selectedDate : (availableDates.length ? availableDates[0] : null);
-            if (baseDate) {
-                let { year, month } = parseDMY(baseDate);
-                currentCalendarYear = year;
-                currentCalendarMonth = month;
-            } else {
-                let now = new Date();
-                currentCalendarYear = now.getFullYear();
-                currentCalendarMonth = now.getMonth() + 1;
-            }
+            // 始终跳转到当前系统日期月份
+            const now = new Date();
+            currentCalendarYear = now.getFullYear();
+            currentCalendarMonth = now.getMonth() + 1; // 1-12
+
             renderCalendar();
             popup.style.display = 'block';
         }
@@ -389,6 +381,8 @@
 
             // 英文月份缩写
             const monthNamesEn = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            // 中文月份
+            const monthNamesZh = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
             // 星期英文缩写 (从周日开始)
             const weekdaysEn = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -404,7 +398,7 @@
             let html = `
                 <div class="calendar-header">
                     <button class="calendar-nav" onclick="changeMonth(-1)">◀</button>
-                    <span class="calendar-month-year">${monthNamesEn[month-1]} ${year}</span>
+                    <span class="calendar-month-year">${monthNamesEn[month-1]} ${monthNamesZh[month-1]} ${year}</span>
                     <button class="calendar-nav" onclick="changeMonth(1)">▶</button>
                 </div>
                 <table class="calendar-table">
@@ -434,7 +428,8 @@
             }
 
             html += '</tbody></table>';
-            html += '<div class="calendar-footer">📌 高亮日期 = 有开彩数据 | 浅蓝圈 = 今天</div>';
+            // 完全移除底部文字
+            html += '<div class="calendar-footer"></div>';
             popup.innerHTML = html;
         }
 
