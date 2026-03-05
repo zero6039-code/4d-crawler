@@ -2,9 +2,10 @@ name: Crawl 4D Results
 
 on:
   schedule:
-  # 马来西亚时间 19:00–19:59 = UTC 11:00–11:59，每分钟运行一次
+    # 马来西亚时间 19:00–19:59 = UTC 11:00–11:59，每5分钟运行一次
+    # 如需限定周一和周四，可将最后部分改为 '1,4'，例如：'*/5 11 * * 1,4'
     - cron: '*/5 11 * * *'
-  workflow_dispatch:
+  workflow_dispatch:   # 允许手动触发
 
 jobs:
   crawl:
@@ -14,11 +15,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
 
       - name: Set up Python
         uses: actions/setup-python@v5
