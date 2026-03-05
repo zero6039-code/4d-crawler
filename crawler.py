@@ -175,8 +175,9 @@ def extract_3d(box):
         }
     return {}
 
+# ========== 修复后的 5D 提取函数 ==========
 def extract_5d_table(box):
-    h5 = box.find("td", string=re.compile("5D"))
+    h5 = box.find("td", string=re.compile(r"5D"))
     if not h5:
         return []
     table = h5.find_parent("table")
@@ -184,14 +185,27 @@ def extract_5d_table(box):
         return []
     rows = table.find_all("tr")
     data = []
-    for row in rows[1:]:
+    # 从第一行开始，跳过标题行（如果有）
+    for row in rows:
         tds = row.find_all("td")
-        if len(tds) >= 2:
-            data.append([tds[0].get_text(strip=True), tds[1].get_text(strip=True)])
+        if len(tds) < 2:
+            continue
+        # 获取所有非空单元格文本
+        cells_text = [td.get_text(strip=True) for td in tds if td.get_text(strip=True)]
+        # 5D 表格每行有 4 个有效单元格，构成两对 (label, number)
+        # 例如：['1st', '34113', '4th', '4113']
+        for i in range(0, len(cells_text), 2):
+            if i+1 < len(cells_text):
+                label = cells_text[i]
+                number = cells_text[i+1]
+                # 过滤掉可能的标题行
+                if label not in ["5D", "6D", "SportsToto"] and number:
+                    data.append([label, number])
     return data
 
+# ========== 修复后的 6D 提取函数 ==========
 def extract_6d_table(box):
-    h6 = box.find("td", string=re.compile("6D"))
+    h6 = box.find("td", string=re.compile(r"6D"))
     if not h6:
         return []
     table = h6.find_parent("table")
@@ -199,14 +213,25 @@ def extract_6d_table(box):
         return []
     rows = table.find_all("tr")
     data = []
-    for row in rows[1:]:
+    for row in rows:
         tds = row.find_all("td")
-        if len(tds) >= 4:
-            data.append([
-                tds[0].get_text(strip=True),
-                tds[1].get_text(strip=True),
-                tds[3].get_text(strip=True) if len(tds) > 3 else ''
-            ])
+        if len(tds) < 2:
+            continue
+        # 提取文本，忽略 "or"
+        cells_text = [td.get_text(strip=True) for td in tds if td.get_text(strip=True) and td.get_text(strip=True).lower() != "or"]
+        if len(cells_text) >= 2:
+            rank = cells_text[0]
+            main_num = cells_text[1]
+            alt_num = cells_text[2] if len(cells_text) >= 3 else ""
+            # 过滤掉标题行
+            if rank not in ["6D", "SportsToto"]:
+                data.append([rank, main_num, alt_num])
+        elif len(tds) >= 2:
+            # 备用方案：直接取前两个td
+            rank = tds[0].get_text(strip=True)
+            main_num = tds[1].get_text(strip=True)
+            if rank not in ["6D", "SportsToto"]:
+                data.append([rank, main_num, ""])
     return data
 
 def extract_lotto(box):
@@ -339,7 +364,6 @@ def main():
     print(f"📦 找到 {len(outer_boxes)} 个 outerbox")
 
     # 定义公司识别规则：每个元组 (关键词, 公司key, 提取函数)
-    # 关键词用于在盒子中查找特定文本，注意顺序：优先匹配更具体的名称
     company_matchers = [
         (re.compile(r'GRAND\s+DRAGON', re.I), 'grand_dragon', extract_grand_dragon),
         (re.compile(r'DAMACAI.*4D', re.I), 'damacai', extract_damacai),
@@ -350,7 +374,6 @@ def main():
         (re.compile(r'SABAH.*88.*4D', re.I), 'sabah', extract_sabah),
         (re.compile(r'SANDAKAN.*4D', re.I), 'sandakan', extract_sandakan),
         (re.compile(r'CASHWEEP.*4D', re.I), 'sarawak_cashsweep', extract_cashsweep),
-        # SportsToto 复合盒子包含多个标题，单独处理
         (re.compile(r'SPORTSTOTO.*5D', re.I), 'sportstoto_5d', extract_sportstoto_5d),
         (re.compile(r'SPORTSTOTO.*6D', re.I), 'sportstoto_6d', extract_sportstoto_6d),
         (re.compile(r'SPORTSTOTO.*LOTTO', re.I), 'sportstoto_lotto', extract_sportstoto_lotto),
@@ -359,32 +382,29 @@ def main():
     processed_companies = set()
 
     for idx, box in enumerate(outer_boxes):
-        # 获取盒子内的所有文本用于匹配
         box_text = box.get_text(" ", strip=True)
         matched = False
         for pattern, company_key, extract_func in company_matchers:
             if pattern.search(box_text):
                 print(f"🔍 处理 {company_key} (outerbox {idx})")
                 data = extract_func(box, global_date, global_draw_no)
+                # 添加调试输出
+                if 'data' in data and isinstance(data['data'], list):
+                    print(f"  提取到 {len(data['data'])} 条 {company_key} 数据")
                 save_json(company_key, data)
                 processed_companies.add(company_key)
                 matched = True
-                # 注意：SportsToto 复合盒子可能匹配多个，但每个提取函数会各自处理同一盒子
-                # 这里不break，允许同一盒子被多个提取函数处理（例如 5D、6D、Lotto 共用一个盒子）
-                # 但为了不重复处理同一公司，我们继续匹配，但避免保存同一公司两次
-                # 由于公司key不同，不会冲突
         if not matched:
-            # 尝试用更通用的方式：可能是SportsToto复合盒子未被关键词命中，再尝试单独处理
-            # 实际上上面的SPORTSTOTO关键词应该能命中，但留个后备
             if "SPORTSTOTO" in box_text.upper():
-                # 尝试分别提取5D、6D、Lotto
                 print(f"🔍 尝试提取 SportsToto 复合数据 (outerbox {idx})")
                 data_5d = extract_sportstoto_5d(box, global_date, global_draw_no)
                 if data_5d.get('data'):
+                    print(f"  提取到 {len(data_5d['data'])} 条 5D 数据")
                     save_json('sportstoto_5d', data_5d)
                     processed_companies.add('sportstoto_5d')
                 data_6d = extract_sportstoto_6d(box, global_date, global_draw_no)
                 if data_6d.get('data'):
+                    print(f"  提取到 {len(data_6d['data'])} 条 6D 数据")
                     save_json('sportstoto_6d', data_6d)
                     processed_companies.add('sportstoto_6d')
                 data_lotto = extract_sportstoto_lotto(box, global_date, global_draw_no)
@@ -394,7 +414,6 @@ def main():
             else:
                 print(f"⚠️ 未识别的 outerbox {idx}，内容: {box_text[:100]}...")
 
-    # 可选：列出本次未出现的公司（即可能当天无开彩）
     all_possible = {key for _, key, _ in company_matchers}
     all_possible.update(['sportstoto_5d', 'sportstoto_6d', 'sportstoto_lotto'])
     missing = all_possible - processed_companies
