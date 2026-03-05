@@ -198,7 +198,8 @@
             'damacai': 'DAMACAI 4D', 'magnum': 'MAGNUM 4D', 'toto': 'TOTO 4D', 'singapore': 'SINGAPORE 4D',
             'damacai_1p3d': 'DAMACAI 1+3D', 'sandakan': 'SANDAKAN 4D', 'sarawak_cashsweep': 'SARAWAK CASHSWEEP',
             'sabah': 'SABAH 88 4D', 'sabah_lotto': 'SABAH LOTTO',
-            'grand_dragon': 'GRAND DRAGON', 'singapore_toto': 'SINGAPORE TOTO',
+            'grand_dragon': 'GRAND DRAGON 豪龙',   // 修改为 "GRAND DRAGON 豪龙"
+            'singapore_toto': 'SINGAPORE TOTO',
             'sportstoto_lotto': 'SPORTS TOTO LOTTO',
             'magnum_jackpot_gold': 'MAGNUM JACKPOT GOLD',
             'sportstoto_5d': 'SPORTS TOTO 5D',
@@ -512,6 +513,11 @@
 
                 if (data.special?.length) html += `<div class="subsection"><div class="subsection-title">特别奖</div><div class="number-list">${data.special.map(n => `<span class="number-item">${n}</span>`).join('')}</div></div>`;
                 if (data.consolation?.length) html += `<div class="subsection"><div class="subsection-title">安慰奖</div><div class="number-list">${data.consolation.map(n => `<span class="number-item">${n}</span>`).join('')}</div></div>`;
+
+                // 为 grand_dragon 显示 Jackpot（如果存在）
+                if (companyKey === 'grand_dragon' && data.jackpot) {
+                    html += `<div class="subsection"><div class="subsection-title">Jackpot</div><div class="number-list"><span class="number-item">${data.jackpot}</span></div></div>`;
+                }
             }
             contentDiv.innerHTML = html;
         }
