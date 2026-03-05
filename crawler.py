@@ -55,7 +55,7 @@ def extract_global_date(soup):
         draw_no = re.sub(r"Draw No:?", "", no_text).strip()
     return date, draw_no
 
-# ---------- 4d4d.co 提取函数（保持不变）----------
+# ---------- 4d4d.co 提取函数（保持不变，但 Singapore 4D 不再使用）----------
 def extract_damacai(box, global_date, global_draw_no):
     return base_extract(box, global_date, global_draw_no)
 
@@ -66,6 +66,7 @@ def extract_toto(box, global_date, global_draw_no):
     return base_extract(box, global_date, global_draw_no)
 
 def extract_singapore(box, global_date, global_draw_no):
+    """此函数不再使用，保留作为备选"""
     data = {
         "draw_date": global_date,
         "draw_no": global_draw_no,
@@ -317,11 +318,10 @@ def extract_lotto(box):
                     break
     return star, power, supreme, jackpots
 
-# ========== 从 JSON API 获取 Singapore Toto 数据 ==========
+# ========== 从 JSON API 获取数据 ==========
 def fetch_singapore_toto_json():
     """
     从 feedsg.json API 获取 Singapore Toto 的原始 JSON 数据
-    添加时间戳参数避免缓存，并增加礼貌延时
     """
     url = "https://www.4dmoon.com/feedsg.json"
     headers = {
@@ -330,52 +330,39 @@ def fetch_singapore_toto_json():
         "Referer": "https://www.4dmoon.com/singapore-4d-results/",
         "X-Requested-With": "XMLHttpRequest",
     }
-    # 添加时间戳参数避免缓存
     timestamp = int(time.time() * 1000)
     url_with_param = f"{url}?_={timestamp}"
 
     try:
-        print(f"🌐 正在请求 Singapore Toto API: {url_with_param}")
+        print(f"🌐 正在请求 Singapore API: {url_with_param}")
         r = requests.get(url_with_param, headers=headers, timeout=15)
         print(f"  状态码: {r.status_code}")
         r.raise_for_status()
         return r.json()
     except Exception as e:
-        print(f"❌ 抓取 Singapore Toto API 失败: {e}")
+        print(f"❌ 抓取 API 失败: {e}")
         return None
 
 def extract_singapore_toto_from_api(api_data):
     """
-    将 API 返回的 JSON 数据转换为前端所需的格式
-    根据实际返回的 JSON 结构调整：顶层包含 "G" 对象，其内部有 P1-P7, JP1-JP6, JPW1-JPW6
+    从 API 的 "G" 对象提取 Singapore Toto 数据
     """
     print("🔍 解析 Singapore Toto API 数据...")
-
-    # 打印 API 返回的数据结构以便调试
-    print("📄 API 返回数据预览:")
-    print(json.dumps(api_data, indent=2, ensure_ascii=False)[:1000])
-
     data = {
         "draw_date": "",
         "draw_no": "",
         "winning_numbers": [],
         "prize_table": []
     }
-
-    # 从 "G" 对象中提取 Singapore Toto 数据
     if isinstance(api_data, dict) and "G" in api_data:
         g = api_data["G"]
-        # 提取日期，例如 "(Thu) 05-Mar-2026"
         if "DD" in g:
             raw_date = g["DD"]
             date_match = re.search(r"(\d{2}-[A-Za-z]{3}-\d{4})", raw_date)
             if date_match:
                 data["draw_date"] = parse_4dmoon_date(date_match.group(1)) or ""
-        # 提取期号，例如 "#4162"
         if "DN" in g:
-            raw_no = g["DN"]
-            data["draw_no"] = raw_no.lstrip('#')
-        # 提取开奖号码 P1 到 P7
+            data["draw_no"] = g["DN"].lstrip('#')
         winning_numbers = []
         for i in range(1, 8):
             key = f"P{i}"
@@ -383,25 +370,68 @@ def extract_singapore_toto_from_api(api_data):
                 winning_numbers.append(str(g[key]))
         if winning_numbers:
             data["winning_numbers"] = winning_numbers
-        # 提取奖金表
         prize_table = []
-        for i in range(1, 7):  # Group 1 到 Group 6
+        for i in range(1, 7):
             amount_key = f"JP{i}"
             winners_key = f"JPW{i}"
             amount = g.get(amount_key, "")
             winners = g.get(winners_key, "")
-            # 即使为空也添加行，以保持表格结构
             prize_table.append([f"Group {i}", amount, winners])
         if prize_table:
             data["prize_table"] = prize_table
     else:
         print("⚠️ API 返回数据中未找到 'G' 对象")
+    return data
 
-    # 如果数据仍然为空，打印完整结构以便手动分析
-    if not data["winning_numbers"] and not data["prize_table"]:
-        print("⚠️ 未能解析出有效数据，完整 API 响应如下：")
-        print(json.dumps(api_data, indent=2, ensure_ascii=False))
-
+def extract_singapore_4d_from_api(api_data):
+    """
+    从 API 的 "S" 对象提取 Singapore 4D 数据
+    """
+    print("🔍 解析 Singapore 4D API 数据...")
+    data = {
+        "draw_date": "",
+        "draw_no": "",
+        "1st": "",
+        "2nd": "",
+        "3rd": "",
+        "special": [],
+        "consolation": [],
+        "type": None
+    }
+    if isinstance(api_data, dict) and "S" in api_data:
+        s = api_data["S"]
+        # 日期
+        if "DD" in s:
+            raw_date = s["DD"]
+            date_match = re.search(r"(\d{2}-[A-Za-z]{3}-\d{4})", raw_date)
+            if date_match:
+                data["draw_date"] = parse_4dmoon_date(date_match.group(1)) or ""
+        # 期号
+        if "DN" in s:
+            data["draw_no"] = s["DN"].lstrip('#')
+        # 前三
+        if "P1" in s:
+            data["1st"] = s["P1"]
+        if "P2" in s:
+            data["2nd"] = s["P2"]
+        if "P3" in s:
+            data["3rd"] = s["P3"]
+        # 特别奖 S1-S10
+        special = []
+        for i in range(1, 11):
+            key = f"S{i}"
+            if key in s and s[key]:
+                special.append(s[key])
+        data["special"] = special
+        # 安慰奖 C1-C10
+        consolation = []
+        for i in range(1, 11):
+            key = f"C{i}"
+            if key in s and s[key]:
+                consolation.append(s[key])
+        data["consolation"] = consolation
+    else:
+        print("⚠️ API 返回数据中未找到 'S' 对象")
     return data
 
 # ---------- 保存 JSON 和索引更新 ----------
@@ -452,7 +482,7 @@ def update_dates_index():
 # ---------- 主流程 ----------
 def main():
     print("🚀 爬虫开始运行")
-    # 1. 抓取 4d4d.co 数据
+    # 1. 抓取 4d4d.co 数据（除 Singapore 4D 外）
     html_4d4d = fetch_html(URL_4D4D)
     if html_4d4d:
         soup_4d4d = BeautifulSoup(html_4d4d, "html.parser")
@@ -461,12 +491,12 @@ def main():
         outer_boxes = soup_4d4d.find_all("div", class_="outerbox")
         print(f"📦 找到 {len(outer_boxes)} 个 outerbox")
 
+        # 注意：移除了 Singapore 4D 的匹配项，现在从 API 获取
         company_matchers = [
             (re.compile(r'GRAND\s+DRAGON', re.I), 'grand_dragon', extract_grand_dragon),
             (re.compile(r'DAMACAI.*4D', re.I), 'damacai', extract_damacai),
             (re.compile(r'MAGNUM.*4D', re.I), 'magnum', extract_magnum),
             (re.compile(r'TOTO.*4D', re.I), 'toto', extract_toto),
-            (re.compile(r'SINGAPORE.*4D', re.I), 'singapore', extract_singapore),
             (re.compile(r'DA MA CAI 1\+3D', re.I), 'damacai_1p3d', extract_damacai_1p3d),
             (re.compile(r'SABAH.*88.*4D', re.I), 'sabah', extract_sabah),
             (re.compile(r'SANDAKAN.*4D', re.I), 'sandakan', extract_sandakan),
@@ -515,19 +545,26 @@ def main():
         if missing:
             print(f"ℹ️ 以下公司当天无数据: {', '.join(missing)}")
 
-    # 2. 从 API 获取 Singapore Toto
-    print("\n🌙 正在从 API 抓取 Singapore Toto...")
-    # 添加礼貌延时，避免请求过快
-    time.sleep(1)
-    toto_json = fetch_singapore_toto_json()
-    if toto_json:
-        toto_data = extract_singapore_toto_from_api(toto_json)
+    # 2. 从 API 获取 Singapore 4D 和 Singapore Toto
+    print("\n🌙 正在从 API 抓取 Singapore 数据...")
+    time.sleep(1)  # 礼貌延时
+    api_json = fetch_singapore_toto_json()
+    if api_json:
+        # 处理 Singapore 4D (S)
+        sg4d_data = extract_singapore_4d_from_api(api_json)
+        if sg4d_data:
+            save_json('singapore', sg4d_data)
+        else:
+            print("⚠️ Singapore 4D 数据为空")
+
+        # 处理 Singapore Toto (G)
+        toto_data = extract_singapore_toto_from_api(api_json)
         if toto_data and (toto_data['winning_numbers'] or toto_data['prize_table']):
             save_json('singapore_toto', toto_data)
         else:
             print("⚠️ Singapore Toto 数据为空")
     else:
-        print("❌ 无法获取 Singapore Toto API 数据")
+        print("❌ 无法获取 API 数据，Singapore 4D 和 Toto 将缺失")
 
     update_dates_index()
 
