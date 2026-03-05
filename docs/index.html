@@ -137,6 +137,14 @@
         .calendar-month-year {
             font-size: 1.1rem;
         }
+
+        /* 新增样式：用于 Jackpot 标签（普通文本，加粗） */
+        .jackpot-label {
+            font-weight: 600;
+            margin: 4px 0 2px 0;
+            color: #2c3e50;
+            font-size: 0.95rem;
+        }
     </style>
 </head>
 <body>
@@ -433,11 +441,15 @@
                     if (data.star && data.star.length) {
                         html += `<div class="subsection"><div class="subsection-title">Star Toto</div>`;
                         html += `<div class="number-list">${data.star.map(n => `<span class="number-item">${n}</span>`).join('')}</div>`;
+                        // Jackpot 1
                         if (starJackpots.length >= 1) {
-                            html += `<div style="margin-top: 8px;"><span class="number-item">Jackpot 1 ${starJackpots[0]}</span></div>`;
+                            html += `<div class="jackpot-label">Jackpot 1 RM</div>`;
+                            html += `<div class="number-list"><span class="number-item">${starJackpots[0]}</span></div>`;
                         }
+                        // Jackpot 2
                         if (starJackpots.length >= 2) {
-                            html += `<div style="margin-top: 4px;"><span class="number-item">Jackpot 2 ${starJackpots[1]}</span></div>`;
+                            html += `<div class="jackpot-label">Jackpot 2 RM</div>`;
+                            html += `<div class="number-list"><span class="number-item">${starJackpots[1]}</span></div>`;
                         }
                         html += `</div>`;
                     }
@@ -447,7 +459,10 @@
                         html += `<div class="subsection"><div class="subsection-title">Power Toto</div>`;
                         html += `<div class="number-list">${data.power.map(n => `<span class="number-item">${n}</span>`).join('')}</div>`;
                         if (powerJackpot) {
-                            html += `<div style="margin-top: 8px;"><span class="number-item">Jackpot ${powerJackpot}</span></div>`;
+                            html += `<div class="jackpot-label">Jackpot RM</div>`;
+                            html += `<div class="number-list"><span class="number-item">${powerJackpot}</span></div>`;
+                        } else {
+                            html += `<div class="number-list"><span class="number-item">Jackpot RM------</span></div>`;
                         }
                         html += `</div>`;
                     }
@@ -457,7 +472,10 @@
                         html += `<div class="subsection"><div class="subsection-title">Supreme Toto</div>`;
                         html += `<div class="number-list">${data.supreme.map(n => `<span class="number-item">${n}</span>`).join('')}</div>`;
                         if (supremeJackpot) {
-                            html += `<div style="margin-top: 8px;"><span class="number-item">Jackpot ${supremeJackpot}</span></div>`;
+                            html += `<div class="jackpot-label">Jackpot RM</div>`;
+                            html += `<div class="number-list"><span class="number-item">${supremeJackpot}</span></div>`;
+                        } else {
+                            html += `<div class="number-list"><span class="number-item">Jackpot RM------</span></div>`;
                         }
                         html += `</div>`;
                     }
