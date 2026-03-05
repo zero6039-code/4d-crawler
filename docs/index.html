@@ -166,7 +166,7 @@
         </div>
         
         <div class="draw-info">
-            <span><strong>日期：</strong> <span id="draw_date">--</span></span>
+            <span id="draw_date">--</span>
             <button class="refresh-btn" id="refresh-btn" onclick="forceRefresh()">刷新</button>
         </div>
 
@@ -214,11 +214,29 @@
             'sabah_lotto'
         ];
 
-        let availableDates = [];           
+        let availableDates = [];           // 存储 YYYY-MM-DD 格式的日期数组（从新到旧）
         let availableDatesSet = new Set(); 
         let selectedDate = null;           
 
-        // ==================== 工具函数 (日期排序) ====================
+        // ==================== 工具函数 (日期转换) ====================
+        function ymdToDmy(ymd) {
+            if (!ymd) return '';
+            let parts = ymd.split('-');
+            if (parts.length === 3) {
+                return `${parts[2]}-${parts[1]}-${parts[0]}`;
+            }
+            return ymd;
+        }
+
+        function dmyToYmd(dmy) {
+            if (!dmy) return '';
+            let parts = dmy.split('-');
+            if (parts.length === 3) {
+                return `${parts[2]}-${parts[1]}-${parts[0]}`;
+            }
+            return dmy;
+        }
+
         function parseDMY(dateStr) {
             let parts = dateStr.split('-');
             let d, m, y;
@@ -239,12 +257,6 @@
             return dates.sort((a, b) => toSortKey(b) - toSortKey(a));
         }
 
-        // 将 DD-MM-YYYY 转换为 YYYY-MM-DD
-        function dmyToYmd(dmy) {
-            let [d, m, y] = dmy.split('-');
-            return `${y}-${m}-${d}`;
-        }
-
         // ==================== 日期选择器功能 ====================
         function toggleDateDropdown() {
             document.getElementById('date-dropdown').classList.toggle('show');
@@ -256,7 +268,7 @@
                 const res = await fetch(`data/dates.json?t=${Date.now()}`, { cache: 'no-store' });
                 if (res.ok) {
                     let dates = await res.json();
-                    availableDates = sortDatesDesc(dates);
+                    availableDates = sortDatesDesc(dates); // YYYY-MM-DD 格式
                     availableDatesSet = new Set(availableDates);
                 }
             } catch (e) { console.warn('无法加载 dates.json', e); }
@@ -267,7 +279,8 @@
         function updateDateBtnWithLatest() {
             const btnSpan = document.getElementById('selected-date');
             if (availableDates.length > 0) {
-                btnSpan.innerText = selectedDate || availableDates[0];
+                // 按钮上显示当前选中的日期（转换为 DD-MM-YYYY）
+                btnSpan.innerText = selectedDate ? ymdToDmy(selectedDate) : ymdToDmy(availableDates[0]);
             } else {
                 btnSpan.innerText = '暂无数据';
             }
@@ -283,13 +296,15 @@
             let html = '<div class="date-option" onclick="selectDate(null)">📌 最新数据</div>';
             recentDates.forEach(date => {
                 const activeClass = (selectedDate === date) ? 'active' : '';
-                html += `<div class="date-option ${activeClass}" onclick="selectDate('${date}')">📅 ${date}</div>`;
+                // 下拉选项中显示 DD-MM-YYYY
+                const displayDate = ymdToDmy(date);
+                html += `<div class="date-option ${activeClass}" onclick="selectDate('${date}')">📅 ${displayDate}</div>`;
             });
             content.innerHTML = html;
         }
 
         function selectDate(date) {
-            selectedDate = date;
+            selectedDate = date; // 内部保持 YYYY-MM-DD
             updateDateBtnWithLatest();
             document.getElementById('date-dropdown').classList.remove('show');
             document.getElementById('date-btn').classList.remove('active');
@@ -448,7 +463,6 @@
             let drawNoStr = data.draw_no || '';
             // 如果 grand_dragon 的日期为空，尝试从其他字段获取（备用）
             if (companyKey === 'grand_dragon' && !dateStr) {
-                // 尝试常见字段名
                 dateStr = data.date || data.drawDate || data.drawdate || '';
                 if (!dateStr) {
                     console.warn('GRAND DRAGON 数据缺少 draw_date 字段', data);
@@ -526,7 +540,6 @@
                     }
                 } 
                 else if (companyKey === 'sabah_lotto') {
-                    // Sabah Lotto 显示格式：开奖号码 + 两个 Jackpot
                     if (data.winning_numbers && data.winning_numbers.length) {
                         html += `<div class="subsection"><div class="subsection-title">开奖号码</div><div class="number-list">${data.winning_numbers.map(n => `<span class="number-item">${n}</span>`).join('')}</div></div>`;
                     }
@@ -550,7 +563,6 @@
                 }
             } else {
                 // 普通公司渲染（包括 grand_dragon）
-                // 奖项部分
                 html = `
                     <div class="prize-grid" style="flex-direction:column;align-items:center;">
                         <div class="prize-card" style="width:220px;margin-bottom:8px;"><div class="label">1st Prize</div><div class="number">${data['1st'] || '----'}</div></div>
@@ -560,7 +572,6 @@
                         </div>
                     </div>`;
 
-                // 如果是 Sabah 且有 3D 数据，显示 3D 部分
                 if (companyKey === 'sabah' && data['3d'] && (data['3d']['1st'] || data['3d']['2nd'] || data['3d']['3rd'])) {
                     html += `<div class="subsection"><div class="subsection-title">3D</div>`;
                     html += `<div style="display:flex;gap:8px;justify-content:center;">`;
@@ -573,7 +584,6 @@
                 if (data.special?.length) html += `<div class="subsection"><div class="subsection-title">特别奖</div><div class="number-list">${data.special.map(n => `<span class="number-item">${n}</span>`).join('')}</div></div>`;
                 if (data.consolation?.length) html += `<div class="subsection"><div class="subsection-title">安慰奖</div><div class="number-list">${data.consolation.map(n => `<span class="number-item">${n}</span>`).join('')}</div></div>`;
 
-                // 为 grand_dragon 显示 Jackpot（如果存在）
                 if (companyKey === 'grand_dragon' && data.jackpot) {
                     html += `<div class="subsection"><div class="subsection-title">Jackpot</div><div class="number-list"><span class="number-item">${data.jackpot}</span></div></div>`;
                 }
@@ -592,7 +602,14 @@
                 if (data) successCount++;
             });
             const firstValid = results.find(d => d?.draw_date);
-            document.getElementById('draw_date').innerText = firstValid ? firstValid.draw_date : (selectedDate || '--');
+            // 顶部 draw_date 显示当前所选日期（如果有 selectedDate）或最新日期，格式为 DD-MM-YYYY
+            if (selectedDate) {
+                document.getElementById('draw_date').innerText = ymdToDmy(selectedDate);
+            } else if (availableDates.length > 0) {
+                document.getElementById('draw_date').innerText = ymdToDmy(availableDates[0]);
+            } else {
+                document.getElementById('draw_date').innerText = '--';
+            }
             statusText.innerHTML = `<span class="status-indicator ${successCount > 0 ? 'success' : 'error'}"></span>${successCount}/${COMPANY_LIST.length} 公司已更新`;
             document.getElementById('update-time').innerText = new Date().toLocaleString();
         }
