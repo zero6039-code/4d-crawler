@@ -317,11 +317,11 @@ def extract_lotto(box):
                     break
     return star, power, supreme, jackpots
 
-# ========== 改进后的 GDLOTTO 豪龙提取函数 ==========
+# ========== 修复后的 GDLOTTO 豪龙提取函数 ==========
 def extract_gd_lotto_from_4dlatest(soup):
     """
     从 https://4dlatest.org/ 提取 GDLOTTO 豪龙数据
-    正确区分特别奖和安慰奖
+    正确区分特别奖和安慰奖，并确保提取日期
     """
     print("🔍 正在从 4dlatest.org 提取 GDLOTTO 豪龙数据...")
     data = {
@@ -349,14 +349,28 @@ def extract_gd_lotto_from_4dlatest(soup):
 
     # 提取日期（通常在标题行中）
     header_text = header.get_text()
+    print(f"📅 标题文本: {header_text}")
+
+    # 尝试多种日期格式：DD/MM/YYYY 或 DD-MM-YYYY
     date_match = re.search(r"(\d{2}/\d{2}/\d{4})", header_text)
+    if not date_match:
+        date_match = re.search(r"(\d{2}-\d{2}-\d{4})", header_text)
     if date_match:
         try:
-            d = datetime.strptime(date_match.group(1), "%d/%m/%Y")
+            # 将日期转换为 DD-MM-YYYY 格式存储
+            raw_date = date_match.group(1).replace('/', '-')
+            # 验证日期有效性
+            d = datetime.strptime(raw_date, "%d-%m-%Y")
             data["draw_date"] = d.strftime("%d-%m-%Y")
             print(f"  提取到日期: {data['draw_date']}")
-        except:
-            pass
+        except Exception as e:
+            print(f"  日期解析失败: {e}")
+
+    # 提取期号（如果有，格式如 #4165/26 或 4165/26）
+    no_match = re.search(r"#?(\d+/\d+)", header_text)
+    if no_match:
+        data["draw_no"] = no_match.group(1)
+        print(f"  提取到期号: {data['draw_no']}")
 
     rows = table.find_all("tr")
     special_mode = False
