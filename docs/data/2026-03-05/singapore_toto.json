@@ -1,7 +1,15 @@
 {
-  "draw_date": "",
-  "draw_no": "",
-  "winning_numbers": [],
+  "draw_date": "05-03-2026",
+  "draw_no": "4162",
+  "winning_numbers": [
+    "1",
+    "5",
+    "12",
+    "15",
+    "22",
+    "42",
+    "37"
+  ],
   "prize_table": [
     [
       "Group 1",
