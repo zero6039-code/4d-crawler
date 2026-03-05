@@ -4,6 +4,11 @@
   "winning_numbers": [],
   "prize_table": [
     [
+      "+Prize GroupShare Amount\r\n\t\t\t\t\t\t\t\t\t(Each)No. of Winning\r\n\t\t\t\t\t\t\t\t\tSharesGroup 1Group 2Group 3Group 4Group 5Group 6",
+      "",
+      ""
+    ],
+    [
       "Prize Group",
       "Share Amount\r\n\t\t\t\t\t\t\t\t\t(Each)",
       "No. of Winning\r\n\t\t\t\t\t\t\t\t\tShares"
