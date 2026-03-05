@@ -68,11 +68,12 @@
                 white-space: normal;
             }
         }
-        /* 公司特有颜色 - 其他保持不变，grand_dragon 将单独在 JS 中处理 */
+        /* 公司特有颜色 */
         .company-section[data-company="damacai"] .company-title { background: linear-gradient(145deg, #1e5620, #2a7a2d); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .company-section[data-company="magnum"] .company-title { background: linear-gradient(145deg, #aa4a1e, #c95f2a); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .company-section[data-company="toto"] .company-title { background: linear-gradient(145deg, #b71c1c, #d32f2f); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .company-section[data-company="singapore"] .company-title { background: linear-gradient(145deg, #1e4a6b, #2c6b96); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        /* grand_dragon 使用默认渐变，不设特殊颜色 */
         .status-indicator { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
         .status-indicator.success { background: #48bb78; }
         .status-indicator.error { background: #f56565; }
@@ -144,59 +145,6 @@
             margin: 4px 0 2px 0;
             color: #2c3e50;
             font-size: 0.95rem;
-        }
-
-        /* 为 grand_dragon 定制的标题样式（将通过 JS 动态添加） */
-        .grand-dragon-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: linear-gradient(145deg, #d32f2f, #b71c1c);
-            color: white;
-            padding: 10px 16px;
-            border-radius: 12px;
-            margin-bottom: 12px;
-            position: relative;
-            overflow: hidden;
-        }
-        .grand-dragon-header .title-text {
-            font-size: 1.6rem;
-            font-weight: 800;
-            letter-spacing: 1px;
-            position: relative;
-            z-index: 2;
-        }
-        .grand-dragon-header .date-badge {
-            background: rgba(255,255,255,0.25);
-            backdrop-filter: blur(4px);
-            padding: 4px 12px;
-            border-radius: 30px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            white-space: nowrap;
-            border: 1px solid rgba(255,255,255,0.3);
-            z-index: 2;
-        }
-        .grand-dragon-header::after {
-            content: "✨";
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 3rem;
-            opacity: 0.2;
-            color: white;
-            pointer-events: none;
-            z-index: 1;
-        }
-        @media (max-width: 600px) {
-            .grand-dragon-header .title-text {
-                font-size: 1.3rem;
-            }
-            .grand-dragon-header .date-badge {
-                font-size: 0.7rem;
-                padding: 2px 8px;
-            }
         }
     </style>
 </head>
@@ -545,24 +493,12 @@
                 // 对于特殊公司，原 metaDiv 保留日期显示
                 metaDiv.innerText = `📅 日期: ${data.draw_date || '--'} | 🎟️ 期号: ${data.draw_no || '--'}`;
             } else {
-                // 普通公司渲染
-                if (companyKey === 'grand_dragon') {
-                    // 为 grand_dragon 定制头部
-                    html = `
-                        <div class="grand-dragon-header">
-                            <span class="title-text">GRAND DRAGON 豪龙</span>
-                            <span class="date-badge">📅 ${data.draw_date || '--'} | 🎟️ ${data.draw_no || '--'}</span>
-                        </div>
-                    `;
-                    // 隐藏原有的 metaDiv
-                    metaDiv.style.display = 'none';
-                } else {
-                    // 其他普通公司使用原有头部
-                    metaDiv.innerText = `📅 日期: ${data.draw_date || '--'} | 🎟️ 期号: ${data.draw_no || '--'}`;
-                }
+                // 普通公司渲染（包括 grand_dragon）
+                // 设置日期和期号
+                metaDiv.innerText = `📅 日期: ${data.draw_date || '--'} | 🎟️ 期号: ${data.draw_no || '--'}`;
 
-                // 奖项部分（所有普通公司共用）
-                html += `
+                // 奖项部分
+                html = `
                     <div class="prize-grid" style="flex-direction:column;align-items:center;">
                         <div class="prize-card" style="width:220px;margin-bottom:8px;"><div class="label">1st Prize</div><div class="number">${data['1st'] || '----'}</div></div>
                         <div style="display:flex;gap:8px;width:100%;">
