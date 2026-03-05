@@ -439,9 +439,22 @@
                 return;
             }
             
+            // 调试输出，查看数据内容
+            console.log(`更新 ${companyKey}:`, data);
+
             let html = '';
             // 构建日期显示，如果数据是后备数据，添加标记
-            let metaText = `📅 日期: ${data.draw_date || '--'} | 🎟️ 期号: ${data.draw_no || '--'}`;
+            let dateStr = data.draw_date || '';
+            let drawNoStr = data.draw_no || '';
+            // 如果 grand_dragon 的日期为空，尝试从其他字段获取（备用）
+            if (companyKey === 'grand_dragon' && !dateStr) {
+                // 尝试常见字段名
+                dateStr = data.date || data.drawDate || data.drawdate || '';
+                if (!dateStr) {
+                    console.warn('GRAND DRAGON 数据缺少 draw_date 字段', data);
+                }
+            }
+            let metaText = `📅 日期: ${dateStr || '--'} | 🎟️ 期号: ${drawNoStr || '--'}`;
             if (data._isFallback && selectedDate) {
                 metaText += ` (最近一期)`;
             }
