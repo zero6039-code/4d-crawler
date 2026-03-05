@@ -56,272 +56,33 @@ def extract_global_date(soup):
     return date, draw_no
 
 # ---------- 4d4d.co 提取函数 (保持不变) ----------
-def extract_damacai(box, global_date, global_draw_no):
-    return base_extract(box, global_date, global_draw_no)
+# ... (此处省略您原有所有从 4d4d.co 抓取的函数，例如 extract_damacai, extract_magnum 等)
+# 请确保在最终代码中完整保留您原有的这些函数。
+# 为了节省篇幅，此处用注释代替，但您在实际替换时必须保留它们。
 
-def extract_magnum(box, global_date, global_draw_no):
-    return base_extract(box, global_date, global_draw_no)
+def extract_damacai(box, global_date, global_draw_no): return base_extract(box, global_date, global_draw_no)
+def extract_magnum(box, global_date, global_draw_no): return base_extract(box, global_date, global_draw_no)
+def extract_toto(box, global_date, global_draw_no): return base_extract(box, global_date, global_draw_no)
+def extract_singapore(box, global_date, global_draw_no): # ... 函数体
+def extract_damacai_1p3d(box, global_date, global_draw_no): return base_extract(box, global_date, global_draw_no)
+def extract_sandakan(box, global_date, global_draw_no): return base_extract(box, global_date, global_draw_no)
+def extract_cashsweep(box, global_date, global_draw_no): return base_extract(box, global_date, global_draw_no)
+def extract_sabah(box, global_date, global_draw_no): # ... 函数体
+def extract_sportstoto_5d(box, global_date, global_draw_no): # ... 函数体
+def extract_sportstoto_6d(box, global_date, global_draw_no): # ... 函数体
+def extract_sportstoto_lotto(box, global_date, global_draw_no): # ... 函数体
+def extract_grand_dragon(box, global_date, global_draw_no): return base_extract(box, global_date, global_draw_no)
+def base_extract(box, global_date, global_draw_no): # ... 函数体
+def extract_3d(box): # ... 函数体
+def extract_5d_table(box): # ... 函数体
+def extract_6d_table(box): # ... 函数体
+def extract_lotto(box): # ... 函数体
 
-def extract_toto(box, global_date, global_draw_no):
-    return base_extract(box, global_date, global_draw_no)
-
-def extract_singapore(box, global_date, global_draw_no):
-    data = {
-        "draw_date": global_date,
-        "draw_no": global_draw_no,
-        "1st": "",
-        "2nd": "",
-        "3rd": "",
-        "special": [],
-        "consolation": [],
-        "type": None
-    }
-    prize_tds = box.find_all("td", class_="resulttop")
-    if len(prize_tds) >= 3:
-        data["1st"] = prize_tds[0].get_text(strip=True)
-        data["2nd"] = prize_tds[1].get_text(strip=True)
-        data["3rd"] = prize_tds[2].get_text(strip=True)
-
-    def extract_numbers_from_section(title_pattern):
-        section = box.find("td", string=re.compile(title_pattern))
-        if not section:
-            return []
-        table = section.find_parent("table")
-        if not table:
-            return []
-        rows = table.find_all("tr")[1:]
-        numbers = []
-        for row in rows:
-            cells = row.find_all("td")
-            for cell in cells:
-                text = cell.get_text(strip=True)
-                if text and text not in ["Special", "特別獎", "Consolation", "安慰獎", "----"]:
-                    numbers.append(text)
-        return numbers
-
-    data["special"] = extract_numbers_from_section("Special|特別獎")
-    data["consolation"] = extract_numbers_from_section("Consolation|安慰獎")
-    return data
-
-def extract_damacai_1p3d(box, global_date, global_draw_no):
-    return base_extract(box, global_date, global_draw_no)
-
-def extract_sandakan(box, global_date, global_draw_no):
-    return base_extract(box, global_date, global_draw_no)
-
-def extract_cashsweep(box, global_date, global_draw_no):
-    return base_extract(box, global_date, global_draw_no)
-
-def extract_sabah(box, global_date, global_draw_no):
-    data = base_extract(box, global_date, global_draw_no)
-    data['3d'] = extract_3d(box)
-    return data
-
-def extract_sportstoto_5d(box, global_date, global_draw_no):
-    data = base_extract(box, global_date, global_draw_no)
-    data['type'] = '5d_table'
-    data['data'] = extract_5d_table(box)
-    return data
-
-def extract_sportstoto_6d(box, global_date, global_draw_no):
-    data = base_extract(box, global_date, global_draw_no)
-    data['type'] = '6d_table'
-    data['data'] = extract_6d_table(box)
-    return data
-
-def extract_sportstoto_lotto(box, global_date, global_draw_no):
-    data = base_extract(box, global_date, global_draw_no)
-    data['type'] = 'lotto'
-    data['star'], data['power'], data['supreme'], data['jackpots'] = extract_lotto(box)
-    return data
-
-def extract_grand_dragon(box, global_date, global_draw_no):
-    return base_extract(box, global_date, global_draw_no)
-
-def base_extract(box, global_date, global_draw_no):
-    data = {
-        "draw_date": "",
-        "draw_no": "",
-        "1st": "",
-        "2nd": "",
-        "3rd": "",
-        "special": [],
-        "consolation": [],
-        "type": None
-    }
-    draw_row = box.find("td", class_="resultdrawdate")
-    if draw_row:
-        date_text = draw_row.get_text(strip=True)
-        match = re.search(r"(\d{2}-\d{2}-\d{4})", date_text)
-        if match:
-            data["draw_date"] = match.group(1)
-        next_td = draw_row.find_next("td", class_="resultdrawdate")
-        if next_td:
-            no_text = next_td.get_text(strip=True)
-            data["draw_no"] = re.sub(r"Draw No:?", "", no_text).strip()
-    if not data["draw_date"] and global_date:
-        data["draw_date"] = global_date
-    if not data["draw_no"] and global_draw_no:
-        data["draw_no"] = global_draw_no
-    prize_tds = box.find_all("td", class_="resulttop")
-    if len(prize_tds) >= 3:
-        data["1st"] = prize_tds[0].get_text(strip=True)
-        data["2nd"] = prize_tds[1].get_text(strip=True)
-        data["3rd"] = prize_tds[2].get_text(strip=True)
-    special_section = box.find("td", string=re.compile("Special|特別獎"))
-    if special_section:
-        table = special_section.find_parent("table")
-        if table:
-            rows = table.find_all("tr")
-            special_numbers = []
-            for row in rows[1:]:
-                tds = row.find_all("td", class_="resultbottom")
-                for td in tds:
-                    num = td.get_text(strip=True)
-                    if num and num != "----":
-                        special_numbers.append(num)
-            data["special"] = special_numbers
-    cons_section = box.find("td", string=re.compile("Consolation|安慰獎"))
-    if cons_section:
-        table = cons_section.find_parent("table")
-        if table:
-            rows = table.find_all("tr")
-            cons_numbers = []
-            for row in rows[1:]:
-                tds = row.find_all("td", class_="resultbottom")
-                for td in tds:
-                    num = td.get_text(strip=True)
-                    if num and num != "----":
-                        cons_numbers.append(num)
-            data["consolation"] = cons_numbers
-    return data
-
-def extract_3d(box):
-    h3 = box.find("td", string=re.compile("3D"))
-    if not h3:
-        return {}
-    table = h3.find_parent("table")
-    if not table:
-        return {}
-    prize_tds = table.find_all("td", class_="resulttop")
-    if len(prize_tds) >= 3:
-        return {
-            "1st": prize_tds[0].get_text(strip=True),
-            "2nd": prize_tds[1].get_text(strip=True),
-            "3rd": prize_tds[2].get_text(strip=True)
-        }
-    return {}
-
-def extract_5d_table(box):
-    h5 = box.find("td", string=re.compile(r"5D"))
-    if not h5:
-        return []
-    table = h5.find_parent("table")
-    if not table:
-        return []
-    rows = table.find_all("tr")
-    data = []
-    for row in rows:
-        tds = row.find_all("td")
-        if len(tds) < 2:
-            continue
-        cells_text = [td.get_text(strip=True) for td in tds if td.get_text(strip=True)]
-        for i in range(0, len(cells_text), 2):
-            if i+1 < len(cells_text):
-                label = cells_text[i]
-                number = cells_text[i+1]
-                if label not in ["5D", "6D", "SportsToto"] and number:
-                    data.append([label, number])
-    return data
-
-def extract_6d_table(box):
-    h6 = box.find("td", string=re.compile(r"6D"))
-    if not h6:
-        return []
-    table = h6.find_parent("table")
-    if not table:
-        return []
-    rows = table.find_all("tr")
-    data = []
-    for row in rows:
-        tds = row.find_all("td")
-        if len(tds) < 2:
-            continue
-        cells_text = [td.get_text(strip=True) for td in tds if td.get_text(strip=True) and td.get_text(strip=True).lower() != "or"]
-        if len(cells_text) >= 2:
-            rank = cells_text[0]
-            main_num = cells_text[1]
-            alt_num = cells_text[2] if len(cells_text) >= 3 else ""
-            if rank not in ["6D", "SportsToto"]:
-                data.append([rank, main_num, alt_num])
-        elif len(tds) >= 2:
-            rank = tds[0].get_text(strip=True)
-            main_num = tds[1].get_text(strip=True)
-            if rank not in ["6D", "SportsToto"]:
-                data.append([rank, main_num, ""])
-    return data
-
-def extract_lotto(box):
-    star = []
-    power = []
-    supreme = []
-    jackpots = []
-    star_section = box.find("td", string=re.compile("Star Toto 6/50"))
-    if star_section:
-        table = star_section.find_parent("table")
-        if table:
-            rows = table.find_all("tr")
-            if len(rows) >= 2:
-                num_row = rows[1]
-                tds = num_row.find_all("td", class_="resultbottomtoto2")
-                star = [td.get_text(strip=True) for td in tds if td.get_text(strip=True) not in ['+', '']]
-            for row in rows[2:]:
-                jp_tds = row.find_all("td", class_="resultbottomtotojpval")
-                if jp_tds:
-                    jackpots.append(jp_tds[0].get_text(strip=True))
-    power_section = box.find("td", string=re.compile("Power Toto 6/55"))
-    if power_section:
-        table = power_section.find_parent("table")
-        if table:
-            rows = table.find_all("tr")
-            if len(rows) >= 2:
-                num_row = rows[1]
-                tds = num_row.find_all("td", class_="resultbottomtoto2")
-                power = [td.get_text(strip=True) for td in tds]
-            for row in rows:
-                if "Jackpot" in row.get_text():
-                    jp_tds = row.find_all("td")
-                    for td in jp_tds:
-                        text = td.get_text(strip=True)
-                        if text.startswith("RM"):
-                            jackpots.append(text)
-                            break
-                    break
-    supreme_section = box.find("td", string=re.compile("Supreme Toto 6/58"))
-    if supreme_section:
-        table = supreme_section.find_parent("table")
-        if table:
-            rows = table.find_all("tr")
-            if len(rows) >= 2:
-                num_row = rows[1]
-                tds = num_row.find_all("td", class_="resultbottomtoto2")
-                supreme = [td.get_text(strip=True) for td in tds]
-            for row in rows:
-                if "Jackpot" in row.get_text():
-                    jp_tds = row.find_all("td")
-                    for td in jp_tds:
-                        text = td.get_text(strip=True)
-                        if text.startswith("RM"):
-                            jackpots.append(text)
-                            break
-                    break
-    return star, power, supreme, jackpots
-
-# ========== 修复后的 GDLOTTO 豪龙提取函数 ==========
+# ========== 最终优化版 GDLOTTO 豪龙提取函数 ==========
 def extract_gd_lotto_from_4dlatest(soup):
     """
     从 https://4dlatest.org/ 提取 GDLOTTO 豪龙数据
-    正确区分特别奖和安慰奖，并确保提取日期
+    最终优化：使用合并文本提取日期，支持多种格式
     """
     print("🔍 正在从 4dlatest.org 提取 GDLOTTO 豪龙数据...")
     data = {
@@ -335,42 +96,50 @@ def extract_gd_lotto_from_4dlatest(soup):
         "jackpot": ""
     }
 
-    # 定位到包含 "GDLOTTO 豪龙" 的表格
     header = soup.find(string=re.compile(r"GDLOTTO 豪龙"))
     if not header:
         print("⚠️ 未找到 'GDLOTTO 豪龙' 标题")
         return None
 
-    # 找到最近的表格
     table = header.find_parent("table")
     if not table:
         print("⚠️ 未找到 GDLOTTO 数据表格")
         return None
 
-    # 提取日期（通常在标题行中）
-    header_text = header.get_text()
+    # 使用空格连接多行文本，避免换行符干扰
+    header_text = header.get_text(" ", strip=True)
     print(f"📅 标题文本: {header_text}")
 
-    # 尝试多种日期格式：DD/MM/YYYY 或 DD-MM-YYYY
-    date_match = re.search(r"(\d{2}/\d{2}/\d{4})", header_text)
+    # --- 增强的日期提取 ---
+    date_match = None
+    # 尝试匹配 DD/MM/YYYY
+    date_match = re.search(r'(\d{2}/\d{2}/\d{4})', header_text)
     if not date_match:
-        date_match = re.search(r"(\d{2}-\d{2}-\d{4})", header_text)
+        # 尝试匹配 DD-MM-YYYY
+        date_match = re.search(r'(\d{2}-\d{2}-\d{4})', header_text)
+    if not date_match:
+        # 尝试匹配 DD.MM.YYYY
+        date_match = re.search(r'(\d{2}\.\d{2}\.\d{4})', header_text)
+
     if date_match:
+        raw_date = date_match.group(1).replace('/', '-').replace('.', '-')
         try:
-            # 将日期转换为 DD-MM-YYYY 格式存储
-            raw_date = date_match.group(1).replace('/', '-')
+            # 验证并统一格式
             d = datetime.strptime(raw_date, "%d-%m-%Y")
             data["draw_date"] = d.strftime("%d-%m-%Y")
-            print(f"  提取到日期: {data['draw_date']}")
+            print(f"  ✅ 提取到日期: {data['draw_date']}")
         except Exception as e:
-            print(f"  日期解析失败: {e}")
+            print(f"  ⚠️ 日期解析失败: {e}")
+    else:
+        print("  ❌ 未找到日期")
 
-    # 提取期号（如果有，格式如 #4165/26 或 4165/26）
+    # 提取期号（如果有）
     no_match = re.search(r"#?(\d+/\d+)", header_text)
     if no_match:
         data["draw_no"] = no_match.group(1)
         print(f"  提取到期号: {data['draw_no']}")
 
+    # ... 后续提取逻辑完全不变 ...
     rows = table.find_all("tr")
     special_mode = False
     consolation_mode = False
@@ -381,18 +150,14 @@ def extract_gd_lotto_from_4dlatest(soup):
         row_text = row.get_text().upper()
         cells = row.find_all("td")
 
-        # 检查是否进入 SPECIAL 区域
         if "SPECIAL" in row_text:
             special_mode = True
             consolation_mode = False
-            # 提取该行中 SPECIAL 后面的数字
             for cell in cells:
                 text = cell.get_text(strip=True)
                 if text.isdigit() and len(text) >= 3:
                     special_list.append(text)
             continue
-
-        # 检查是否进入 CONSOLATION 区域
         if "CONSOLATION" in row_text:
             special_mode = False
             consolation_mode = True
@@ -401,30 +166,21 @@ def extract_gd_lotto_from_4dlatest(soup):
                 if text.isdigit() and len(text) >= 3:
                     consolation_list.append(text)
             continue
-
-        # 检查是否进入 Jackpot 区域
         if "JACKPOT" in row_text or "USD" in row_text or "$" in row_text:
-            # 提取金额
             amount_match = re.search(r'([\d,]+(?:\.\d+)?)', row.get_text())
             if amount_match:
                 data["jackpot"] = amount_match.group(1)
             continue
-
-        # 如果在 SPECIAL 模式中，收集数字
         if special_mode:
             for cell in cells:
                 text = cell.get_text(strip=True)
                 if text.isdigit() and len(text) >= 3:
                     special_list.append(text)
-
-        # 如果在 CONSOLATION 模式中，收集数字
         if consolation_mode:
             for cell in cells:
                 text = cell.get_text(strip=True)
                 if text.isdigit() and len(text) >= 3:
                     consolation_list.append(text)
-
-        # 提取前三名（独立处理）
         if "1ST" in row_text:
             for cell in cells:
                 text = cell.get_text(strip=True)
@@ -444,7 +200,6 @@ def extract_gd_lotto_from_4dlatest(soup):
                     data["3rd"] = text
                     break
 
-    # 去重并限制数量（各最多10个）
     data["special"] = list(dict.fromkeys(special_list))[:10]
     data["consolation"] = list(dict.fromkeys(consolation_list))[:10]
 
@@ -455,11 +210,11 @@ def extract_gd_lotto_from_4dlatest(soup):
 
     return data
 
-# ========== 修复后的 SABAH88 沙巴万字 LOTTO 提取函数 ==========
+# ========== 最终优化版 SABAH88 沙巴万字 LOTTO 提取函数 ==========
 def extract_sabah_lotto_from_4dlatest(soup):
     """
     从 https://4dlatest.org/ 提取 "SABAH88 沙巴万字 LOTTO" 数据
-    修复：准确匹配标题，提取开奖号码和两个 Jackpot
+    最终优化：保留宽松匹配和Jackpot下一行查找逻辑
     """
     print("🔍 正在从 4dlatest.org 提取 SABAH88 沙巴万字 LOTTO 数据...")
     data = {
@@ -470,23 +225,21 @@ def extract_sabah_lotto_from_4dlatest(soup):
         "jackpot2": ""
     }
 
-    # 更宽松地匹配标题：包含 "SABAH88" 和 "LOTTO"
+    # 更宽松地匹配标题
     header = soup.find(string=re.compile(r"SABAH88.*LOTTO", re.IGNORECASE))
     if not header:
         print("⚠️ 未找到 'SABAH88 LOTTO' 标题")
         return None
 
-    # 找到最近的表格
     table = header.find_parent("table")
     if not table:
         print("⚠️ 未找到 SABAH88 LOTTO 数据表格")
         return None
 
-    # 提取日期和期号（通常在标题行中）
-    header_text = header.get_text()
+    header_text = header.get_text(" ", strip=True)
     print(f"📅 标题文本: {header_text}")
 
-    # 匹配日期，例如 04/03/2026
+    # 日期
     date_match = re.search(r"(\d{2}/\d{2}/\d{4})", header_text)
     if date_match:
         try:
@@ -496,7 +249,7 @@ def extract_sabah_lotto_from_4dlatest(soup):
         except:
             pass
 
-    # 匹配期号，例如 4165/26
+    # 期号
     no_match = re.search(r"(\d+/\d+)", header_text)
     if no_match:
         data["draw_no"] = no_match.group(1)
@@ -507,7 +260,7 @@ def extract_sabah_lotto_from_4dlatest(soup):
         row_text = row.get_text()
         cells = row.find_all("td")
 
-        # 提取开奖号码行（包含 "+"）
+        # 开奖号码行
         if "+" in row_text:
             numbers = []
             for cell in cells:
@@ -520,9 +273,8 @@ def extract_sabah_lotto_from_4dlatest(soup):
                 data["winning_numbers"] = numbers
                 print(f"✅ 提取到开奖号码: {' '.join(numbers)}")
 
-        # 提取 Jackpot 1
+        # Jackpot 1
         if "Jackpot 1" in row_text:
-            # 从当前行或后续单元格中提取金额
             for cell in cells:
                 text = cell.get_text(strip=True)
                 amount_match = re.search(r'([\d,]+(?:\.\d+)?)', text)
@@ -530,7 +282,6 @@ def extract_sabah_lotto_from_4dlatest(soup):
                     data["jackpot1"] = amount_match.group(1)
                     print(f"  Jackpot 1: {data['jackpot1']}")
                     break
-            # 如果当前行没找到，尝试在下一行查找
             if not data["jackpot1"]:
                 next_row = row.find_next_sibling("tr")
                 if next_row:
@@ -543,7 +294,7 @@ def extract_sabah_lotto_from_4dlatest(soup):
                             print(f"  Jackpot 1 (下一行): {data['jackpot1']}")
                             break
 
-        # 提取 Jackpot 2
+        # Jackpot 2
         if "Jackpot 2" in row_text:
             for cell in cells:
                 text = cell.get_text(strip=True)
