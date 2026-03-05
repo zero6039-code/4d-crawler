@@ -211,7 +211,8 @@
 
         const SPECIAL_COMPANIES = [
             'sportstoto_fireball', 'sportstoto_lotto', 'singapore_toto',
-            'magnum_jackpot_gold', 'sportstoto_5d', 'sportstoto_6d', 'magnum_life'
+            'magnum_jackpot_gold', 'sportstoto_5d', 'sportstoto_6d', 'magnum_life',
+            'sabah_lotto'  // 确保 sabah_lotto 在特殊公司列表中
         ];
 
         let availableDates = [];           
@@ -415,7 +416,7 @@
             
             let html = '';
             if (SPECIAL_COMPANIES.includes(companyKey)) {
-                // 特殊公司渲染（保持不变）
+                // 特殊公司渲染
                 if (companyKey === 'singapore_toto' && data.winning_numbers) {
                     html = `<div class="subsection"><div class="subsection-title">开奖号码</div><div class="number-list">${data.winning_numbers.map(n => `<span class="number-item">${n}</span>`).join('')}</div></div>`;
                     if (data.prize_table && data.prize_table.length > 0) {
@@ -479,6 +480,18 @@
                         html += `</div>`;
                     }
                 } 
+                else if (companyKey === 'sabah_lotto') {
+                    // Sabah Lotto 显示格式：开奖号码 + 两个 Jackpot
+                    if (data.winning_numbers && data.winning_numbers.length) {
+                        html += `<div class="subsection"><div class="subsection-title">开奖号码</div><div class="number-list">${data.winning_numbers.map(n => `<span class="number-item">${n}</span>`).join('')}</div></div>`;
+                    }
+                    if (data.jackpot1) {
+                        html += `<div class="subsection"><div class="subsection-title">Jackpot 1</div><div class="number-list"><span class="number-item">RM ${data.jackpot1}</span></div></div>`;
+                    }
+                    if (data.jackpot2) {
+                        html += `<div class="subsection"><div class="subsection-title">Jackpot 2</div><div class="number-list"><span class="number-item">RM ${data.jackpot2}</span></div></div>`;
+                    }
+                }
                 else if (data.data && Array.isArray(data.data)) {
                     html = data.data.map(row => {
                         if (row.length >= 3) {
