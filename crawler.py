@@ -600,55 +600,46 @@ def extract_sabah_lotto_from_4dlatest(soup):
 
     return data
 
-# ========== 从 Singapore Pools 官方获取 TOTO 数据 ==========
+# ========== 从 Singapore Pools 官方获取 TOTO 数据（增强版） ==========
 def fetch_singapore_toto_from_official():
     """
-    从 Singapore Pools 官方数据接口获取 TOTO 完整开奖数据
-    包含开奖号码和 Group 1-7 奖金分配表
-    参考: https://stackoverflow.com/questions/57714107
+    从 Singapore Pools 官方页面获取 TOTO 数据
+    使用正则表达式提取，不依赖特定 CSS 类名
     """
     print("🔍 正在从 Singapore Pools 官方获取 TOTO 数据...")
     
-    # 官方动态数据接口 - 包含最新开奖结果
-    url = "http://www.singaporepools.com.sg/DataFileArchive/Lottery/Output/toto_draw_results_en.html"
+    # 官方结果页面（可能有两个可用URL）
+    urls = [
+        "http://www.singaporepools.com.sg/DataFileArchive/Lottery/Output/toto_draw_results_en.html",
+        "https://www.singaporepools.com.sg/en/product/Pages/toto_results.aspx"
+    ]
     
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
     }
     
-    try:
-        r = requests.get(url, headers=headers, timeout=15)
-        r.raise_for_status()
-        soup = BeautifulSoup(r.text, "html.parser")
-        
-        data = {
-            "draw_date": "",
-            "draw_no": "",
-            "winning_numbers": [],
-            "prize_table": []
-        }
-        
-        # 1. 提取期号和日期
-        # 查找包含 Draw No. 的元素
-        draw_info = soup.find('div', class_='drawInfo')
-        if not draw_info:
-            # 备用：查找任何包含 "Draw No." 的文本
-            draw_info = soup.find(string=re.compile(r'Draw\s*No\.', re.I))
-            if draw_info:
-                draw_info = draw_info.parent
-        
-        if draw_info:
-            text = draw_info.get_text()
-            print(f"📄 抽奖信息: {text}")
+    data = {
+        "draw_date": "",
+        "draw_no": "",
+        "winning_numbers": [],
+        "prize_table": []
+    }
+    
+    for url in urls:
+        try:
+            print(f"🌐 尝试请求: {url}")
+            r = requests.get(url, headers=headers, timeout=15)
+            r.raise_for_status()
+            html = r.text
             
-            # 匹配 Draw No. 4162
-            no_match = re.search(r'Draw\s*No\.?\s*(\d+)', text, re.I)
-            if no_match:
-                data["draw_no"] = no_match.group(1)
+            # 1. 提取期号和日期
+            # 常见的格式: "Draw No. 4162  •  05 Mar 2026" 或 "Draw No: 4162, 05 Mar 2026"
+            draw_no_match = re.search(r'Draw\s*No\.?\s*:?\s*(\d+)', html, re.I)
+            if draw_no_match:
+                data["draw_no"] = draw_no_match.group(1)
                 print(f"  提取到期号: {data['draw_no']}")
             
-            # 匹配日期，例如 "05 Mar 2026"
-            date_match = re.search(r'(\d{1,2}\s+[A-Za-z]{3}\s+\d{4})', text)
+            date_match = re.search(r'(\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{4})', html, re.I)
             if date_match:
                 raw_date = date_match.group(1)
                 try:
@@ -657,85 +648,76 @@ def fetch_singapore_toto_from_official():
                     print(f"  提取到日期: {data['draw_date']}")
                 except Exception as e:
                     print(f"  日期解析失败: {e}")
-        
-        # 2. 提取开奖号码
-        # 查找包含号码的容器（通常 class 为 winningNumbers 或 prizeNumbers）
-        numbers_container = soup.find('div', class_='winningNumbers')
-        if not numbers_container:
-            numbers_container = soup.find('div', class_='prizeNumbers')
-        
-        if numbers_container:
+            
+            # 2. 提取开奖号码
             numbers = []
-            # 查找所有号码标签（通常是 span 或 div）
-            num_tags = numbers_container.find_all(['span', 'div'], class_=re.compile(r'number|prize', re.I))
-            if not num_tags:
-                # 如果没有特定 class，取所有 td 或 span
-                num_tags = numbers_container.find_all(['td', 'span', 'div'])
             
-            for tag in num_tags:
-                text = tag.get_text(strip=True)
-                if text.isdigit() and len(text) <= 2:  # TOTO 号码最多2位数
-                    numbers.append(text)
-                elif text == '+':
-                    pass
-            
-            # 如果找到的号码数量合理（至少6个）
-            if len(numbers) >= 6:
-                data["winning_numbers"] = numbers
-                print(f"✅ 提取到开奖号码: {' '.join(numbers)}")
+            # 尝试匹配 "1 5 12 15 22 42 + 37" 这种格式
+            number_pattern = r'(\d{1,2})\s+(\d{1,2})\s+(\d{1,2})\s+(\d{1,2})\s+(\d{1,2})\s+(\d{1,2})\s*\+\s*(\d{1,2})'
+            num_match = re.search(number_pattern, html)
+            if num_match:
+                numbers = list(num_match.groups())
+                print(f"  通过正则匹配到号码: {' '.join(numbers)}")
             else:
-                print(f"⚠️ 提取到的号码数量不足: {numbers}")
-        
-        # 3. 提取奖金分配表
-        prize_table = []
-        # 查找奖金表格
-        prize_table_elem = soup.find('table', class_='prizeTable')
-        if not prize_table_elem:
-            prize_table_elem = soup.find('table', {'summary': re.compile(r'Prize', re.I)})
-        
-        if prize_table_elem:
-            rows = prize_table_elem.find_all('tr')
-            # 跳过表头（如果有）
-            for row in rows[1:]:
-                cells = row.find_all('td')
-                if len(cells) >= 3:
-                    group = cells[0].get_text(strip=True)
-                    amount = cells[1].get_text(strip=True)
-                    winners = cells[2].get_text(strip=True)
-                    # 过滤掉空行或明显不是奖组的行
-                    if group and 'Group' in group:
-                        prize_table.append([group, amount, winners])
-        
-        # 如果没找到表格，尝试用正则直接提取页面中的奖组数据
-        if not prize_table:
-            page_text = soup.get_text()
-            # 匹配 Group 1 到 Group 7 的金额和赢家数
-            groups = []
-            for i in range(1, 8):
-                # 示例: Group 1 $1,591,682 2
-                pattern = rf'Group\s+{i}\s+\$?([\d,]+(?:\.\d+)?)?\s+([\d,]+)?'
-                match = re.search(pattern, page_text, re.I)
-                if match:
-                    amount = match.group(1) if match.group(1) else ''
-                    winners = match.group(2) if match.group(2) else ''
-                    groups.append([f"Group {i}", amount, winners])
-            if groups:
-                prize_table = groups
-        
-        data["prize_table"] = prize_table
-        
-        # 验证数据
-        if data["winning_numbers"] and len(data["prize_table"]) >= 6:
-            print(f"✅ 成功获取 TOTO 数据: 期号 {data['draw_no']}, 日期 {data['draw_date']}")
-            print(f"   奖组数量: {len(data['prize_table'])}")
-            return data
-        else:
-            print("⚠️ 获取的数据不完整")
-            return None
+                # 尝试另一种格式：可能以列表形式出现
+                all_numbers = re.findall(r'\b(\d{1,2})\b', html)
+                # 过滤掉明显不是号码的数字（如年份、期号等）
+                # 通常中奖号码在 1-49 之间
+                candidates = [n for n in all_numbers if 1 <= int(n) <= 49]
+                # 如果有至少6个且不超过8个，可能就是我们需要的
+                if len(candidates) >= 6 and len(candidates) <= 8:
+                    numbers = candidates[-7:] if len(candidates) >=7 else candidates
+                    print(f"  通过数字列表匹配到号码: {' '.join(numbers)}")
             
-    except Exception as e:
-        print(f"❌ 抓取失败: {e}")
-        return None
+            if numbers:
+                data["winning_numbers"] = numbers
+            
+            # 3. 提取奖组数据
+            prize_rows = []
+            # 查找奖组表格区域
+            # 从 "Group 1" 开始，到表格结束
+            table_section = re.search(r'Prize Group.*?(?:<table.*?</table>|$)', html, re.I | re.S)
+            if table_section:
+                table_html = table_section.group(0)
+                # 提取所有行
+                rows = re.findall(r'<tr.*?>(.*?)</tr>', table_html, re.I | re.S)
+                for row in rows:
+                    cells = re.findall(r'<t[dh].*?>(.*?)</t[dh]>', row, re.I | re.S)
+                    if len(cells) >= 3:
+                        group = re.sub(r'<.*?>', '', cells[0]).strip()
+                        amount = re.sub(r'<.*?>', '', cells[1]).strip()
+                        winners = re.sub(r'<.*?>', '', cells[2]).strip()
+                        if group and ('Group' in group or 'Prize' in group):
+                            prize_rows.append([group, amount, winners])
+            
+            # 如果没找到表格，尝试直接匹配每一组
+            if not prize_rows:
+                for i in range(1, 8):
+                    # 匹配 "Group 1 $1,591,682 2" 这种格式
+                    pattern = rf'Group\s+{i}\s*\$?([\d,]+(?:\.\d+)?)?\s*([\d,]+)?'
+                    match = re.search(pattern, html, re.I)
+                    if match:
+                        amount = match.group(1) if match.group(1) else ''
+                        winners = match.group(2) if match.group(2) else ''
+                        prize_rows.append([f"Group {i}", amount, winners])
+            
+            data["prize_table"] = prize_rows
+            
+            # 验证数据
+            if data["winning_numbers"] and len(data["prize_table"]) >= 6:
+                print(f"✅ 成功获取 TOTO 数据: 期号 {data['draw_no']}, 日期 {data['draw_date']}")
+                print(f"   奖组数量: {len(data['prize_table'])}")
+                return data
+            else:
+                print(f"⚠️ 从 {url} 获取的数据不完整，尝试下一个URL...")
+                continue
+                
+        except Exception as e:
+            print(f"❌ 从 {url} 抓取失败: {e}")
+            continue
+    
+    print("❌ 所有URL均尝试失败")
+    return None
 
 # ---------- 保存 JSON 和索引更新 ----------
 def save_json(company, data):
