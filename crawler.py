@@ -5,7 +5,6 @@ import os
 from datetime import datetime
 import re
 import time
-import subprocess  # 用于调用 npx 命令
 
 # ---------- 配置 ----------
 URL_4D4D = "https://4d4d.co/"
@@ -601,81 +600,141 @@ def extract_sabah_lotto_from_4dlatest(soup):
 
     return data
 
-# ========== 通过 asean-lottery-mcp 获取 Singapore TOTO 数据 ==========
-def fetch_singapore_toto_via_mcp():
+# ========== 从 Singapore Pools 官方获取 TOTO 数据 ==========
+def fetch_singapore_toto_from_official():
     """
-    通过免费的 asean-lottery-mcp 工具获取最新 Singapore TOTO 数据
-    需要先安装: npm install -g asean-lottery-mcp
+    从 Singapore Pools 官方数据接口获取 TOTO 完整开奖数据
+    包含开奖号码和 Group 1-7 奖金分配表
+    参考: https://stackoverflow.com/questions/57714107
     """
-    print("🔍 正在通过 asean-lottery-mcp 获取 Singapore TOTO 数据...")
+    print("🔍 正在从 Singapore Pools 官方获取 TOTO 数据...")
     
-    # 构建调用命令，获取最新开奖结果
-    # 命令: echo '{"method":"tools/call","params":{"name":"get_latest_draw_result","arguments":{"provider":"SGP"}}}' | npx -y asean-lottery-mcp
-    command = ['npx', '-y', 'asean-lottery-mcp']
+    # 官方动态数据接口 - 包含最新开奖结果
+    url = "http://www.singaporepools.com.sg/DataFileArchive/Lottery/Output/toto_draw_results_en.html"
     
-    # 构造请求的 JSON 数据
-    request_data = {
-        "jsonrpc": "2.0",
-        "id": 1,
-        "method": "tools/call",
-        "params": {
-            "name": "get_latest_draw_result",
-            "arguments": {
-                "provider": "SGP"  # SGP 是 Singapore Pools 的代码
-            }
-        }
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
     }
     
     try:
-        # 执行命令并传递输入
-        result = subprocess.run(
-            command,
-            input=json.dumps(request_data),
-            text=True,
-            capture_output=True,
-            timeout=30
-        )
+        r = requests.get(url, headers=headers, timeout=15)
+        r.raise_for_status()
+        soup = BeautifulSoup(r.text, "html.parser")
         
-        if result.returncode == 0:
-            output_data = json.loads(result.stdout)
-            # 解析返回的数据，转换为前端需要的格式
-            draw_result = output_data.get("result", {})
+        data = {
+            "draw_date": "",
+            "draw_no": "",
+            "winning_numbers": [],
+            "prize_table": []
+        }
+        
+        # 1. 提取期号和日期
+        # 查找包含 Draw No. 的元素
+        draw_info = soup.find('div', class_='drawInfo')
+        if not draw_info:
+            # 备用：查找任何包含 "Draw No." 的文本
+            draw_info = soup.find(string=re.compile(r'Draw\s*No\.', re.I))
+            if draw_info:
+                draw_info = draw_info.parent
+        
+        if draw_info:
+            text = draw_info.get_text()
+            print(f"📄 抽奖信息: {text}")
             
-            # 提取开奖日期和期号
-            # 根据实际返回结构调整，这里假设返回字段为 date, drawNo, winningNumbers, prizeTable
-            # 日期格式可能需要转换，假设返回的是 DD-MM-YYYY 或 YYYY-MM-DD
-            raw_date = draw_result.get("date", "")
-            draw_date = raw_date
-            # 尝试转换为 DD-MM-YYYY
-            if raw_date:
+            # 匹配 Draw No. 4162
+            no_match = re.search(r'Draw\s*No\.?\s*(\d+)', text, re.I)
+            if no_match:
+                data["draw_no"] = no_match.group(1)
+                print(f"  提取到期号: {data['draw_no']}")
+            
+            # 匹配日期，例如 "05 Mar 2026"
+            date_match = re.search(r'(\d{1,2}\s+[A-Za-z]{3}\s+\d{4})', text)
+            if date_match:
+                raw_date = date_match.group(1)
                 try:
-                    # 如果日期格式为 DD/MM/YYYY
-                    if '/' in raw_date:
-                        d = datetime.strptime(raw_date, "%d/%m/%Y")
-                        draw_date = d.strftime("%d-%m-%Y")
-                    # 如果日期格式为 YYYY-MM-DD
-                    elif re.match(r'\d{4}-\d{2}-\d{2}', raw_date):
-                        d = datetime.strptime(raw_date, "%Y-%m-%d")
-                        draw_date = d.strftime("%d-%m-%Y")
-                    # 如果已经是 DD-MM-YYYY
-                    else:
-                        d = datetime.strptime(raw_date, "%d-%m-%Y")
-                        draw_date = raw_date
-                except:
+                    d = datetime.strptime(raw_date, "%d %b %Y")
+                    data["draw_date"] = d.strftime("%d-%m-%Y")
+                    print(f"  提取到日期: {data['draw_date']}")
+                except Exception as e:
+                    print(f"  日期解析失败: {e}")
+        
+        # 2. 提取开奖号码
+        # 查找包含号码的容器（通常 class 为 winningNumbers 或 prizeNumbers）
+        numbers_container = soup.find('div', class_='winningNumbers')
+        if not numbers_container:
+            numbers_container = soup.find('div', class_='prizeNumbers')
+        
+        if numbers_container:
+            numbers = []
+            # 查找所有号码标签（通常是 span 或 div）
+            num_tags = numbers_container.find_all(['span', 'div'], class_=re.compile(r'number|prize', re.I))
+            if not num_tags:
+                # 如果没有特定 class，取所有 td 或 span
+                num_tags = numbers_container.find_all(['td', 'span', 'div'])
+            
+            for tag in num_tags:
+                text = tag.get_text(strip=True)
+                if text.isdigit() and len(text) <= 2:  # TOTO 号码最多2位数
+                    numbers.append(text)
+                elif text == '+':
                     pass
-
-            return {
-                "draw_date": draw_date,
-                "draw_no": draw_result.get("drawNo", ""),
-                "winning_numbers": draw_result.get("winningNumbers", []),
-                "prize_table": draw_result.get("prizeTable", [])
-            }
+            
+            # 如果找到的号码数量合理（至少6个）
+            if len(numbers) >= 6:
+                data["winning_numbers"] = numbers
+                print(f"✅ 提取到开奖号码: {' '.join(numbers)}")
+            else:
+                print(f"⚠️ 提取到的号码数量不足: {numbers}")
+        
+        # 3. 提取奖金分配表
+        prize_table = []
+        # 查找奖金表格
+        prize_table_elem = soup.find('table', class_='prizeTable')
+        if not prize_table_elem:
+            prize_table_elem = soup.find('table', {'summary': re.compile(r'Prize', re.I)})
+        
+        if prize_table_elem:
+            rows = prize_table_elem.find_all('tr')
+            # 跳过表头（如果有）
+            for row in rows[1:]:
+                cells = row.find_all('td')
+                if len(cells) >= 3:
+                    group = cells[0].get_text(strip=True)
+                    amount = cells[1].get_text(strip=True)
+                    winners = cells[2].get_text(strip=True)
+                    # 过滤掉空行或明显不是奖组的行
+                    if group and 'Group' in group:
+                        prize_table.append([group, amount, winners])
+        
+        # 如果没找到表格，尝试用正则直接提取页面中的奖组数据
+        if not prize_table:
+            page_text = soup.get_text()
+            # 匹配 Group 1 到 Group 7 的金额和赢家数
+            groups = []
+            for i in range(1, 8):
+                # 示例: Group 1 $1,591,682 2
+                pattern = rf'Group\s+{i}\s+\$?([\d,]+(?:\.\d+)?)?\s+([\d,]+)?'
+                match = re.search(pattern, page_text, re.I)
+                if match:
+                    amount = match.group(1) if match.group(1) else ''
+                    winners = match.group(2) if match.group(2) else ''
+                    groups.append([f"Group {i}", amount, winners])
+            if groups:
+                prize_table = groups
+        
+        data["prize_table"] = prize_table
+        
+        # 验证数据
+        if data["winning_numbers"] and len(data["prize_table"]) >= 6:
+            print(f"✅ 成功获取 TOTO 数据: 期号 {data['draw_no']}, 日期 {data['draw_date']}")
+            print(f"   奖组数量: {len(data['prize_table'])}")
+            return data
         else:
-            print(f"❌ 命令执行失败: {result.stderr}")
+            print("⚠️ 获取的数据不完整")
             return None
             
     except Exception as e:
-        print(f"❌ 获取数据失败: {e}")
+        print(f"❌ 抓取失败: {e}")
         return None
 
 # ---------- 保存 JSON 和索引更新 ----------
@@ -812,10 +871,10 @@ def main():
     else:
         print("❌ 无法获取 4dlatest.org 页面")
 
-    # 3. 通过 asean-lottery-mcp 获取 Singapore TOTO 数据
-    print("\n🌕 正在通过 asean-lottery-mcp 获取 Singapore TOTO 数据...")
+    # 3. 从 Singapore Pools 官方获取 Singapore TOTO 数据
+    print("\n🌕 正在从官方接口获取 Singapore TOTO 数据...")
     time.sleep(1)
-    toto_data = fetch_singapore_toto_via_mcp()
+    toto_data = fetch_singapore_toto_from_official()
     if toto_data and toto_data.get('winning_numbers'):
         save_json('singapore_toto', toto_data)
     else:
