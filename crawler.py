@@ -601,13 +601,11 @@ def extract_sabah_lotto_from_4dlatest(soup):
 
     return data
 
-# ========== 从 Singapore Pools 官方获取最新 TOTO 数据（自动获取最新一期） ==========
+# ========== 从 Singapore Pools 官方获取最新 TOTO 数据（增强版） ==========
 def fetch_singapore_toto_from_official():
     """
     自动获取新加坡 TOTO 最新一期开奖结果
-    步骤：
-    1. 访问 TOTO 主页面，找到最新结果的链接
-    2. 请求该链接，解析完整数据
+    增强版：更精确地查找最新结果链接
     """
     print("🔍 正在从 Singapore Pools 官方获取最新 TOTO 数据...")
     
@@ -622,22 +620,24 @@ def fetch_singapore_toto_from_official():
         r.raise_for_status()
         soup = BeautifulSoup(r.text, "html.parser")
         
-        # 查找包含最新期号的链接，通常 class 为 "toto-draw-link" 或类似
-        # 根据观察，页面中会有 "Draw No. 4162" 的链接
+        # 查找指向最新结果页面的链接
         latest_link = None
+        
+        # 策略1：查找包含特定路径和参数的链接
         for a in soup.find_all('a', href=True):
-            text = a.get_text(strip=True)
-            if re.search(r'Draw\s*No\.?\s*\d+', text, re.I):
-                latest_link = urljoin(main_url, a['href'])
-                print(f"✅ 找到最新结果链接: {latest_link}")
+            href = a['href']
+            # 检查是否指向结果页并带有 sppl 参数
+            if 'toto_results.aspx' in href and 'sppl=' in href:
+                latest_link = urljoin(main_url, href)
+                print(f"✅ 通过 URL 模式找到最新结果链接: {latest_link}")
                 break
         
+        # 策略2：如果没找到，查找包含 "Draw No." 文本的链接
         if not latest_link:
-            # 备用：尝试从可能包含最新结果的区域查找
-            # 例如 "Latest Draw" 按钮
-            for a in soup.find_all('a', string=re.compile(r'Latest|View', re.I)):
-                latest_link = urljoin(main_url, a.get('href'))
-                if latest_link:
+            for a in soup.find_all('a', href=True):
+                text = a.get_text(strip=True)
+                if re.search(r'Draw\s*No\.?\s*\d+', text, re.I):
+                    latest_link = urljoin(main_url, a['href'])
                     print(f"✅ 通过文本找到最新结果链接: {latest_link}")
                     break
         
@@ -664,13 +664,10 @@ def fetch_singapore_toto_from_official():
         
         # 提取日期和期号（通常在页面顶部的 h2 或 div 中）
         header = soup2.find('h2', string=re.compile(r'TOTO Results', re.I))
-        if not header:
-            header = soup2.find('div', class_='drawInfo')
         if header:
             header_text = header.get_text()
             print(f"📄 页面标题: {header_text}")
             
-            # 日期格式: "Thu, 05 Mar 2026"
             date_match = re.search(r'(\d{1,2}\s+[A-Za-z]{3}\s+\d{4})', header_text)
             if date_match:
                 raw_date = date_match.group(1)
@@ -681,17 +678,13 @@ def fetch_singapore_toto_from_official():
                 except Exception as e:
                     print(f"  日期解析失败: {e}")
             
-            # 期号格式: "Draw No. 4162"
             no_match = re.search(r'Draw\s*No\.?\s*(\d+)', header_text, re.I)
             if no_match:
                 data["draw_no"] = no_match.group(1)
                 print(f"  提取到期号: {data['draw_no']}")
         
         # 提取开奖号码
-        # 查找包含 "Winning Numbers" 的表格
         winning_section = soup2.find('span', string=re.compile(r'Winning Numbers', re.I))
-        if not winning_section:
-            winning_section = soup2.find('td', string=re.compile(r'Winning Numbers', re.I))
         if winning_section:
             table = winning_section.find_parent('table')
             if table:
@@ -701,7 +694,7 @@ def fetch_singapore_toto_from_official():
                     if text.isdigit() and 1 <= int(text) <= 49:
                         numbers.append(text)
                 if numbers:
-                    # 通常前6个是主号码，第7个是额外号码（如果有）
+                    # 通常前6个是主号码，第7个是额外号码
                     if len(numbers) >= 7:
                         data["winning_numbers"] = numbers[:6] + [numbers[-1]]
                     else:
@@ -709,43 +702,25 @@ def fetch_singapore_toto_from_official():
                     print(f"✅ 提取到开奖号码: {' '.join(data['winning_numbers'])}")
         
         # 提取奖金分配表
-        prize_table = []
-        # 查找包含 "Prize Group" 的表头
         prize_header = soup2.find('th', string=re.compile(r'Prize Group', re.I))
         if prize_header:
             table = prize_header.find_parent('table')
             if table:
                 rows = table.find_all('tr')[1:]  # 跳过表头
+                prize_table = []
                 for row in rows:
                     cells = row.find_all('td')
                     if len(cells) >= 3:
                         group = cells[0].get_text(strip=True)
                         amount = cells[1].get_text(strip=True)
                         winners = cells[2].get_text(strip=True)
-                        if group and ('Group' in group or re.search(r'Group\s*\d+', group, re.I)):
+                        if group and ('Group' in group):
                             prize_table.append([group, amount, winners])
-        
-        # 备用：直接查找包含 Group 1-7 的表格
-        if not prize_table:
-            table = soup2.find('table', class_='prizeTable')
-            if not table:
-                table = soup2.find('table', {'summary': re.compile(r'Prize', re.I)})
-            if table:
-                rows = table.find_all('tr')[1:]
-                for row in rows:
-                    cells = row.find_all('td')
-                    if len(cells) >= 3:
-                        group = cells[0].get_text(strip=True)
-                        amount = cells[1].get_text(strip=True)
-                        winners = cells[2].get_text(strip=True)
-                        prize_table.append([group, amount, winners])
-        
-        data["prize_table"] = prize_table
+                data["prize_table"] = prize_table
         
         # 验证数据
         if data["winning_numbers"] and len(data["prize_table"]) >= 6:
             print(f"✅ 成功获取 TOTO 数据: 期号 {data['draw_no']}, 日期 {data['draw_date']}")
-            print(f"   奖组数量: {len(data['prize_table'])}")
             return data
         else:
             print("⚠️ 获取的数据不完整")
