@@ -5,6 +5,7 @@ import os
 from datetime import datetime
 import re
 import time
+import subprocess  # 用于调用 npx 命令
 
 # ---------- 配置 ----------
 URL_4D4D = "https://4d4d.co/"
@@ -332,7 +333,7 @@ def extract_lotto(box):
 
     return star, power, supreme, jackpots
 
-# ========== 最终优化版 GDLOTTO 豪龙提取函数 ==========
+# ========== 优化后的 GDLOTTO 豪龙提取函数 ==========
 def extract_gd_lotto_from_4dlatest(soup):
     """
     从 https://4dlatest.org/ 提取 GDLOTTO 豪龙数据
@@ -600,6 +601,83 @@ def extract_sabah_lotto_from_4dlatest(soup):
 
     return data
 
+# ========== 通过 asean-lottery-mcp 获取 Singapore TOTO 数据 ==========
+def fetch_singapore_toto_via_mcp():
+    """
+    通过免费的 asean-lottery-mcp 工具获取最新 Singapore TOTO 数据
+    需要先安装: npm install -g asean-lottery-mcp
+    """
+    print("🔍 正在通过 asean-lottery-mcp 获取 Singapore TOTO 数据...")
+    
+    # 构建调用命令，获取最新开奖结果
+    # 命令: echo '{"method":"tools/call","params":{"name":"get_latest_draw_result","arguments":{"provider":"SGP"}}}' | npx -y asean-lottery-mcp
+    command = ['npx', '-y', 'asean-lottery-mcp']
+    
+    # 构造请求的 JSON 数据
+    request_data = {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "tools/call",
+        "params": {
+            "name": "get_latest_draw_result",
+            "arguments": {
+                "provider": "SGP"  # SGP 是 Singapore Pools 的代码
+            }
+        }
+    }
+    
+    try:
+        # 执行命令并传递输入
+        result = subprocess.run(
+            command,
+            input=json.dumps(request_data),
+            text=True,
+            capture_output=True,
+            timeout=30
+        )
+        
+        if result.returncode == 0:
+            output_data = json.loads(result.stdout)
+            # 解析返回的数据，转换为前端需要的格式
+            draw_result = output_data.get("result", {})
+            
+            # 提取开奖日期和期号
+            # 根据实际返回结构调整，这里假设返回字段为 date, drawNo, winningNumbers, prizeTable
+            # 日期格式可能需要转换，假设返回的是 DD-MM-YYYY 或 YYYY-MM-DD
+            raw_date = draw_result.get("date", "")
+            draw_date = raw_date
+            # 尝试转换为 DD-MM-YYYY
+            if raw_date:
+                try:
+                    # 如果日期格式为 DD/MM/YYYY
+                    if '/' in raw_date:
+                        d = datetime.strptime(raw_date, "%d/%m/%Y")
+                        draw_date = d.strftime("%d-%m-%Y")
+                    # 如果日期格式为 YYYY-MM-DD
+                    elif re.match(r'\d{4}-\d{2}-\d{2}', raw_date):
+                        d = datetime.strptime(raw_date, "%Y-%m-%d")
+                        draw_date = d.strftime("%d-%m-%Y")
+                    # 如果已经是 DD-MM-YYYY
+                    else:
+                        d = datetime.strptime(raw_date, "%d-%m-%Y")
+                        draw_date = raw_date
+                except:
+                    pass
+
+            return {
+                "draw_date": draw_date,
+                "draw_no": draw_result.get("drawNo", ""),
+                "winning_numbers": draw_result.get("winningNumbers", []),
+                "prize_table": draw_result.get("prizeTable", [])
+            }
+        else:
+            print(f"❌ 命令执行失败: {result.stderr}")
+            return None
+            
+    except Exception as e:
+        print(f"❌ 获取数据失败: {e}")
+        return None
+
 # ---------- 保存 JSON 和索引更新 ----------
 def save_json(company, data):
     if not data:
@@ -731,9 +809,17 @@ def main():
             save_json('sabah_lotto', sabah_data)
         else:
             print("⚠️ SABAH88 沙巴万字 LOTTO 数据为空")
-            
     else:
         print("❌ 无法获取 4dlatest.org 页面")
+
+    # 3. 通过 asean-lottery-mcp 获取 Singapore TOTO 数据
+    print("\n🌕 正在通过 asean-lottery-mcp 获取 Singapore TOTO 数据...")
+    time.sleep(1)
+    toto_data = fetch_singapore_toto_via_mcp()
+    if toto_data and toto_data.get('winning_numbers'):
+        save_json('singapore_toto', toto_data)
+    else:
+        print("⚠️ Singapore TOTO 数据为空")
 
     update_dates_index()
 
