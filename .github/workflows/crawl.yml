@@ -21,8 +21,16 @@ jobs:
         with:
           python-version: '3.10'
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
       - name: Install Python dependencies
         run: pip install requests beautifulsoup4
+
+      - name: Install asean-lottery-mcp
+        run: npm install -g asean-lottery-mcp
 
       - name: Run crawler
         run: python crawler.py
