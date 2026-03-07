@@ -242,7 +242,7 @@
                 content.innerHTML = '<div class="loading-history">暂无历史数据</div>';
                 return;
             }
-            const recentDates = availableDates.slice(0, 10);
+            const recentDates = availableDates.slice(0, 5);
             let html = '<div class="date-option" onclick="selectDate(null)">📌 最新数据</div>';
             recentDates.forEach(date => {
                 const activeClass = (selectedDate === date) ? 'active' : '';
