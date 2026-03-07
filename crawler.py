@@ -10,6 +10,7 @@ from urllib.parse import urljoin
 # ---------- 配置 ----------
 URL_4D4D = "https://4d4d.co/"
 URL_4DLATEST = "https://4dlatest.org/"
+URL_4D2ULIVE = "https://4d2ulive.com"  # 新增：4d2ulive 网站
 
 # ---------- 辅助函数 ----------
 def fetch_html(url):
@@ -639,7 +640,7 @@ def extract_magnum_jackpot_gold_from_4dlatest(soup):
     print(f"  提取到 {len(data['jackpots'])} 个奖池")
     return data
 
-# ---------- 新增：从 4dlatest.org 提取 Magnum Life ----------
+# ---------- 从 4dlatest.org 提取 Magnum Life ----------
 def extract_magnum_life_from_4dlatest(soup):
     print("🔍 正在从 4dlatest.org 提取 MAGNUM LIFE 数据...")
     data = {
@@ -710,149 +711,181 @@ def extract_magnum_life_from_4dlatest(soup):
     print(f"  ✅ 提取到特别号码: {' '.join(data['bonus_numbers'])}")
     return data
 
-# ---------- 新增：从 4dlatest.org 提取 Sports Toto 5D/6D/Lotto ----------
+# ---------- 增强版：从 4dlatest.org 提取 Sports Toto 5D/6D/Lotto（通过查找包含 "Sports Toto" 的文本）----------
 def extract_sportstoto_from_4dlatest(soup):
     """
-    提取 Sports Toto 5D, 6D, Lotto (Star Toto 6/50) 数据
+    从 4dlatest.org 提取 Sports Toto 5D, 6D, Lotto 数据
     返回 (data_5d, data_6d, data_lotto) 三个字典
     """
     print("🔍 正在从 4dlatest.org 提取 Sports Toto 5D/6D/Lotto 数据...")
-    # 初始化三个数据结构
-    data_5d = {
-        "draw_date": "",
-        "draw_no": "",
-        "type": "5d",
-        "1st": "",
-        "2nd": "",
-        "3rd": "",
-        "4th": "",
-        "5th": "",
-        "6th": ""
-    }
-    data_6d = {
-        "draw_date": "",
-        "draw_no": "",
-        "type": "6d",
-        "1st": "",
-        "2nd": {"main": "", "alt": ""},
-        "3rd": {"main": "", "alt": ""},
-        "4th": {"main": "", "alt": ""},
-        "5th": {"main": "", "alt": ""}
-    }
-    data_lotto = {
-        "draw_date": "",
-        "draw_no": "",
-        "type": "lotto",
-        "star": [],
-        "power": [],
-        "supreme": [],
-        "jackpots": []
-    }
+    data_5d = {"draw_date": "", "draw_no": "", "type": "5d", "1st": "", "2nd": "", "3rd": "", "4th": "", "5th": "", "6th": ""}
+    data_6d = {"draw_date": "", "draw_no": "", "type": "6d", "1st": "", "2nd": {"main": "", "alt": ""}, "3rd": {"main": "", "alt": ""}, "4th": {"main": "", "alt": ""}, "5th": {"main": "", "alt": ""}}
+    data_lotto = {"draw_date": "", "draw_no": "", "type": "lotto", "star": [], "power": [], "supreme": [], "jackpots": []}
 
-    # 放宽正则匹配，支持多种写法
-    pattern = re.compile(r"Sports[ T]*Toto.*5D.*6D.*Lotto", re.IGNORECASE)
-    header = soup.find(string=pattern)
-    if not header:
-        # 调试：打印包含 "Sports" 或 "Toto" 的文本片段
-        print("⚠️ 未找到匹配标题，尝试查找包含 'Sports' 或 'Toto' 的文本：")
-        all_texts = [elem for elem in soup.find_all(string=True) if "Sports" in elem or "Toto" in elem]
-        for txt in all_texts[:5]:
-            print(f"   - {repr(txt)[:100]}")
+    # 查找所有包含 "Sports Toto" 的文本节点（忽略大小写和空格）
+    toto_texts = soup.find_all(string=re.compile(r"Sports\s*Toto", re.IGNORECASE))
+    if not toto_texts:
+        print("⚠️ 未找到包含 'Sports Toto' 的文本")
         return None, None, None
 
+    # 对每个匹配的文本，尝试向上找到表格
+    for text_node in toto_texts:
+        table = text_node.find_parent("table")
+        if table:
+            print(f"✅ 找到包含 Sports Toto 的表格")
+            # 尝试从表格或其周围提取日期和期号
+            # 可能日期在表头的某个单元格中
+            header_row = table.find("tr")
+            if header_row:
+                header_text = header_row.get_text(" ", strip=True)
+                date_match = re.search(r"(\d{2}-\d{2}-\d{4})", header_text)
+                if date_match:
+                    data_5d["draw_date"] = data_6d["draw_date"] = data_lotto["draw_date"] = date_match.group(1)
+                    print(f"  ✅ 提取到日期: {date_match.group(1)}")
+                no_match = re.search(r"Draw No:?\s*(\d+-\d+)", header_text, re.IGNORECASE)
+                if no_match:
+                    data_5d["draw_no"] = data_6d["draw_no"] = data_lotto["draw_no"] = no_match.group(1)
+                    print(f"  ✅ 提取到期号: {no_match.group(1)}")
+
+            # 现在在 table 内部查找 5D, 6D, Lotto 的子表格
+            # 5D
+            header_5d = table.find("td", string=re.compile(r"5D"))
+            if header_5d:
+                table_5d = header_5d.find_parent("table")
+                if table_5d:
+                    rows_5d = table_5d.find_all("tr")
+                    for row in rows_5d:
+                        tds = row.find_all("td")
+                        if len(tds) >= 2:
+                            label = tds[0].get_text(strip=True).lower()
+                            number = tds[1].get_text(strip=True)
+                            if "1st" in label:
+                                data_5d["1st"] = number
+                            elif "2nd" in label:
+                                data_5d["2nd"] = number
+                            elif "3rd" in label:
+                                data_5d["3rd"] = number
+                            elif "4th" in label:
+                                data_5d["4th"] = number
+                            elif "5th" in label:
+                                data_5d["5th"] = number
+                            elif "6th" in label:
+                                data_5d["6th"] = number
+                    print(f"  ✅ 提取到 5D: {data_5d['1st']}, {data_5d['2nd']}, {data_5d['3rd']} ...")
+
+            # 6D
+            header_6d = table.find("td", string=re.compile(r"6D"))
+            if header_6d:
+                table_6d = header_6d.find_parent("table")
+                if table_6d:
+                    rows_6d = table_6d.find_all("tr")
+                    for row in rows_6d:
+                        row_text = row.get_text()
+                        tds = row.find_all("td")
+                        if len(tds) < 2:
+                            continue
+                        label = tds[0].get_text(strip=True).lower()
+                        if "1st" in label and len(tds) >= 2:
+                            data_6d["1st"] = tds[1].get_text(strip=True)
+                        elif "2nd" in label:
+                            main, alt = extract_6d_pair(row_text)
+                            data_6d["2nd"]["main"] = main
+                            data_6d["2nd"]["alt"] = alt
+                        elif "3rd" in label:
+                            main, alt = extract_6d_pair(row_text)
+                            data_6d["3rd"]["main"] = main
+                            data_6d["3rd"]["alt"] = alt
+                        elif "4th" in label:
+                            main, alt = extract_6d_pair(row_text)
+                            data_6d["4th"]["main"] = main
+                            data_6d["4th"]["alt"] = alt
+                        elif "5th" in label:
+                            main, alt = extract_6d_pair(row_text)
+                            data_6d["5th"]["main"] = main
+                            data_6d["5th"]["alt"] = alt
+                    print(f"  ✅ 提取到 6D: 1st {data_6d['1st']}")
+
+            # Lotto (Star Toto 6/50)
+            header_lotto = table.find("td", string=re.compile(r"Star Toto 6/50"))
+            if header_lotto:
+                table_lotto = header_lotto.find_parent("table")
+                if table_lotto:
+                    rows_lotto = table_lotto.find_all("tr")
+                    if len(rows_lotto) >= 2:
+                        num_row = rows_lotto[1]
+                        tds = num_row.find_all("td")
+                        for td in tds:
+                            text = td.get_text(strip=True)
+                            if text.isdigit():
+                                data_lotto["star"].append(text)
+                        print(f"  ✅ 提取到 Star Toto 号码: {data_lotto['star']}")
+
+            # 如果成功提取到任何数据，返回
+            if any(data_5d.get(k) for k in ['1st','2nd','3rd','4th','5th','6th']) or \
+               data_6d.get('1st') or data_lotto.get('star'):
+                return data_5d, data_6d, data_lotto
+
+    print("⚠️ 未能从任何包含 'Sports Toto' 的表格中提取到数据")
+    return None, None, None
+
+# ---------- 新增：从 4d2ulive.com 获取 Grand Dragon 数据（用于补充日期）----------
+def fetch_grand_dragon_from_4d2ulive():
+    print("🔍 正在从 4d2ulive.com 获取 Grand Dragon 4D 数据...")
+    html = fetch_html(URL_4D2ULIVE)
+    if not html:
+        return None
+    soup = BeautifulSoup(html, "html.parser")
+    data = {"draw_date": "", "draw_no": "", "1st": "", "2nd": "", "3rd": "", "special": [], "consolation": [], "jackpot": ""}
+    
+    # 定位 Grand Dragon 区域（根据图片中的标题 "Grand Dragon 4D 豪龙"）
+    header = soup.find(string=re.compile(r"Grand\s+Dragon.*4D.*豪龙", re.IGNORECASE))
+    if not header:
+        print("⚠️ 未找到 Grand Dragon 标题")
+        return None
+    
+    # 提取日期（可能在标题附近，如 "Date: 07-03-2026 (Sat)"）
+    header_text = header.get_text(" ", strip=True)
+    date_match = re.search(r"(\d{2}-\d{2}-\d{4})", header_text)
+    if date_match:
+        data["draw_date"] = date_match.group(1)
+        print(f"  ✅ 提取到日期: {data['draw_date']}")
+    
+    # 找到包含结果的表格
     table = header.find_parent("table")
     if not table:
         table = header.find_next("table")
     if not table:
-        print("⚠️ 未找到 Sports Toto 主表格")
-        return None, None, None
-
-    # 提取日期和期号（可能在标题行，如 "Date: 07-03-2026 (Sat)  Draw No: 6100-26"）
-    header_text = header.get_text(" ", strip=True)
-    print(f"📅 标题文本: {header_text}")
-    date_match = re.search(r"(\d{2}-\d{2}-\d{4})", header_text)
-    if date_match:
-        data_5d["draw_date"] = data_6d["draw_date"] = data_lotto["draw_date"] = date_match.group(1)
-        print(f"  ✅ 提取到日期: {date_match.group(1)}")
-    no_match = re.search(r"Draw No:?\s*(\d+-\d+)", header_text, re.IGNORECASE)
-    if no_match:
-        data_5d["draw_no"] = data_6d["draw_no"] = data_lotto["draw_no"] = no_match.group(1)
-        print(f"  ✅ 提取到期号: {no_match.group(1)}")
-
-    # 现在寻找内部的子表格：5D, 6D, Lotto
-    # 5D 表格
-    header_5d = table.find("td", string=re.compile(r"5D"))
-    if header_5d:
-        table_5d = header_5d.find_parent("table")
-        if table_5d:
-            rows_5d = table_5d.find_all("tr")
-            for row in rows_5d:
-                tds = row.find_all("td")
-                if len(tds) >= 2:
-                    label = tds[0].get_text(strip=True).lower()
-                    number = tds[1].get_text(strip=True)
-                    if "1st" in label:
-                        data_5d["1st"] = number
-                    elif "2nd" in label:
-                        data_5d["2nd"] = number
-                    elif "3rd" in label:
-                        data_5d["3rd"] = number
-                    elif "4th" in label:
-                        data_5d["4th"] = number
-                    elif "5th" in label:
-                        data_5d["5th"] = number
-                    elif "6th" in label:
-                        data_5d["6th"] = number
-            print(f"  ✅ 提取到 5D: {data_5d['1st']}, {data_5d['2nd']}, {data_5d['3rd']}, ...")
-
-    # 6D 表格
-    header_6d = table.find("td", string=re.compile(r"6D"))
-    if header_6d:
-        table_6d = header_6d.find_parent("table")
-        if table_6d:
-            rows_6d = table_6d.find_all("tr")
-            for row in rows_6d:
-                row_text = row.get_text()
-                tds = row.find_all("td")
-                if len(tds) < 2:
-                    continue
-                label = tds[0].get_text(strip=True).lower()
-                if "1st" in label and len(tds) >= 2:
-                    data_6d["1st"] = tds[1].get_text(strip=True)
-                elif "2nd" in label:
-                    main, alt = extract_6d_pair(row_text)
-                    data_6d["2nd"]["main"] = main
-                    data_6d["2nd"]["alt"] = alt
-                elif "3rd" in label:
-                    main, alt = extract_6d_pair(row_text)
-                    data_6d["3rd"]["main"] = main
-                    data_6d["3rd"]["alt"] = alt
-                elif "4th" in label:
-                    main, alt = extract_6d_pair(row_text)
-                    data_6d["4th"]["main"] = main
-                    data_6d["4th"]["alt"] = alt
-                elif "5th" in label:
-                    main, alt = extract_6d_pair(row_text)
-                    data_6d["5th"]["main"] = main
-                    data_6d["5th"]["alt"] = alt
-            print(f"  ✅ 提取到 6D: 1st {data_6d['1st']}")
-
-    # Lotto (Star Toto 6/50) 表格
-    header_lotto = table.find("td", string=re.compile(r"Star Toto 6/50"))
-    if header_lotto:
-        table_lotto = header_lotto.find_parent("table")
-        if table_lotto:
-            rows_lotto = table_lotto.find_all("tr")
-            if len(rows_lotto) >= 2:
-                num_row = rows_lotto[1]
-                tds = num_row.find_all("td")
-                for td in tds:
-                    text = td.get_text(strip=True)
-                    if text.isdigit():
-                        data_lotto["star"].append(text)
-                print(f"  ✅ 提取到 Star Toto 号码: {data_lotto['star']}")
-
-    return data_5d, data_6d, data_lotto
+        print("⚠️ 未找到 Grand Dragon 数据表格")
+        return None
+    
+    # 解析表格（根据图片结构）
+    rows = table.find_all("tr")
+    special_list = []
+    cons_list = []
+    for row in rows:
+        row_text = row.get_text()
+        cells = row.find_all("td")
+        if "Special" in row_text or "特別獎" in row_text:
+            for cell in cells:
+                text = cell.get_text(strip=True)
+                if text.isdigit() and len(text) == 4:
+                    special_list.append(text)
+        elif "Consolation" in row_text or "安慰獎" in row_text:
+            for cell in cells:
+                text = cell.get_text(strip=True)
+                if text.isdigit() and len(text) == 4:
+                    cons_list.append(text)
+        else:
+            # 可能是前三奖行
+            if len(cells) >= 3:
+                # 假设顺序：1st, 2nd, 3rd
+                data["1st"] = cells[0].get_text(strip=True)
+                data["2nd"] = cells[1].get_text(strip=True)
+                data["3rd"] = cells[2].get_text(strip=True)
+    
+    data["special"] = special_list
+    data["consolation"] = cons_list
+    return data
 
 # ---------- 从 Singapore Pools 获取 TOTO ----------
 def fetch_singapore_toto_from_official():
@@ -1049,6 +1082,11 @@ def main():
         gd_data = extract_gd_lotto_from_4dlatest(soup_4dlatest)
         # 放宽保存条件：只要有前三或特别/安慰奖就保存
         if gd_data and (gd_data.get('1st') or gd_data.get('special') or gd_data.get('consolation')):
+            # 尝试从 4d2ulive.com 获取日期补充
+            gd_from_4d2u = fetch_grand_dragon_from_4d2ulive()
+            if gd_from_4d2u and gd_from_4d2u.get('draw_date'):
+                gd_data['draw_date'] = gd_from_4d2u['draw_date']
+                print(f"  ✅ 从 4d2ulive 补充日期: {gd_from_4d2u['draw_date']}")
             save_json('grand_dragon', gd_data)
         else:
             print("⚠️ GDLOTTO 豪龙数据为空，保留原有数据")
@@ -1062,7 +1100,6 @@ def main():
 
         # 2.3 抓取 MAGNUM JACKPOT GOLD
         mjg_data = extract_magnum_jackpot_gold_from_4dlatest(soup_4dlatest)
-        # 放宽保存条件：只要有组号码或奖池就保存
         if mjg_data and (mjg_data.get('groups') or mjg_data.get('jackpots')):
             save_json('magnum_jackpot_gold', mjg_data)
         else:
