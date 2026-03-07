@@ -749,10 +749,15 @@ def extract_sportstoto_from_4dlatest(soup):
         "jackpots": []
     }
 
-    # 定位包含 "SportsToto 5D, 6D, Lotto" 的标题
-    header = soup.find(string=re.compile(r"SportsToto.*5D.*6D.*Lotto", re.IGNORECASE))
+    # 放宽正则匹配，支持多种写法
+    pattern = re.compile(r"Sports[ T]*Toto.*5D.*6D.*Lotto", re.IGNORECASE)
+    header = soup.find(string=pattern)
     if not header:
-        print("⚠️ 未找到 'SportsToto 5D, 6D, Lotto' 标题")
+        # 调试：打印包含 "Sports" 或 "Toto" 的文本片段
+        print("⚠️ 未找到匹配标题，尝试查找包含 'Sports' 或 'Toto' 的文本：")
+        all_texts = [elem for elem in soup.find_all(string=True) if "Sports" in elem or "Toto" in elem]
+        for txt in all_texts[:5]:
+            print(f"   - {repr(txt)[:100]}")
         return None, None, None
 
     table = header.find_parent("table")
@@ -765,19 +770,16 @@ def extract_sportstoto_from_4dlatest(soup):
     # 提取日期和期号（可能在标题行，如 "Date: 07-03-2026 (Sat)  Draw No: 6100-26"）
     header_text = header.get_text(" ", strip=True)
     print(f"📅 标题文本: {header_text}")
-    # 尝试匹配日期
     date_match = re.search(r"(\d{2}-\d{2}-\d{4})", header_text)
     if date_match:
         data_5d["draw_date"] = data_6d["draw_date"] = data_lotto["draw_date"] = date_match.group(1)
         print(f"  ✅ 提取到日期: {date_match.group(1)}")
-    # 尝试匹配期号
     no_match = re.search(r"Draw No:?\s*(\d+-\d+)", header_text, re.IGNORECASE)
     if no_match:
         data_5d["draw_no"] = data_6d["draw_no"] = data_lotto["draw_no"] = no_match.group(1)
         print(f"  ✅ 提取到期号: {no_match.group(1)}")
 
     # 现在寻找内部的子表格：5D, 6D, Lotto
-    # 方法：查找包含 "5D" 的表格，然后获取其后的行
     # 5D 表格
     header_5d = table.find("td", string=re.compile(r"5D"))
     if header_5d:
@@ -849,7 +851,6 @@ def extract_sportstoto_from_4dlatest(soup):
                     if text.isdigit():
                         data_lotto["star"].append(text)
                 print(f"  ✅ 提取到 Star Toto 号码: {data_lotto['star']}")
-            # 如果有更多行可能包含 Jackpot，但图片中未显示，暂时忽略
 
     return data_5d, data_6d, data_lotto
 
@@ -1011,7 +1012,7 @@ def main():
                         save_json(company_key, data)
                     processed_companies.add(company_key)
                     matched = True
-                    break  # 匹配到一个就跳出内层循环，避免重复处理同一outerbox
+                    break
             if not matched:
                 # 尝试复合提取 Sports Toto
                 if "SPORTSTOTO" in box_text.upper():
@@ -1046,7 +1047,8 @@ def main():
 
         # 2.1 抓取 GDLOTTO 豪龙
         gd_data = extract_gd_lotto_from_4dlatest(soup_4dlatest)
-        if gd_data and gd_data.get('1st'):
+        # 放宽保存条件：只要有前三或特别/安慰奖就保存
+        if gd_data and (gd_data.get('1st') or gd_data.get('special') or gd_data.get('consolation')):
             save_json('grand_dragon', gd_data)
         else:
             print("⚠️ GDLOTTO 豪龙数据为空，保留原有数据")
@@ -1060,19 +1062,20 @@ def main():
 
         # 2.3 抓取 MAGNUM JACKPOT GOLD
         mjg_data = extract_magnum_jackpot_gold_from_4dlatest(soup_4dlatest)
-        if mjg_data and mjg_data.get('draw_date'):
+        # 放宽保存条件：只要有组号码或奖池就保存
+        if mjg_data and (mjg_data.get('groups') or mjg_data.get('jackpots')):
             save_json('magnum_jackpot_gold', mjg_data)
         else:
             print("⚠️ MAGNUM JACKPOT GOLD 数据为空")
 
-        # 2.4 新增：抓取 MAGNUM LIFE
+        # 2.4 抓取 MAGNUM LIFE
         magnum_life_data = extract_magnum_life_from_4dlatest(soup_4dlatest)
-        if magnum_life_data and magnum_life_data.get('winning_numbers'):
+        if magnum_life_data and (magnum_life_data.get('winning_numbers') or magnum_life_data.get('bonus_numbers')):
             save_json('magnum_life', magnum_life_data)
         else:
             print("⚠️ MAGNUM LIFE 数据为空")
 
-        # 2.5 新增：抓取 Sports Toto 5D/6D/Lotto
+        # 2.5 抓取 Sports Toto 5D/6D/Lotto
         toto_5d, toto_6d, toto_lotto = extract_sportstoto_from_4dlatest(soup_4dlatest)
         if toto_5d and any(toto_5d.get(k) for k in ['1st','2nd','3rd','4th','5th','6th']):
             save_json('sportstoto_5d', toto_5d)
