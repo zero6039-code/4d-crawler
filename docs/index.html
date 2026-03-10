@@ -103,6 +103,48 @@
 
         /* Jackpot 标签 */
         .jackpot-label { font-weight: 600; margin: 4px 0 2px 0; color: #2c3e50; font-size: 0.95rem; }
+
+        /* ========== 针对 DAMACAI 4D 的定制样式 ========== */
+        .company-section[data-company="damacai"] {
+            background-image: url('/docs/images/damacai4d.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            color: #ffffff !important;
+        }
+
+        /* 强制卡片内所有文字为白色 */
+        .company-section[data-company="damacai"],
+        .company-section[data-company="damacai"] * {
+            color: #ffffff !important;
+        }
+
+        /* 隐藏标题左边的箭头 */
+        .company-section[data-company="damacai"] .company-title::before {
+            content: none;
+        }
+
+        /* 调整卡片内元素背景为半透明 */
+        .company-section[data-company="damacai"] .prize-card,
+        .company-section[data-company="damacai"] .subsection,
+        .company-section[data-company="damacai"] .number-item,
+        .company-section[data-company="damacai"] .custom-table td,
+        .company-section[data-company="damacai"] .custom-table th {
+            background: rgba(255, 255, 255, 0.15) !important;
+            border-color: rgba(255, 255, 255, 0.3) !important;
+            color: #ffffff !important;
+        }
+
+        /* 数字项保持适当对比 */
+        .company-section[data-company="damacai"] .number-item {
+            background: rgba(255, 255, 255, 0.25) !important;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        /* 卡片阴影微调 */
+        .company-section[data-company="damacai"] {
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
     </style>
 </head>
 <body>
@@ -401,6 +443,15 @@
                 if (!dateStr) console.warn('GRAND DRAGON 数据缺少 draw_date', data);
             }
             let metaText = `📅 日期: ${dateStr || '--'} | 🎟️ 期号: ${drawNoStr || '--'}`;
+            
+            // 针对 DAMACAI 4D 删除日期和期号旁边的图标
+            if (companyKey === 'damacai') {
+                metaText = metaText.replace('📅', '').replace('🎟️', '').replace(/\s+/g, ' ').trim();
+                // 可能还需要调整分隔符格式，例如变成 "日期: 08-03-2026 | 期号: 6048-26"
+                metaText = metaText.replace('日期:', '').replace('期号:', '');
+                metaText = `日期: ${dateStr || '--'} | 期号: ${drawNoStr || '--'}`;
+            }
+
             if (data._isFallback && selectedDate) metaText += ` (最近一期)`;
             metaDiv.innerText = metaText;
 
