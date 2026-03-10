@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <script defer src="https://va.vercel-scripts.com/v1/va.js" data-project-id="prj_OlkT8OfUEFKzdmDE1ld3CHagqMFY"></script>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3226709889348088"
+     crossorigin="anonymous"></script>
+    <title>4D 成绩 Malaysia · 实时更新</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <style>
+        /* 基础样式保持不变 */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
+        body { background: #f0f2f5; padding: 15px 10px; }
+        .container { max-width: 1300px; margin: 0 auto; }
+        h1 { font-size: 2.2rem; font-weight: 800; text-align: center; margin-bottom: 15px; background: linear-gradient(135deg, #0b1c2f, #2c3e50); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1px; }
+        .date-selector { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; position: relative; }
+        .date-dropdown { position: relative; display: inline-block; }
+        .date-btn { background: #ffffffcc; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.8); border-radius: 25px; padding: 8px 20px; font-size: 1rem; font-weight: 500; color: #2c3e50; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: all 0.2s; }
+        .date-btn:hover { background: #ffffff; box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
+        .date-btn .arrow { font-size: 0.8rem; transition: transform 0.2s; }
+        .date-btn.active .arrow { transform: rotate(180deg); }
+        .date-dropdown-content { display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); background: white; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); min-width: 220px; max-height: 300px; overflow-y: auto; z-index: 1000; margin-top: 8px; border: 1px solid #e2e8f0; }
+        .date-dropdown.show .date-dropdown-content { display: block; }
+        .date-option { padding: 10px 16px; cursor: pointer; transition: background 0.2s; border-bottom: 1px solid #f0f0f0; }
+        .date-option:hover { background: #f0f2f5; }
+        .date-option.active { background: #e6f0ff; color: #3182ce; font-weight: 600; }
+        .date-option .draw-no { font-size: 0.75rem; color: #7c8b9c; }
+        .loading-history { text-align: center; padding: 20px; color: #7c8b9c; }
+        .draw-info { background: #ffffffcc; backdrop-filter: blur(4px); border-radius: 40px; padding: 6px 20px 6px 25px; display: inline-flex; align-items: center; justify-content: center; gap: 20px; margin: 0 auto 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); font-weight: 500; color: #2c3e50; border: 1px solid rgba(255,255,255,0.8); left: 50%; position: relative; transform: translateX(-50%); white-space: nowrap; }
+        .draw-info strong { color: #d32f2f; font-weight: 600; margin-right: 4px; }
+        .refresh-btn { background: linear-gradient(135deg, #3182ce, #2c5282); color: white; border: none; padding: 5px 16px; border-radius: 20px; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.2s; box-shadow: 0 2px 8px rgba(49,130,206,0.3); line-height: 1.4; }
+        .refresh-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(49,130,206,0.4); }
+        .companies-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        .company-section { background: white; border-radius: 24px; box-shadow: 0 8px 20px rgba(0,20,30,0.1); margin-bottom: 0; padding: 14px 12px; border: 1px solid rgba(255,255,255,0.5); transition: transform 0.15s ease; }
+        .company-section:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(0,0,0,0.12); }
+        .company-section.loading { opacity: 0.6; pointer-events: none; }
+        .company-section.error { border-color: #d32f2f; background: #ffebee; }
+        .company-title { font-size: 1.6rem; font-weight: 800; margin-bottom: 4px; padding-left: 4px; background: linear-gradient(145deg, #1e2b3a, #2b3d55); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+        .company-title::before { content: "🎯"; margin-right: 6px; font-size: 1.4rem; background: none; -webkit-text-fill-color: initial; }
+        .draw-date { font-size: 0.9rem; color: #4a5568; margin-bottom: 10px; padding-left: 4px; font-weight: 500; }
+        .prize-grid { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 12px 0 16px; }
+        .prize-card { background: #f8fafd; border-radius: 16px; padding: 10px 12px; flex: 1 1 90px; min-width: 80px; text-align: center; box-shadow: inset 0 1px 4px #ffffff, 0 5px 10px rgba(0,0,0,0.04); border: 1px solid #e9ecf0; }
+        .prize-card .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #5f6b7a; font-weight: 500; margin-bottom: 4px; }
+        .prize-card .number { font-size: 1.7rem; font-weight: 800; color: #c62828; line-height: 1.2; text-shadow: 2px 2px 0 rgba(198,40,40,0.1); font-family: 'Courier New', monospace; }
+        .subsection { margin-top: 16px; background: #f9fbfd; border-radius: 16px; padding: 12px 10px; border: 1px solid #e2e8f0; }
+        .subsection-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 4px; color: #1e2f3e; }
+        .subsection-title::before { content: "✨"; font-size: 1.2rem; }
+        .number-list { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-start; }
+        .number-item { background: #ffffff; padding: 6px 10px; border-radius: 28px; font-family: 'Courier New', monospace; font-size: 1.1rem; font-weight: 600; color: #0b2a41; box-shadow: 0 3px 8px rgba(0,0,0,0.03); border: 1px solid #d4deec; min-width: 50px; text-align: center; transition: all 0.1s; white-space: pre-line; line-height: 1.4; }
+        .number-item:hover { background: #e6f0ff; border-color: #8a9cb0; }
+        .custom-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.9rem; }
+        .custom-table th { background: #e2e8f0; padding: 8px 4px; text-align: center; font-weight: 600; color: #2d3748; border: 1px solid #cbd5e0; }
+        .custom-table td { padding: 6px 4px; text-align: center; border: 1px solid #cbd5e0; background: white; }
+        .custom-table .alt-number { color: #3182ce; font-weight: 500; }
+        .group-subtitle { font-size: 0.95rem; font-weight: 600; margin: 8px 0 4px 0; color: #2c3e50; width: 100%; }
+        footer { text-align: center; margin-top: 30px; color: #7c8b9c; font-size: 0.8rem; border-top: 1px solid #dbe1ea; padding-top: 16px; }
+        @media (max-width: 900px) { .companies-grid { grid-template-columns: repeat(2, 1fr); } }
+        /* 手机字体优化 */
+        @media (max-width: 600px) {
+            .companies-grid { grid-template-columns: 1fr; }
+            .company-title { font-size: 1.5rem; }
+            .prize-card .number { font-size: 1.6rem; }
+            .number-item {
+                font-size: 1.3rem;
+                padding: 6px 12px;
+                min-width: auto;
+                word-break: break-all;
+                white-space: normal;
+            }
+        }
+        /* 公司特有颜色 */
+        .company-section[data-company="damacai"] .company-title { background: linear-gradient(145deg, #1e5620, #2a7a2d); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .company-section[data-company="magnum"] .company-title { background: linear-gradient(145deg, #aa4a1e, #c95f2a); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .company-section[data-company="toto"] .company-title { background: linear-gradient(145deg, #b71c1c, #d32f2f); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .company-section[data-company="singapore"] .company-title { background: linear-gradient(145deg, #1e4a6b, #2c6b96); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .status-indicator { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+        .status-indicator.success { background: #48bb78; }
+        .status-indicator.error { background: #f56565; }
+        .status-indicator.loading { background: #ecc94b; animation: blink 1s infinite; }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+        /* 日历样式 */
+        .calendar-btn { background: #ffffffcc; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.8); border-radius: 25px; padding: 8px 20px; font-size: 1rem; font-weight: 500; color: #2c3e50; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: all 0.2s; }
+        .calendar-btn:hover { background: #ffffff; box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
+        .calendar-popup { position: absolute; background: white; border-radius: 20px; box-shadow: 0 12px 30px rgba(0,0,0,0.2); padding: 16px; z-index: 2000; width: 320px; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 8px; border: 1px solid #e2e8f0; backdrop-filter: blur(4px); }
+        .calendar-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; font-weight: 600; color: #2d3748; }
+        .calendar-nav { background: none; border: none; font-size: 1.2rem; cursor: pointer; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #f0f2f5; transition: 0.2s; }
+        .calendar-nav:hover { background: #e2e8f0; }
+        .calendar-table { width: 100%; border-collapse: collapse; text-align: center; table-layout: fixed; }
+        .calendar-table th,
+        .calendar-table td { width: 36px; }
+        .calendar-table th { font-size: 0.8rem; font-weight: 600; color: #718096; padding: 6px 0; }
+        .calendar-table td { padding: 0; height: 36px; line-height: 36px; font-size: 0.9rem; cursor: pointer; border-radius: 50%; transition: 0.1s; text-align: center; vertical-align: middle; }
+        .calendar-table td.has-data { background: #c6e0ff; font-weight: 600; color: #1e4a6b; }
+        .calendar-table td.today { background: transparent; box-shadow: 0 0 0 2px #a0c4ff; font-weight: 600; }
+        .calendar-table td.selected { background: #3182ce !important; color: white !important; font-weight: 600; }
+        .calendar-table td:hover { background: #e2e8f0 !important; }
+        .calendar-table td.has-data:hover { background: #a9c9f0 !important; }
+        .calendar-month-year { font-size: 1.1rem; }
+
+        /* Jackpot 标签 */
+        .jackpot-label { font-weight: 600; margin: 4px 0 2px 0; color: #2c3e50; font-size: 0.95rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>MY 4D RESULT MALAYSIA</h1>
+        
+        <div class="date-selector">
+            <div class="date-dropdown" id="date-dropdown">
+                <button class="date-btn" id="date-btn" onclick="toggleDateDropdown()">
+                    <span id="selected-date">加载中...</span>
+                    <span class="arrow">▼</span>
+                </button>
+                <div class="date-dropdown-content" id="date-dropdown-content">
+                    <div class="loading-history">🔄 加载历史数据...</div>
+                </div>
+            </div>
+            <button class="calendar-btn" id="calendar-btn">📅 月历</button>
+            <div id="calendar-popup" class="calendar-popup" style="display: none;"></div>
+        </div>
+        
+        <div class="draw-info">
+            <span id="draw_date">--</span>
+            <button class="refresh-btn" id="refresh-btn" onclick="forceRefresh()">Refresh</button>
+        </div>
+
+        <div id="companies-grid" class="companies-grid">
+            <p style="text-align: center; grid-column: 1/-1; color: #666;">🔄 正在加载数据...</p>
+        </div>
+
+        <footer>
+            ⚠️ 数据仅供参考，请以官方公告为准。<br>
+            <span id="status-text">
+                <span class="status-indicator loading"></span>正在加载...
+            </span>
+            <br>
+            更新于 <span id="update-time">-</span>
+        </footer>
+    </div>
+
+    <script>
+        // ==================== 配置 ====================
+        const COMPANY_LIST = [
+            'damacai', 'magnum', 'toto', 'singapore', 'damacai_1p3d',
+            'sandakan', 'sarawak_cashsweep', 'sabah', 'sabah_lotto',
+            'grand_dragon', 'singapore_toto', 'sportstoto_lotto',
+            'magnum_jackpot_gold', 'sportstoto_5d', 'sportstoto_6d',
+            'magnum_life', 'sportstoto_fireball'
+        ];
+
+        const NAME_MAP = {
+            'damacai': 'DAMACAI 4D', 'magnum': 'MAGNUM 4D', 'toto': 'TOTO 4D', 'singapore': 'SINGAPORE 4D',
+            'damacai_1p3d': 'DAMACAI 1+3D', 'sandakan': 'SANDAKAN 4D', 'sarawak_cashsweep': 'SARAWAK CASHSWEEP',
+            'sabah': 'SABAH 88 4D', 'sabah_lotto': 'SABAH LOTTO',
+            'grand_dragon': 'GRAND DRAGON 豪龙',
+            'singapore_toto': 'SINGAPORE TOTO',
+            'sportstoto_lotto': 'SPORTS TOTO LOTTO',
+            'magnum_jackpot_gold': 'MAGNUM JACKPOT GOLD',
+            'sportstoto_5d': 'SPORTS TOTO 5D',
+            'sportstoto_6d': 'SPORTS TOTO 6D',
+            'magnum_life': 'MAGNUM LIFE',
+            'sportstoto_fireball': 'SPORTS TOTO FIREBALL'
+        };
+
+        const SPECIAL_COMPANIES = [
+            'sportstoto_fireball', 'sportstoto_lotto', 'singapore_toto',
+            'magnum_jackpot_gold', 'sportstoto_5d', 'sportstoto_6d', 'magnum_life',
+            'sabah_lotto'
+        ];
+
+        let availableDates = [];           
+        let availableDatesSet = new Set(); 
+        let selectedDate = null;           
+
+        // ==================== 工具函数 ====================
+        function ymdToDmy(ymd) {
+            if (!ymd) return '';
+            let parts = ymd.split('-');
+            if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
+            return ymd;
+        }
+
+        function dmyToYmd(dmy) {
+            if (!dmy) return '';
+            let parts = dmy.split('-');
+            if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
+            return dmy;
+        }
+
+        function parseDMY(dateStr) {
+            let parts = dateStr.split('-');
+            let d, m, y;
+            if (parts[0].length === 4) {
+                [y, m, d] = parts.map(Number);
+            } else {
+                [d, m, y] = parts.map(Number);
+            }
+            return { year: y, month: m, day: d };
+        }
+
+        function toSortKey(dateStr) {
+            let { year, month, day } = parseDMY(dateStr);
+            return year * 10000 + month * 100 + day;
+        }
+
+        function sortDatesDesc(dates) {
+            return dates.sort((a, b) => toSortKey(b) - toSortKey(a));
+        }
+
+        // ==================== 日期选择器 ====================
+        function toggleDateDropdown() {
+            document.getElementById('date-dropdown').classList.toggle('show');
+            document.getElementById('date-btn').classList.toggle('active');
+        }
+
+        async function loadDateIndex() {
+            try {
+                const res = await fetch(`data/dates.json?t=${Date.now()}`, { cache: 'no-store' });
+                if (res.ok) {
+                    let dates = await res.json();
+                    availableDates = sortDatesDesc(dates);
+                    availableDatesSet = new Set(availableDates);
+                }
+            } catch (e) { console.warn('无法加载 dates.json', e); }
+            renderDateDropdown();
+            updateDateBtnWithLatest();
+        }
+
+        function updateDateBtnWithLatest() {
+            const btnSpan = document.getElementById('selected-date');
+            if (availableDates.length > 0) {
+                btnSpan.innerText = selectedDate ? ymdToDmy(selectedDate) : ymdToDmy(availableDates[0]);
+            } else {
+                btnSpan.innerText = '暂无数据';
+            }
+        }
+
+        function renderDateDropdown() {
+            const content = document.getElementById('date-dropdown-content');
+            if (availableDates.length === 0) {
+                content.innerHTML = '<div class="loading-history">暂无历史数据</div>';
+                return;
+            }
+            const recentDates = availableDates.slice(0, 5);
+            let html = '<div class="date-option" onclick="selectDate(null)">📌 最新数据</div>';
+            recentDates.forEach(date => {
+                const activeClass = (selectedDate === date) ? 'active' : '';
+                const displayDate = ymdToDmy(date);
+                html += `<div class="date-option ${activeClass}" onclick="selectDate('${date}')">📅 ${displayDate}</div>`;
+            });
+            content.innerHTML = html;
+        }
+
+        function selectDate(date) {
+            selectedDate = date;
+            updateDateBtnWithLatest();
+            document.getElementById('date-dropdown').classList.remove('show');
+            document.getElementById('date-btn').classList.remove('active');
+            document.getElementById('calendar-popup').style.display = 'none';
+            loadAllCompanies(); 
+        }
+
+        // ==================== 日历 ====================
+        let currentCalendarYear, currentCalendarMonth;
+
+        function showCalendar() {
+            const popup = document.getElementById('calendar-popup');
+            if (popup.style.display === 'block') {
+                popup.style.display = 'none';
+                return;
+            }
+            const now = new Date();
+            currentCalendarYear = now.getFullYear();
+            currentCalendarMonth = now.getMonth() + 1;
+            renderCalendar();
+            popup.style.display = 'block';
+        }
+
+        function renderCalendar() {
+            const popup = document.getElementById('calendar-popup');
+            if (!popup) return;
+            let year = currentCalendarYear;
+            let month = currentCalendarMonth;
+            const monthNamesEn = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const monthNamesZh = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
+            const weekdaysEn = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            let firstDay = new Date(year, month - 1, 1).getDay();
+            let daysInMonth = new Date(year, month, 0).getDate();
+            const now = new Date();
+            const todayYmd = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,'0')}-${now.getDate().toString().padStart(2,'0')}`;
+            let html = `
+                <div class="calendar-header">
+                    <button class="calendar-nav" id="prev-month">◀</button>
+                    <span class="calendar-month-year">${monthNamesEn[month-1]} ${monthNamesZh[month-1]} ${year}</span>
+                    <button class="calendar-nav" id="next-month">▶</button>
+                </div>
+                <table class="calendar-table">
+                    <thead><tr>${weekdaysEn.map(d => `<th>${d}</th>`).join('')}</tr></thead>
+                    <tbody>
+            `;
+            let date = 1;
+            for (let i = 0; i < 6; i++) {
+                html += '<tr>';
+                for (let j = 0; j < 7; j++) {
+                    if ((i === 0 && j < firstDay) || date > daysInMonth) {
+                        html += '<td class="empty"></td>';
+                    } else {
+                        let dateYmd = `${year}-${month.toString().padStart(2,'0')}-${date.toString().padStart(2,'0')}`;
+                        let hasData = availableDatesSet.has(dateYmd);
+                        let isSelected = (selectedDate === dateYmd) ? 'selected' : '';
+                        let isToday = (dateYmd === todayYmd) ? 'today' : '';
+                        html += `<td class="${hasData ? 'has-data' : ''} ${isSelected} ${isToday}" onclick="calendarDateClick('${dateYmd}')">${date}</td>`;
+                        date++;
+                    }
+                }
+                html += '</tr>';
+                if (date > daysInMonth) break;
+            }
+            html += '</tbody></table>';
+            popup.innerHTML = html;
+            document.getElementById('prev-month').onclick = (e) => { e.stopPropagation(); changeMonth(-1); };
+            document.getElementById('next-month').onclick = (e) => { e.stopPropagation(); changeMonth(1); };
+        }
+
+        function changeMonth(delta) {
+            currentCalendarMonth += delta;
+            if (currentCalendarMonth > 12) { currentCalendarMonth = 1; currentCalendarYear++; }
+            else if (currentCalendarMonth < 1) { currentCalendarMonth = 12; currentCalendarYear--; }
+            renderCalendar();
+        }
+
+        function calendarDateClick(dateYmd) {
+            if (dateYmd) selectDate(dateYmd);
+            else alert('该日期暂无开彩数据');
+        }
+
+        // ==================== 数据加载 ====================
+        async function loadCompanyData(companyKey) {
+            const basePath = selectedDate ? `data/${selectedDate}` : 'data';
+            const url = `${basePath}/${companyKey}.json?t=${Date.now()}`;
+            try {
+                const res = await fetch(url, { cache: 'no-store' });
+                if (res.ok) return await res.json();
+                else {
+                    console.log(`${companyKey} 在 ${selectedDate} 无数据，尝试加载最新数据`);
+                    const latestUrl = `data/${companyKey}.json?t=${Date.now()}`;
+                    const latestRes = await fetch(latestUrl, { cache: 'no-store' });
+                    if (latestRes.ok) {
+                        const data = await latestRes.json();
+                        data._isFallback = true;
+                        return data;
+                    } else return null;
+                }
+            } catch (err) {
+                console.warn(`${companyKey} 请求失败，尝试加载最新数据`, err);
+                try {
+                    const latestUrl = `data/${companyKey}.json?t=${Date.now()}`;
+                    const latestRes = await fetch(latestUrl, { cache: 'no-store' });
+                    if (latestRes.ok) {
+                        const data = await latestRes.json();
+                        data._isFallback = true;
+                        return data;
+                    }
+                } catch (e) {}
+                return null;
+            }
+        }
+
+        function createCompanySkeletons() {
+            const grid = document.getElementById('companies-grid');
+            grid.innerHTML = '';
+            COMPANY_LIST.forEach(companyKey => {
+                grid.innerHTML += `
+                    <div class="company-section" id="company-${companyKey}" data-company="${companyKey}">
+                        <div class="company-title">${NAME_MAP[companyKey]}</div>
+                        <div class="draw-date" id="meta-${companyKey}">📅 日期: -- | 🎟️ 期号: --</div>
+                        <div class="company-content" id="content-${companyKey}"><p style="text-align:center;color:#999;">加载中...</p></div>
+                    </div>`;
+            });
+        }
+
+        // ==================== 核心：更新卡片 ====================
+        function updateCompanyCard(companyKey, data) {
+            const contentDiv = document.getElementById(`content-${companyKey}`);
+            const metaDiv = document.getElementById(`meta-${companyKey}`);
+            if (!data) {
+                contentDiv.innerHTML = '<p style="text-align:center;color:#d32f2f;">无数据</p>';
+                metaDiv.innerText = '📅 日期: -- | 🎟️ 期号: --';
+                return;
+            }
+            
+            let html = '';
+            let dateStr = data.draw_date || '';
+            let drawNoStr = data.draw_no || '';
+            if (companyKey === 'grand_dragon' && !dateStr) {
+                dateStr = data.date || data.drawDate || data.drawdate || '';
+                if (!dateStr) console.warn('GRAND DRAGON 数据缺少 draw_date', data);
+            }
+            let metaText = `📅 日期: ${dateStr || '--'} | 🎟️ 期号: ${drawNoStr || '--'}`;
+            if (data._isFallback && selectedDate) metaText += ` (最近一期)`;
+            metaDiv.innerText = metaText;
+
+            if (SPECIAL_COMPANIES.includes(companyKey)) {
+                if (companyKey === 'singapore_toto' && data.winning_numbers) {
+                    html = `<div class="subsection"><div class="subsection-title">开奖号码</div><div class="number-list">${data.winning_numbers.map(n => `<span class="number-item">${n}</span>`).join('')}</div></div>`;
+                    if (data.prize_table && data.prize_table.length > 0) {
+                        html += `<div class="subsection"><div class="subsection-title">奖金分配</div><table class="custom-table"><tr><th>Prize Group</th><th>Amount</th><th>Winners</th></tr>`;
+                        data.prize_table.forEach(row => {
+                            html += `<tr><td>${row[0]}</td><td>${row[1]}</td><td>${row[2]}</td></tr>`;
+                        });
+                        html += `</table></div>`;
+                    }
+                } 
+                else if (companyKey === 'sportstoto_lotto') {
+                    // 确保 jackpots 至少有 4 个元素，缺失则设为空字符串
+                    let jackpots = data.jackpots || [];
+                    while (jackpots.length < 4) jackpots.push("");
+                    let starJackpots = [jackpots[0], jackpots[1]];
+                    let powerJackpot = jackpots[2];
+                    let supremeJackpot = jackpots[3];
+
+                    if (data.star && data.star.length) {
+                        html += `<div class="subsection"><div class="subsection-title">Star Toto</div>`;
+                        html += `<div class="number-list">${data.star.map(n => `<span class="number-item">${n}</span>`).join('')}</div>`;
+                        if (starJackpots[0]) {
+                            html += `<div class="jackpot-label">Jackpot 1</div>`;
+                            html += `<div class="number-list"><span class="number-item">${starJackpots[0]}</span></div>`;
+                        }
+                        if (starJackpots[1]) {
+                            html += `<div class="jackpot-label">Jackpot 2</div>`;
+                            html += `<div class="number-list"><span class="number-item">${starJackpots[1]}</span></div>`;
+                        }
+                        html += `</div>`;
+                    }
+
+                    if (data.power && data.power.length) {
+                        html += `<div class="subsection"><div class="subsection-title">Power Toto</div>`;
+                        html += `<div class="number-list">${data.power.map(n => `<span class="number-item">${n}</span>`).join('')}</div>`;
+                        if (powerJackpot) {
+                            html += `<div class="jackpot-label">Jackpot</div>`;
+                            html += `<div class="number-list"><span class="number-item">${powerJackpot}</span></div>`;
+                        } else {
+                            html += `<div class="number-list"><span class="number-item">Jackpot ---</span></div>`;
+                        }
+                        html += `</div>`;
+                    }
+
+                    if (data.supreme && data.supreme.length) {
+                        html += `<div class="subsection"><div class="subsection-title">Supreme Toto</div>`;
+                        html += `<div class="number-list">${data.supreme.map(n => `<span class="number-item">${n}</span>`).join('')}</div>`;
+                        if (supremeJackpot) {
+                            html += `<div class="jackpot-label">Jackpot</div>`;
+                            html += `<div class="number-list"><span class="number-item">${supremeJackpot}</span></div>`;
+                        } else {
+                            html += `<div class="number-list"><span class="number-item">Jackpot ---</span></div>`;
+                        }
+                        html += `</div>`;
+                    }
+                } 
+                else if (companyKey === 'sabah_lotto') {
+                    if (data.winning_numbers && data.winning_numbers.length) {
+                        html += `<div class="subsection"><div class="subsection-title">开奖号码</div><div class="number-list">${data.winning_numbers.map(n => `<span class="number-item">${n}</span>`).join('')}</div></div>`;
+                    }
+                    if (data.jackpot1) {
+                        html += `<div class="subsection"><div class="subsection-title">Jackpot 1</div><div class="number-list"><span class="number-item">RM ${data.jackpot1}</span></div></div>`;
+                    }
+                    if (data.jackpot2) {
+                        html += `<div class="subsection"><div class="subsection-title">Jackpot 2</div><div class="number-list"><span class="number-item">RM ${data.jackpot2}</span></div></div>`;
+                    }
+                }
+                else if (data.data && Array.isArray(data.data)) {
+                    html = data.data.map(row => {
+                        if (row.length >= 3) {
+                            return `<div style="display:flex;justify-content:space-between;padding:4px 0;"><span>${row[0]}</span><span class="number-item">${row[1]}</span><span class="number-item alt-number">${row[2]}</span></div>`;
+                        } else {
+                            return `<div style="display:flex;justify-content:space-between;padding:4px 0;"><span>${row[0]}</span><span class="number-item">${row[1]}</span></div>`;
+                        }
+                    }).join('');
+                } else {
+                    html = '<p style="text-align:center; padding:10px;">特殊开彩详见官网</p>';
+                }
+            } else {
+                // 普通公司
+                html = `
+                    <div class="prize-grid" style="flex-direction:column;align-items:center;">
+                        <div class="prize-card" style="width:220px;margin-bottom:8px;"><div class="label">1st Prize</div><div class="number">${data['1st'] || '----'}</div></div>
+                        <div style="display:flex;gap:8px;width:100%;">
+                            <div class="prize-card" style="flex:1;"><div class="label">2nd Prize</div><div class="number">${data['2nd'] || '----'}</div></div>
+                            <div class="prize-card" style="flex:1;"><div class="label">3rd Prize</div><div class="number">${data['3rd'] || '----'}</div></div>
+                        </div>
+                    </div>`;
+
+                if (companyKey === 'sabah' && data['3d'] && (data['3d']['1st'] || data['3d']['2nd'] || data['3d']['3rd'])) {
+                    html += `<div class="subsection"><div class="subsection-title">3D</div>`;
+                    html += `<div style="display:flex;gap:8px;justify-content:center;">`;
+                    html += `<div class="prize-card" style="flex:1;"><div class="label">1st</div><div class="number">${data['3d']['1st'] || '---'}</div></div>`;
+                    html += `<div class="prize-card" style="flex:1;"><div class="label">2nd</div><div class="number">${data['3d']['2nd'] || '---'}</div></div>`;
+                    html += `<div class="prize-card" style="flex:1;"><div class="label">3rd</div><div class="number">${data['3d']['3rd'] || '---'}</div></div>`;
+                    html += `</div></div>`;
+                }
+
+                if (data.special?.length) html += `<div class="subsection"><div class="subsection-title">特别奖</div><div class="number-list">${data.special.map(n => `<span class="number-item">${n}</span>`).join('')}</div></div>`;
+                if (data.consolation?.length) html += `<div class="subsection"><div class="subsection-title">安慰奖</div><div class="number-list">${data.consolation.map(n => `<span class="number-item">${n}</span>`).join('')}</div></div>`;
+
+                if (companyKey === 'grand_dragon' && data.jackpot) {
+                    html += `<div class="subsection"><div class="subsection-title">Jackpot</div><div class="number-list"><span class="number-item">${data.jackpot}</span></div></div>`;
+                }
+            }
+            contentDiv.innerHTML = html;
+        }
+
+        async function loadAllCompanies() {
+            const statusText = document.getElementById('status-text');
+            statusText.innerHTML = '<span class="status-indicator loading"></span>正在更新...';
+            const promises = COMPANY_LIST.map(key => loadCompanyData(key));
+            const results = await Promise.all(promises);
+            let successCount = 0;
+            results.forEach((data, idx) => {
+                updateCompanyCard(COMPANY_LIST[idx], data);
+                if (data) successCount++;
+            });
+            const firstValid = results.find(d => d?.draw_date);
+            if (selectedDate) {
+                document.getElementById('draw_date').innerText = ymdToDmy(selectedDate);
+            } else if (availableDates.length > 0) {
+                document.getElementById('draw_date').innerText = ymdToDmy(availableDates[0]);
+            } else {
+                document.getElementById('draw_date').innerText = '--';
+            }
+            statusText.innerHTML = `<span class="status-indicator ${successCount > 0 ? 'success' : 'error'}"></span>${successCount}/${COMPANY_LIST.length} 公司已更新`;
+            document.getElementById('update-time').innerText = new Date().toLocaleString();
+        }
+
+        function forceRefresh() { loadAllCompanies(); }
+
+        // ==================== 初始化 ====================
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadDateIndex();
+            createCompanySkeletons();
+            loadAllCompanies();
+            document.getElementById('calendar-btn').onclick = showCalendar;
+            
+            document.addEventListener('click', (e) => {
+                const calendarPopup = document.getElementById('calendar-popup');
+                const dateDropdown = document.getElementById('date-dropdown');
+                if (calendarPopup.style.display === 'block' && !calendarPopup.contains(e.target) && e.target.id !== 'calendar-btn') {
+                    calendarPopup.style.display = 'none';
+                }
+                if (dateDropdown.classList.contains('show') && !dateDropdown.contains(e.target)) {
+                    dateDropdown.classList.remove('show');
+                    document.getElementById('date-btn').classList.remove('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
