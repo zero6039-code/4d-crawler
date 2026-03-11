@@ -511,7 +511,7 @@ def extract_gd_lotto_from_4dlatest(soup):
     print(f"  Jackpot: {data['jackpot']}")
     return data
 
-# ---------- 从 4dmoon.com 获取新加坡 4D & TOTO 数据 (TOTO 修复版) ----------
+# ---------- 从 4dmoon.com 获取新加坡 4D & TOTO 数据 (区域定位最终版) ----------
 def fetch_singapore_from_4dmoon():
     print("🔍 正在从 4dmoon.com 获取新加坡 4D & TOTO 数据...")
     url = "https://www.4dmoon.com/singapore-4d-results/"
@@ -520,17 +520,16 @@ def fetch_singapore_from_4dmoon():
         return None, None
 
     soup = BeautifulSoup(html, "html.parser")
-    lines = soup.get_text().splitlines()
+    # 获取纯文本并保留换行
+    text = soup.get_text()
+    lines = text.splitlines()
 
     singapore_4d_data = {"draw_date": "", "draw_no": "", "1st": "", "2nd": "", "3rd": "", "special": [], "consolation": []}
     singapore_toto_data = {"draw_date": "", "draw_no": "", "winning_numbers": [], "prize_table": []}
 
-    # ---------- 新加坡 4D 部分（保持原有逻辑，未修改）----------
-    # 为保持完整性，沿用之前的简单提取（您可后续优化）
-    page_text = soup.get_text()
-    if 'Singapore 4D' in page_text:
-        # 提取日期
-        date_match = re.search(r'Singapore\s*4D.*?\([A-Za-z]{3}\)\s*(\d{1,2}-[A-Za-z]{3}-\d{4})', page_text, re.DOTALL)
+    # ---------- 新加坡 4D 部分（保持原有简单提取）----------
+    if 'Singapore 4D' in text:
+        date_match = re.search(r'Singapore\s*4D.*?\([A-Za-z]{3}\)\s*(\d{1,2}-[A-Za-z]{3}-\d{4})', text, re.DOTALL)
         if date_match:
             try:
                 d = datetime.strptime(date_match.group(1), "%d-%b-%Y")
@@ -538,96 +537,85 @@ def fetch_singapore_from_4dmoon():
                 print(f"    ✅ 4D 日期: {singapore_4d_data['draw_date']}")
             except:
                 pass
-        # 提取期号
-        no_match = re.search(r'#(\d+)', page_text)
+        no_match = re.search(r'#(\d+)', text)
         if no_match:
             singapore_4d_data["draw_no"] = no_match.group(1)
             print(f"    ✅ 4D 期号: {singapore_4d_data['draw_no']}")
-        # 提取前三
-        prize_section = re.search(r'1st\s*Prize.*?(\d{4})\D+(\d{4})\D+(\d{4})', page_text, re.DOTALL)
-        if prize_section:
-            singapore_4d_data["1st"] = prize_section.group(1)
-            singapore_4d_data["2nd"] = prize_section.group(2)
-            singapore_4d_data["3rd"] = prize_section.group(3)
-            print(f"    ✅ 4D 前三: {prize_section.group(1)}, {prize_section.group(2)}, {prize_section.group(3)}")
-        # 特别奖和安慰奖暂不处理（可根据需要补充）
 
-    # ---------- 新加坡 TOTO 部分（全新修复）----------
-    toto_section = False
-    collecting_numbers = False
-    temp_numbers = []
-    prize_mode = False
-
-    for line in lines:
-        line = line.strip()
-        if not line:
-            continue
-
-        # 进入 TOTO 区域
+    # ---------- 新加坡 TOTO 部分（区域定位法）----------
+    # 1. 定位 "Singapore Toto" 区域
+    toto_start = None
+    for i, line in enumerate(lines):
         if 'Singapore Toto' in line:
-            toto_section = True
-            # 提取日期
-            date_match = re.search(r'\([A-Za-z]{3}\)\s*(\d{1,2}-[A-Za-z]{3}-\d{4})', line)
-            if date_match:
-                try:
-                    d = datetime.strptime(date_match.group(1), "%d-%b-%Y")
-                    singapore_toto_data["draw_date"] = d.strftime("%d-%m-%Y")
-                    print(f"    ✅ TOTO 日期: {singapore_toto_data['draw_date']}")
-                except:
-                    pass
-            continue
+            toto_start = i
+            break
 
-        if toto_section and not prize_mode:
-            # 提取期号
+    if toto_start is not None:
+        print("  ✅ 找到新加坡 TOTO 数据")
+        # 提取日期（从标题行）
+        header_line = lines[toto_start]
+        date_match = re.search(r'\([A-Za-z]{3}\)\s*(\d{1,2}-[A-Za-z]{3}-\d{4})', header_line)
+        if date_match:
+            try:
+                d = datetime.strptime(date_match.group(1), "%d-%b-%Y")
+                singapore_toto_data["draw_date"] = d.strftime("%d-%m-%Y")
+                print(f"    ✅ TOTO 日期: {singapore_toto_data['draw_date']}")
+            except:
+                pass
+
+        # 2. 从标题行之后查找期号（通常在下一行或附近）
+        for j in range(toto_start + 1, min(toto_start + 5, len(lines))):
+            line = lines[j].strip()
             if line.startswith('#'):
                 singapore_toto_data["draw_no"] = line[1:].strip()
                 print(f"    ✅ TOTO 期号: {singapore_toto_data['draw_no']}")
-                continue
+                break
 
-            # 收集数字行（开奖号码可能分多行显示）
-            if line.isdigit() or line.replace(' ', '').isdigit():
-                for num in re.findall(r'\d+', line):
-                    temp_numbers.append(num)
-                continue
+        # 3. 查找号码行（包含 "+" 的行）
+        numbers_line = None
+        for j in range(toto_start + 1, toto_start + 20):  # 向下搜索20行
+            if j >= len(lines):
+                break
+            line = lines[j].strip()
+            if '+' in line and re.search(r'\d+\s*\+\s*\d+', line):
+                numbers_line = line
+                break
 
-            # 遇到包含 '|' 的行，通常表示号码行的结束，并可能包含额外号码
-            if '|' in line:
-                for num in re.findall(r'\d+', line):
-                    temp_numbers.append(num)
-                # 整理号码
-                if temp_numbers:
-                    # 去重并保持顺序
-                    seen = set()
-                    unique_nums = []
-                    for num in temp_numbers:
-                        if num not in seen:
-                            seen.add(num)
-                            unique_nums.append(num)
-                    # 通常前6个是主号码，最后一个为额外号码
-                    if len(unique_nums) >= 7:
-                        singapore_toto_data["winning_numbers"] = unique_nums[:6] + [unique_nums[-1]]
-                    else:
-                        singapore_toto_data["winning_numbers"] = unique_nums
-                    print(f"    ✅ TOTO 号码: {' '.join(singapore_toto_data['winning_numbers'])}")
-                temp_numbers = []
-                # 之后进入奖金表模式
-                prize_mode = True
-                continue
+        if numbers_line:
+            # 提取所有数字
+            all_nums = re.findall(r'\b(\d{1,2})\b', numbers_line)
+            if all_nums:
+                # 通常前6个是主号码，最后一个是额外号码
+                if len(all_nums) >= 7:
+                    singapore_toto_data["winning_numbers"] = all_nums[:6] + [all_nums[-1]]
+                else:
+                    singapore_toto_data["winning_numbers"] = all_nums
+                print(f"    ✅ TOTO 号码: {' '.join(singapore_toto_data['winning_numbers'])}")
 
-        # 奖金表解析
-        if prize_mode:
-            # 跳过标题行
-            if 'Prize Group' in line:
-                continue
-            # 奖金表行格式：Group 2 | $96,496 | 3
-            parts = re.split(r'\s*\|\s*', line)
-            if len(parts) >= 3:
-                group = parts[0].strip()
-                amount = parts[1].strip() if parts[1] else ""
-                winners = parts[2].strip() if len(parts) > 2 else ""
-                singapore_toto_data["prize_table"].append([group, amount, winners])
+        # 4. 查找奖金表（从 "Prize Group" 开始）
+        prize_start = None
+        for j in range(toto_start + 1, len(lines)):
+            if 'Prize Group' in lines[j]:
+                prize_start = j
+                break
 
-    print(f"    ✅ TOTO 奖金表行数: {len(singapore_toto_data['prize_table'])}")
+        if prize_start:
+            # 从下一行开始解析表格
+            for j in range(prize_start + 1, len(lines)):
+                line = lines[j].strip()
+                if not line or (line.startswith('|') is False and '|' not in line):
+                    # 空行或非表格行结束
+                    break
+                # 处理可能没有竖线开头的行
+                parts = re.split(r'\s*\|\s*', line)
+                if len(parts) >= 3:
+                    group = parts[0].strip()
+                    amount = parts[1].strip() if parts[1] else ""
+                    winners = parts[2].strip() if len(parts) > 2 else ""
+                    singapore_toto_data["prize_table"].append([group, amount, winners])
+
+        print(f"    ✅ TOTO 奖金表行数: {len(singapore_toto_data['prize_table'])}")
+
     return singapore_4d_data, singapore_toto_data
 
 # ---------- 从 4dlatest.org 提取 SABAH88 沙巴万字 LOTTO ----------
