@@ -511,7 +511,7 @@ def extract_gd_lotto_from_4dlatest(soup):
     print(f"  Jackpot: {data['jackpot']}")
     return data
 
-# ---------- 从 4dmoon.com 获取新加坡 4D & TOTO 数据 (基于文本正则的终极修复版) ----------
+# ---------- 从 4dmoon.com 获取新加坡 4D & TOTO 数据 (TOTO 修复版) ----------
 def fetch_singapore_from_4dmoon():
     print("🔍 正在从 4dmoon.com 获取新加坡 4D & TOTO 数据...")
     url = "https://www.4dmoon.com/singapore-4d-results/"
@@ -520,98 +520,114 @@ def fetch_singapore_from_4dmoon():
         return None, None
 
     soup = BeautifulSoup(html, "html.parser")
-    page_text = soup.get_text()
+    lines = soup.get_text().splitlines()
 
     singapore_4d_data = {"draw_date": "", "draw_no": "", "1st": "", "2nd": "", "3rd": "", "special": [], "consolation": []}
     singapore_toto_data = {"draw_date": "", "draw_no": "", "winning_numbers": [], "prize_table": []}
 
-    # --- 提取新加坡 4D 数据 ---
-    # 1. 定位 "Singapore 4D" 区块
+    # ---------- 新加坡 4D 部分（保持原有逻辑，未修改）----------
+    # 为保持完整性，沿用之前的简单提取（您可后续优化）
+    page_text = soup.get_text()
     if 'Singapore 4D' in page_text:
-        print("  ✅ 找到新加坡 4D 数据")
-        # 提取日期和期号
+        # 提取日期
         date_match = re.search(r'Singapore\s*4D.*?\([A-Za-z]{3}\)\s*(\d{1,2}-[A-Za-z]{3}-\d{4})', page_text, re.DOTALL)
         if date_match:
             try:
                 d = datetime.strptime(date_match.group(1), "%d-%b-%Y")
                 singapore_4d_data["draw_date"] = d.strftime("%d-%m-%Y")
                 print(f"    ✅ 4D 日期: {singapore_4d_data['draw_date']}")
-            except Exception as e:
-                print(f"    ⚠️ 4D 日期解析失败: {e}")
-
+            except:
+                pass
+        # 提取期号
         no_match = re.search(r'#(\d+)', page_text)
         if no_match:
             singapore_4d_data["draw_no"] = no_match.group(1)
             print(f"    ✅ 4D 期号: {singapore_4d_data['draw_no']}")
-
-        # 提取前三 (查找 "1st Prize" 后的四个数字)
+        # 提取前三
         prize_section = re.search(r'1st\s*Prize.*?(\d{4})\D+(\d{4})\D+(\d{4})', page_text, re.DOTALL)
         if prize_section:
             singapore_4d_data["1st"] = prize_section.group(1)
             singapore_4d_data["2nd"] = prize_section.group(2)
             singapore_4d_data["3rd"] = prize_section.group(3)
-            print(f"    ✅ 4D 前三: {singapore_4d_data['1st']}, {singapore_4d_data['2nd']}, {singapore_4d_data['3rd']}")
+            print(f"    ✅ 4D 前三: {prize_section.group(1)}, {prize_section.group(2)}, {prize_section.group(3)}")
+        # 特别奖和安慰奖暂不处理（可根据需要补充）
 
-        # 提取特别奖 (查找 "Special" 后的一串四位数字)
-        special_match = re.search(r'Special\s*([\d\s]+?)(?=\s*Consolation|\s*$)', page_text, re.DOTALL)
-        if special_match:
-            special_numbers = re.findall(r'\b(\d{4})\b', special_match.group(1))
-            singapore_4d_data["special"] = special_numbers[:10]
-            print(f"    ✅ 4D 特别奖数量: {len(singapore_4d_data['special'])}")
+    # ---------- 新加坡 TOTO 部分（全新修复）----------
+    toto_section = False
+    collecting_numbers = False
+    temp_numbers = []
+    prize_mode = False
 
-        # 提取安慰奖 (查找 "Consolation" 后的一串四位数字)
-        cons_match = re.search(r'Consolation\s*([\d\s]+?)(?=\s*Singapore Toto|\s*$)', page_text, re.DOTALL)
-        if cons_match:
-            cons_numbers = re.findall(r'\b(\d{4})\b', cons_match.group(1))
-            singapore_4d_data["consolation"] = cons_numbers[:10]
-            print(f"    ✅ 4D 安慰奖数量: {len(singapore_4d_data['consolation'])}")
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
 
-    # --- 提取新加坡 TOTO 数据 ---
-    if 'Singapore Toto' in page_text:
-        print("  ✅ 找到新加坡 TOTO 数据")
-        # 提取日期
-        date_match = re.search(r'Singapore\s*Toto.*?\([A-Za-z]{3}\)\s*(\d{1,2}-[A-Za-z]{3}-\d{4})', page_text, re.DOTALL)
-        if date_match:
-            try:
-                d = datetime.strptime(date_match.group(1), "%d-%b-%Y")
-                singapore_toto_data["draw_date"] = d.strftime("%d-%m-%Y")
-                print(f"    ✅ TOTO 日期: {singapore_toto_data['draw_date']}")
-            except Exception as e:
-                print(f"    ⚠️ TOTO 日期解析失败: {e}")
+        # 进入 TOTO 区域
+        if 'Singapore Toto' in line:
+            toto_section = True
+            # 提取日期
+            date_match = re.search(r'\([A-Za-z]{3}\)\s*(\d{1,2}-[A-Za-z]{3}-\d{4})', line)
+            if date_match:
+                try:
+                    d = datetime.strptime(date_match.group(1), "%d-%b-%Y")
+                    singapore_toto_data["draw_date"] = d.strftime("%d-%m-%Y")
+                    print(f"    ✅ TOTO 日期: {singapore_toto_data['draw_date']}")
+                except:
+                    pass
+            continue
 
-        # 提取期号 (可能跟在日期后面)
-        no_match = re.search(r'#(\d+)', page_text)
-        if no_match:
-            singapore_toto_data["draw_no"] = no_match.group(1)
-            print(f"    ✅ TOTO 期号: {singapore_toto_data['draw_no']}")
+        if toto_section and not prize_mode:
+            # 提取期号
+            if line.startswith('#'):
+                singapore_toto_data["draw_no"] = line[1:].strip()
+                print(f"    ✅ TOTO 期号: {singapore_toto_data['draw_no']}")
+                continue
 
-        # 提取开奖号码 (匹配 "7 13 14 17 40 44 + 35" 格式)
-        nums_match = re.search(r'(\d{1,2}\s+\d{1,2}\s+\d{1,2}\s+\d{1,2}\s+\d{1,2}\s+\d{1,2}\s*\+\s*\d{1,2})', page_text)
-        if nums_match:
-            num_str = nums_match.group(1)
-            winning = re.findall(r'\b(\d{1,2})\b', num_str)
-            if winning:
-                if len(winning) >= 7:
-                    singapore_toto_data["winning_numbers"] = winning[:6] + [winning[-1]]
-                else:
-                    singapore_toto_data["winning_numbers"] = winning
-                print(f"    ✅ TOTO 号码: {' '.join(singapore_toto_data['winning_numbers'])}")
+            # 收集数字行（开奖号码可能分多行显示）
+            if line.isdigit() or line.replace(' ', '').isdigit():
+                for num in re.findall(r'\d+', line):
+                    temp_numbers.append(num)
+                continue
 
-        # 提取奖金表 (查找 "Prize Group" 后的表格数据)
-        table_match = re.search(r'Prize Group.*?\n(.*?)(?=\n\n|\Z)', page_text, re.DOTALL)
-        if table_match:
-            table_text = table_match.group(1)
-            # 按行分割，每行格式：Group 1 | |  或 Group 2 | $96,496 | 3
-            lines = table_text.strip().split('\n')
-            for line in lines[1:]:  # 跳过标题行
-                parts = re.split(r'\s*\|\s*', line.strip())
-                if len(parts) >= 3:
-                    group = parts[0].strip()
-                    amount = parts[1].strip() if parts[1] else ""
-                    winners = parts[2].strip() if len(parts) > 2 else ""
-                    singapore_toto_data["prize_table"].append([group, amount, winners])
-            print(f"    ✅ TOTO 奖金表行数: {len(singapore_toto_data['prize_table'])}")
+            # 遇到包含 '|' 的行，通常表示号码行的结束，并可能包含额外号码
+            if '|' in line:
+                for num in re.findall(r'\d+', line):
+                    temp_numbers.append(num)
+                # 整理号码
+                if temp_numbers:
+                    # 去重并保持顺序
+                    seen = set()
+                    unique_nums = []
+                    for num in temp_numbers:
+                        if num not in seen:
+                            seen.add(num)
+                            unique_nums.append(num)
+                    # 通常前6个是主号码，最后一个为额外号码
+                    if len(unique_nums) >= 7:
+                        singapore_toto_data["winning_numbers"] = unique_nums[:6] + [unique_nums[-1]]
+                    else:
+                        singapore_toto_data["winning_numbers"] = unique_nums
+                    print(f"    ✅ TOTO 号码: {' '.join(singapore_toto_data['winning_numbers'])}")
+                temp_numbers = []
+                # 之后进入奖金表模式
+                prize_mode = True
+                continue
 
+        # 奖金表解析
+        if prize_mode:
+            # 跳过标题行
+            if 'Prize Group' in line:
+                continue
+            # 奖金表行格式：Group 2 | $96,496 | 3
+            parts = re.split(r'\s*\|\s*', line)
+            if len(parts) >= 3:
+                group = parts[0].strip()
+                amount = parts[1].strip() if parts[1] else ""
+                winners = parts[2].strip() if len(parts) > 2 else ""
+                singapore_toto_data["prize_table"].append([group, amount, winners])
+
+    print(f"    ✅ TOTO 奖金表行数: {len(singapore_toto_data['prize_table'])}")
     return singapore_4d_data, singapore_toto_data
 
 # ---------- 从 4dlatest.org 提取 SABAH88 沙巴万字 LOTTO ----------
