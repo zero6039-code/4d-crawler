@@ -38,8 +38,8 @@
         .company-section:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(0,0,0,0.12); }
         .company-section.loading { opacity: 0.6; pointer-events: none; }
         .company-section.error { border-color: #d32f2f; background: #ffebee; }
-        .company-title { font-size: 1.6rem; font-weight: 800; margin-bottom: 4px; padding-left: 4px; background: linear-gradient(145deg, #1e2b3a, #2b3d55); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1px; display: flex; align-items: center; flex-wrap: wrap; gap: 12px; } /* 增加 gap 以容纳更大图标 */
-        /* 马图标样式：位于标题右侧，更大更突出，路径更新为 damacai.png */
+        .company-title { font-size: 1.6rem; font-weight: 800; margin-bottom: 4px; padding-left: 4px; background: linear-gradient(145deg, #1e2b3a, #2b3d55); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1px; display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+        /* 图标样式：统一高度，位于文字右侧 */
         .company-title img {
             height: 3rem;
             width: auto;
@@ -49,7 +49,7 @@
             transition: transform 0.2s;
         }
         .company-title img:hover { transform: scale(1.05); }
-        .draw-date { font-size: 0.8rem; color: #4a5568; margin-bottom: 8px; padding-left: 4px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } /* 缩小字体，强制单行，溢出省略 */
+        .draw-date { font-size: 0.8rem; color: #4a5568; margin-bottom: 8px; padding-left: 4px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .prize-grid { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 12px 0 16px; }
         .prize-card { background: #f8fafd; border-radius: 16px; padding: 10px 12px; flex: 1 1 90px; min-width: 80px; text-align: center; box-shadow: inset 0 1px 4px #ffffff, 0 5px 10px rgba(0,0,0,0.04); border: 1px solid #e9ecf0; }
         .prize-card .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #5f6b7a; font-weight: 500; margin-bottom: 4px; }
@@ -71,7 +71,7 @@
         @media (max-width: 600px) {
             .companies-grid { grid-template-columns: 1fr; }
             .company-title { font-size: 1.5rem; gap: 8px; }
-            .company-title img { height: 2.5rem; } /* 手机图标尺寸 */
+            .company-title img { height: 2.5rem; }
             .prize-card .number { font-size: 1.6rem; }
             .number-item {
                 font-size: 1.3rem;
@@ -80,7 +80,7 @@
                 word-break: break-all;
                 white-space: normal;
             }
-            .draw-date { font-size: 0.75rem; } /* 手机屏幕进一步缩小字体 */
+            .draw-date { font-size: 0.75rem; }
         }
         /* 公司特有颜色 */
         .company-section[data-company="damacai"] .company-title { background: linear-gradient(145deg, #1e5620, #2a7a2d); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
@@ -182,6 +182,22 @@
             'magnum_jackpot_gold', 'sportstoto_5d', 'sportstoto_6d', 'magnum_life',
             'sabah_lotto'
         ];
+
+        // 公司图标映射（对应 images 目录下的文件）
+        const COMPANY_IMAGE_MAP = {
+            'damacai': 'damacai.png',
+            'damacai_1p3d': 'damacai1+3.png',
+            'sandakan': 'sandakan_logo.png',
+            'sarawak_cashsweep': 'sarawak.jpg',
+            'sabah': 'sabah88.png',
+            'sabah_lotto': 'sabahlotto.png',
+            'grand_dragon': 'granddragon.png',
+            'magnum': 'magnum.png',
+            'toto': 'toto.png',
+            'singapore': 'singapore4d.png',
+            'singapore_toto': 'singapore-pools.png'
+            // 其他公司无对应图标
+        };
 
         let availableDates = [];           
         let availableDatesSet = new Set(); 
@@ -385,12 +401,11 @@
             const grid = document.getElementById('companies-grid');
             grid.innerHTML = '';
             COMPANY_LIST.forEach(companyKey => {
-                // 为 damacai 卡片标题添加马图标（放在文字右侧），图片路径改为 damacai.png，其他公司无图标
-                let titleHtml = '';
-                if (companyKey === 'damacai') {
-                    titleHtml = `${NAME_MAP[companyKey]} <img src="images/damacai.png" alt="Damacai Horse" onerror="this.style.display='none'">`;
-                } else {
-                    titleHtml = NAME_MAP[companyKey];
+                const imageFile = COMPANY_IMAGE_MAP[companyKey];
+                let titleHtml = NAME_MAP[companyKey];
+                if (imageFile) {
+                    // 如果有对应图标，添加到文字右侧
+                    titleHtml = `${NAME_MAP[companyKey]} <img src="images/${imageFile}" alt="${companyKey} logo" onerror="this.style.display='none'">`;
                 }
                 grid.innerHTML += `
                     <div class="company-section" id="company-${companyKey}" data-company="${companyKey}">
