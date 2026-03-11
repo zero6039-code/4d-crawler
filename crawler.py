@@ -361,7 +361,7 @@ def extract_sportstoto_lotto(box, global_date, global_draw_no):
     data['star'], data['power'], data['supreme'], data['jackpots'] = extract_lotto(box)
     return data
 
-# ---------- 从 4dlatest.org 提取 GDLOTTO 豪龙 ----------
+# ---------- 从 4dlatest.org 提取 GDLOTTO 豪龙 (增强版) ----------
 def extract_gd_lotto_from_4dlatest(soup):
     print("🔍 正在从 4dlatest.org 提取 GDLOTTO 豪龙数据...")
     data = {
@@ -374,99 +374,124 @@ def extract_gd_lotto_from_4dlatest(soup):
         "consolation": [],
         "jackpot": ""
     }
-    header = soup.find(string=re.compile(r"GDLOTTO.*豪龙", re.IGNORECASE))
-    if not header:
+
+    # 定位包含“GDLOTTO 豪龙”的单元格
+    header_td = soup.find('td', string=re.compile(r'GDLOTTO.*豪龙', re.I))
+    if not header_td:
         print("⚠️ 未找到 'GDLOTTO 豪龙' 标题")
         return None
-    table = header.find_parent("table")
-    if not table:
-        table = header.find_next("table")
+
+    table = header_td.find_parent('table')
     if not table:
         print("⚠️ 未找到 GDLOTTO 数据表格")
         return None
-    header_text = header.get_text(" ", strip=True)
+
+    # 从标题行提取日期和期号
+    header_text = header_td.get_text(" ", strip=True)
     print(f"📅 标题文本: {header_text}")
-    date_match = re.search(r"(\d{2}/\d{2}/\d{4})", header_text)
+
+    # 日期匹配：支持 dd/mm/yyyy, dd-mm-yyyy, dd mmm yyyy (如 11 Mar 2026)
+    date_match = re.search(r'(\d{1,2}[/-]\d{1,2}[/-]\d{4})', header_text)
     if not date_match:
-        date_match = re.search(r"(\d{2}-\d{2}-\d{4})", header_text)
+        date_match = re.search(r'(\d{1,2}\s+[A-Za-z]{3}\s+\d{4})', header_text)
     if date_match:
+        raw_date = date_match.group(1)
         try:
-            d = datetime.strptime(date_match.group(1), "%d/%m/%Y" if '/' in date_match.group(1) else "%d-%m-%Y")
-            data["draw_date"] = d.strftime("%d-%m-%Y")
+            if re.match(r'\d{1,2}\s+[A-Za-z]{3}\s+\d{4}', raw_date):
+                d = datetime.strptime(raw_date, "%d %b %Y")
+                data["draw_date"] = d.strftime("%d-%m-%Y")
+            else:
+                sep = '/' if '/' in raw_date else '-'
+                d = datetime.strptime(raw_date, f"%d{sep}%m{sep}%Y")
+                data["draw_date"] = d.strftime("%d-%m-%Y")
             print(f"  ✅ 提取到日期: {data['draw_date']}")
-        except:
-            pass
-    no_match = re.search(r"#?(\d+/\d+)", header_text)
+        except Exception as e:
+            print(f"  ⚠️ 日期解析失败: {e}")
+
+    # 期号匹配
+    no_match = re.search(r'#?(\d+/\d+)', header_text)
     if no_match:
         data["draw_no"] = no_match.group(1)
-        print(f"  提取到期号: {data['draw_no']}")
+        print(f"  ✅ 提取到期号: {data['draw_no']}")
+
+    # 如果标题行没有提取到期号，尝试从表格第一行查找
+    if not data["draw_no"]:
+        first_row = table.find('tr')
+        if first_row:
+            row_text = first_row.get_text()
+            no_match = re.search(r'#?(\d+/\d+)', row_text)
+            if no_match:
+                data["draw_no"] = no_match.group(1)
+                print(f"  ✅ 从第一行提取到期号: {data['draw_no']}")
 
     rows = table.find_all("tr")
     special_mode = False
     consolation_mode = False
     special_list = []
     consolation_list = []
+
     for row in rows:
         row_text = row.get_text().upper()
         cells = row.find_all("td")
+
+        # 切换模式
         if "SPECIAL" in row_text:
             special_mode = True
             consolation_mode = False
+            # 该行本身可能含有数字（如 SPECIAL 8789 8805...）
             for cell in cells:
-                text = cell.get_text(strip=True)
-                if text.isdigit() and len(text) >= 3:
-                    special_list.append(text)
+                num = cell.get_text(strip=True)
+                if num.isdigit() and len(num) == 4:
+                    special_list.append(num)
             continue
+
         if "CONSOLATION" in row_text:
             special_mode = False
             consolation_mode = True
             for cell in cells:
-                text = cell.get_text(strip=True)
-                if text.isdigit() and len(text) >= 3:
-                    consolation_list.append(text)
+                num = cell.get_text(strip=True)
+                if num.isdigit() and len(num) == 4:
+                    consolation_list.append(num)
             continue
-        if "JACKPOT" in row_text or "USD" in row_text or "$" in row_text:
-            amount_match = re.search(r'([\d,]+(?:.\d+)?)', row.get_text())
-            if amount_match:
-                data["jackpot"] = amount_match.group(1)
-            continue
+
+        # 提取前三名（可能在单独的单元格中）
+        cell_texts = [c.get_text(strip=True) for c in cells]
+        for i, txt in enumerate(cell_texts):
+            if '1ST' in txt.upper() and i+1 < len(cell_texts):
+                data['1st'] = cell_texts[i+1]
+            elif '2ND' in txt.upper() and i+1 < len(cell_texts):
+                data['2nd'] = cell_texts[i+1]
+            elif '3RD' in txt.upper() and i+1 < len(cell_texts):
+                data['3rd'] = cell_texts[i+1]
+
+        # 如果当前处于 special 或 consolation 模式，提取数字
         if special_mode:
             for cell in cells:
-                text = cell.get_text(strip=True)
-                if text.isdigit() and len(text) >= 3:
-                    special_list.append(text)
+                num = cell.get_text(strip=True)
+                if num.isdigit() and len(num) == 4:
+                    special_list.append(num)
         if consolation_mode:
             for cell in cells:
-                text = cell.get_text(strip=True)
-                if text.isdigit() and len(text) >= 3:
-                    consolation_list.append(text)
-        if "1ST" in row_text:
-            for cell in cells:
-                text = cell.get_text(strip=True)
-                if text.isdigit() and len(text) >= 3:
-                    data["1st"] = text
-                    break
-        if "2ND" in row_text:
-            for cell in cells:
-                text = cell.get_text(strip=True)
-                if text.isdigit() and len(text) >= 3:
-                    data["2nd"] = text
-                    break
-        if "3RD" in row_text:
-            for cell in cells:
-                text = cell.get_text(strip=True)
-                if text.isdigit() and len(text) >= 3:
-                    data["3rd"] = text
-                    break
+                num = cell.get_text(strip=True)
+                if num.isdigit() and len(num) == 4:
+                    consolation_list.append(num)
+
+        # 提取 Jackpot 金额
+        if 'JACKPOT' in row_text or 'RM' in row_text:
+            amount_match = re.search(r'RM\s*([\d,]+(?:\.\d+)?)', row_text)
+            if amount_match:
+                data['jackpot'] = amount_match.group(1)
+
     data["special"] = list(dict.fromkeys(special_list))[:10]
     data["consolation"] = list(dict.fromkeys(consolation_list))[:10]
+
     print(f"  提取到前三: {data['1st']}, {data['2nd']}, {data['3rd']}")
     print(f"  特别奖数量: {len(data['special'])}")
     print(f"  安慰奖数量: {len(data['consolation'])}")
     print(f"  Jackpot: {data['jackpot']}")
     return data
 
-# ---------- 最终优化：从 4dlatest.org 提取 SABAH88 沙巴万字 LOTTO ----------
+# ---------- 从 4dlatest.org 提取 SABAH88 沙巴万字 LOTTO ----------
 def extract_sabah_lotto_from_4dlatest(soup):
     print("🔍 正在从 4dlatest.org 提取 SABAH88 沙巴万字 LOTTO 数据...")
     data = {
@@ -837,7 +862,7 @@ def extract_sportstoto_from_4dlatest(soup):
     print("⚠️ 未能从任何包含 'Sports Toto' 的表格中提取到数据")
     return None, None, None
 
-# ---------- 从 4d2ulive.com 获取 Grand Dragon 数据 ----------
+# ---------- 从 4d2ulive.com 获取 Grand Dragon 数据 (增强版) ----------
 def fetch_grand_dragon_from_4d2ulive():
     print("🔍 正在从 4d2ulive.com 获取 Grand Dragon 4D 数据...")
     html = fetch_html(URL_4D2ULIVE)
@@ -852,17 +877,38 @@ def fetch_grand_dragon_from_4d2ulive():
         return None
 
     header_text = header.get_text(" ", strip=True)
-    date_match = re.search(r"(\d{2}-\d{2}-\d{4})", header_text)
+    print(f"📅 标题文本: {header_text}")
+
+    # 日期提取（支持多种格式）
+    date_match = re.search(r'(\d{1,2}[/-]\d{1,2}[/-]\d{4})', header_text)
+    if not date_match:
+        date_match = re.search(r'(\d{1,2}\s+[A-Za-z]{3}\s+\d{4})', header_text)
     if date_match:
-        data["draw_date"] = date_match.group(1)
-        print(f"  ✅ 提取到日期: {data['draw_date']}")
+        raw_date = date_match.group(1)
+        try:
+            if re.match(r'\d{1,2}\s+[A-Za-z]{3}\s+\d{4}', raw_date):
+                d = datetime.strptime(raw_date, "%d %b %Y")
+                data["draw_date"] = d.strftime("%d-%m-%Y")
+            else:
+                sep = '/' if '/' in raw_date else '-'
+                d = datetime.strptime(raw_date, f"%d{sep}%m{sep}%Y")
+                data["draw_date"] = d.strftime("%d-%m-%Y")
+            print(f"  ✅ 提取到日期: {data['draw_date']}")
+        except Exception as e:
+            print(f"  ⚠️ 日期解析失败: {e}")
+
+    # 期号提取
+    no_match = re.search(r'#?(\d+/\d+)', header_text)
+    if no_match:
+        data["draw_no"] = no_match.group(1)
+        print(f"  ✅ 提取到期号: {data['draw_no']}")
 
     table = header.find_parent("table")
     if not table:
         table = header.find_next("table")
     if not table:
         print("⚠️ 未找到 Grand Dragon 数据表格")
-        return None
+        return data
 
     rows = table.find_all("tr")
     special_list = []
