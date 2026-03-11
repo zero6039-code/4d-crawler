@@ -39,7 +39,7 @@
         .company-section.loading { opacity: 0.6; pointer-events: none; }
         .company-section.error { border-color: #d32f2f; background: #ffebee; }
         .company-title { font-size: 1.6rem; font-weight: 800; margin-bottom: 4px; padding-left: 4px; background: linear-gradient(145deg, #1e2b3a, #2b3d55); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
-        .company-title::before { content: "🎯"; margin-right: 6px; font-size: 1.4rem; background: none; -webkit-text-fill-color: initial; }
+        /* 已应要求删除公司名前的标靶 emoji */
         .draw-date { font-size: 0.9rem; color: #4a5568; margin-bottom: 10px; padding-left: 4px; font-weight: 500; }
         .prize-grid { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 12px 0 16px; }
         .prize-card { background: #f8fafd; border-radius: 16px; padding: 10px 12px; flex: 1 1 90px; min-width: 80px; text-align: center; box-shadow: inset 0 1px 4px #ffffff, 0 5px 10px rgba(0,0,0,0.04); border: 1px solid #e9ecf0; }
@@ -377,7 +377,7 @@
                 grid.innerHTML += `
                     <div class="company-section" id="company-${companyKey}" data-company="${companyKey}">
                         <div class="company-title">${NAME_MAP[companyKey]}</div>
-                        <div class="draw-date" id="meta-${companyKey}">📅 日期: -- | 🎟️ 期号: --</div>
+                        <div class="draw-date" id="meta-${companyKey}">日期 Date: -- | 期号 Draw Date: --</div>
                         <div class="company-content" id="content-${companyKey}"><p style="text-align:center;color:#999;">加载中...</p></div>
                     </div>`;
             });
@@ -389,7 +389,7 @@
             const metaDiv = document.getElementById(`meta-${companyKey}`);
             if (!data) {
                 contentDiv.innerHTML = '<p style="text-align:center;color:#d32f2f;">无数据</p>';
-                metaDiv.innerText = '📅 日期: -- | 🎟️ 期号: --';
+                metaDiv.innerText = '日期 Date: -- | 期号 Draw Date: --';
                 return;
             }
             
@@ -400,7 +400,7 @@
                 dateStr = data.date || data.drawDate || data.drawdate || '';
                 if (!dateStr) console.warn('GRAND DRAGON 数据缺少 draw_date', data);
             }
-            let metaText = `📅 日期: ${dateStr || '--'} | 🎟️ 期号: ${drawNoStr || '--'}`;
+            let metaText = `日期 Date: ${dateStr || '--'} | 期号 Draw Date: ${drawNoStr || '--'}`;
             if (data._isFallback && selectedDate) metaText += ` (最近一期)`;
             metaDiv.innerText = metaText;
 
