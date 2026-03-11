@@ -38,10 +38,10 @@
         .company-section:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(0,0,0,0.12); }
         .company-section.loading { opacity: 0.6; pointer-events: none; }
         .company-section.error { border-color: #d32f2f; background: #ffebee; }
-        .company-title { font-size: 1.6rem; font-weight: 800; margin-bottom: 4px; padding-left: 4px; background: linear-gradient(145deg, #1e2b3a, #2b3d55); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
-        /* 马图标样式：位于标题右侧，更大更突出 */
+        .company-title { font-size: 1.6rem; font-weight: 800; margin-bottom: 4px; padding-left: 4px; background: linear-gradient(145deg, #1e2b3a, #2b3d55); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1px; display: flex; align-items: center; flex-wrap: wrap; gap: 12px; } /* 增加 gap 以容纳更大图标 */
+        /* 马图标样式：位于标题右侧，更大更突出，路径更新为 damacai.png */
         .company-title img {
-            height: 2.4rem;
+            height: 3rem;
             width: auto;
             margin-left: 8px;
             vertical-align: middle;
@@ -70,8 +70,8 @@
         /* 手机字体优化 */
         @media (max-width: 600px) {
             .companies-grid { grid-template-columns: 1fr; }
-            .company-title { font-size: 1.5rem; }
-            .company-title img { height: 2.0rem; } /* 手机图标略大但适应屏幕 */
+            .company-title { font-size: 1.5rem; gap: 8px; }
+            .company-title img { height: 2.5rem; } /* 手机图标尺寸 */
             .prize-card .number { font-size: 1.6rem; }
             .number-item {
                 font-size: 1.3rem;
@@ -385,7 +385,7 @@
             const grid = document.getElementById('companies-grid');
             grid.innerHTML = '';
             COMPANY_LIST.forEach(companyKey => {
-                // 为 damacai 卡片标题添加马图标（放在文字右侧），其他公司无图标
+                // 为 damacai 卡片标题添加马图标（放在文字右侧），图片路径改为 damacai.png，其他公司无图标
                 let titleHtml = '';
                 if (companyKey === 'damacai') {
                     titleHtml = `${NAME_MAP[companyKey]} <img src="images/damacai.png" alt="Damacai Horse" onerror="this.style.display='none'">`;
