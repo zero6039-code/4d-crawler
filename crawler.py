@@ -361,7 +361,7 @@ def extract_sportstoto_lotto(box, global_date, global_draw_no):
     data['star'], data['power'], data['supreme'], data['jackpots'] = extract_lotto(box)
     return data
 
-# ---------- 从 4dlatest.org 提取 GDLOTTO 豪龙 (增强版) ----------
+# ---------- 从 4dlatest.org 提取 GDLOTTO 豪龙 (修复版，基于"豪龙"定位) ----------
 def extract_gd_lotto_from_4dlatest(soup):
     print("🔍 正在从 4dlatest.org 提取 GDLOTTO 豪龙数据...")
     data = {
@@ -375,18 +375,26 @@ def extract_gd_lotto_from_4dlatest(soup):
         "jackpot": ""
     }
 
-    # 定位包含“GDLOTTO 豪龙”的单元格
-    header_td = soup.find('td', string=re.compile(r'GDLOTTO.*豪龙', re.I))
+    # 1. 定位包含“豪龙”的 td 单元格（兼容 GDLOTTO、GRANDDRAGON 等前缀）
+    header_td = soup.find('td', string=re.compile(r'豪龙', re.I))
     if not header_td:
-        print("⚠️ 未找到 'GDLOTTO 豪龙' 标题")
+        # 尝试搜索任何包含“豪龙”的文本节点，再找其父 td
+        text_node = soup.find(string=re.compile(r'豪龙', re.I))
+        if text_node:
+            header_td = text_node.find_parent('td')
+    if not header_td:
+        print("⚠️ 未找到包含 '豪龙' 的标题")
         return None
 
+    # 2. 获取表格（可能是当前 td 所在的表格，或下一个表格）
     table = header_td.find_parent('table')
     if not table:
-        print("⚠️ 未找到 GDLOTTO 数据表格")
+        table = header_td.find_next('table')
+    if not table:
+        print("⚠️ 未找到豪龙数据表格")
         return None
 
-    # 从标题行提取日期和期号
+    # 3. 从标题行提取日期和期号
     header_text = header_td.get_text(" ", strip=True)
     print(f"📅 标题文本: {header_text}")
 
@@ -424,6 +432,7 @@ def extract_gd_lotto_from_4dlatest(soup):
                 data["draw_no"] = no_match.group(1)
                 print(f"  ✅ 从第一行提取到期号: {data['draw_no']}")
 
+    # 4. 遍历表格行提取号码
     rows = table.find_all("tr")
     special_mode = False
     consolation_mode = False
@@ -862,7 +871,7 @@ def extract_sportstoto_from_4dlatest(soup):
     print("⚠️ 未能从任何包含 'Sports Toto' 的表格中提取到数据")
     return None, None, None
 
-# ---------- 从 4d2ulive.com 获取 Grand Dragon 数据 (增强版) ----------
+# ---------- 从 4d2ulive.com 获取 Grand Dragon 数据 ----------
 def fetch_grand_dragon_from_4d2ulive():
     print("🔍 正在从 4d2ulive.com 获取 Grand Dragon 4D 数据...")
     html = fetch_html(URL_4D2ULIVE)
@@ -877,38 +886,17 @@ def fetch_grand_dragon_from_4d2ulive():
         return None
 
     header_text = header.get_text(" ", strip=True)
-    print(f"📅 标题文本: {header_text}")
-
-    # 日期提取（支持多种格式）
-    date_match = re.search(r'(\d{1,2}[/-]\d{1,2}[/-]\d{4})', header_text)
-    if not date_match:
-        date_match = re.search(r'(\d{1,2}\s+[A-Za-z]{3}\s+\d{4})', header_text)
+    date_match = re.search(r"(\d{2}-\d{2}-\d{4})", header_text)
     if date_match:
-        raw_date = date_match.group(1)
-        try:
-            if re.match(r'\d{1,2}\s+[A-Za-z]{3}\s+\d{4}', raw_date):
-                d = datetime.strptime(raw_date, "%d %b %Y")
-                data["draw_date"] = d.strftime("%d-%m-%Y")
-            else:
-                sep = '/' if '/' in raw_date else '-'
-                d = datetime.strptime(raw_date, f"%d{sep}%m{sep}%Y")
-                data["draw_date"] = d.strftime("%d-%m-%Y")
-            print(f"  ✅ 提取到日期: {data['draw_date']}")
-        except Exception as e:
-            print(f"  ⚠️ 日期解析失败: {e}")
-
-    # 期号提取
-    no_match = re.search(r'#?(\d+/\d+)', header_text)
-    if no_match:
-        data["draw_no"] = no_match.group(1)
-        print(f"  ✅ 提取到期号: {data['draw_no']}")
+        data["draw_date"] = date_match.group(1)
+        print(f"  ✅ 提取到日期: {data['draw_date']}")
 
     table = header.find_parent("table")
     if not table:
         table = header.find_next("table")
     if not table:
         print("⚠️ 未找到 Grand Dragon 数据表格")
-        return data
+        return None
 
     rows = table.find_all("tr")
     special_list = []
@@ -1126,7 +1114,7 @@ def main():
     if html_4dlatest:
         soup_4dlatest = BeautifulSoup(html_4dlatest, "html.parser")
 
-        # 2.1 GDLOTTO 豪龙
+        # 2.1 GDLOTTO 豪龙 (使用修复版)
         gd_data = extract_gd_lotto_from_4dlatest(soup_4dlatest)
         if gd_data and (gd_data.get('1st') or gd_data.get('special') or gd_data.get('consolation')):
             gd_from_4d2u = fetch_grand_dragon_from_4d2ulive()
@@ -1137,7 +1125,7 @@ def main():
         else:
             print("⚠️ GDLOTTO 豪龙数据为空，保留原有数据")
 
-        # 2.2 SABAH88 沙巴万字 LOTTO（使用优化版）
+        # 2.2 SABAH88 沙巴万字 LOTTO
         sabah_data = extract_sabah_lotto_from_4dlatest(soup_4dlatest)
         if sabah_data and sabah_data.get('winning_numbers'):
             save_json('sabah_lotto', sabah_data)
