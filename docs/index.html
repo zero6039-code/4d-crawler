@@ -212,7 +212,8 @@
             'sportstoto_5d',
             'sportstoto_6d',
             'magnum_life',
-            'sportstoto_fireball'
+            'sportstoto_fireball',
+            'singapore_toto'   // 新增隐藏 Singapore TOTO
         ];
 
         let availableDates = [];           
@@ -444,29 +445,41 @@
             }
             
             let html = '';
-            let dateStr = data.draw_date || '';
-            let drawNoStr = data.draw_no || '';
-            if (companyKey === 'grand_dragon' && !dateStr) {
-                dateStr = data.date || data.drawDate || data.drawdate || '';
-                if (!dateStr) console.warn('GRAND DRAGON 数据缺少 draw_date', data);
-            }
+            // 尝试多种可能的日期字段
+            let dateStr = data.draw_date || data.date || data.drawDate || data.drawdate || '';
+            let drawNoStr = data.draw_no || data.drawNo || data.draw_number || data.drawNumber || data.no || '';
+            
             let metaText = `日期 Date: ${dateStr || '--'} | 期号 Draw Date: ${drawNoStr || '--'}`;
             if (data._isFallback && selectedDate) metaText += ` (最近一期)`;
             metaDiv.innerText = metaText;
 
             if (SPECIAL_COMPANIES.includes(companyKey)) {
-                if (companyKey === 'singapore_toto' && data.winning_numbers) {
-                    html = `<div class="subsection"><div class="subsection-title">开奖号码</div><div class="number-list">${data.winning_numbers.map(n => `<span class="number-item">${n}</span>`).join('')}</div></div>`;
-                    if (data.prize_table && data.prize_table.length > 0) {
+                if (companyKey === 'singapore_toto') {
+                    // 尝试多种可能的开奖号码字段
+                    let winningNumbers = data.winning_numbers || data.numbers || data.winning || data.wins || [];
+                    if (winningNumbers && winningNumbers.length) {
+                        html += `<div class="subsection"><div class="subsection-title">开奖号码</div><div class="number-list">${winningNumbers.map(n => `<span class="number-item">${n}</span>`).join('')}</div></div>`;
+                    }
+                    // 尝试多种可能的奖金分配字段
+                    let prizeTable = data.prize_table || data.prizes || data.prizeTable || data.prize_table_data || [];
+                    if (prizeTable && prizeTable.length > 0) {
                         html += `<div class="subsection"><div class="subsection-title">奖金分配</div><table class="custom-table"><tr><th>Prize Group</th><th>Amount</th><th>Winners</th></tr>`;
-                        data.prize_table.forEach(row => {
-                            html += `<tr><td>${row[0]}</td><td>${row[1]}</td><td>${row[2]}</td></tr>`;
+                        prizeTable.forEach(row => {
+                            // 兼容数组或对象格式
+                            if (Array.isArray(row)) {
+                                html += `<tr><td>${row[0] || ''}</td><td>${row[1] || ''}</td><td>${row[2] || ''}</td></tr>`;
+                            } else if (typeof row === 'object') {
+                                let group = row.group || row.prize || row.Prize || row.name || '';
+                                let amount = row.amount || row.Amount || row.prize_amount || row.value || '';
+                                let winners = row.winners || row.Winners || row.winner_count || '';
+                                html += `<tr><td>${group}</td><td>${amount}</td><td>${winners}</td></tr>`;
+                            }
                         });
                         html += `</table></div>`;
                     }
-                } 
+                }
                 else if (companyKey === 'sportstoto_lotto') {
-                    // 确保 jackpots 至少有 4 个元素，缺失则设为空字符串
+                    // 保持不变...
                     let jackpots = data.jackpots || [];
                     while (jackpots.length < 4) jackpots.push("");
                     let starJackpots = [jackpots[0], jackpots[1]];
@@ -512,6 +525,7 @@
                     }
                 } 
                 else if (companyKey === 'sabah_lotto') {
+                    // 保持不变...
                     if (data.winning_numbers && data.winning_numbers.length) {
                         html += `<div class="subsection"><div class="subsection-title">开奖号码</div><div class="number-list">${data.winning_numbers.map(n => `<span class="number-item">${n}</span>`).join('')}</div></div>`;
                     }
@@ -534,13 +548,13 @@
                     html = '<p style="text-align:center; padding:10px;">特殊开彩详见官网</p>';
                 }
             } else {
-                // 普通公司
+                // 普通公司（包含 GRAND DRAGON）
                 html = `
                     <div class="prize-grid" style="flex-direction:column;align-items:center;">
-                        <div class="prize-card" style="width:220px;margin-bottom:8px;"><div class="label">1st Prize</div><div class="number">${data['1st'] || '----'}</div></div>
+                        <div class="prize-card" style="width:220px;margin-bottom:8px;"><div class="label">1st Prize</div><div class="number">${data['1st'] || data.first || data.prize1 || '----'}</div></div>
                         <div style="display:flex;gap:8px;width:100%;">
-                            <div class="prize-card" style="flex:1;"><div class="label">2nd Prize</div><div class="number">${data['2nd'] || '----'}</div></div>
-                            <div class="prize-card" style="flex:1;"><div class="label">3rd Prize</div><div class="number">${data['3rd'] || '----'}</div></div>
+                            <div class="prize-card" style="flex:1;"><div class="label">2nd Prize</div><div class="number">${data['2nd'] || data.second || data.prize2 || '----'}</div></div>
+                            <div class="prize-card" style="flex:1;"><div class="label">3rd Prize</div><div class="number">${data['3rd'] || data.third || data.prize3 || '----'}</div></div>
                         </div>
                     </div>`;
 
@@ -553,8 +567,16 @@
                     html += `</div></div>`;
                 }
 
-                if (data.special?.length) html += `<div class="subsection"><div class="subsection-title">特别奖</div><div class="number-list">${data.special.map(n => `<span class="number-item">${n}</span>`).join('')}</div></div>`;
-                if (data.consolation?.length) html += `<div class="subsection"><div class="subsection-title">安慰奖</div><div class="number-list">${data.consolation.map(n => `<span class="number-item">${n}</span>`).join('')}</div></div>`;
+                // 尝试多种特别奖字段
+                let special = data.special || data.special_numbers || data.special_prizes || data.special_results || [];
+                if (special && special.length) {
+                    html += `<div class="subsection"><div class="subsection-title">特别奖</div><div class="number-list">${special.map(n => `<span class="number-item">${n}</span>`).join('')}</div></div>`;
+                }
+                // 尝试多种安慰奖字段
+                let consolation = data.consolation || data.consolation_numbers || data.consolation_prizes || data.consolation_results || [];
+                if (consolation && consolation.length) {
+                    html += `<div class="subsection"><div class="subsection-title">安慰奖</div><div class="number-list">${consolation.map(n => `<span class="number-item">${n}</span>`).join('')}</div></div>`;
+                }
 
                 if (companyKey === 'grand_dragon' && data.jackpot) {
                     html += `<div class="subsection"><div class="subsection-title">Jackpot</div><div class="number-list"><span class="number-item">${data.jackpot}</span></div></div>`;
