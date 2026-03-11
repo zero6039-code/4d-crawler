@@ -40,7 +40,7 @@
         .company-section.error { border-color: #d32f2f; background: #ffebee; }
         .company-title { font-size: 1.6rem; font-weight: 800; margin-bottom: 4px; padding-left: 4px; background: linear-gradient(145deg, #1e2b3a, #2b3d55); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
         /* 已应要求删除公司名前的标靶 emoji */
-        .draw-date { font-size: 0.9rem; color: #4a5568; margin-bottom: 10px; padding-left: 4px; font-weight: 500; }
+        .draw-date { font-size: 0.8rem; color: #4a5568; margin-bottom: 8px; padding-left: 4px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } /* 缩小字体，强制单行，溢出省略 */
         .prize-grid { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 12px 0 16px; }
         .prize-card { background: #f8fafd; border-radius: 16px; padding: 10px 12px; flex: 1 1 90px; min-width: 80px; text-align: center; box-shadow: inset 0 1px 4px #ffffff, 0 5px 10px rgba(0,0,0,0.04); border: 1px solid #e9ecf0; }
         .prize-card .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #5f6b7a; font-weight: 500; margin-bottom: 4px; }
@@ -70,6 +70,7 @@
                 word-break: break-all;
                 white-space: normal;
             }
+            .draw-date { font-size: 0.75rem; } /* 手机屏幕进一步缩小字体 */
         }
         /* 公司特有颜色 */
         .company-section[data-company="damacai"] .company-title { background: linear-gradient(145deg, #1e5620, #2a7a2d); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
