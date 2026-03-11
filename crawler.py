@@ -361,9 +361,11 @@ def extract_sportstoto_lotto(box, global_date, global_draw_no):
     data['star'], data['power'], data['supreme'], data['jackpots'] = extract_lotto(box)
     return data
 
-# ---------- 从 4dlatest.org 提取 GDLOTTO 豪龙 (修复版，基于表格内容定位) ----------
+# ================== 修复后的函数开始 ==================
+
+# ---------- 从 4dlatest.org 精确提取 GDLOTTO 豪龙数据 (修复版) ----------
 def extract_gd_lotto_from_4dlatest(soup):
-    print("🔍 正在从 4dlatest.org 提取 GDLOTTO 豪龙数据...")
+    print("🔍 正在从 4dlatest.org 精确提取 GDLOTTO 豪龙数据...")
     data = {
         "draw_date": "",
         "draw_no": "",
@@ -375,58 +377,56 @@ def extract_gd_lotto_from_4dlatest(soup):
         "jackpot": ""
     }
 
-    # 1. 找到所有可能包含彩票结果的表格
-    tables = soup.find_all('table')
-    target_table = None
-    header_text = ""
-
-    for table in tables:
-        # 检查表格文本中是否同时包含“SPECIAL”和“CONSOLATION”这两个关键部分
-        table_text = table.get_text()
-        if 'SPECIAL' in table_text.upper() and 'CONSOLATION' in table_text.upper():
-            # 进一步确认这是豪龙的表格：检查其附近是否有“豪龙”标题
-            # 向前查找5个兄弟节点或父节点中是否包含“豪龙”
-            prev_element = table.find_previous(string=re.compile(r'豪龙', re.I))
-            if prev_element:
-                target_table = table
-                header_text = prev_element.strip() if prev_element else "GDLOTTO 豪龙"
-                print(f"  ✅ 通过标题 '{header_text}' 定位到豪龙表格")
-                break
-
-    if not target_table:
-        print("⚠️ 未找到包含 SPECIAL/CONSOLATION 且附近有 '豪龙' 标题的表格")
+    # 1. 精确查找包含 "GDLOTTO 豪龙" 的标题元素
+    header_element = soup.find(string=re.compile(r'GDLOTTO\s*豪龙', re.I))
+    if not header_element:
+        print("⚠️ 未找到标题为 'GDLOTTO 豪龙' 的元素")
         return None
 
-    # 2. 从找到的表格中提取数据 (您的原有提取逻辑可以复用)
-    # 但为了完整性，我将核心提取逻辑重写于此，确保它在这个表格上工作
+    # 2. 获取该标题所在的表格（通常是标题的下一个表格或父级内的表格）
+    target_table = header_element.find_parent('table')
+    if not target_table:
+        # 如果标题不在表格内，尝试找它后面的第一个表格
+        target_table = header_element.find_next('table')
+
+    if not target_table:
+        print("⚠️ 未找到 GDLOTTO 豪龙的数据表格")
+        return None
+
+    print(f"  ✅ 成功定位到 GDLOTTO 豪龙表格")
+
+    # 3. 从标题文本中提取日期和期号
+    header_text = header_element.get_text(" ", strip=True)
+    print(f"📅 标题文本: {header_text}")
+
+    # 日期匹配
+    date_match = re.search(r'(\d{2}/\d{2}/\d{4})', header_text)
+    if date_match:
+        try:
+            d = datetime.strptime(date_match.group(1), "%d/%m/%Y")
+            data["draw_date"] = d.strftime("%d-%m-%Y")
+            print(f"  ✅ 提取到日期: {data['draw_date']}")
+        except:
+            pass
+
+    # 期号匹配
+    no_match = re.search(r'#?(\d+/\d+)', header_text)
+    if no_match:
+        data["draw_no"] = no_match.group(1)
+        print(f"  ✅ 提取到期号: {data['draw_no']}")
+
+    # 4. 遍历表格行提取号码
     rows = target_table.find_all("tr")
     special_mode = False
     consolation_mode = False
     special_list = []
     consolation_list = []
 
-    # 提取日期和期号 (从标题文本中)
-    print(f"📅 标题文本: {header_text}")
-    date_match = re.search(r'(\d{2}/\d{2}/\d{4})', header_text)
-    if not date_match:
-        date_match = re.search(r'(\d{2}-\d{2}-\d{4})', header_text)
-    if date_match:
-        try:
-            d = datetime.strptime(date_match.group(1), "%d/%m/%Y" if '/' in date_match.group(1) else "%d-%m-%Y")
-            data["draw_date"] = d.strftime("%d-%m-%Y")
-            print(f"  ✅ 提取到日期: {data['draw_date']}")
-        except:
-            pass
-    no_match = re.search(r'#?(\d+/\d+)', header_text)
-    if no_match:
-        data["draw_no"] = no_match.group(1)
-        print(f"  ✅ 提取到期号: {data['draw_no']}")
-
-    # 遍历行提取号码
     for row in rows:
         row_text = row.get_text().upper()
         cells = row.find_all("td")
 
+        # 切换模式
         if "SPECIAL" in row_text:
             special_mode = True
             consolation_mode = False
@@ -443,7 +443,7 @@ def extract_gd_lotto_from_4dlatest(soup):
                 if num.isdigit() and len(num) == 4:
                     consolation_list.append(num)
             continue
-        if "JACKPOT" in row_text or "USD" in row_text or "RM" in row_text:
+        if "JACKPOT" in row_text or "USD" in row_text:
             amount_match = re.search(r'([\d,]+(?:\.\d+)?)', row.get_text())
             if amount_match:
                 data["jackpot"] = amount_match.group(1)
@@ -489,6 +489,114 @@ def extract_gd_lotto_from_4dlatest(soup):
     print(f"  安慰奖数量: {len(data['consolation'])}")
     print(f"  Jackpot: {data['jackpot']}")
     return data
+
+# ---------- 从 4dmoon.com 获取 Singapore 4D & TOTO 数据 (修复版) ----------
+def fetch_singapore_from_4dmoon():
+    print("🔍 正在从 4dmoon.com 获取新加坡 4D & TOTO 数据...")
+    url = "https://www.4dmoon.com/singapore-4d-results/"
+    html = fetch_html(url)
+    if not html:
+        return None, None
+
+    soup = BeautifulSoup(html, "html.parser")
+    singapore_4d_data = {"draw_date": "", "draw_no": "", "1st": "", "2nd": "", "3rd": "", "special": [], "consolation": []}
+    singapore_toto_data = {"draw_date": "", "draw_no": "", "winning_numbers": [], "prize_table": []}
+
+    # 获取页面中所有文本，按标题分割
+    page_text = soup.get_text()
+
+    # --- 提取新加坡 4D 数据 ---
+    if 'Singapore 4D' in page_text:
+        print("  ✅ 找到新加坡 4D 数据")
+        # 查找包含 "Singapore 4D" 的标题行，通常在其附近有日期和期号
+        header_4d = soup.find(string=re.compile(r'Singapore\s*4D', re.I))
+        if header_4d:
+            header_text = header_4d.get_text()
+            # 提取日期
+            date_match = re.search(r'\([A-Za-z]{3}\)\s*(\d{2}-[A-Za-z]{3}-\d{4})', header_text)
+            if date_match:
+                try:
+                    d = datetime.strptime(date_match.group(1), "%d-%b-%Y")
+                    singapore_4d_data["draw_date"] = d.strftime("%d-%m-%Y")
+                except: pass
+            # 提取期号
+            no_match = re.search(r'#(\d+)', header_text)
+            if no_match:
+                singapore_4d_data["draw_no"] = no_match.group(1)
+
+        # 提取前三 (从 "1st Prize" 等标签后的数字)
+        prize_text = soup.find(string=re.compile(r'1st\s*Prize', re.I))
+        if prize_text:
+            # 尝试找到附近的数字 (可能需要根据实际结构调整)
+            parent = prize_text.find_parent()
+            if parent:
+                numbers = re.findall(r'\b(\d{4})\b', parent.get_text())
+                if len(numbers) >= 3:
+                    singapore_4d_data["1st"] = numbers[0]
+                    singapore_4d_data["2nd"] = numbers[1]
+                    singapore_4d_data["3rd"] = numbers[2]
+
+        # 提取特别奖和安慰奖 (通过查找 "Special" 和 "Consolation" 表格)
+        special_section = soup.find(string=re.compile(r'Special', re.I))
+        if special_section:
+            table = special_section.find_parent('table')
+            if table:
+                special_nums = re.findall(r'\b(\d{4})\b', table.get_text())
+                singapore_4d_data["special"] = special_nums[:10]
+
+        consolation_section = soup.find(string=re.compile(r'Consolation', re.I))
+        if consolation_section:
+            table = consolation_section.find_parent('table')
+            if table:
+                cons_nums = re.findall(r'\b(\d{4})\b', table.get_text())
+                singapore_4d_data["consolation"] = cons_nums[:10]
+
+    # --- 提取新加坡 TOTO 数据 ---
+    if 'Singapore Toto' in page_text:
+        print("  ✅ 找到新加坡 TOTO 数据")
+        header_toto = soup.find(string=re.compile(r'Singapore\s*Toto', re.I))
+        if header_toto:
+            header_text = header_toto.get_text()
+            # 提取日期
+            date_match = re.search(r'\([A-Za-z]{3}\)\s*(\d{2}-[A-Za-z]{3}-\d{4})', header_text)
+            if date_match:
+                try:
+                    d = datetime.strptime(date_match.group(1), "%d-%b-%Y")
+                    singapore_toto_data["draw_date"] = d.strftime("%d-%m-%Y")
+                except: pass
+            # 提取期号
+            no_match = re.search(r'#(\d+)', header_text)
+            if no_match:
+                singapore_toto_data["draw_no"] = no_match.group(1)
+
+        # 提取开奖号码 (匹配 "7 13 14 17 40 44 + 35" 这种格式)
+        nums_match = re.search(r'(\d{1,2}\s+\d{1,2}\s+\d{1,2}\s+\d{1,2}\s+\d{1,2}\s+\d{1,2}\s*\+\s*\d{1,2})', page_text)
+        if nums_match:
+            num_str = nums_match.group(1)
+            winning = re.findall(r'\b(\d{1,2})\b', num_str)
+            if winning:
+                if len(winning) >= 7:
+                    singapore_toto_data["winning_numbers"] = winning[:6] + [winning[-1]]
+                else:
+                    singapore_toto_data["winning_numbers"] = winning
+
+        # 提取奖金表
+        prize_table_section = soup.find(string=re.compile(r'Prize Group', re.I))
+        if prize_table_section:
+            table = prize_table_section.find_parent('table')
+            if table:
+                rows = table.find_all('tr')[1:]
+                for row in rows:
+                    cells = row.find_all('td')
+                    if len(cells) >= 3:
+                        group = cells[0].get_text(strip=True)
+                        amount = cells[1].get_text(strip=True)
+                        winners = cells[2].get_text(strip=True)
+                        singapore_toto_data["prize_table"].append([group, amount, winners])
+
+    return singapore_4d_data, singapore_toto_data
+
+# ================== 修复后的函数结束 ==================
 
 # ---------- 从 4dlatest.org 提取 SABAH88 沙巴万字 LOTTO ----------
 def extract_sabah_lotto_from_4dlatest(soup):
@@ -913,107 +1021,6 @@ def fetch_grand_dragon_from_4d2ulive():
     data["special"] = special_list
     data["consolation"] = cons_list
     return data
-
-# ---------- 从 4dmoon.com 获取 Singapore 4D & TOTO 数据 ----------
-def fetch_singapore_from_4dmoon():
-    print("🔍 正在从 4dmoon.com 获取新加坡 4D & TOTO 数据...")
-    url = "https://www.4dmoon.com/singapore-4d-results/"
-    html = fetch_html(url)
-    if not html:
-        return None, None
-
-    soup = BeautifulSoup(html, "html.parser")
-    singapore_4d_data = {"draw_date": "", "draw_no": "", "1st": "", "2nd": "", "3rd": "", "special": [], "consolation": []}
-    singapore_toto_data = {"draw_date": "", "draw_no": "", "winning_numbers": [], "prize_table": []}
-
-    # 查找所有主要的文章区块
-    articles = soup.find_all('article')
-    for article in articles:
-        header = article.find('h2')
-        if not header:
-            continue
-        header_text = header.get_text()
-
-        # 提取新加坡 4D 数据
-        if 'Singapore 4D' in header_text:
-            print("  ✅ 找到新加坡 4D 区块")
-            # 提取日期和期号
-            date_match = re.search(r'\([A-Za-z]{3}\)\s*(\d{2}-[A-Za-z]{3}-\d{4})', header_text)
-            if date_match:
-                try:
-                    d = datetime.strptime(date_match.group(1), "%d-%b-%Y")
-                    singapore_4d_data["draw_date"] = d.strftime("%d-%m-%Y")
-                except: pass
-            no_match = re.search(r'#(\d+)', article.get_text())
-            if no_match:
-                singapore_4d_data["draw_no"] = no_match.group(1)
-
-            # 提取前三 (通常在 <p> 标签或特定结构中)
-            prizes = article.find_all('p')
-            for p in prizes:
-                p_text = p.get_text()
-                if '1st Prize' in p_text:
-                    num_match = re.search(r'(\d{4})', p_text)
-                    if num_match: singapore_4d_data["1st"] = num_match.group(1)
-                elif '2nd Prize' in p_text:
-                    num_match = re.search(r'(\d{4})', p_text)
-                    if num_match: singapore_4d_data["2nd"] = num_match.group(1)
-                elif '3rd Prize' in p_text:
-                    num_match = re.search(r'(\d{4})', p_text)
-                    if num_match: singapore_4d_data["3rd"] = num_match.group(1)
-
-            # 提取特别奖和安慰奖 (从表格中)
-            tables = article.find_all('table')
-            for table in tables:
-                table_text = table.get_text()
-                if 'Special' in table_text:
-                    special_nums = re.findall(r'\b(\d{4})\b', table_text)
-                    singapore_4d_data["special"] = special_nums[:10] # 取前10个
-                elif 'Consolation' in table_text:
-                    cons_nums = re.findall(r'\b(\d{4})\b', table_text)
-                    singapore_4d_data["consolation"] = cons_nums[:10]
-
-        # 提取新加坡 TOTO 数据
-        elif 'Singapore Toto' in header_text:
-            print("  ✅ 找到新加坡 TOTO 区块")
-            # 提取日期和期号
-            date_match = re.search(r'\([A-Za-z]{3}\)\s*(\d{2}-[A-Za-z]{3}-\d{4})', header_text)
-            if date_match:
-                try:
-                    d = datetime.strptime(date_match.group(1), "%d-%b-%Y")
-                    singapore_toto_data["draw_date"] = d.strftime("%d-%m-%Y")
-                except: pass
-            no_match = re.search(r'#(\d+)', article.get_text())
-            if no_match:
-                singapore_toto_data["draw_no"] = no_match.group(1)
-
-            # 提取开奖号码 (通常在表格之前)
-            article_text = article.get_text()
-            # 匹配类似 "7 13 14 17 40 44 + 35" 的格式
-            nums_match = re.search(r'([\d\s+]+?)\s*Prize Group', article_text, re.DOTALL)
-            if nums_match:
-                num_str = nums_match.group(1)
-                winning = re.findall(r'\b(\d{1,2})\b', num_str)
-                if winning:
-                    # 通常前6个是主号码，最后一个是额外号码
-                    if len(winning) >= 7:
-                        singapore_toto_data["winning_numbers"] = winning[:6] + [winning[-1]]
-                    else:
-                        singapore_toto_data["winning_numbers"] = winning
-
-            # 提取奖金表
-            prize_table = article.find('table')
-            if prize_table:
-                rows = prize_table.find_all('tr')[1:] # 跳过标题行
-                for row in rows:
-                    cells = row.find_all('td')
-                    if len(cells) >= 3:
-                        group = cells[0].get_text(strip=True)
-                        amount = cells[1].get_text(strip=True)
-                        winners = cells[2].get_text(strip=True)
-                        singapore_toto_data["prize_table"].append([group, amount, winners])
-
-    return singapore_4d_data, singapore_toto_data
 
 # ---------- 保存 JSON 和索引 ----------
 def save_json(company, data):
