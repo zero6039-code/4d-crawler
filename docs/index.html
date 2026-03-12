@@ -29,12 +29,12 @@
         .date-option .draw-no { font-size: 0.75rem; color: #7c8b9c; }
         .loading-history { text-align: center; padding: 20px; color: #7c8b9c; }
         
-        /* 更新 draw-info 样式：移除左侧日期，只保留刷新按钮，并居中 */
+        /* draw-info 只保留刷新按钮，居中 */
         .draw-info {
             background: #ffffffcc;
             backdrop-filter: blur(4px);
             border-radius: 40px;
-            padding: 6px 20px;          /* 左右内边距一致，使按钮居中 */
+            padding: 6px 20px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -130,7 +130,7 @@
         .status-indicator.loading { background: #ecc94b; animation: blink 1s infinite; }
         @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-        /* 日历按钮新样式：让图标更大，日期文字正常，垂直居中 */
+        /* 日历按钮样式：与日期按钮统一，加箭头 */
         .calendar-btn {
             background: #ffffffcc;
             backdrop-filter: blur(4px);
@@ -148,6 +148,10 @@
             transition: all 0.2s;
         }
         .calendar-btn:hover { background: #ffffff; box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
+        .calendar-btn .arrow {
+            font-size: 0.8rem;
+            transition: transform 0.2s;
+        }
         /* 日历图标单独放大 */
         .calendar-icon {
             font-size: 1.9rem;
@@ -189,12 +193,14 @@
                     <div class="loading-history">🔄 加载历史数据...</div>
                 </div>
             </div>
-            <!-- 月历按钮：HTML结构保留，内容将在JS中动态更新为日期+大图标 -->
-            <button class="calendar-btn" id="calendar-btn"></button>
+            <!-- 日历按钮：动态显示日期，带向下箭头，点击弹出日历 -->
+            <button class="calendar-btn" id="calendar-btn">
+                <!-- 内容由JS动态生成，包含图标、日期和箭头 -->
+            </button>
             <div id="calendar-popup" class="calendar-popup" style="display: none;"></div>
         </div>
         
-        <!-- draw-info 移除了日期span，只保留刷新按钮，并居中 -->
+        <!-- 仅刷新按钮居中 -->
         <div class="draw-info">
             <button class="refresh-btn" id="refresh-btn" onclick="forceRefresh()">Refresh</button>
         </div>
@@ -649,7 +655,6 @@
                 if (data) successCount++;
             });
             // 已移除 draw_date 的更新，因为该元素已删除
-            // if (selectedDate) { ... } 等不再需要
 
             statusText.innerHTML = `<span class="status-indicator ${successCount > 0 ? 'success' : 'error'}"></span>${successCount}/${COMPANY_LIST.length} 公司已更新`;
             document.getElementById('update-time').innerText = new Date().toLocaleString();
@@ -662,17 +667,16 @@
             await loadDateIndex();
             createCompanySkeletons();
             
-            // 设置日历按钮：显示当天日期，图标放大
+            // 设置日历按钮：显示当天日期（完整四位年份），带日历图标和向下箭头
             const calendarBtn = document.getElementById('calendar-btn');
             function updateCalendarButtonDate() {
                 const now = new Date();
                 const day = String(now.getDate()).padStart(2, '0');
                 const month = String(now.getMonth() + 1).padStart(2, '0');
-                const year = String(now.getFullYear()).slice(-2);
+                const fullYear = now.getFullYear(); // 四位年份
                 const weekday = now.toLocaleDateString('en-US', { weekday: 'short' }); // "Thu"
-                const dateStr = `${day}-${month}-${year} ${weekday}`;
-                // 使用两个span：一个放放大图标，一个放日期文本
-                calendarBtn.innerHTML = `<span class="calendar-icon">📅</span><span>${dateStr}</span>`;
+                const dateStr = `${day}-${month}-${fullYear} ${weekday}`;
+                calendarBtn.innerHTML = `<span class="calendar-icon">📅</span><span>${dateStr}</span><span class="arrow">▼</span>`;
             }
             updateCalendarButtonDate();
             
