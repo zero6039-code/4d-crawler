@@ -10,15 +10,13 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <style>
-        /* 样式保持不变，与用户提供的相同 */
+        /* 样式与之前完全相同，省略以节省篇幅，实际使用时请保留完整样式 */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
         body { background: #f0f2f5; padding: 15px 10px; }
         .container { max-width: 1300px; margin: 0 auto; }
         h1 { font-size: 2.2rem; font-weight: 800; text-align: center; margin-bottom: 15px; background: linear-gradient(135deg, #0b1c2f, #2c3e50); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1px; }
-        
         .top-calendar { display: flex; justify-content: center; margin-bottom: 15px; }
         .bottom-row { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; position: relative; }
-        
         .date-dropdown { position: relative; display: inline-block; }
         .date-btn { background: #ffffffcc; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.8); border-radius: 25px; padding: 8px 20px; font-size: 1rem; font-weight: 500; color: #2c3e50; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: all 0.2s; }
         .date-btn:hover { background: #ffffff; box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
@@ -31,25 +29,9 @@
         .date-option.active { background: #e6f0ff; color: #3182ce; font-weight: 600; }
         .date-option .draw-no { font-size: 0.75rem; color: #7c8b9c; }
         .loading-history { text-align: center; padding: 20px; color: #7c8b9c; }
-        
-        .refresh-btn {
-            background: linear-gradient(135deg, #3182ce, #2c5282);
-            color: white;
-            border: none;
-            padding: 8px 25px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 600;
-            transition: all 0.2s;
-            box-shadow: 0 2px 8px rgba(49,130,206,0.3);
-            line-height: 1.4;
-        }
+        .refresh-btn { background: linear-gradient(135deg, #3182ce, #2c5282); color: white; border: none; padding: 8px 25px; border-radius: 25px; cursor: pointer; font-size: 1rem; font-weight: 600; transition: all 0.2s; box-shadow: 0 2px 8px rgba(49,130,206,0.3); line-height: 1.4; }
         .refresh-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(49,130,206,0.4); }
-        
-        .calendar-btn {
-            background: #ffffffcc; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.8); border-radius: 25px; padding: 8px 20px; font-size: 1rem; font-weight: 500; color: #2c3e50; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: all 0.2s;
-        }
+        .calendar-btn { background: #ffffffcc; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.8); border-radius: 25px; padding: 8px 20px; font-size: 1rem; font-weight: 500; color: #2c3e50; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: all 0.2s; }
         .calendar-btn:hover { background: #ffffff; box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
         .calendar-btn .arrow { font-size: 0.8rem; transition: transform 0.2s; }
         .calendar-icon { font-size: 1.9rem; line-height: 1; display: inline-block; }
@@ -67,7 +49,6 @@
         .calendar-table td:hover { background: #e2e8f0 !important; }
         .calendar-table td.has-data:hover { background: #a9c9f0 !important; }
         .calendar-month-year { font-size: 1.1rem; }
-
         .companies-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
         .company-section { background: white; border-radius: 24px; box-shadow: 0 8px 20px rgba(0,20,30,0.1); margin-bottom: 0; padding: 14px 12px; border: 1px solid rgba(255,255,255,0.5); transition: transform 0.15s ease; }
         .company-section:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(0,0,0,0.12); }
@@ -100,7 +81,6 @@
         .status-indicator.error { background: #f56565; }
         .status-indicator.loading { background: #ecc94b; animation: blink 1s infinite; }
         @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
-        
         @media (max-width: 900px) { .companies-grid { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 600px) {
             .companies-grid { grid-template-columns: 1fr; }
@@ -212,7 +192,6 @@
         let availableDatesSet = new Set(); 
         let selectedDate = null;           
 
-        // 用于轮询的定时器 ID 和状态记录
         let pollingTimers = {};
         let companyLastId = {};              // 记录每个公司已接收的最大 ID
         let companyCurrentDate = {};         // 记录每个公司当前显示的日期 (dd-mm-yyyy)
@@ -252,7 +231,6 @@
             return dates.sort((a, b) => toSortKey(b) - toSortKey(a));
         }
 
-        // 获取当天日期字符串，格式 dd-mm-yyyy
         function getTodayString() {
             const now = new Date();
             const day = String(now.getDate()).padStart(2, '0');
@@ -311,7 +289,6 @@
             document.getElementById('date-dropdown').classList.remove('show');
             document.getElementById('date-btn').classList.remove('active');
             document.getElementById('calendar-popup').style.display = 'none';
-            // 如果选择了历史日期，停止轮询，重新从本地加载
             stopAllPolling();
             loadAllCompanies(); 
         }
@@ -392,7 +369,6 @@
 
         // ==================== 从 API 加载数据（全量）====================
         async function loadCompanyData(companyKey) {
-            // 如果选择了历史日期，仍从本地 JSON 加载
             if (selectedDate) {
                 const url = `data/${selectedDate}/${companyKey}.json?t=${Date.now()}`;
                 try {
@@ -403,13 +379,11 @@
                     return null;
                 }
             }
-            // 否则从 API 加载全量数据
             const url = `${API_BASE}/api/company/${companyKey}`;
             try {
                 const res = await fetch(url);
                 if (res.ok) {
                     const data = await res.json();
-                    // 记录该公司的最后 ID 和当前显示的日期
                     if (data.max_id) {
                         companyLastId[companyKey] = data.max_id;
                     }
@@ -426,7 +400,6 @@
             }
         }
 
-        // ==================== 创建卡片骨架 ====================
         function createCompanySkeletons() {
             const grid = document.getElementById('companies-grid');
             grid.innerHTML = '';
@@ -446,7 +419,6 @@
             });
         }
 
-        // ==================== 更新卡片（首次渲染或刷新）====================
         function updateCompanyCard(companyKey, data) {
             const contentDiv = document.getElementById(`content-${companyKey}`);
             const metaDiv = document.getElementById(`meta-${companyKey}`);
@@ -463,11 +435,10 @@
             if (data._isFallback && selectedDate) metaText += ` (最近一期)`;
             metaDiv.innerText = metaText;
 
-            // 构造 HTML，为可增量区域设置 ID
             let html = '';
 
-            // 普通公司（包含大奖、特别奖、安慰奖）
             if (!SPECIAL_COMPANIES.includes(companyKey)) {
+                // 大奖部分
                 html = `
                     <div class="prize-grid" style="flex-direction:column;align-items:center;">
                         <div class="prize-card" style="width:220px;margin-bottom:8px;"><div class="label">1st Prize</div><div class="number" id="first-${companyKey}">${data['1st'] || data.first || data.prize1 || '----'}</div></div>
@@ -486,21 +457,25 @@
                     html += `</div></div>`;
                 }
 
-                // 特别奖容器
+                // 特别奖容器 - 生成10个占位符当无数据时
                 html += `<div class="subsection"><div class="subsection-title">特别奖</div><div class="number-list" id="special-${companyKey}">`;
                 const special = data.special || data.special_numbers || data.special_prizes || data.special_results || [];
                 if (special.length === 0) {
-                    html += '<span class="number-item">----</span>';
+                    for (let i = 0; i < 10; i++) {
+                        html += '<span class="number-item">----</span>';
+                    }
                 } else {
                     special.forEach(n => html += `<span class="number-item">${n}</span>`);
                 }
                 html += `</div></div>`;
 
-                // 安慰奖容器
+                // 安慰奖容器 - 生成10个占位符当无数据时
                 html += `<div class="subsection"><div class="subsection-title">安慰奖</div><div class="number-list" id="consolation-${companyKey}">`;
                 const consolation = data.consolation || data.consolation_numbers || data.consolation_prizes || data.consolation_results || [];
                 if (consolation.length === 0) {
-                    html += '<span class="number-item">----</span>';
+                    for (let i = 0; i < 10; i++) {
+                        html += '<span class="number-item">----</span>';
+                    }
                 } else {
                     consolation.forEach(n => html += `<span class="number-item">${n}</span>`);
                 }
@@ -510,31 +485,26 @@
                     html += `<div class="subsection"><div class="subsection-title">Jackpot</div><div class="number-list"><span class="number-item">${data.jackpot}</span></div></div>`;
                 }
             } else {
-                // 特殊公司（简化处理，可根据需要扩展）
                 html = '<p style="text-align:center; padding:10px;">特殊开彩详见官网</p>';
             }
 
             contentDiv.innerHTML = html;
         }
 
-        // ==================== 轮询增量数据 ====================
         async function pollLatest(companyKey) {
-            if (selectedDate) return; // 历史日期不轮询
+            if (selectedDate) return;
             const lastId = companyLastId[companyKey] || 0;
             const url = `${API_BASE}/api/company/${companyKey}/latest?after=${lastId}`;
             try {
                 const res = await fetch(url);
-                const items = await res.json(); // 数组
+                const items = await res.json();
                 if (items.length > 0) {
-                    // 更新最后 ID
                     companyLastId[companyKey] = items[items.length-1].id;
 
                     const today = getTodayString();
                     const currentDate = companyCurrentDate[companyKey];
 
-                    // 如果当前显示的日期不是当天，说明页面展示的是前一天数据，需要清空后切换到当天
                     if (currentDate !== today) {
-                        // 清空该公司的所有可增量容器：特别奖、安慰奖，以及大奖
                         const specialContainer = document.getElementById(`special-${companyKey}`);
                         const consolationContainer = document.getElementById(`consolation-${companyKey}`);
                         const firstElem = document.getElementById(`first-${companyKey}`);
@@ -547,25 +517,19 @@
                         if (secondElem) secondElem.textContent = '----';
                         if (thirdElem) thirdElem.textContent = '----';
                         
-                        // 更新当前显示的日期为当天
                         companyCurrentDate[companyKey] = today;
                     }
 
-                    // 根据 type 追加号码
                     items.forEach(item => {
                         let containerId = null;
                         if (item.type === 'special') containerId = `special-${companyKey}`;
                         else if (item.type === 'consolation') containerId = `consolation-${companyKey}`;
-                        // 如果类型是大奖（如 '1st'），也可以处理，但通常不会增量，暂不实现
-                        // 其他类型可扩展
 
                         if (containerId) {
                             const container = document.getElementById(containerId);
                             if (container) {
-                                // 如果容器中只有一个占位符 "----"，先移除它
-                                if (container.children.length === 1 && container.children[0].textContent === '----') {
-                                    container.innerHTML = '';
-                                }
+                                // 移除所有占位符（如果存在）
+                                container.innerHTML = '';
                                 const span = document.createElement('span');
                                 span.className = 'number-item';
                                 span.textContent = item.number;
@@ -582,7 +546,7 @@
         function startPolling() {
             COMPANY_LIST.forEach(company => {
                 if (!HIDDEN_COMPANIES.includes(company) && !pollingTimers[company]) {
-                    pollingTimers[company] = setInterval(() => pollLatest(company), 15000); // 15秒
+                    pollingTimers[company] = setInterval(() => pollLatest(company), 15000);
                 }
             });
         }
@@ -592,7 +556,6 @@
             pollingTimers = {};
         }
 
-        // ==================== 全量加载所有公司 ====================
         async function loadAllCompanies() {
             const statusText = document.getElementById('status-text');
             statusText.innerHTML = '<span class="status-indicator loading"></span>正在更新...';
@@ -607,7 +570,6 @@
             statusText.innerHTML = `<span class="status-indicator ${successCount > 0 ? 'success' : 'error'}"></span>${successCount}/${COMPANY_LIST.length} 公司已更新`;
             document.getElementById('update-time').innerText = new Date().toLocaleString();
 
-            // 如果没有选择历史日期，启动轮询
             if (!selectedDate) {
                 stopAllPolling();
                 startPolling();
@@ -619,7 +581,6 @@
             loadAllCompanies();
         }
 
-        // ==================== 初始化 ====================
         document.addEventListener('DOMContentLoaded', async () => {
             await loadDateIndex();
             createCompanySkeletons();
