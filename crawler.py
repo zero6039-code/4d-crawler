@@ -5,12 +5,96 @@ import os
 from datetime import datetime
 import re
 import time
+import sqlite3
 from urllib.parse import urljoin
 
 # ---------- 配置 ----------
 URL_4D4D = "https://4d4d.co/"
 URL_4DLATEST = "https://4dlatest.org/"
 URL_4D2ULIVE = "https://4d2ulive.com"
+DB_PATH = '4d_results.db'  # SQLite 数据库文件
+
+# ---------- 数据库辅助函数 ----------
+def get_db_connection():
+    conn = sqlite3.connect(DB_PATH)
+    return conn
+
+def insert_number(company, type_, number, draw_date):
+    """
+    将单个号码插入数据库，如果已存在则跳过
+    company: 公司键（如 'damacai'）
+    type_: 号码类型（如 'special', 'consolation', '1st' 等）
+    number: 号码字符串
+    draw_date: 开奖日期，格式 'dd-mm-yyyy'
+    """
+    if not number or number == '----':
+        return
+    conn = get_db_connection()
+    c = conn.cursor()
+    # 检查是否已存在
+    c.execute('''
+        SELECT id FROM results 
+        WHERE company = ? AND type = ? AND number = ? AND draw_date = ?
+    ''', (company, type_, number, draw_date))
+    if c.fetchone() is None:
+        c.execute('''
+            INSERT INTO results (company, type, number, draw_date)
+            VALUES (?, ?, ?, ?)
+        ''', (company, type_, number, draw_date))
+        conn.commit()
+        print(f"   💾 插入数据库: {company} {type_} {number} {draw_date}")
+    else:
+        print(f"   🔁 已存在: {company} {type_} {number}")
+    conn.close()
+
+def store_numbers_from_data(company, data):
+    """
+    从数据对象中提取所有号码并存入数据库
+    """
+    draw_date = data.get('draw_date')
+    if not draw_date or draw_date == '----':
+        draw_date = datetime.now().strftime("%d-%m-%Y")
+
+    # 常见号码字段
+    prize_fields = ['1st', '2nd', '3rd']
+    list_fields = ['special', 'consolation', 'winning_numbers', 'star', 'power', 'supreme']
+    
+    # 处理单个奖项
+    for field in prize_fields:
+        num = data.get(field)
+        if num and num != '----':
+            insert_number(company, field, num, draw_date)
+    
+    # 处理列表奖项
+    for field in list_fields:
+        nums = data.get(field, [])
+        if isinstance(nums, list):
+            for num in nums:
+                if num and num != '----':
+                    insert_number(company, field, num, draw_date)
+    
+    # 特殊处理：sportstoto_6d 的嵌套结构
+    if company == 'sportstoto_6d':
+        for pos in ['2nd', '3rd', '4th', '5th']:
+            item = data.get(pos, {})
+            if isinstance(item, dict):
+                main = item.get('main')
+                alt = item.get('alt')
+                if main:
+                    insert_number(company, f'{pos}_main', main, draw_date)
+                if alt:
+                    insert_number(company, f'{pos}_alt', alt, draw_date)
+    
+    # 特殊处理：magnum_jackpot_gold 的 groups（可选）
+    if company == 'magnum_jackpot_gold':
+        groups = data.get('groups', [])
+        for grp in groups:
+            grp_num = grp.get('group')
+            nums = grp.get('numbers', [])
+            # 将组内号码插入，类型为 'group_X'
+            for num in nums:
+                if num and num != '+':
+                    insert_number(company, f'group_{grp_num}', num, draw_date)
 
 # ---------- 辅助函数 ----------
 def fetch_html(url):
@@ -1042,7 +1126,7 @@ def fetch_grand_dragon_from_4d2ulive():
     data["consolation"] = cons_list
     return data
 
-# ---------- 保存 JSON 和索引 ----------
+# ---------- 保存 JSON 和索引，并存储到数据库 ----------
 def save_json(company, data):
     if not data:
         print(f"❌ {company} 数据为空，跳过保存")
@@ -1069,6 +1153,9 @@ def save_json(company, data):
     with open(archive_path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
     print(f"📁 已归档至: {archive_path}")
+
+    # ---------- 将号码存入数据库 ----------
+    store_numbers_from_data(company, data)
 
 def update_dates_index():
     base_dir = "docs/data"
@@ -1210,7 +1297,7 @@ def main():
     time.sleep(1)
     sg_4d, sg_toto = fetch_singapore_from_4dmoon()
     if sg_4d and (sg_4d.get('draw_date') or sg_4d.get('1st')):
-        save_json('singapore_4d', sg_4d)
+        save_json('singapore', sg_4d)  # 注意：公司键是 'singapore' 而不是 'singapore_4d'
     else:
         print("⚠️ 新加坡 4D 数据为空")
     if sg_toto and (sg_toto.get('draw_date') or sg_toto.get('winning_numbers')):
