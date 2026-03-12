@@ -24,6 +24,10 @@ jobs:
       - name: Install Python dependencies
         run: pip install requests beautifulsoup4
 
+      # 新增步骤：初始化数据库，创建表
+      - name: Initialize database
+        run: python database.py
+
       - name: Run crawler
         run: python crawler.py
 
