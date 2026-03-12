@@ -10,13 +10,15 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <style>
-        /* 样式与之前完全相同，省略以节省篇幅，实际使用时请保留完整样式 */
+        /* 完整样式，确保日历按钮和布局正确 */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
         body { background: #f0f2f5; padding: 15px 10px; }
         .container { max-width: 1300px; margin: 0 auto; }
         h1 { font-size: 2.2rem; font-weight: 800; text-align: center; margin-bottom: 15px; background: linear-gradient(135deg, #0b1c2f, #2c3e50); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1px; }
-        .top-calendar { display: flex; justify-content: center; margin-bottom: 15px; }
+        
+        .top-calendar { display: flex; justify-content: center; margin-bottom: 15px; position: relative; }
         .bottom-row { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; position: relative; }
+        
         .date-dropdown { position: relative; display: inline-block; }
         .date-btn { background: #ffffffcc; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.8); border-radius: 25px; padding: 8px 20px; font-size: 1rem; font-weight: 500; color: #2c3e50; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: all 0.2s; }
         .date-btn:hover { background: #ffffff; box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
@@ -29,9 +31,25 @@
         .date-option.active { background: #e6f0ff; color: #3182ce; font-weight: 600; }
         .date-option .draw-no { font-size: 0.75rem; color: #7c8b9c; }
         .loading-history { text-align: center; padding: 20px; color: #7c8b9c; }
-        .refresh-btn { background: linear-gradient(135deg, #3182ce, #2c5282); color: white; border: none; padding: 8px 25px; border-radius: 25px; cursor: pointer; font-size: 1rem; font-weight: 600; transition: all 0.2s; box-shadow: 0 2px 8px rgba(49,130,206,0.3); line-height: 1.4; }
+        
+        .refresh-btn {
+            background: linear-gradient(135deg, #3182ce, #2c5282);
+            color: white;
+            border: none;
+            padding: 8px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(49,130,206,0.3);
+            line-height: 1.4;
+        }
         .refresh-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(49,130,206,0.4); }
-        .calendar-btn { background: #ffffffcc; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.8); border-radius: 25px; padding: 8px 20px; font-size: 1rem; font-weight: 500; color: #2c3e50; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: all 0.2s; }
+        
+        .calendar-btn {
+            background: #ffffffcc; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.8); border-radius: 25px; padding: 8px 20px; font-size: 1rem; font-weight: 500; color: #2c3e50; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: all 0.2s;
+        }
         .calendar-btn:hover { background: #ffffff; box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
         .calendar-btn .arrow { font-size: 0.8rem; transition: transform 0.2s; }
         .calendar-icon { font-size: 1.9rem; line-height: 1; display: inline-block; }
@@ -49,6 +67,7 @@
         .calendar-table td:hover { background: #e2e8f0 !important; }
         .calendar-table td.has-data:hover { background: #a9c9f0 !important; }
         .calendar-month-year { font-size: 1.1rem; }
+
         .companies-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
         .company-section { background: white; border-radius: 24px; box-shadow: 0 8px 20px rgba(0,20,30,0.1); margin-bottom: 0; padding: 14px 12px; border: 1px solid rgba(255,255,255,0.5); transition: transform 0.15s ease; }
         .company-section:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(0,0,0,0.12); }
@@ -81,6 +100,7 @@
         .status-indicator.error { background: #f56565; }
         .status-indicator.loading { background: #ecc94b; animation: blink 1s infinite; }
         @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+        
         @media (max-width: 900px) { .companies-grid { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 600px) {
             .companies-grid { grid-template-columns: 1fr; }
@@ -102,11 +122,13 @@
     <div class="container">
         <h1>MY 4D RESULT MALAYSIA</h1>
         
+        <!-- 顶部日历按钮单独一行 -->
         <div class="top-calendar">
             <button class="calendar-btn" id="calendar-btn"></button>
             <div id="calendar-popup" class="calendar-popup" style="display: none;"></div>
         </div>
         
+        <!-- 底部行：日期按钮 + 刷新按钮并排 -->
         <div class="bottom-row">
             <div class="date-dropdown" id="date-dropdown">
                 <button class="date-btn" id="date-btn" onclick="toggleDateDropdown()">
@@ -457,7 +479,7 @@
                     html += `</div></div>`;
                 }
 
-                // 特别奖容器 - 生成10个占位符当无数据时
+                // 特别奖容器 - 始终生成10个占位符，后面会被实际号码替换
                 html += `<div class="subsection"><div class="subsection-title">特别奖</div><div class="number-list" id="special-${companyKey}">`;
                 const special = data.special || data.special_numbers || data.special_prizes || data.special_results || [];
                 if (special.length === 0) {
@@ -466,10 +488,14 @@
                     }
                 } else {
                     special.forEach(n => html += `<span class="number-item">${n}</span>`);
+                    // 如果不足10个，补足占位符
+                    for (let i = special.length; i < 10; i++) {
+                        html += '<span class="number-item">----</span>';
+                    }
                 }
                 html += `</div></div>`;
 
-                // 安慰奖容器 - 生成10个占位符当无数据时
+                // 安慰奖容器
                 html += `<div class="subsection"><div class="subsection-title">安慰奖</div><div class="number-list" id="consolation-${companyKey}">`;
                 const consolation = data.consolation || data.consolation_numbers || data.consolation_prizes || data.consolation_results || [];
                 if (consolation.length === 0) {
@@ -478,6 +504,9 @@
                     }
                 } else {
                     consolation.forEach(n => html += `<span class="number-item">${n}</span>`);
+                    for (let i = consolation.length; i < 10; i++) {
+                        html += '<span class="number-item">----</span>';
+                    }
                 }
                 html += `</div></div>`;
 
@@ -505,14 +534,31 @@
                     const currentDate = companyCurrentDate[companyKey];
 
                     if (currentDate !== today) {
+                        // 清空该公司所有可增量区域，并重置大奖为占位符
                         const specialContainer = document.getElementById(`special-${companyKey}`);
                         const consolationContainer = document.getElementById(`consolation-${companyKey}`);
                         const firstElem = document.getElementById(`first-${companyKey}`);
                         const secondElem = document.getElementById(`second-${companyKey}`);
                         const thirdElem = document.getElementById(`third-${companyKey}`);
                         
-                        if (specialContainer) specialContainer.innerHTML = '';
-                        if (consolationContainer) consolationContainer.innerHTML = '';
+                        if (specialContainer) {
+                            specialContainer.innerHTML = '';
+                            for (let i = 0; i < 10; i++) {
+                                const span = document.createElement('span');
+                                span.className = 'number-item';
+                                span.textContent = '----';
+                                specialContainer.appendChild(span);
+                            }
+                        }
+                        if (consolationContainer) {
+                            consolationContainer.innerHTML = '';
+                            for (let i = 0; i < 10; i++) {
+                                const span = document.createElement('span');
+                                span.className = 'number-item';
+                                span.textContent = '----';
+                                consolationContainer.appendChild(span);
+                            }
+                        }
                         if (firstElem) firstElem.textContent = '----';
                         if (secondElem) secondElem.textContent = '----';
                         if (thirdElem) thirdElem.textContent = '----';
@@ -520,6 +566,7 @@
                         companyCurrentDate[companyKey] = today;
                     }
 
+                    // 处理增量号码：替换第一个占位符为实际号码
                     items.forEach(item => {
                         let containerId = null;
                         if (item.type === 'special') containerId = `special-${companyKey}`;
@@ -528,12 +575,14 @@
                         if (containerId) {
                             const container = document.getElementById(containerId);
                             if (container) {
-                                // 移除所有占位符（如果存在）
-                                container.innerHTML = '';
-                                const span = document.createElement('span');
-                                span.className = 'number-item';
-                                span.textContent = item.number;
-                                container.appendChild(span);
+                                const placeholders = container.querySelectorAll('.number-item');
+                                // 找到第一个占位符（内容为 '----'）并替换
+                                for (let i = 0; i < placeholders.length; i++) {
+                                    if (placeholders[i].textContent === '----') {
+                                        placeholders[i].textContent = item.number;
+                                        break;
+                                    }
+                                }
                             }
                         }
                     });
@@ -581,6 +630,7 @@
             loadAllCompanies();
         }
 
+        // ==================== 初始化 ====================
         document.addEventListener('DOMContentLoaded', async () => {
             await loadDateIndex();
             createCompanySkeletons();
@@ -597,8 +647,10 @@
             }
             updateCalendarButtonDate();
             
-            loadAllCompanies();
+            // 确保日历按钮点击事件正确绑定
             document.getElementById('calendar-btn').onclick = showCalendar;
+            
+            loadAllCompanies();
             
             document.addEventListener('click', (e) => {
                 const calendarPopup = document.getElementById('calendar-popup');
