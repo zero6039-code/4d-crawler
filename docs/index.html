@@ -15,7 +15,24 @@
         body { background: #f0f2f5; padding: 15px 10px; }
         .container { max-width: 1300px; margin: 0 auto; }
         h1 { font-size: 2.2rem; font-weight: 800; text-align: center; margin-bottom: 15px; background: linear-gradient(135deg, #0b1c2f, #2c3e50); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1px; }
-        .date-selector { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; position: relative; }
+        
+        /* 顶部日历按钮单独一行，居中 */
+        .top-calendar {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+        /* 底部行：日期按钮 + 刷新按钮并排 */
+        .bottom-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            position: relative;
+        }
+        
         .date-dropdown { position: relative; display: inline-block; }
         .date-btn { background: #ffffffcc; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.8); border-radius: 25px; padding: 8px 20px; font-size: 1rem; font-weight: 500; color: #2c3e50; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: all 0.2s; }
         .date-btn:hover { background: #ffffff; box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
@@ -29,33 +46,15 @@
         .date-option .draw-no { font-size: 0.75rem; color: #7c8b9c; }
         .loading-history { text-align: center; padding: 20px; color: #7c8b9c; }
         
-        /* draw-info 只保留刷新按钮，居中 */
-        .draw-info {
-            background: #ffffffcc;
-            backdrop-filter: blur(4px);
-            border-radius: 40px;
-            padding: 6px 20px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            font-weight: 500;
-            color: #2c3e50;
-            border: 1px solid rgba(255,255,255,0.8);
-            left: 50%;
-            position: relative;
-            transform: translateX(-50%);
-            white-space: nowrap;
-        }
+        /* 刷新按钮样式 */
         .refresh-btn {
             background: linear-gradient(135deg, #3182ce, #2c5282);
             color: white;
             border: none;
-            padding: 5px 16px;
-            border-radius: 20px;
+            padding: 8px 25px;
+            border-radius: 25px;
             cursor: pointer;
-            font-size: 0.85rem;
+            font-size: 1rem;
             font-weight: 600;
             transition: all 0.2s;
             box-shadow: 0 2px 8px rgba(49,130,206,0.3);
@@ -63,74 +62,7 @@
         }
         .refresh-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(49,130,206,0.4); }
         
-        .companies-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
-        .company-section { background: white; border-radius: 24px; box-shadow: 0 8px 20px rgba(0,20,30,0.1); margin-bottom: 0; padding: 14px 12px; border: 1px solid rgba(255,255,255,0.5); transition: transform 0.15s ease; }
-        .company-section:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(0,0,0,0.12); }
-        .company-section.loading { opacity: 0.6; pointer-events: none; }
-        .company-section.error { border-color: #d32f2f; background: #ffebee; }
-        /* 隐藏特定公司的卡片（用于临时隐藏） */
-        .hidden-company { display: none; }
-        .company-title { font-size: 1.6rem; font-weight: 800; margin-bottom: 4px; padding-left: 4px; background: linear-gradient(145deg, #1e2b3a, #2b3d55); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1px; display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
-        /* 图标基础样式：默认大尺寸（除1+3外） */
-        .company-title img {
-            height: 4rem;
-            width: auto;
-            margin-left: 8px;
-            vertical-align: middle;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
-            transition: transform 0.2s;
-        }
-        .company-title img:hover { transform: scale(1.05); }
-        /* 1+3 图片保持原尺寸 */
-        .company-section[data-company="damacai_1p3d"] .company-title img {
-            height: 3rem;
-        }
-        .draw-date { font-size: 0.8rem; color: #4a5568; margin-bottom: 8px; padding-left: 4px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .prize-grid { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 12px 0 16px; }
-        .prize-card { background: #f8fafd; border-radius: 16px; padding: 10px 12px; flex: 1 1 90px; min-width: 80px; text-align: center; box-shadow: inset 0 1px 4px #ffffff, 0 5px 10px rgba(0,0,0,0.04); border: 1px solid #e9ecf0; }
-        .prize-card .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #5f6b7a; font-weight: 500; margin-bottom: 4px; }
-        .prize-card .number { font-size: 1.7rem; font-weight: 800; color: #c62828; line-height: 1.2; text-shadow: 2px 2px 0 rgba(198,40,40,0.1); font-family: 'Courier New', monospace; }
-        .subsection { margin-top: 16px; background: #f9fbfd; border-radius: 16px; padding: 12px 10px; border: 1px solid #e2e8f0; }
-        .subsection-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 4px; color: #1e2f3e; }
-        .subsection-title::before { content: "✨"; font-size: 1.2rem; }
-        .number-list { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-start; }
-        .number-item { background: #ffffff; padding: 6px 10px; border-radius: 28px; font-family: 'Courier New', monospace; font-size: 1.1rem; font-weight: 600; color: #0b2a41; box-shadow: 0 3px 8px rgba(0,0,0,0.03); border: 1px solid #d4deec; min-width: 50px; text-align: center; transition: all 0.1s; white-space: pre-line; line-height: 1.4; }
-        .number-item:hover { background: #e6f0ff; border-color: #8a9cb0; }
-        .custom-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.9rem; }
-        .custom-table th { background: #e2e8f0; padding: 8px 4px; text-align: center; font-weight: 600; color: #2d3748; border: 1px solid #cbd5e0; }
-        .custom-table td { padding: 6px 4px; text-align: center; border: 1px solid #cbd5e0; background: white; }
-        .custom-table .alt-number { color: #3182ce; font-weight: 500; }
-        .group-subtitle { font-size: 0.95rem; font-weight: 600; margin: 8px 0 4px 0; color: #2c3e50; width: 100%; }
-        footer { text-align: center; margin-top: 30px; color: #7c8b9c; font-size: 0.8rem; border-top: 1px solid #dbe1ea; padding-top: 16px; }
-        @media (max-width: 900px) { .companies-grid { grid-template-columns: repeat(2, 1fr); } }
-        /* 手机字体优化 */
-        @media (max-width: 600px) {
-            .companies-grid { grid-template-columns: 1fr; }
-            .company-title { font-size: 1.5rem; gap: 8px; }
-            .company-title img { height: 3.2rem; }
-            .company-section[data-company="damacai_1p3d"] .company-title img { height: 2.5rem; }
-            .prize-card .number { font-size: 1.6rem; }
-            .number-item {
-                font-size: 1.3rem;
-                padding: 6px 12px;
-                min-width: auto;
-                word-break: break-all;
-                white-space: normal;
-            }
-            .draw-date { font-size: 0.75rem; }
-        }
-        /* 公司特有颜色 */
-        .company-section[data-company="damacai"] .company-title { background: linear-gradient(145deg, #1e5620, #2a7a2d); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .company-section[data-company="magnum"] .company-title { background: linear-gradient(145deg, #aa4a1e, #c95f2a); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .company-section[data-company="toto"] .company-title { background: linear-gradient(145deg, #b71c1c, #d32f2f); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .company-section[data-company="singapore"] .company-title { background: linear-gradient(145deg, #1e4a6b, #2c6b96); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .status-indicator { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
-        .status-indicator.success { background: #48bb78; }
-        .status-indicator.error { background: #f56565; }
-        .status-indicator.loading { background: #ecc94b; animation: blink 1s infinite; }
-        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
-
-        /* 日历按钮样式：与日期按钮统一，加箭头 */
+        /* 日历按钮样式（与日期按钮统一） */
         .calendar-btn {
             background: #ffffffcc;
             backdrop-filter: blur(4px);
@@ -152,13 +84,11 @@
             font-size: 0.8rem;
             transition: transform 0.2s;
         }
-        /* 日历图标单独放大 */
         .calendar-icon {
             font-size: 1.9rem;
             line-height: 1;
             display: inline-block;
         }
-        /* 日历弹出层样式不变 */
         .calendar-popup { position: absolute; background: white; border-radius: 20px; box-shadow: 0 12px 30px rgba(0,0,0,0.2); padding: 16px; z-index: 2000; width: 320px; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 8px; border: 1px solid #e2e8f0; backdrop-filter: blur(4px); }
         .calendar-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; font-weight: 600; color: #2d3748; }
         .calendar-nav { background: none; border: none; font-size: 1.2rem; cursor: pointer; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #f0f2f5; transition: 0.2s; }
@@ -175,7 +105,60 @@
         .calendar-table td.has-data:hover { background: #a9c9f0 !important; }
         .calendar-month-year { font-size: 1.1rem; }
 
-        /* Jackpot 标签 */
+        .companies-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        .company-section { background: white; border-radius: 24px; box-shadow: 0 8px 20px rgba(0,20,30,0.1); margin-bottom: 0; padding: 14px 12px; border: 1px solid rgba(255,255,255,0.5); transition: transform 0.15s ease; }
+        .company-section:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(0,0,0,0.12); }
+        .company-section.loading { opacity: 0.6; pointer-events: none; }
+        .company-section.error { border-color: #d32f2f; background: #ffebee; }
+        .hidden-company { display: none; }
+        .company-title { font-size: 1.6rem; font-weight: 800; margin-bottom: 4px; padding-left: 4px; background: linear-gradient(145deg, #1e2b3a, #2b3d55); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1px; display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+        .company-title img {
+            height: 4rem;
+            width: auto;
+            margin-left: 8px;
+            vertical-align: middle;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+            transition: transform 0.2s;
+        }
+        .company-title img:hover { transform: scale(1.05); }
+        .company-section[data-company="damacai_1p3d"] .company-title img { height: 3rem; }
+        .draw-date { font-size: 0.8rem; color: #4a5568; margin-bottom: 8px; padding-left: 4px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .prize-grid { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 12px 0 16px; }
+        .prize-card { background: #f8fafd; border-radius: 16px; padding: 10px 12px; flex: 1 1 90px; min-width: 80px; text-align: center; box-shadow: inset 0 1px 4px #ffffff, 0 5px 10px rgba(0,0,0,0.04); border: 1px solid #e9ecf0; }
+        .prize-card .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #5f6b7a; font-weight: 500; margin-bottom: 4px; }
+        .prize-card .number { font-size: 1.7rem; font-weight: 800; color: #c62828; line-height: 1.2; text-shadow: 2px 2px 0 rgba(198,40,40,0.1); font-family: 'Courier New', monospace; }
+        .subsection { margin-top: 16px; background: #f9fbfd; border-radius: 16px; padding: 12px 10px; border: 1px solid #e2e8f0; }
+        .subsection-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 4px; color: #1e2f3e; }
+        .subsection-title::before { content: "✨"; font-size: 1.2rem; }
+        .number-list { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-start; }
+        .number-item { background: #ffffff; padding: 6px 10px; border-radius: 28px; font-family: 'Courier New', monospace; font-size: 1.1rem; font-weight: 600; color: #0b2a41; box-shadow: 0 3px 8px rgba(0,0,0,0.03); border: 1px solid #d4deec; min-width: 50px; text-align: center; transition: all 0.1s; white-space: pre-line; line-height: 1.4; }
+        .number-item:hover { background: #e6f0ff; border-color: #8a9cb0; }
+        .custom-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.9rem; }
+        .custom-table th { background: #e2e8f0; padding: 8px 4px; text-align: center; font-weight: 600; color: #2d3748; border: 1px solid #cbd5e0; }
+        .custom-table td { padding: 6px 4px; text-align: center; border: 1px solid #cbd5e0; background: white; }
+        .custom-table .alt-number { color: #3182ce; font-weight: 500; }
+        .group-subtitle { font-size: 0.95rem; font-weight: 600; margin: 8px 0 4px 0; color: #2c3e50; width: 100%; }
+        footer { text-align: center; margin-top: 30px; color: #7c8b9c; font-size: 0.8rem; border-top: 1px solid #dbe1ea; padding-top: 16px; }
+        .status-indicator { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+        .status-indicator.success { background: #48bb78; }
+        .status-indicator.error { background: #f56565; }
+        .status-indicator.loading { background: #ecc94b; animation: blink 1s infinite; }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+        
+        @media (max-width: 900px) { .companies-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 600px) {
+            .companies-grid { grid-template-columns: 1fr; }
+            .company-title { font-size: 1.5rem; gap: 8px; }
+            .company-title img { height: 3.2rem; }
+            .company-section[data-company="damacai_1p3d"] .company-title img { height: 2.5rem; }
+            .prize-card .number { font-size: 1.6rem; }
+            .number-item { font-size: 1.3rem; padding: 6px 12px; min-width: auto; word-break: break-all; white-space: normal; }
+            .draw-date { font-size: 0.75rem; }
+        }
+        .company-section[data-company="damacai"] .company-title { background: linear-gradient(145deg, #1e5620, #2a7a2d); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .company-section[data-company="magnum"] .company-title { background: linear-gradient(145deg, #aa4a1e, #c95f2a); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .company-section[data-company="toto"] .company-title { background: linear-gradient(145deg, #b71c1c, #d32f2f); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .company-section[data-company="singapore"] .company-title { background: linear-gradient(145deg, #1e4a6b, #2c6b96); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .jackpot-label { font-weight: 600; margin: 4px 0 2px 0; color: #2c3e50; font-size: 0.95rem; }
     </style>
 </head>
@@ -183,7 +166,16 @@
     <div class="container">
         <h1>MY 4D RESULT MALAYSIA</h1>
         
-        <div class="date-selector">
+        <!-- 顶部：日历按钮单独一行 -->
+        <div class="top-calendar">
+            <button class="calendar-btn" id="calendar-btn">
+                <!-- 内容由JS动态生成，包含图标、日期和箭头 -->
+            </button>
+            <div id="calendar-popup" class="calendar-popup" style="display: none;"></div>
+        </div>
+        
+        <!-- 底部行：日期按钮 + 刷新按钮并排，日期按钮在左，刷新在右 -->
+        <div class="bottom-row">
             <div class="date-dropdown" id="date-dropdown">
                 <button class="date-btn" id="date-btn" onclick="toggleDateDropdown()">
                     <span id="selected-date">加载中...</span>
@@ -193,15 +185,6 @@
                     <div class="loading-history">🔄 加载历史数据...</div>
                 </div>
             </div>
-            <!-- 日历按钮：动态显示日期，带向下箭头，点击弹出日历 -->
-            <button class="calendar-btn" id="calendar-btn">
-                <!-- 内容由JS动态生成，包含图标、日期和箭头 -->
-            </button>
-            <div id="calendar-popup" class="calendar-popup" style="display: none;"></div>
-        </div>
-        
-        <!-- 仅刷新按钮居中 -->
-        <div class="draw-info">
             <button class="refresh-btn" id="refresh-btn" onclick="forceRefresh()">Refresh</button>
         </div>
 
@@ -249,7 +232,6 @@
             'sabah_lotto'
         ];
 
-        // 公司图标映射（对应 images 目录下的文件）
         const COMPANY_IMAGE_MAP = {
             'damacai': 'damacai.png',
             'damacai_1p3d': 'damacai1+3.png',
@@ -262,17 +244,15 @@
             'toto': 'toto.png',
             'singapore': 'singapore4d.png',
             'singapore_toto': 'singapore-pools.png'
-            // 其他公司无对应图标
         };
 
-        // 需要临时隐藏的公司列表（对应 COMPANY_LIST 中的键）
         const HIDDEN_COMPANIES = [
             'magnum_jackpot_gold',
             'sportstoto_5d',
             'sportstoto_6d',
             'magnum_life',
             'sportstoto_fireball',
-            'singapore_toto'   // 新增隐藏 Singapore TOTO
+            'singapore_toto'
         ];
 
         let availableDates = [];           
@@ -482,7 +462,6 @@
                 if (imageFile) {
                     titleHtml = `${NAME_MAP[companyKey]} <img src="images/${imageFile}" alt="${companyKey} logo" onerror="this.style.display='none'">`;
                 }
-                // 判断是否需要隐藏
                 const hiddenClass = HIDDEN_COMPANIES.includes(companyKey) ? 'hidden-company' : '';
                 grid.innerHTML += `
                     <div class="company-section ${hiddenClass}" id="company-${companyKey}" data-company="${companyKey}">
@@ -493,7 +472,6 @@
             });
         }
 
-        // ==================== 核心：更新卡片 ====================
         function updateCompanyCard(companyKey, data) {
             const contentDiv = document.getElementById(`content-${companyKey}`);
             const metaDiv = document.getElementById(`meta-${companyKey}`);
@@ -504,7 +482,6 @@
             }
             
             let html = '';
-            // 尝试多种可能的日期字段
             let dateStr = data.draw_date || data.date || data.drawDate || data.drawdate || '';
             let drawNoStr = data.draw_no || data.drawNo || data.draw_number || data.drawNumber || data.no || '';
             
@@ -514,17 +491,14 @@
 
             if (SPECIAL_COMPANIES.includes(companyKey)) {
                 if (companyKey === 'singapore_toto') {
-                    // 尝试多种可能的开奖号码字段
                     let winningNumbers = data.winning_numbers || data.numbers || data.winning || data.wins || [];
                     if (winningNumbers && winningNumbers.length) {
                         html += `<div class="subsection"><div class="subsection-title">开奖号码</div><div class="number-list">${winningNumbers.map(n => `<span class="number-item">${n}</span>`).join('')}</div></div>`;
                     }
-                    // 尝试多种可能的奖金分配字段
                     let prizeTable = data.prize_table || data.prizes || data.prizeTable || data.prize_table_data || [];
                     if (prizeTable && prizeTable.length > 0) {
                         html += `<div class="subsection"><div class="subsection-title">奖金分配</div><table class="custom-table"><tr><th>Prize Group</th><th>Amount</th><th>Winners</th></tr>`;
                         prizeTable.forEach(row => {
-                            // 兼容数组或对象格式
                             if (Array.isArray(row)) {
                                 html += `<tr><td>${row[0] || ''}</td><td>${row[1] || ''}</td><td>${row[2] || ''}</td></tr>`;
                             } else if (typeof row === 'object') {
@@ -538,7 +512,6 @@
                     }
                 }
                 else if (companyKey === 'sportstoto_lotto') {
-                    // 保持不变...
                     let jackpots = data.jackpots || [];
                     while (jackpots.length < 4) jackpots.push("");
                     let starJackpots = [jackpots[0], jackpots[1]];
@@ -584,7 +557,6 @@
                     }
                 } 
                 else if (companyKey === 'sabah_lotto') {
-                    // 保持不变...
                     if (data.winning_numbers && data.winning_numbers.length) {
                         html += `<div class="subsection"><div class="subsection-title">开奖号码</div><div class="number-list">${data.winning_numbers.map(n => `<span class="number-item">${n}</span>`).join('')}</div></div>`;
                     }
@@ -607,7 +579,6 @@
                     html = '<p style="text-align:center; padding:10px;">特殊开彩详见官网</p>';
                 }
             } else {
-                // 普通公司（包含 GRAND DRAGON）
                 html = `
                     <div class="prize-grid" style="flex-direction:column;align-items:center;">
                         <div class="prize-card" style="width:220px;margin-bottom:8px;"><div class="label">1st Prize</div><div class="number">${data['1st'] || data.first || data.prize1 || '----'}</div></div>
@@ -626,12 +597,10 @@
                     html += `</div></div>`;
                 }
 
-                // 尝试多种特别奖字段
                 let special = data.special || data.special_numbers || data.special_prizes || data.special_results || [];
                 if (special && special.length) {
                     html += `<div class="subsection"><div class="subsection-title">特别奖</div><div class="number-list">${special.map(n => `<span class="number-item">${n}</span>`).join('')}</div></div>`;
                 }
-                // 尝试多种安慰奖字段
                 let consolation = data.consolation || data.consolation_numbers || data.consolation_prizes || data.consolation_results || [];
                 if (consolation && consolation.length) {
                     html += `<div class="subsection"><div class="subsection-title">安慰奖</div><div class="number-list">${consolation.map(n => `<span class="number-item">${n}</span>`).join('')}</div></div>`;
@@ -654,7 +623,6 @@
                 updateCompanyCard(COMPANY_LIST[idx], data);
                 if (data) successCount++;
             });
-            // 已移除 draw_date 的更新，因为该元素已删除
 
             statusText.innerHTML = `<span class="status-indicator ${successCount > 0 ? 'success' : 'error'}"></span>${successCount}/${COMPANY_LIST.length} 公司已更新`;
             document.getElementById('update-time').innerText = new Date().toLocaleString();
@@ -673,8 +641,8 @@
                 const now = new Date();
                 const day = String(now.getDate()).padStart(2, '0');
                 const month = String(now.getMonth() + 1).padStart(2, '0');
-                const fullYear = now.getFullYear(); // 四位年份
-                const weekday = now.toLocaleDateString('en-US', { weekday: 'short' }); // "Thu"
+                const fullYear = now.getFullYear();
+                const weekday = now.toLocaleDateString('en-US', { weekday: 'short' });
                 const dateStr = `${day}-${month}-${fullYear} ${weekday}`;
                 calendarBtn.innerHTML = `<span class="calendar-icon">📅</span><span>${dateStr}</span><span class="arrow">▼</span>`;
             }
