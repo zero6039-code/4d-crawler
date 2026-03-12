@@ -156,7 +156,7 @@
 
     <script>
         // ==================== 配置 ====================
-        const API_BASE = 'https://fourd-crawler.onrender.com';  // Render 后端地址
+        const API_BASE = 'https://fourd-crawler.onrender.com';  // ⚠️ 请替换为您的 Render 域名
         const COMPANY_LIST = [
             'damacai', 'magnum', 'toto', 'singapore', 'damacai_1p3d',
             'sandakan', 'sarawak_cashsweep', 'sabah', 'sabah_lotto',
@@ -212,9 +212,10 @@
         let availableDatesSet = new Set(); 
         let selectedDate = null;           
 
-        // 用于轮询的定时器 ID 和最后 ID 记录
+        // 用于轮询的定时器 ID 和状态记录
         let pollingTimers = {};
-        let companyLastId = {};
+        let companyLastId = {};              // 记录每个公司已接收的最大 ID
+        let companyCurrentDate = {};         // 记录每个公司当前显示的日期 (dd-mm-yyyy)
 
         // ==================== 工具函数 ====================
         function ymdToDmy(ymd) {
@@ -249,6 +250,15 @@
 
         function sortDatesDesc(dates) {
             return dates.sort((a, b) => toSortKey(b) - toSortKey(a));
+        }
+
+        // 获取当天日期字符串，格式 dd-mm-yyyy
+        function getTodayString() {
+            const now = new Date();
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const year = now.getFullYear();
+            return `${day}-${month}-${year}`;
         }
 
         // ==================== 日期选择器 ====================
@@ -399,9 +409,12 @@
                 const res = await fetch(url);
                 if (res.ok) {
                     const data = await res.json();
-                    // 记录该公司的最后 ID
+                    // 记录该公司的最后 ID 和当前显示的日期
                     if (data.max_id) {
                         companyLastId[companyKey] = data.max_id;
+                    }
+                    if (data.draw_date) {
+                        companyCurrentDate[companyKey] = data.draw_date;
                     }
                     return data;
                 } else {
@@ -433,7 +446,7 @@
             });
         }
 
-        // ==================== 更新卡片（首次渲染）====================
+        // ==================== 更新卡片（首次渲染或刷新）====================
         function updateCompanyCard(companyKey, data) {
             const contentDiv = document.getElementById(`content-${companyKey}`);
             const metaDiv = document.getElementById(`meta-${companyKey}`);
@@ -443,58 +456,24 @@
                 return;
             }
             
-            let html = '';
-            let dateStr = data.draw_date || data.date || data.drawDate || data.drawdate || '';
+            let dateStr = data.draw_date || '';
             let drawNoStr = data.draw_no || data.drawNo || data.draw_number || data.drawNumber || data.no || '';
             
             let metaText = `日期 Date: ${dateStr || '--'} | 期号 Draw Date: ${drawNoStr || '--'}`;
             if (data._isFallback && selectedDate) metaText += ` (最近一期)`;
             metaDiv.innerText = metaText;
 
-            // 根据不同公司类型生成 HTML，但需要为可增量区域设置容器 ID
-            if (SPECIAL_COMPANIES.includes(companyKey)) {
-                if (companyKey === 'singapore_toto') {
-                    let winningNumbers = data.winning_numbers || data.numbers || data.winning || data.wins || [];
-                    html += `<div class="subsection"><div class="subsection-title">开奖号码</div><div class="number-list" id="winning-${companyKey}">`;
-                    winningNumbers.forEach(n => html += `<span class="number-item">${n}</span>`);
-                    html += `</div></div>`;
-                    
-                    let prizeTable = data.prize_table || data.prizes || data.prizeTable || data.prize_table_data || [];
-                    if (prizeTable && prizeTable.length > 0) {
-                        html += `<div class="subsection"><div class="subsection-title">奖金分配</div><table class="custom-table"><tr><th>Prize Group</th><th>Amount</th><th>Winners</th></tr>`;
-                        prizeTable.forEach(row => {
-                            if (Array.isArray(row)) {
-                                html += `<tr><td>${row[0] || ''}</td><td>${row[1] || ''}</td><td>${row[2] || ''}</td></tr>`;
-                            } else if (typeof row === 'object') {
-                                let group = row.group || row.prize || row.Prize || row.name || '';
-                                let amount = row.amount || row.Amount || row.prize_amount || row.value || '';
-                                let winners = row.winners || row.Winners || row.winner_count || '';
-                                html += `<tr><td>${group}</td><td>${amount}</td><td>${winners}</td></tr>`;
-                            }
-                        });
-                        html += `</table></div>`;
-                    }
-                }
-                else if (companyKey === 'sportstoto_lotto') {
-                    // 略，保持原样，但需要为 star/power/supreme 设置容器 ID
-                    // 为简化，此处仅示例，完整处理应参考原代码并添加 id
-                } 
-                else if (companyKey === 'sabah_lotto') {
-                    // 类似
-                }
-                else if (data.data && Array.isArray(data.data)) {
-                    // 特殊格式处理
-                } else {
-                    html = '<p style="text-align:center; padding:10px;">特殊开彩详见官网</p>';
-                }
-            } else {
-                // 普通公司
+            // 构造 HTML，为可增量区域设置 ID
+            let html = '';
+
+            // 普通公司（包含大奖、特别奖、安慰奖）
+            if (!SPECIAL_COMPANIES.includes(companyKey)) {
                 html = `
                     <div class="prize-grid" style="flex-direction:column;align-items:center;">
-                        <div class="prize-card" style="width:220px;margin-bottom:8px;"><div class="label">1st Prize</div><div class="number">${data['1st'] || data.first || data.prize1 || '----'}</div></div>
+                        <div class="prize-card" style="width:220px;margin-bottom:8px;"><div class="label">1st Prize</div><div class="number" id="first-${companyKey}">${data['1st'] || data.first || data.prize1 || '----'}</div></div>
                         <div style="display:flex;gap:8px;width:100%;">
-                            <div class="prize-card" style="flex:1;"><div class="label">2nd Prize</div><div class="number">${data['2nd'] || data.second || data.prize2 || '----'}</div></div>
-                            <div class="prize-card" style="flex:1;"><div class="label">3rd Prize</div><div class="number">${data['3rd'] || data.third || data.prize3 || '----'}</div></div>
+                            <div class="prize-card" style="flex:1;"><div class="label">2nd Prize</div><div class="number" id="second-${companyKey}">${data['2nd'] || data.second || data.prize2 || '----'}</div></div>
+                            <div class="prize-card" style="flex:1;"><div class="label">3rd Prize</div><div class="number" id="third-${companyKey}">${data['3rd'] || data.third || data.prize3 || '----'}</div></div>
                         </div>
                     </div>`;
 
@@ -507,20 +486,34 @@
                     html += `</div></div>`;
                 }
 
-                let special = data.special || data.special_numbers || data.special_prizes || data.special_results || [];
+                // 特别奖容器
                 html += `<div class="subsection"><div class="subsection-title">特别奖</div><div class="number-list" id="special-${companyKey}">`;
-                special.forEach(n => html += `<span class="number-item">${n}</span>`);
+                const special = data.special || data.special_numbers || data.special_prizes || data.special_results || [];
+                if (special.length === 0) {
+                    html += '<span class="number-item">----</span>';
+                } else {
+                    special.forEach(n => html += `<span class="number-item">${n}</span>`);
+                }
                 html += `</div></div>`;
 
-                let consolation = data.consolation || data.consolation_numbers || data.consolation_prizes || data.consolation_results || [];
+                // 安慰奖容器
                 html += `<div class="subsection"><div class="subsection-title">安慰奖</div><div class="number-list" id="consolation-${companyKey}">`;
-                consolation.forEach(n => html += `<span class="number-item">${n}</span>`);
+                const consolation = data.consolation || data.consolation_numbers || data.consolation_prizes || data.consolation_results || [];
+                if (consolation.length === 0) {
+                    html += '<span class="number-item">----</span>';
+                } else {
+                    consolation.forEach(n => html += `<span class="number-item">${n}</span>`);
+                }
                 html += `</div></div>`;
 
                 if (companyKey === 'grand_dragon' && data.jackpot) {
                     html += `<div class="subsection"><div class="subsection-title">Jackpot</div><div class="number-list"><span class="number-item">${data.jackpot}</span></div></div>`;
                 }
+            } else {
+                // 特殊公司（简化处理，可根据需要扩展）
+                html = '<p style="text-align:center; padding:10px;">特殊开彩详见官网</p>';
             }
+
             contentDiv.innerHTML = html;
         }
 
@@ -535,16 +528,49 @@
                 if (items.length > 0) {
                     // 更新最后 ID
                     companyLastId[companyKey] = items[items.length-1].id;
+
+                    const today = getTodayString();
+                    const currentDate = companyCurrentDate[companyKey];
+
+                    // 如果当前显示的日期不是当天，说明页面展示的是前一天数据，需要清空后切换到当天
+                    if (currentDate !== today) {
+                        // 清空该公司的所有可增量容器：特别奖、安慰奖，以及大奖
+                        const specialContainer = document.getElementById(`special-${companyKey}`);
+                        const consolationContainer = document.getElementById(`consolation-${companyKey}`);
+                        const firstElem = document.getElementById(`first-${companyKey}`);
+                        const secondElem = document.getElementById(`second-${companyKey}`);
+                        const thirdElem = document.getElementById(`third-${companyKey}`);
+                        
+                        if (specialContainer) specialContainer.innerHTML = '';
+                        if (consolationContainer) consolationContainer.innerHTML = '';
+                        if (firstElem) firstElem.textContent = '----';
+                        if (secondElem) secondElem.textContent = '----';
+                        if (thirdElem) thirdElem.textContent = '----';
+                        
+                        // 更新当前显示的日期为当天
+                        companyCurrentDate[companyKey] = today;
+                    }
+
                     // 根据 type 追加号码
                     items.forEach(item => {
-                        const container = document.getElementById(item.type + '-' + companyKey) || 
-                                         document.getElementById('winning-' + companyKey) ||
-                                         document.getElementById('star-' + companyKey); // 其他类型可扩展
-                        if (container) {
-                            const span = document.createElement('span');
-                            span.className = 'number-item';
-                            span.textContent = item.number;
-                            container.appendChild(span);
+                        let containerId = null;
+                        if (item.type === 'special') containerId = `special-${companyKey}`;
+                        else if (item.type === 'consolation') containerId = `consolation-${companyKey}`;
+                        // 如果类型是大奖（如 '1st'），也可以处理，但通常不会增量，暂不实现
+                        // 其他类型可扩展
+
+                        if (containerId) {
+                            const container = document.getElementById(containerId);
+                            if (container) {
+                                // 如果容器中只有一个占位符 "----"，先移除它
+                                if (container.children.length === 1 && container.children[0].textContent === '----') {
+                                    container.innerHTML = '';
+                                }
+                                const span = document.createElement('span');
+                                span.className = 'number-item';
+                                span.textContent = item.number;
+                                container.appendChild(span);
+                            }
                         }
                     });
                 }
