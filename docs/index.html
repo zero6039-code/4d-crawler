@@ -135,7 +135,6 @@
 
     <script>
         // ==================== 配置 ====================
-        // ★★★ 公司列表（已移除重复的 grand_dragon）★★★
         const COMPANY_LIST = [
             'grand_dragon',
             'damacai', 'magnum', 'toto', 'singapore', 'damacai_1p3d',
@@ -184,7 +183,7 @@
             'singapore_toto': 'singapore-pools.png'
         };
 
-        // ★★★ 隐藏公司列表（添加 sportstoto_fireball）★★★
+        // 隐藏公司列表（隐藏 sportstoto_fireball）
         const HIDDEN_COMPANIES = [
             'sportstoto_fireball'
         ];
@@ -419,7 +418,6 @@
         // ==================== 核心数据加载 ====================
         async function loadCompanyData(companyKey) {
             let localData = await loadFromLocalCache(companyKey, selectedDate);
-
             if (localData) {
                 renderCompanyCard(companyKey, localData);
             } else {
@@ -427,15 +425,17 @@
             }
         }
 
-        // ★★★ 修复后的 loadFromLocalCache 函数（豪龙仅在主页默认视图使用最新日期）★★★
+        // ★★★ 修复后的 loadFromLocalCache 函数：豪龙主页始终使用最新日期 ★★★
         async function loadFromLocalCache(companyKey, date = null) {
-            let startDate = date || selectedDate;
+            let startDate;
             
-            // 豪龙特殊处理：仅在主页默认视图（没有指定date，且selectedDate为过滤后的第一个日期）时，从最新日期开始查找
-            if (companyKey === 'grand_dragon' && !date && selectedDate === filteredDates[0]) {
-                startDate = availableDates[0]; // 全局最新日期
+            if (companyKey === 'grand_dragon' && !date) {
+                // 主页豪龙：始终使用最新日期
+                startDate = availableDates[0];
                 console.log(`🔍 豪龙主页模式：从最新日期 ${startDate} 开始查找`);
             } else {
+                // 其他公司或历史查询：使用传入的 date 或全局 selectedDate
+                startDate = date || selectedDate;
                 console.log(`📅 加载 ${companyKey} 日期: ${startDate || '无'}`);
             }
 
@@ -480,7 +480,7 @@
             return null;
         }
 
-        // ★★★ 辅助函数：过滤无效号码（如 "****"）★★★
+        // 辅助函数：过滤无效号码
         function filterValidNumbers(arr) {
             if (!Array.isArray(arr)) return [];
             return arr.filter(num => num && num !== '----' && num !== '****' && num !== '***' && /^\d{4}$/.test(num));
@@ -596,8 +596,8 @@
                         html += `</div></div>`;
                     }
 
-                    // ★★★ 特别奖：过滤无效项，保持10个位置 ★★★
-                    html += `<div class="subsection"><div class="subsection-title">特别奖</div><div class="number-list" id="special-${companyKey}">`;
+                    // 特别奖（过滤无效项，保持10个位置）
+                    html += `<div class="subsection"><div class="subsection-title">特别奖 SPECIAL</div><div class="number-list" id="special-${companyKey}">`;
                     const specialRaw = data.special || data.special_numbers || data.special_prizes || data.special_results || [];
                     const specialValid = filterValidNumbers(specialRaw);
                     for (let i = 0; i < 10; i++) {
@@ -609,8 +609,8 @@
                     }
                     html += `</div></div>`;
 
-                    // ★★★ 安慰奖：过滤无效项，保持10个位置 ★★★
-                    html += `<div class="subsection"><div class="subsection-title">安慰奖</div><div class="number-list" id="consolation-${companyKey}">`;
+                    // 安慰奖（过滤无效项，保持10个位置）
+                    html += `<div class="subsection"><div class="subsection-title">安慰奖 CONSOLATION</div><div class="number-list" id="consolation-${companyKey}">`;
                     const consolationRaw = data.consolation || data.consolation_numbers || data.consolation_prizes || data.consolation_results || [];
                     const consolationValid = filterValidNumbers(consolationRaw);
                     for (let i = 0; i < 10; i++) {
