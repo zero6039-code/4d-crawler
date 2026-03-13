@@ -2,7 +2,7 @@ name: Daily 4D Crawler
 
 on:
   schedule:
-    # 每 5 分钟运行一次（可根据需要调整）
+    # 马来西亚时间 19:00-19:59 (UTC 11:00-11:59) 每5分钟运行一次
     - cron: '*/5 11 * * *'
   workflow_dispatch:  # 允许手动触发
 
@@ -10,12 +10,12 @@ jobs:
   crawl:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # 允许推送代码
+      contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}  # 使用内置 token
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
