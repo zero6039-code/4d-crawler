@@ -10,7 +10,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <style>
-        /* 样式保持不变，与之前相同（为节省篇幅此处省略，实际使用时请保留完整样式） */
+        /* 完整样式（保持不变，此处省略以节省篇幅，实际使用时请保留） */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
         body { background: #f0f2f5; padding: 15px 10px; }
         .container { max-width: 1300px; margin: 0 auto; }
@@ -186,6 +186,7 @@
             'magnum_life',
             'sportstoto_fireball',
             'singapore_toto'
+            // 注意：sabah_lotto 和 sportstoto_lotto 不在隐藏列表中，因此会显示
         ];
 
         let availableDates = [];           
@@ -284,7 +285,7 @@
         }
 
         function selectDate(date) {
-            if (selectedDate === date) return; // 避免重复加载
+            if (selectedDate === date) return; // 避免重复加载相同日期
             selectedDate = date;
             updateDateBtnWithLatest();
             document.getElementById('date-dropdown').classList.remove('show');
@@ -395,28 +396,38 @@
             const cachePromise = loadFromLocalCache(companyKey);
             const apiPromise = loadFromAPI(companyKey);
 
-            // 谁先返回就先渲染谁
-            return Promise.race([cachePromise, apiPromise])
-                .then(firstResult => {
-                    if (firstResult && firstResult.fromCache) {
-                        // 如果缓存先返回，先用缓存渲染，并启动 API 更新
-                        renderCompanyCard(companyKey, firstResult.data);
-                        // 继续等待 API 结果，用于后续更新
-                        apiPromise.then(apiResult => {
-                            if (apiResult && apiResult.data) {
-                                updateWithApiData(companyKey, apiResult.data);
-                            }
-                        }).catch(err => console.warn(`${companyKey} API 后续更新失败`, err));
-                        return firstResult.data;
-                    } else if (firstResult && firstResult.data) {
-                        // 如果 API 先返回，直接用 API 数据渲染
-                        renderCompanyCard(companyKey, firstResult.data);
-                        return firstResult.data;
-                    } else {
-                        // 两者都失败，返回 null
-                        return null;
-                    }
-                });
+            // 等待两者都完成（但缓存优先渲染）
+            const [cacheResult, apiResult] = await Promise.allSettled([cachePromise, apiPromise]);
+
+            // 1. 优先使用缓存数据渲染
+            if (cacheResult.status === 'fulfilled' && cacheResult.value) {
+                renderCompanyCard(companyKey, cacheResult.value.data);
+            } else {
+                // 缓存失败，用空数据占位（后续 API 可能会更新）
+                renderCompanyCard(companyKey, null);
+            }
+
+            // 2. 如果 API 返回有效数据，且与缓存不同，则更新页面
+            if (apiResult.status === 'fulfilled' && apiResult.value && apiResult.value.data) {
+                const apiData = apiResult.value.data;
+                // 判断 API 数据是否非空（至少有一个有效字段）
+                const hasData = Object.keys(apiData).some(key => 
+                    ['1st', '2nd', '3rd', 'special', 'consolation', 'winning_numbers', 'star', 'power', 'supreme'].includes(key) && 
+                    (Array.isArray(apiData[key]) ? apiData[key].length > 0 : apiData[key] && apiData[key] !== '----')
+                );
+                if (hasData) {
+                    // 更新最后 ID 和当前日期
+                    if (apiData.max_id) companyLastId[companyKey] = apiData.max_id;
+                    if (apiData.draw_date) companyCurrentDate[companyKey] = apiData.draw_date;
+                    // 用 API 数据更新页面
+                    updateWithApiData(companyKey, apiData);
+                } else {
+                    console.log(`${companyKey} API 返回空数据，保留缓存`);
+                }
+            }
+
+            // 返回缓存数据或 null（不影响整体流程）
+            return cacheResult.value?.data || null;
         }
 
         async function loadFromLocalCache(companyKey) {
@@ -439,8 +450,6 @@
                 const res = await fetch(url);
                 if (res.ok) {
                     const data = await res.json();
-                    if (data.max_id) companyLastId[companyKey] = data.max_id;
-                    if (data.draw_date) companyCurrentDate[companyKey] = data.draw_date;
                     return { fromCache: false, data: data };
                 }
             } catch (err) {
@@ -458,10 +467,10 @@
             const apiDate = apiData.draw_date;
 
             if (!currentDate) {
-                // 如果当前没有数据（理论上不可能），直接替换
+                // 如果当前没有数据，直接替换
                 renderCompanyCard(companyKey, apiData);
             } else if (currentDate === apiDate) {
-                // 日期相同：进行增量更新（调用轮询逻辑，但这里简化：直接替换，因为数据可能更全）
+                // 日期相同：直接替换（因为 API 返回的数据可能更全）
                 renderCompanyCard(companyKey, apiData);
             } else {
                 // 日期不同：需要清空后替换
@@ -500,9 +509,8 @@
 
             let html = '';
 
-            // 处理特殊公司（保持原有的特殊公司逻辑，但 sabah_lotto 和 sportstoto_lotto 已移出）
+            // 处理特殊公司（保持原有的特殊公司逻辑）
             if (SPECIAL_COMPANIES.includes(companyKey)) {
-                // 原有的特殊公司处理（如 singapore_toto 等）保持不变
                 if (companyKey === 'singapore_toto') {
                     let winningNumbers = data.winning_numbers || data.numbers || data.winning || data.wins || [];
                     html += `<div class="subsection"><div class="subsection-title">开奖号码</div><div class="number-list" id="winning-${companyKey}">`;
@@ -524,14 +532,12 @@
                         });
                         html += `</table></div>`;
                     }
-                } else if (companyKey === 'sportstoto_5d' || companyKey === 'sportstoto_6d' || companyKey === 'magnum_life' || companyKey === 'sportstoto_fireball') {
-                    // 可以添加其他特殊公司的处理，暂用默认
-                    html = '<p style="text-align:center; padding:10px;">特殊开彩详见官网</p>';
                 } else {
+                    // 其他特殊公司暂用占位
                     html = '<p style="text-align:center; padding:10px;">特殊开彩详见官网</p>';
                 }
             } else {
-                // 普通公司分支（现在包含 sabah_lotto 和 sportstoto_lotto）
+                // 普通公司分支（包含 sabah_lotto 和 sportstoto_lotto）
                 if (companyKey === 'sabah_lotto') {
                     // SABAH LOTTO 特殊渲染
                     html = `<div class="subsection"><div class="subsection-title">开奖号码</div><div class="number-list" id="winning-${companyKey}">`;
@@ -691,7 +697,6 @@
                             const container = document.getElementById(containerId);
                             if (container) {
                                 const placeholders = container.querySelectorAll('.number-item');
-                                // 找到第一个占位符（内容为 '----'）并替换
                                 for (let i = 0; i < placeholders.length; i++) {
                                     if (placeholders[i].textContent === '----') {
                                         placeholders[i].textContent = item.number;
