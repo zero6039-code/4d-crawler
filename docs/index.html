@@ -135,23 +135,26 @@
 
     <script>
         // ==================== 配置 ====================
-        const API_BASE = ''; // 不再需要API，所有数据来自本地JSON
-        
-        // ★★★ 公司列表顺序（grand_dragon 第一位）★★★
         const COMPANY_LIST = [
             'grand_dragon',
             'damacai', 'magnum', 'toto', 'singapore', 'damacai_1p3d',
             'sandakan', 'sarawak_cashsweep', 'sabah', 'sabah_lotto',
-            'singapore_toto', 'sportstoto_lotto',
+            'grand_dragon', 'singapore_toto', 'sportstoto_lotto',
             'magnum_jackpot_gold', 'sportstoto_5d', 'sportstoto_6d',
             'magnum_life', 'sportstoto_fireball'
         ];
 
         const NAME_MAP = {
             'grand_dragon': 'GRAND DRAGON 豪龙',
-            'damacai': 'DAMACAI 4D', 'magnum': 'MAGNUM 4D', 'toto': 'TOTO 4D', 'singapore': 'SINGAPORE 4D',
-            'damacai_1p3d': 'DAMACAI 1+3D', 'sandakan': 'SANDAKAN 4D', 'sarawak_cashsweep': 'SARAWAK CASHSWEEP',
-            'sabah': 'SABAH 88 4D', 'sabah_lotto': 'SABAH LOTTO',
+            'damacai': 'DAMACAI 4D',
+            'magnum': 'MAGNUM 4D',
+            'toto': 'TOTO 4D',
+            'singapore': 'SINGAPORE 4D',
+            'damacai_1p3d': 'DAMACAI 1+3D',
+            'sandakan': 'SANDAKAN 4D',
+            'sarawak_cashsweep': 'SARAWAK CASHSWEEP',
+            'sabah': 'SABAH 88 4D',
+            'sabah_lotto': 'SABAH LOTTO',
             'singapore_toto': 'SINGAPORE TOTO',
             'sportstoto_lotto': 'SPORTS TOTO LOTTO',
             'magnum_jackpot_gold': 'MAGNUM JACKPOT GOLD',
@@ -180,17 +183,10 @@
             'singapore_toto': 'singapore-pools.png'
         };
 
-        const HIDDEN_COMPANIES = [
-            'magnum_jackpot_gold',
-            'sportstoto_5d',
-            'sportstoto_6d',
-            'magnum_life',
-            'sportstoto_fireball',
-            'singapore_toto',
-            'sportstoto_lotto',
-            'sabah_lotto'
-        ];
+        // ★★★ 所有公司全部显示，隐藏列表为空 ★★★
+        const HIDDEN_COMPANIES = [];
 
+        // 用于日历高亮的公司（排除豪龙，避免每日高亮）
         const CALENDAR_CHECK_COMPANIES = [
             'damacai', 'magnum', 'toto', 'singapore', 'damacai_1p3d',
             'sandakan', 'sarawak_cashsweep', 'sabah'
@@ -201,10 +197,6 @@
         let filteredDates = [];             
         let filteredDatesSet = new Set();
         let selectedDate = null;           
-
-        let pollingTimers = {};
-        let companyLastId = {};              
-        let companyCurrentDate = {};         
 
         // ==================== 工具函数 ====================
         function ymdToDmy(ymd) {
@@ -239,14 +231,6 @@
 
         function sortDatesDesc(dates) {
             return dates.sort((a, b) => toSortKey(b) - toSortKey(a));
-        }
-
-        function getTodayString() {
-            const now = new Date();
-            const day = String(now.getDate()).padStart(2, '0');
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const year = now.getFullYear();
-            return `${day}-${month}-${year}`;
         }
 
         // ==================== 日期选择器 ====================
@@ -346,7 +330,6 @@
             document.getElementById('date-dropdown').classList.remove('show');
             document.getElementById('date-btn').classList.remove('active');
             document.getElementById('calendar-popup').style.display = 'none';
-            stopAllPolling();
             loadAllCompanies(); 
         }
 
@@ -439,22 +422,22 @@
             } else {
                 renderCompanyCard(companyKey, null);
             }
-
-            // 不再需要API轮询
-            return localData;
         }
 
-        // ★★★ 修改后的 loadFromLocalCache 函数（豪龙强制从最新日期查找）★★★
+        // ★★★ 修复后的 loadFromLocalCache 函数（豪龙仅在主页默认视图使用最新日期）★★★
         async function loadFromLocalCache(companyKey, date = null) {
             let startDate = date || selectedDate;
             
-            // ★★★ 豪龙永远从所有日期的最新开始查找（不依赖任何条件）★★★
-            if (companyKey === 'grand_dragon') {
+            // 豪龙特殊处理：仅在主页默认视图（没有指定date，且selectedDate为过滤后的第一个日期）时，从最新日期开始查找
+            if (companyKey === 'grand_dragon' && !date && selectedDate === filteredDates[0]) {
                 startDate = availableDates[0]; // 全局最新日期
-                console.log(`🔍 豪龙强制从最新日期 ${startDate} 开始查找`);
+                console.log(`🔍 豪龙主页模式：从最新日期 ${startDate} 开始查找`);
+            } else {
+                console.log(`📅 加载 ${companyKey} 日期: ${startDate || '无'}`);
             }
 
             if (!startDate) {
+                // 尝试从根目录加载（最新文件）
                 try {
                     const url = `data/${companyKey}.json?t=${Date.now()}`;
                     const res = await fetch(url);
@@ -494,7 +477,7 @@
             return null;
         }
 
-        // 渲染卡片（保持不变）
+        // 渲染卡片（包含所有公司）
         function renderCompanyCard(companyKey, data) {
             const contentDiv = document.getElementById(`content-${companyKey}`);
             const metaDiv = document.getElementById(`meta-${companyKey}`);
@@ -513,6 +496,7 @@
 
             let html = '';
 
+            // 特殊公司处理（如 Singapore Toto, Magnum Jackpot Gold 等）
             if (SPECIAL_COMPANIES.includes(companyKey)) {
                 if (companyKey === 'singapore_toto') {
                     let winningNumbers = data.winning_numbers || data.numbers || data.winning || data.wins || [];
@@ -536,9 +520,11 @@
                         html += `</table></div>`;
                     }
                 } else {
+                    // 其他特殊公司占位
                     html = '<p style="text-align:center; padding:10px;">特殊开彩详见官网</p>';
                 }
             } else {
+                // 普通公司（包含标准4D和Sabah Lotto等）
                 if (companyKey === 'sabah_lotto') {
                     html = `<div class="subsection"><div class="subsection-title">开奖号码</div><div class="number-list" id="winning-${companyKey}">`;
                     const winning = data.winning_numbers || [];
@@ -585,6 +571,7 @@
                         html += `</div></div>`;
                     }
                 } else {
+                    // 标准 4D 公司
                     html = `
                         <div class="prize-grid" style="flex-direction:column;align-items:center;">
                             <div class="prize-card" style="width:220px;margin-bottom:8px;"><div class="label">1st Prize</div><div class="number" id="first-${companyKey}">${data['1st'] || data.first || data.prize1 || '----'}</div></div>
@@ -640,13 +627,6 @@
             contentDiv.innerHTML = html;
         }
 
-        const updateCompanyCard = renderCompanyCard;
-
-        // ==================== 轮询增量数据（不再使用，保留空函数）====================
-        async function pollLatest(companyKey) { return; }
-        function startPolling() { return; }
-        function stopAllPolling() { return; }
-
         // ==================== 创建卡片骨架 ====================
         function createCompanySkeletons() {
             const grid = document.getElementById('companies-grid');
@@ -677,9 +657,6 @@
         }
 
         function forceRefresh() {
-            // 清除公司当前日期记录，强制重新加载
-            companyCurrentDate = {};
-            companyLastId = {};
             loadAllCompanies();
         }
 
