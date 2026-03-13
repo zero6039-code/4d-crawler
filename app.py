@@ -10,7 +10,9 @@ import logging
 app = Flask(__name__)
 CORS(app)
 
-DATABASE = '4d_results.db'
+# 使用绝对路径定位数据库文件
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATABASE = os.path.join(BASE_DIR, '4d_results.db')
 CRAWLER_SECRET = os.environ.get('CRAWLER_SECRET', 'default-secret-change-me')
 
 # 配置日志
@@ -50,6 +52,7 @@ def get_latest_draw_date(company):
 
 @app.route('/api/company/<company>', methods=['GET'])
 def get_full_data(company):
+    logging.info(f"收到全量数据请求: {company}")
     today = datetime.now().strftime("%Y-%m-%d")
     rows = query_db(
         'SELECT id, type, number FROM results WHERE company = ? AND draw_date = ? ORDER BY id',
@@ -60,6 +63,7 @@ def get_full_data(company):
     else:
         latest = get_latest_draw_date(company)
         if not latest:
+            logging.warning(f"公司 {company} 无任何数据")
             return jsonify({
                 'draw_date': '',
                 'max_id': 0,
@@ -73,6 +77,7 @@ def get_full_data(company):
             [company, target_date]
         )
         if not rows:
+            logging.error(f"公司 {company} 在日期 {target_date} 应有数据但查询为空")
             return jsonify({'draw_date': '', 'max_id': 0})
 
     result = {
@@ -87,6 +92,7 @@ def get_full_data(company):
         if row['id'] > max_id:
             max_id = row['id']
     result['max_id'] = max_id
+    logging.info(f"返回 {company} 的数据，日期 {target_date}，max_id {max_id}")
     return jsonify(result)
 
 @app.route('/api/company/<company>/latest', methods=['GET'])
@@ -102,7 +108,9 @@ def get_latest(company):
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
-    return jsonify({'status': 'ok'})
+    # 同时检查数据库文件是否存在，用于诊断
+    db_exists = os.path.exists(DATABASE)
+    return jsonify({'status': 'ok', 'database_exists': db_exists})
 
 @app.route('/api/trigger-crawler', methods=['GET'])
 def trigger_crawler():
@@ -111,8 +119,13 @@ def trigger_crawler():
         return jsonify({'error': 'Unauthorized'}), 403
 
     try:
+        # 在子进程中运行爬虫，并传入相同的绝对路径环境变量（如果爬虫支持）
+        # 注意：需要确保 crawler.py 也使用相同的 DATABASE 绝对路径
+        # 这里我们通过修改环境变量传递给子进程（如果 crawler.py 读取 DB_PATH 环境变量）
+        env = os.environ.copy()
+        env['DB_PATH'] = DATABASE  # 如果 crawler.py 支持从环境变量读取，则传递
         result = subprocess.run([sys.executable, 'crawler.py'],
-                                capture_output=True, text=True, timeout=300)
+                                capture_output=True, text=True, timeout=300, env=env)
         return jsonify({
             'status': 'success',
             'stdout': result.stdout,
@@ -124,6 +137,18 @@ def trigger_crawler():
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
+# 初始化数据库（在应用启动时运行）
+def init_database():
+    try:
+        import database
+        database.init_db()
+        logging.info("数据库初始化成功")
+    except Exception as e:
+        logging.error(f"数据库初始化失败: {e}")
+
+# 启动时初始化数据库
+init_database()
+
 if __name__ == '__main__':
-     port = int(os.environ.get('PORT', 5000))
-     app.run(host='0.0.0.0', port=port, debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)
