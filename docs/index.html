@@ -135,11 +135,12 @@
 
     <script>
         // ==================== 配置 ====================
+        // ★★★ 公司列表（已移除重复的 grand_dragon）★★★
         const COMPANY_LIST = [
             'grand_dragon',
             'damacai', 'magnum', 'toto', 'singapore', 'damacai_1p3d',
             'sandakan', 'sarawak_cashsweep', 'sabah', 'sabah_lotto',
-            'grand_dragon', 'singapore_toto', 'sportstoto_lotto',
+            'singapore_toto', 'sportstoto_lotto',
             'magnum_jackpot_gold', 'sportstoto_5d', 'sportstoto_6d',
             'magnum_life', 'sportstoto_fireball'
         ];
@@ -183,8 +184,10 @@
             'singapore_toto': 'singapore-pools.png'
         };
 
-        // ★★★ 所有公司全部显示，隐藏列表为空 ★★★
-        const HIDDEN_COMPANIES = [];
+        // ★★★ 隐藏公司列表（添加 sportstoto_fireball）★★★
+        const HIDDEN_COMPANIES = [
+            'sportstoto_fireball'
+        ];
 
         // 用于日历高亮的公司（排除豪龙，避免每日高亮）
         const CALENDAR_CHECK_COMPANIES = [
@@ -477,7 +480,13 @@
             return null;
         }
 
-        // 渲染卡片（包含所有公司）
+        // ★★★ 辅助函数：过滤无效号码（如 "****"）★★★
+        function filterValidNumbers(arr) {
+            if (!Array.isArray(arr)) return [];
+            return arr.filter(num => num && num !== '----' && num !== '****' && num !== '***' && /^\d{4}$/.test(num));
+        }
+
+        // 渲染卡片
         function renderCompanyCard(companyKey, data) {
             const contentDiv = document.getElementById(`content-${companyKey}`);
             const metaDiv = document.getElementById(`meta-${companyKey}`);
@@ -496,7 +505,6 @@
 
             let html = '';
 
-            // 特殊公司处理（如 Singapore Toto, Magnum Jackpot Gold 等）
             if (SPECIAL_COMPANIES.includes(companyKey)) {
                 if (companyKey === 'singapore_toto') {
                     let winningNumbers = data.winning_numbers || data.numbers || data.winning || data.wins || [];
@@ -520,11 +528,9 @@
                         html += `</table></div>`;
                     }
                 } else {
-                    // 其他特殊公司占位
                     html = '<p style="text-align:center; padding:10px;">特殊开彩详见官网</p>';
                 }
             } else {
-                // 普通公司（包含标准4D和Sabah Lotto等）
                 if (companyKey === 'sabah_lotto') {
                     html = `<div class="subsection"><div class="subsection-title">开奖号码</div><div class="number-list" id="winning-${companyKey}">`;
                     const winning = data.winning_numbers || [];
@@ -590,30 +596,28 @@
                         html += `</div></div>`;
                     }
 
+                    // ★★★ 特别奖：过滤无效项，保持10个位置 ★★★
                     html += `<div class="subsection"><div class="subsection-title">特别奖</div><div class="number-list" id="special-${companyKey}">`;
-                    const special = data.special || data.special_numbers || data.special_prizes || data.special_results || [];
-                    if (special.length === 0) {
-                        for (let i = 0; i < 10; i++) {
-                            html += '<span class="number-item">----</span>';
-                        }
-                    } else {
-                        special.forEach(n => html += `<span class="number-item">${n}</span>`);
-                        for (let i = special.length; i < 10; i++) {
-                            html += '<span class="number-item">----</span>';
+                    const specialRaw = data.special || data.special_numbers || data.special_prizes || data.special_results || [];
+                    const specialValid = filterValidNumbers(specialRaw);
+                    for (let i = 0; i < 10; i++) {
+                        if (i < specialValid.length) {
+                            html += `<span class="number-item">${specialValid[i]}</span>`;
+                        } else {
+                            html += `<span class="number-item">----</span>`;
                         }
                     }
                     html += `</div></div>`;
 
+                    // ★★★ 安慰奖：过滤无效项，保持10个位置 ★★★
                     html += `<div class="subsection"><div class="subsection-title">安慰奖</div><div class="number-list" id="consolation-${companyKey}">`;
-                    const consolation = data.consolation || data.consolation_numbers || data.consolation_prizes || data.consolation_results || [];
-                    if (consolation.length === 0) {
-                        for (let i = 0; i < 10; i++) {
-                            html += '<span class="number-item">----</span>';
-                        }
-                    } else {
-                        consolation.forEach(n => html += `<span class="number-item">${n}</span>`);
-                        for (let i = consolation.length; i < 10; i++) {
-                            html += '<span class="number-item">----</span>';
+                    const consolationRaw = data.consolation || data.consolation_numbers || data.consolation_prizes || data.consolation_results || [];
+                    const consolationValid = filterValidNumbers(consolationRaw);
+                    for (let i = 0; i < 10; i++) {
+                        if (i < consolationValid.length) {
+                            html += `<span class="number-item">${consolationValid[i]}</span>`;
+                        } else {
+                            html += `<span class="number-item">----</span>`;
                         }
                     }
                     html += `</div></div>`;
