@@ -138,9 +138,9 @@
         // ==================== 配置 ====================
         const API_BASE = 'https://fourd-crawler.onrender.com';  // ⚠️ 请替换为您的 Render 域名
         
-        // ★★★ 调整公司列表顺序：将 grand_dragon 移到第一位 ★★★
+        // 公司列表顺序（grand_dragon 第一位）
         const COMPANY_LIST = [
-            'grand_dragon',          // 现在 GRAND DRAGON 豪龙 是第一个
+            'grand_dragon',
             'damacai', 'magnum', 'toto', 'singapore', 'damacai_1p3d',
             'sandakan', 'sarawak_cashsweep', 'sabah', 'sabah_lotto',
             'singapore_toto', 'sportstoto_lotto',
@@ -153,6 +153,7 @@
             'damacai': 'DAMACAI 4D', 'magnum': 'MAGNUM 4D', 'toto': 'TOTO 4D', 'singapore': 'SINGAPORE 4D',
             'damacai_1p3d': 'DAMACAI 1+3D', 'sandakan': 'SANDAKAN 4D', 'sarawak_cashsweep': 'SARAWAK CASHSWEEP',
             'sabah': 'SABAH 88 4D', 'sabah_lotto': 'SABAH LOTTO',
+            'grand_dragon': 'GRAND DRAGON 豪龙',
             'singapore_toto': 'SINGAPORE TOTO',
             'sportstoto_lotto': 'SPORTS TOTO LOTTO',
             'magnum_jackpot_gold': 'MAGNUM JACKPOT GOLD',
@@ -162,7 +163,6 @@
             'sportstoto_fireball': 'SPORTS TOTO FIREBALL'
         };
 
-        // 特殊公司列表
         const SPECIAL_COMPANIES = [
             'sportstoto_fireball', 'singapore_toto',
             'magnum_jackpot_gold', 'sportstoto_5d', 'sportstoto_6d', 'magnum_life'
@@ -182,7 +182,6 @@
             'singapore_toto': 'singapore-pools.png'
         };
 
-        // 隐藏公司列表（保持不变）
         const HIDDEN_COMPANIES = [
             'magnum_jackpot_gold',
             'sportstoto_5d',
@@ -194,7 +193,6 @@
             'sabah_lotto'
         ];
 
-        // ★★★ 定义用于日历高亮检查的公司列表（排除 grand_dragon）★★★
         const CALENDAR_CHECK_COMPANIES = [
             'damacai', 'magnum', 'toto', 'singapore', 'damacai_1p3d',
             'sandakan', 'sarawak_cashsweep', 'sabah'
@@ -202,14 +200,13 @@
 
         let availableDates = [];           
         let availableDatesSet = new Set(); 
-        // ★★★ 用于存储过滤后的日期（至少有一个 CALENDAR_CHECK_COMPANIES 公司有数据）★★★
         let filteredDates = [];             
         let filteredDatesSet = new Set();
         let selectedDate = null;           
 
         let pollingTimers = {};
-        let companyLastId = {};              // 记录每个公司已接收的最大 ID（仅用于实时轮询）
-        let companyCurrentDate = {};         // 记录每个公司当前显示的日期 (dd-mm-yyyy)
+        let companyLastId = {};              
+        let companyCurrentDate = {};         
 
         // ==================== 工具函数 ====================
         function ymdToDmy(ymd) {
@@ -268,16 +265,14 @@
                     availableDates = sortDatesDesc(dates);
                     availableDatesSet = new Set(availableDates);
                     
-                    // 生成过滤后的日期列表（排除只有 grand_dragon 有数据的日期）
                     await generateFilteredDates();
                     
-                    // 自动选择过滤后的最新日期作为默认显示
                     if (filteredDates.length > 0) {
                         selectedDate = filteredDates[0];
                     } else if (availableDates.length > 0) {
-                        // 如果没有过滤后的日期，回退到全部日期的第一个
                         selectedDate = availableDates[0];
                     }
+                    console.log('📅 初始 selectedDate:', selectedDate);
                 }
             } catch (e) { console.warn('无法加载 dates.json', e); }
             renderDateDropdown();
@@ -286,7 +281,6 @@
 
         async function generateFilteredDates() {
             filteredDates = [];
-            // 限制并发数，避免请求过多
             const concurrency = 5;
             for (let i = 0; i < availableDates.length; i += concurrency) {
                 const batch = availableDates.slice(i, i + concurrency);
@@ -302,11 +296,10 @@
                 });
             }
             filteredDatesSet = new Set(filteredDates);
-            console.log('过滤后的日期:', filteredDates);
+            console.log('过滤后的日期 (8家公司有数据):', filteredDates);
         }
 
         async function checkDateHasData(dateYmd) {
-            // 并行检查最多 3 个公司，找到第一个存在的就返回 true
             const checkPromises = CALENDAR_CHECK_COMPANIES.map(async (company) => {
                 const url = `data/${dateYmd}/${company}.json`;
                 try {
@@ -331,7 +324,6 @@
             }
         }
 
-        // ★★★ 修改：日期下拉列表只显示过滤后的日期 filteredDates（即8家公司有数据的日期）★★★
         function renderDateDropdown() {
             const content = document.getElementById('date-dropdown-content');
             if (filteredDates.length === 0) {
@@ -407,7 +399,6 @@
                         html += '<td class="empty"></td>';
                     } else {
                         let dateYmd = `${year}-${month.toString().padStart(2,'0')}-${date.toString().padStart(2,'0')}`;
-                        // ★★★ 使用 filteredDatesSet 判断是否有高亮数据（8家公司）★★★
                         let hasData = filteredDatesSet.has(dateYmd);
                         let isSelected = (selectedDate === dateYmd) ? 'selected' : '';
                         let isToday = (dateYmd === todayYmd) ? 'today' : '';
@@ -432,7 +423,6 @@
             renderCalendar();
         }
 
-        // ★★★ 修改：允许点击任何有数据的日期（包括仅豪龙有数据的日期）★★★
         function calendarDateClick(dateYmd) {
             if (availableDatesSet.has(dateYmd)) {
                 selectDate(dateYmd);
@@ -464,11 +454,10 @@
             return localData;
         }
 
-        // ★★★ 修改后的 loadFromLocalCache 函数（增加豪龙特殊处理）★★★
         async function loadFromLocalCache(companyKey, date = null) {
             let startDate = date || selectedDate;
             
-            // 特殊处理：豪龙在主页默认视图下，从最新日期开始查找
+            // 豪龙特殊处理：在主页默认视图下，从所有日期的最新开始查找
             if (companyKey === 'grand_dragon' && !date && filteredDates.length > 0 && selectedDate === filteredDates[0]) {
                 startDate = availableDates[0]; // 从最新日期开始
                 console.log(`🔍 豪龙特殊处理：从最新日期 ${startDate} 开始查找`);
@@ -479,27 +468,37 @@
                     const url = `data/${companyKey}.json?t=${Date.now()}`;
                     const res = await fetch(url);
                     if (res.ok) return await res.json();
-                } catch (e) {}
+                } catch (e) {
+                    console.warn(`加载根目录失败: ${companyKey}`, e);
+                }
                 return null;
             }
 
             if (availableDates.length === 0) return null;
             const startIndex = availableDates.indexOf(startDate);
-            if (startIndex === -1) return null;
+            if (startIndex === -1) {
+                console.warn(`起始日期 ${startDate} 不在 availableDates 中`);
+                return null;
+            }
 
             const candidateDates = availableDates.slice(startIndex);
             const maxAttempts = 10;
             for (let i = 0; i < Math.min(candidateDates.length, maxAttempts); i++) {
                 const candidateDate = candidateDates[i];
                 const url = `data/${candidateDate}/${companyKey}.json?t=${Date.now()}`;
+                console.log(`尝试加载: ${url}`);
                 try {
                     const res = await fetch(url);
                     if (res.ok) {
                         const data = await res.json();
                         console.log(`✅ 从本地加载成功: ${url} (回退到 ${candidateDate})`);
                         return data;
+                    } else {
+                        console.warn(`加载失败 (${res.status}): ${url}`);
                     }
-                } catch (e) {}
+                } catch (e) {
+                    console.warn(`加载异常: ${url}`, e);
+                }
             }
             return null;
         }
@@ -544,7 +543,6 @@
             }
         }
 
-        // 渲染卡片（保持不变，与之前一致）
         function renderCompanyCard(companyKey, data) {
             const contentDiv = document.getElementById(`content-${companyKey}`);
             const metaDiv = document.getElementById(`meta-${companyKey}`);
@@ -692,7 +690,6 @@
 
         const updateCompanyCard = renderCompanyCard;
 
-        // ==================== 轮询增量数据 ====================
         async function pollLatest(companyKey) {
             if (selectedDate) return;
             const lastId = companyLastId[companyKey] || 0;
@@ -775,7 +772,6 @@
             pollingTimers = {};
         }
 
-        // ==================== 创建卡片骨架 ====================
         function createCompanySkeletons() {
             const grid = document.getElementById('companies-grid');
             grid.innerHTML = '';
