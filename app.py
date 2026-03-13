@@ -1,15 +1,16 @@
-import os
-import subprocess
-import sys
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import sqlite3
 from datetime import datetime
+import os
+import subprocess
+import sys
 
 app = Flask(__name__)
 CORS(app)
 
 DATABASE = '4d_results.db'
+CRAWLER_SECRET = os.environ.get('CRAWLER_SECRET', 'default-secret-change-me')  # 从环境变量读取密钥
 
 def get_db_connection():
     conn = sqlite3.connect(DATABASE)
@@ -86,6 +87,25 @@ def get_latest(company):
 @app.route('/api/health', methods=['GET'])
 def health_check():
     return jsonify({'status': 'ok'})
+
+@app.route('/api/trigger-crawler', methods=['GET'])
+def trigger_crawler():
+    """受保护的爬虫触发接口，需要 secret 参数"""
+    secret = request.args.get('secret')
+    if secret != CRAWLER_SECRET:
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    try:
+        # 执行爬虫脚本，捕获输出
+        result = subprocess.run([sys.executable, 'crawler.py'], capture_output=True, text=True)
+        return jsonify({
+            'status': 'success',
+            'stdout': result.stdout,
+            'stderr': result.stderr,
+            'returncode': result.returncode
+        })
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
