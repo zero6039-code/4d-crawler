@@ -202,7 +202,7 @@
 
         let availableDates = [];           
         let availableDatesSet = new Set(); 
-        // ★★★ 新增：用于存储过滤后的日期（至少有一个 CALENDAR_CHECK_COMPANIES 公司有数据）★★★
+        // ★★★ 用于存储过滤后的日期（至少有一个 CALENDAR_CHECK_COMPANIES 公司有数据）★★★
         let filteredDates = [];             
         let filteredDatesSet = new Set();
         let selectedDate = null;           
@@ -260,7 +260,6 @@
             document.getElementById('date-btn').classList.toggle('active');
         }
 
-        // ★★★ 修改：加载 dates.json 后，生成过滤后的日期列表 filteredDates ★★★
         async function loadDateIndex() {
             try {
                 const res = await fetch(`data/dates.json?t=${Date.now()}`, { cache: 'no-store' });
@@ -285,7 +284,6 @@
             updateDateBtnWithLatest();
         }
 
-        // ★★★ 新增：生成过滤后的日期列表（检查每个日期下，目标公司是否有数据）★★★
         async function generateFilteredDates() {
             filteredDates = [];
             // 限制并发数，避免请求过多
@@ -307,7 +305,6 @@
             console.log('过滤后的日期:', filteredDates);
         }
 
-        // ★★★ 新增：检查某个日期下，CALENDAR_CHECK_COMPANIES 中是否有公司有数据 ★★★
         async function checkDateHasData(dateYmd) {
             // 并行检查最多 3 个公司，找到第一个存在的就返回 true
             const checkPromises = CALENDAR_CHECK_COMPANIES.map(async (company) => {
@@ -334,7 +331,7 @@
             }
         }
 
-        // ★★★ 修改：日期下拉列表只显示过滤后的日期 filteredDates ★★★
+        // ★★★ 修改：日期下拉列表只显示过滤后的日期 filteredDates（即8家公司有数据的日期）★★★
         function renderDateDropdown() {
             const content = document.getElementById('date-dropdown-content');
             if (filteredDates.length === 0) {
@@ -378,7 +375,6 @@
             popup.style.display = 'block';
         }
 
-        // ★★★ 完全重写 renderCalendar 函数，使用 filteredDatesSet 判断高亮 ★★★
         async function renderCalendar() {
             const popup = document.getElementById('calendar-popup');
             if (!popup) return;
@@ -411,7 +407,7 @@
                         html += '<td class="empty"></td>';
                     } else {
                         let dateYmd = `${year}-${month.toString().padStart(2,'0')}-${date.toString().padStart(2,'0')}`;
-                        // ★★★ 使用 filteredDatesSet 判断是否有数据 ★★★
+                        // ★★★ 使用 filteredDatesSet 判断是否有高亮数据（8家公司）★★★
                         let hasData = filteredDatesSet.has(dateYmd);
                         let isSelected = (selectedDate === dateYmd) ? 'selected' : '';
                         let isToday = (dateYmd === todayYmd) ? 'today' : '';
@@ -436,12 +432,12 @@
             renderCalendar();
         }
 
+        // ★★★ 修改：允许点击任何有数据的日期（包括仅豪龙有数据的日期）★★★
         function calendarDateClick(dateYmd) {
-            // ★★★ 修改：点击日期时，仅当过滤后的日期集中存在时才允许选择 ★★★
-            if (filteredDatesSet.has(dateYmd)) {
+            if (availableDatesSet.has(dateYmd)) {
                 selectDate(dateYmd);
             } else {
-                alert('该日期无主要公司开彩数据');
+                alert('该日期无开彩数据');
             }
         }
 
