@@ -95,6 +95,11 @@ def get_latest_draw_date(company):
 
 @app.route('/api/company/<company>', methods=['GET'])
 def get_full_data(company):
+    """
+    全量接口：
+    - 优先返回当天数据，若无则返回最近一期数据。
+    - 返回格式包含 draw_date (dd-mm-yyyy), max_id, 以及各类型号码数组。
+    """
     logging.info(f"收到全量数据请求: {company}")
     today = datetime.now().strftime("%Y-%m-%d")
     
@@ -142,8 +147,45 @@ def get_full_data(company):
     logging.info(f"返回 {company} 的数据，日期 {target_date}，max_id {max_id}")
     return jsonify(result)
 
+@app.route('/api/company/<company>/history', methods=['GET'])
+def get_history(company):
+    """
+    历史数据接口：返回指定日期的数据。
+    参数：date (必填)，格式 YYYY-MM-DD。
+    返回格式：只包含号码分组（无 max_id），结构与全量接口一致。
+    """
+    date_param = request.args.get('date')
+    if not date_param:
+        return jsonify({'error': 'Missing date parameter'}), 400
+    
+    # 标准化日期（确保数据库查询格式一致）
+    query_date = normalize_date(date_param)
+    if not query_date:
+        return jsonify({'error': 'Invalid date format'}), 400
+
+    rows = query_db(
+        'SELECT type, number FROM results WHERE company = ? AND draw_date = ? ORDER BY id',
+        [company, query_date]
+    )
+    if not rows:
+        logging.info(f"公司 {company} 在日期 {query_date} 无数据")
+        return jsonify({})  # 返回空对象，前端会显示占位符
+
+    result = {}
+    for row in rows:
+        t = row['type']
+        num = row['number']
+        result.setdefault(t, []).append(num)
+    
+    logging.info(f"返回 {company} 在 {query_date} 的历史数据")
+    return jsonify(result)
+
 @app.route('/api/company/<company>/latest', methods=['GET'])
 def get_latest(company):
+    """
+    增量接口：返回当天自 after 之后新增的号码。
+    参数：after (int)，可选，默认0。
+    """
     after = request.args.get('after', 0, type=int)
     today = datetime.now().strftime("%Y-%m-%d")
     rows = query_db(
@@ -155,11 +197,13 @@ def get_latest(company):
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
+    """健康检查，附带数据库文件存在状态"""
     db_exists = os.path.exists(DATABASE)
     return jsonify({'status': 'ok', 'database_exists': db_exists})
 
 @app.route('/api/trigger-crawler', methods=['GET'])
 def trigger_crawler():
+    """手动触发爬虫（受 secret 保护）"""
     secret = request.args.get('secret')
     if secret != CRAWLER_SECRET:
         return jsonify({'error': 'Unauthorized'}), 403
@@ -211,6 +255,21 @@ def debug_db():
     except Exception as e:
         result['error'] = str(e)
     return jsonify(result)
+
+@app.route('/')
+def index():
+    """API 根路径，返回简单说明"""
+    return jsonify({
+        'name': '4D Results API',
+        'endpoints': [
+            '/api/health',
+            '/api/debug/db',
+            '/api/company/<company>',
+            '/api/company/<company>/history?date=YYYY-MM-DD',
+            '/api/company/<company>/latest?after=<id>',
+            '/api/trigger-crawler?secret=<key>'
+        ]
+    })
 
 # 初始化数据库（在应用启动时运行）
 def init_database():
