@@ -42,18 +42,56 @@ def query_db(query, args=(), one=False):
     finally:
         conn.close()
 
+def normalize_date(date_str):
+    """
+    将输入的日期字符串统一转换为 YYYY-MM-DD 格式。
+    支持 dd-mm-yyyy 和 yyyy-mm-dd 两种格式。
+    如果无法解析，返回原字符串。
+    """
+    if not date_str:
+        return date_str
+    # 尝试解析为 dd-mm-yyyy
+    try:
+        d = datetime.strptime(date_str, "%d-%m-%Y")
+        return d.strftime("%Y-%m-%d")
+    except ValueError:
+        pass
+    # 尝试解析为 yyyy-mm-dd
+    try:
+        d = datetime.strptime(date_str, "%Y-%m-%d")
+        return date_str  # 已经是正确格式
+    except ValueError:
+        logging.warning(f"无法解析的日期格式: {date_str}")
+        return date_str
+
+def format_date_for_display(ymd_date):
+    """将 YYYY-MM-DD 转换为 DD-MM-YYYY 用于前端显示"""
+    if not ymd_date:
+        return ''
+    try:
+        d = datetime.strptime(ymd_date, "%Y-%m-%d")
+        return d.strftime("%d-%m-%Y")
+    except ValueError:
+        return ymd_date
+
 def get_latest_draw_date(company):
+    """获取该公司最新有数据的日期（始终返回 YYYY-MM-DD 格式）"""
     row = query_db(
         'SELECT draw_date FROM results WHERE company = ? ORDER BY draw_date DESC LIMIT 1',
         [company],
         one=True
     )
-    return row['draw_date'] if row else None
+    if row:
+        raw_date = row['draw_date']
+        return normalize_date(raw_date)  # 统一格式
+    return None
 
 @app.route('/api/company/<company>', methods=['GET'])
 def get_full_data(company):
     logging.info(f"收到全量数据请求: {company}")
     today = datetime.now().strftime("%Y-%m-%d")
+    
+    # 尝试获取当天数据
     rows = query_db(
         'SELECT id, type, number FROM results WHERE company = ? AND draw_date = ? ORDER BY id',
         [company, today]
@@ -71,7 +109,7 @@ def get_full_data(company):
                 'consolation': [],
                 'prize': []
             })
-        target_date = latest
+        target_date = latest  # 此时已为 YYYY-MM-DD 格式
         rows = query_db(
             'SELECT id, type, number FROM results WHERE company = ? AND draw_date = ? ORDER BY id',
             [company, target_date]
@@ -81,7 +119,7 @@ def get_full_data(company):
             return jsonify({'draw_date': '', 'max_id': 0})
 
     result = {
-        'draw_date': datetime.strptime(target_date, "%Y-%m-%d").strftime("%d-%m-%Y"),
+        'draw_date': format_date_for_display(target_date),  # 转换为前端显示格式
         'max_id': 0
     }
     max_id = 0
@@ -108,7 +146,6 @@ def get_latest(company):
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
-    # 同时检查数据库文件是否存在，用于诊断
     db_exists = os.path.exists(DATABASE)
     return jsonify({'status': 'ok', 'database_exists': db_exists})
 
@@ -119,11 +156,8 @@ def trigger_crawler():
         return jsonify({'error': 'Unauthorized'}), 403
 
     try:
-        # 在子进程中运行爬虫，并传入相同的绝对路径环境变量（如果爬虫支持）
-        # 注意：需要确保 crawler.py 也使用相同的 DATABASE 绝对路径
-        # 这里我们通过修改环境变量传递给子进程（如果 crawler.py 读取 DB_PATH 环境变量）
         env = os.environ.copy()
-        env['DB_PATH'] = DATABASE  # 如果 crawler.py 支持从环境变量读取，则传递
+        env['DB_PATH'] = DATABASE
         result = subprocess.run([sys.executable, 'crawler.py'],
                                 capture_output=True, text=True, timeout=300, env=env)
         return jsonify({
@@ -137,6 +171,38 @@ def trigger_crawler():
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
+@app.route('/api/debug/db', methods=['GET'])
+def debug_db():
+    """调试接口：返回数据库状态和第一条数据"""
+    result = {
+        'database_path': DATABASE,
+        'file_exists': os.path.exists(DATABASE),
+        'tables': [],
+        'sample_data': None,
+        'error': None
+    }
+    if not result['file_exists']:
+        return jsonify(result)
+    
+    try:
+        conn = get_db_connection()
+        if conn is None:
+            result['error'] = '无法连接数据库'
+            return jsonify(result)
+        
+        cur = conn.cursor()
+        cur.execute("SELECT name FROM sqlite_master WHERE type='table';")
+        result['tables'] = [row[0] for row in cur.fetchall()]
+        
+        cur.execute("SELECT * FROM results LIMIT 1")
+        row = cur.fetchone()
+        if row:
+            result['sample_data'] = dict(row)
+        conn.close()
+    except Exception as e:
+        result['error'] = str(e)
+    return jsonify(result)
+
 # 初始化数据库（在应用启动时运行）
 def init_database():
     try:
@@ -146,7 +212,6 @@ def init_database():
     except Exception as e:
         logging.error(f"数据库初始化失败: {e}")
 
-# 启动时初始化数据库
 init_database()
 
 if __name__ == '__main__':
