@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <script defer src="https://va.vercel-scripts.com/v1/va.js" data-project-id="prj_OlkT8OfUEFKzdmDE1ld3CHagqMFY"></script>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3226709889348088" crossorigin="anonymous"></script>
     <title>4D 成绩 Malaysia · 实时更新</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -136,9 +135,9 @@
 
     <script>
         // ==================== 配置 ====================
-        const API_BASE = 'https://fourd-crawler.onrender.com';  // ⚠️ 请替换为您的 Render 域名
+        const API_BASE = ''; // 不再需要API，所有数据来自本地JSON
         
-        // 公司列表顺序（grand_dragon 第一位）
+        // ★★★ 公司列表顺序（grand_dragon 第一位）★★★
         const COMPANY_LIST = [
             'grand_dragon',
             'damacai', 'magnum', 'toto', 'singapore', 'damacai_1p3d',
@@ -153,7 +152,6 @@
             'damacai': 'DAMACAI 4D', 'magnum': 'MAGNUM 4D', 'toto': 'TOTO 4D', 'singapore': 'SINGAPORE 4D',
             'damacai_1p3d': 'DAMACAI 1+3D', 'sandakan': 'SANDAKAN 4D', 'sarawak_cashsweep': 'SARAWAK CASHSWEEP',
             'sabah': 'SABAH 88 4D', 'sabah_lotto': 'SABAH LOTTO',
-            'grand_dragon': 'GRAND DRAGON 豪龙',
             'singapore_toto': 'SINGAPORE TOTO',
             'sportstoto_lotto': 'SPORTS TOTO LOTTO',
             'magnum_jackpot_gold': 'MAGNUM JACKPOT GOLD',
@@ -273,6 +271,7 @@
                         selectedDate = availableDates[0];
                     }
                     console.log('📅 初始 selectedDate:', selectedDate);
+                    console.log('📅 所有可用日期:', availableDates);
                 }
             } catch (e) { console.warn('无法加载 dates.json', e); }
             renderDateDropdown();
@@ -441,26 +440,18 @@
                 renderCompanyCard(companyKey, null);
             }
 
-            if (!selectedDate) {
-                loadFromAPI(companyKey).then(apiResult => {
-                    if (apiResult && apiResult.data) {
-                        updateWithApiData(companyKey, apiResult.data);
-                        if (apiResult.data.max_id) companyLastId[companyKey] = apiResult.data.max_id;
-                        if (apiResult.data.draw_date) companyCurrentDate[companyKey] = apiResult.data.draw_date;
-                    }
-                }).catch(err => console.warn(`${companyKey} API后台更新失败`, err));
-            }
-
+            // 不再需要API轮询
             return localData;
         }
 
+        // ★★★ 修改后的 loadFromLocalCache 函数（豪龙强制从最新日期查找）★★★
         async function loadFromLocalCache(companyKey, date = null) {
             let startDate = date || selectedDate;
             
-            // 豪龙特殊处理：在主页默认视图下，从所有日期的最新开始查找
-            if (companyKey === 'grand_dragon' && !date && filteredDates.length > 0 && selectedDate === filteredDates[0]) {
-                startDate = availableDates[0]; // 从最新日期开始
-                console.log(`🔍 豪龙特殊处理：从最新日期 ${startDate} 开始查找`);
+            // ★★★ 豪龙永远从所有日期的最新开始查找（不依赖任何条件）★★★
+            if (companyKey === 'grand_dragon') {
+                startDate = availableDates[0]; // 全局最新日期
+                console.log(`🔍 豪龙强制从最新日期 ${startDate} 开始查找`);
             }
 
             if (!startDate) {
@@ -503,46 +494,7 @@
             return null;
         }
 
-        async function loadFromAPI(companyKey) {
-            const url = `${API_BASE}/api/company/${companyKey}`;
-            try {
-                const res = await fetch(url);
-                if (res.ok) {
-                    const data = await res.json();
-                    return { fromCache: false, data: data };
-                }
-            } catch (err) {
-                console.warn(`${companyKey} API请求失败`, err);
-            }
-            return { fromCache: false, data: null };
-        }
-
-        function updateWithApiData(companyKey, apiData) {
-            const metaDiv = document.getElementById(`meta-${companyKey}`);
-            const metaText = metaDiv ? metaDiv.innerText : '';
-            const currentDateMatch = metaText.match(/日期 Date: (\d{2}-\d{2}-\d{4})/);
-            const currentDate = currentDateMatch ? currentDateMatch[1] : null;
-            const apiDate = apiData.draw_date;
-
-            if (!currentDate) {
-                renderCompanyCard(companyKey, apiData);
-            } else if (currentDate === apiDate) {
-                renderCompanyCard(companyKey, apiData);
-            } else {
-                const firstElem = document.getElementById(`first-${companyKey}`);
-                const secondElem = document.getElementById(`second-${companyKey}`);
-                const thirdElem = document.getElementById(`third-${companyKey}`);
-                const specialContainer = document.getElementById(`special-${companyKey}`);
-                const consolationContainer = document.getElementById(`consolation-${companyKey}`);
-                if (firstElem) firstElem.textContent = '----';
-                if (secondElem) secondElem.textContent = '----';
-                if (thirdElem) thirdElem.textContent = '----';
-                if (specialContainer) specialContainer.innerHTML = '';
-                if (consolationContainer) consolationContainer.innerHTML = '';
-                renderCompanyCard(companyKey, apiData);
-            }
-        }
-
+        // 渲染卡片（保持不变）
         function renderCompanyCard(companyKey, data) {
             const contentDiv = document.getElementById(`content-${companyKey}`);
             const metaDiv = document.getElementById(`meta-${companyKey}`);
@@ -690,88 +642,12 @@
 
         const updateCompanyCard = renderCompanyCard;
 
-        async function pollLatest(companyKey) {
-            if (selectedDate) return;
-            const lastId = companyLastId[companyKey] || 0;
-            const url = `${API_BASE}/api/company/${companyKey}/latest?after=${lastId}`;
-            try {
-                const res = await fetch(url);
-                const items = await res.json();
-                if (items.length > 0) {
-                    companyLastId[companyKey] = items[items.length-1].id;
+        // ==================== 轮询增量数据（不再使用，保留空函数）====================
+        async function pollLatest(companyKey) { return; }
+        function startPolling() { return; }
+        function stopAllPolling() { return; }
 
-                    const today = getTodayString();
-                    const currentDate = companyCurrentDate[companyKey];
-
-                    if (currentDate !== today) {
-                        const specialContainer = document.getElementById(`special-${companyKey}`);
-                        const consolationContainer = document.getElementById(`consolation-${companyKey}`);
-                        const firstElem = document.getElementById(`first-${companyKey}`);
-                        const secondElem = document.getElementById(`second-${companyKey}`);
-                        const thirdElem = document.getElementById(`third-${companyKey}`);
-                        
-                        if (specialContainer) {
-                            specialContainer.innerHTML = '';
-                            for (let i = 0; i < 10; i++) {
-                                const span = document.createElement('span');
-                                span.className = 'number-item';
-                                span.textContent = '----';
-                                specialContainer.appendChild(span);
-                            }
-                        }
-                        if (consolationContainer) {
-                            consolationContainer.innerHTML = '';
-                            for (let i = 0; i < 10; i++) {
-                                const span = document.createElement('span');
-                                span.className = 'number-item';
-                                span.textContent = '----';
-                                consolationContainer.appendChild(span);
-                            }
-                        }
-                        if (firstElem) firstElem.textContent = '----';
-                        if (secondElem) secondElem.textContent = '----';
-                        if (thirdElem) thirdElem.textContent = '----';
-                        
-                        companyCurrentDate[companyKey] = today;
-                    }
-
-                    items.forEach(item => {
-                        let containerId = null;
-                        if (item.type === 'special') containerId = `special-${companyKey}`;
-                        else if (item.type === 'consolation') containerId = `consolation-${companyKey}`;
-
-                        if (containerId) {
-                            const container = document.getElementById(containerId);
-                            if (container) {
-                                const placeholders = container.querySelectorAll('.number-item');
-                                for (let i = 0; i < placeholders.length; i++) {
-                                    if (placeholders[i].textContent === '----') {
-                                        placeholders[i].textContent = item.number;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    });
-                }
-            } catch (err) {
-                console.warn(`${companyKey} 轮询失败`, err);
-            }
-        }
-
-        function startPolling() {
-            COMPANY_LIST.forEach(company => {
-                if (!HIDDEN_COMPANIES.includes(company) && !pollingTimers[company]) {
-                    pollingTimers[company] = setInterval(() => pollLatest(company), 15000);
-                }
-            });
-        }
-
-        function stopAllPolling() {
-            Object.values(pollingTimers).forEach(timer => clearInterval(timer));
-            pollingTimers = {};
-        }
-
+        // ==================== 创建卡片骨架 ====================
         function createCompanySkeletons() {
             const grid = document.getElementById('companies-grid');
             grid.innerHTML = '';
@@ -798,15 +674,10 @@
             await Promise.all(promises);
             statusText.innerHTML = `<span class="status-indicator success"></span>数据已加载`;
             document.getElementById('update-time').innerText = new Date().toLocaleString();
-
-            if (!selectedDate) {
-                stopAllPolling();
-                startPolling();
-            }
         }
 
         function forceRefresh() {
-            stopAllPolling();
+            // 清除公司当前日期记录，强制重新加载
             companyCurrentDate = {};
             companyLastId = {};
             loadAllCompanies();
