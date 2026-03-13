@@ -787,10 +787,15 @@
             
             document.addEventListener('click', (e) => {
                 const calendarPopup = document.getElementById('calendar-popup');
+                const calendarBtn = document.getElementById('calendar-btn');
                 const dateDropdown = document.getElementById('date-dropdown');
-                if (calendarPopup.style.display === 'block' && !calendarPopup.contains(e.target) && e.target.id !== 'calendar-btn') {
+
+                // 点击外部关闭日历弹窗
+                if (calendarPopup.style.display === 'block' && !calendarPopup.contains(e.target) && !calendarBtn.contains(e.target)) {
                     calendarPopup.style.display = 'none';
                 }
+
+                // 点击外部关闭日期下拉框
                 if (dateDropdown.classList.contains('show') && !dateDropdown.contains(e.target)) {
                     dateDropdown.classList.remove('show');
                     document.getElementById('date-btn').classList.remove('active');
