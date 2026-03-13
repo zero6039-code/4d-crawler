@@ -188,7 +188,7 @@
             'sportstoto_fireball'
         ];
 
-        // 用于日历高亮的公司（排除豪龙，避免每日高亮）
+        // 用于日历高亮的公司（排除豪龙和 Singapore Toto）
         const CALENDAR_CHECK_COMPANIES = [
             'damacai', 'magnum', 'toto', 'singapore', 'damacai_1p3d',
             'sandakan', 'sarawak_cashsweep', 'sabah'
@@ -235,6 +235,16 @@
             return dates.sort((a, b) => toSortKey(b) - toSortKey(a));
         }
 
+        // 格式化日期为 "dd-mm-yyyy 星期几"
+        function formatDisplayDate(dateStr) {
+            if (!dateStr) return '加载中...';
+            let dmy = ymdToDmy(dateStr);
+            let parts = dmy.split('-');
+            let d = new Date(parts[2], parts[1]-1, parts[0]);
+            let weekday = d.toLocaleDateString('en-US', { weekday: 'short' });
+            return `${dmy} ${weekday}`;
+        }
+
         // ==================== 日期选择器 ====================
         function toggleDateDropdown() {
             document.getElementById('date-dropdown').classList.toggle('show');
@@ -262,6 +272,7 @@
             } catch (e) { console.warn('无法加载 dates.json', e); }
             renderDateDropdown();
             updateDateBtnWithLatest();
+            updateCalendarButtonDate(); // 更新顶部日历按钮
         }
 
         async function generateFilteredDates() {
@@ -300,10 +311,12 @@
 
         function updateDateBtnWithLatest() {
             const btnSpan = document.getElementById('selected-date');
-            if (filteredDates.length > 0) {
-                btnSpan.innerText = selectedDate ? ymdToDmy(selectedDate) : ymdToDmy(filteredDates[0]);
+            if (selectedDate) {
+                btnSpan.innerText = ymdToDmy(selectedDate);
+            } else if (filteredDates.length > 0) {
+                btnSpan.innerText = ymdToDmy(filteredDates[0]);
             } else if (availableDates.length > 0) {
-                btnSpan.innerText = selectedDate ? ymdToDmy(selectedDate) : ymdToDmy(availableDates[0]);
+                btnSpan.innerText = ymdToDmy(availableDates[0]);
             } else {
                 btnSpan.innerText = '暂无数据';
             }
@@ -329,6 +342,7 @@
             if (selectedDate === date) return;
             selectedDate = date;
             updateDateBtnWithLatest();
+            updateCalendarButtonDate(); // 更新顶部日历按钮
             document.getElementById('date-dropdown').classList.remove('show');
             document.getElementById('date-btn').classList.remove('active');
             document.getElementById('calendar-popup').style.display = 'none';
@@ -631,6 +645,18 @@
             contentDiv.innerHTML = html;
         }
 
+        // ==================== 顶部日历按钮更新函数 ====================
+        function updateCalendarButtonDate() {
+            const btn = document.getElementById('calendar-btn');
+            if (!btn) return;
+            if (selectedDate) {
+                const display = formatDisplayDate(selectedDate);
+                btn.innerHTML = `<span class="calendar-icon">📅</span><span>${display}</span><span class="arrow">▼</span>`;
+            } else {
+                btn.innerHTML = `<span class="calendar-icon">📅</span><span>加载中...</span><span class="arrow">▼</span>`;
+            }
+        }
+
         // ==================== 创建卡片骨架 ====================
         function createCompanySkeletons() {
             const grid = document.getElementById('companies-grid');
@@ -668,18 +694,6 @@
         document.addEventListener('DOMContentLoaded', async () => {
             await loadDateIndex();
             createCompanySkeletons();
-            
-            const calendarBtn = document.getElementById('calendar-btn');
-            function updateCalendarButtonDate() {
-                const now = new Date();
-                const day = String(now.getDate()).padStart(2, '0');
-                const month = String(now.getMonth() + 1).padStart(2, '0');
-                const fullYear = now.getFullYear();
-                const weekday = now.toLocaleDateString('en-US', { weekday: 'short' });
-                const dateStr = `${day}-${month}-${fullYear} ${weekday}`;
-                calendarBtn.innerHTML = `<span class="calendar-icon">📅</span><span>${dateStr}</span><span class="arrow">▼</span>`;
-            }
-            updateCalendarButtonDate();
             
             document.getElementById('calendar-btn').onclick = showCalendar;
             
