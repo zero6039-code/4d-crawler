@@ -10,7 +10,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <style>
-        /* 完整样式（与用户提供的保持一致） */
+        /* 完整样式（与之前保持一致） */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
         body { background: #f0f2f5; padding: 15px 10px; }
         .container { max-width: 1300px; margin: 0 auto; }
@@ -179,13 +179,16 @@
             'singapore_toto': 'singapore-pools.png'
         };
 
+        // ★★★ 隐藏公司列表：新增 sportstoto_lotto 和 sabah_lotto ★★★
         const HIDDEN_COMPANIES = [
             'magnum_jackpot_gold',
             'sportstoto_5d',
             'sportstoto_6d',
             'magnum_life',
             'sportstoto_fireball',
-            'singapore_toto'
+            'singapore_toto',
+            'sportstoto_lotto',
+            'sabah_lotto'
         ];
 
         let availableDates = [];           
@@ -252,6 +255,10 @@
                     let dates = await res.json();
                     availableDates = sortDatesDesc(dates);
                     availableDatesSet = new Set(availableDates);
+                    // ★★★ 自动选择最新日期作为默认显示 ★★★
+                    if (availableDates.length > 0) {
+                        selectedDate = availableDates[0];
+                    }
                 }
             } catch (e) { console.warn('无法加载 dates.json', e); }
             renderDateDropdown();
@@ -368,21 +375,17 @@
             else alert('该日期暂无开彩数据');
         }
 
-        // ==================== 核心数据加载：缓存优先 + API后台更新 ====================
+        // ==================== 核心数据加载：缓存优先 + 智能回退 + API后台更新 ====================
         async function loadCompanyData(companyKey) {
-            // 1. 无论是否选择历史日期，都首先尝试从本地加载
-            let localData = null;
-            if (selectedDate) {
-                // 选择了历史日期：从 data/YYYY-MM-DD/公司.json 加载
-                localData = await loadFromLocalCache(companyKey, selectedDate);
-            } else {
-                // 未选择历史日期：从 data/公司.json (最新一期) 加载
-                localData = await loadFromLocalCache(companyKey);
-            }
+            // 1. 从本地缓存加载（优先使用 selectedDate，如果失败则自动回退到更早日期）
+            let localData = await loadFromLocalCache(companyKey, selectedDate);
 
             // 2. 如果本地加载成功，立即渲染
             if (localData) {
                 renderCompanyCard(companyKey, localData);
+            } else {
+                // 如果本地完全无数据（所有日期都失败），显示空卡片
+                renderCompanyCard(companyKey, null);
             }
 
             // 3. 如果未选择历史日期（即查看最新数据），则从 API 获取最新数据用于后台更新
@@ -396,34 +399,47 @@
                 }).catch(err => console.warn(`${companyKey} API后台更新失败`, err));
             }
 
-            // 返回本地数据（用于 Promise.all）
             return localData;
         }
 
+        // ★★★ 修改后的本地缓存加载函数：支持自动回退到更早日期 ★★★
         async function loadFromLocalCache(companyKey, date = null) {
-            let url;
-            if (date) {
-                // 如果传入了日期，从 data/YYYY-MM-DD/公司.json 加载
-                // date 参数格式应为 YYYY-MM-DD (来自 dates.json)
-                url = `data/${date}/${companyKey}.json?t=${Date.now()}`;
-            } else {
-                // 否则从 data/公司.json (最新一期) 加载
-                url = `data/${companyKey}.json?t=${Date.now()}`;
-            }
-            try {
-                const res = await fetch(url);
-                if (res.ok) {
-                    const data = await res.json();
-                    console.log(`✅ 从本地加载成功: ${url}`);
-                    return data;
-                } else {
-                    console.warn(`⚠️ 本地文件不存在: ${url}`);
-                    return null;
-                }
-            } catch (e) {
-                console.warn(`❌ 本地缓存加载失败: ${companyKey}`, e);
+            // 确定起始日期：优先使用传入的 date，否则使用全局 selectedDate
+            let startDate = date || selectedDate;
+            if (!startDate) {
+                // 如果没有起始日期（极端情况），尝试从根目录加载（备用）
+                try {
+                    const url = `data/${companyKey}.json?t=${Date.now()}`;
+                    const res = await fetch(url);
+                    if (res.ok) return await res.json();
+                } catch (e) {}
                 return null;
             }
+
+            // 确保 availableDates 已加载且包含起始日期
+            if (availableDates.length === 0) return null;
+            const startIndex = availableDates.indexOf(startDate);
+            if (startIndex === -1) return null; // 起始日期不在列表中
+
+            // 候选日期列表：从起始日期开始，向更早方向遍历（availableDates 是降序，所以 slice 后顺序不变）
+            const candidateDates = availableDates.slice(startIndex);
+            // 限制最多尝试 10 个日期，避免过多请求
+            const maxAttempts = 10;
+            for (let i = 0; i < Math.min(candidateDates.length, maxAttempts); i++) {
+                const candidateDate = candidateDates[i];
+                const url = `data/${candidateDate}/${companyKey}.json?t=${Date.now()}`;
+                try {
+                    const res = await fetch(url);
+                    if (res.ok) {
+                        const data = await res.json();
+                        console.log(`✅ 从本地加载成功: ${url} (回退到 ${candidateDate})`);
+                        return data;
+                    }
+                } catch (e) {
+                    // 忽略错误，继续尝试下一个日期
+                }
+            }
+            return null; // 所有尝试都失败
         }
 
         async function loadFromAPI(companyKey) {
@@ -519,7 +535,7 @@
                     html = '<p style="text-align:center; padding:10px;">特殊开彩详见官网</p>';
                 }
             } else {
-                // 普通公司分支（包含 sabah_lotto 和 sportstoto_lotto）
+                // 普通公司分支（包含 sabah_lotto 和 sportstoto_lotto，但这两个已被隐藏，所以不会执行到这里）
                 if (companyKey === 'sabah_lotto') {
                     // SABAH LOTTO 特殊渲染
                     html = `<div class="subsection"><div class="subsection-title">开奖号码</div><div class="number-list" id="winning-${companyKey}">`;
