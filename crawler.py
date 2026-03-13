@@ -8,11 +8,35 @@ import time
 import sqlite3
 from urllib.parse import urljoin
 
+# ========== 路径统一配置 ==========
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, '4d_results.db')  # 绝对路径，与 Flask 保持一致
+
 # ---------- 配置 ----------
 URL_4D4D = "https://4d4d.co/"
 URL_4DLATEST = "https://4dlatest.org/"
 URL_4D2ULIVE = "https://4d2ulive.com"
-DB_PATH = '4d_results.db'  # SQLite 数据库文件
+
+# ---------- 日期转换辅助函数 ----------
+def dmy_to_ymd(date_str):
+    """将 dd-mm-yyyy 转换为 yyyy-mm-dd"""
+    if not date_str or date_str == '----':
+        return None
+    try:
+        d = datetime.strptime(date_str, "%d-%m-%Y")
+        return d.strftime("%Y-%m-%d")
+    except:
+        return None
+
+def ymd_to_dmy(date_str):
+    """将 yyyy-mm-dd 转换为 dd-mm-yyyy（用于显示）"""
+    if not date_str:
+        return ''
+    try:
+        d = datetime.strptime(date_str, "%Y-%m-%d")
+        return d.strftime("%d-%m-%Y")
+    except:
+        return date_str
 
 # ---------- 数据库辅助函数 ----------
 def get_db_connection():
@@ -22,10 +46,7 @@ def get_db_connection():
 def insert_number(company, type_, number, draw_date):
     """
     将单个号码插入数据库，如果已存在则跳过
-    company: 公司键（如 'damacai'）
-    type_: 号码类型（如 'special', 'consolation', '1st' 等）
-    number: 号码字符串
-    draw_date: 开奖日期，格式 'dd-mm-yyyy'
+    draw_date 必须为 YYYY-MM-DD 格式
     """
     if not number or number == '----':
         return
@@ -50,10 +71,13 @@ def insert_number(company, type_, number, draw_date):
 def store_numbers_from_data(company, data):
     """
     从数据对象中提取所有号码并存入数据库
+    data 中的 draw_date 可能是 dd-mm-yyyy 格式，需要转换
     """
-    draw_date = data.get('draw_date')
-    if not draw_date or draw_date == '----':
-        draw_date = datetime.now().strftime("%d-%m-%Y")
+    raw_date = data.get('draw_date')
+    # 转换为 YYYY-MM-DD
+    draw_date = dmy_to_ymd(raw_date) if raw_date else datetime.now().strftime("%Y-%m-%d")
+    if not draw_date:
+        draw_date = datetime.now().strftime("%Y-%m-%d")
 
     # 常见号码字段
     prize_fields = ['1st', '2nd', '3rd']
@@ -85,13 +109,12 @@ def store_numbers_from_data(company, data):
                 if alt:
                     insert_number(company, f'{pos}_alt', alt, draw_date)
     
-    # 特殊处理：magnum_jackpot_gold 的 groups（可选）
+    # 特殊处理：magnum_jackpot_gold 的 groups
     if company == 'magnum_jackpot_gold':
         groups = data.get('groups', [])
         for grp in groups:
             grp_num = grp.get('group')
             nums = grp.get('numbers', [])
-            # 将组内号码插入，类型为 'group_X'
             for num in nums:
                 if num and num != '+':
                     insert_number(company, f'group_{grp_num}', num, draw_date)
@@ -116,15 +139,15 @@ def find_parent_table(element):
     return element
 
 def parse_4dmoon_date(date_str):
-    """将 02-Mar-2026 转换为 02-03-2026"""
+    """将 02-Mar-2026 转换为 02-03-2026（用于显示），但最终存入数据库需转 YYYY-MM-DD"""
     try:
         d = datetime.strptime(date_str.strip(), "%d-%b-%Y")
-        return d.strftime("%d-%m-%Y")
+        return d.strftime("%d-%m-%Y")  # 这里返回显示格式，后续 store 时会转 YMD
     except:
         return None
 
 def extract_global_date(soup):
-    """从第一个 outerbox 中提取全局日期和期号"""
+    """从第一个 outerbox 中提取全局日期和期号（日期格式 dd-mm-yyyy）"""
     first_box = soup.find("div", class_="outerbox")
     if not first_box:
         return None, None
@@ -467,7 +490,6 @@ def extract_gd_lotto_from_4dlatest(soup):
         print("⚠️ 未找到标题为 'GDLOTTO 豪龙' 的元素")
         return None
 
-    # 获取标题所在的单元格，提取完整文本（可能包含日期）
     parent_cell = header_element.find_parent('td')
     if parent_cell:
         header_text = parent_cell.get_text(" ", strip=True)
@@ -476,7 +498,6 @@ def extract_gd_lotto_from_4dlatest(soup):
 
     print(f"📅 标题文本: {header_text}")
 
-    # 2. 获取该标题所在的表格
     target_table = header_element.find_parent('table')
     if not target_table:
         target_table = header_element.find_next('table')
@@ -484,8 +505,7 @@ def extract_gd_lotto_from_4dlatest(soup):
         print("⚠️ 未找到 GDLOTTO 豪龙的数据表格")
         return None
 
-    # 3. 从标题文本中提取日期和期号
-    # 支持多种格式：dd/mm/yyyy, dd-mm-yyyy, dd mmm yyyy
+    # 从标题文本中提取日期和期号
     date_match = re.search(r'(\d{1,2}[/-]\d{1,2}[/-]\d{4})', header_text)
     if not date_match:
         date_match = re.search(r'(\d{1,2}\s+[A-Za-z]{3}\s+\d{4})', header_text)
@@ -494,7 +514,7 @@ def extract_gd_lotto_from_4dlatest(soup):
         try:
             if re.match(r'\d{1,2}\s+[A-Za-z]{3}\s+\d{4}', raw_date):
                 d = datetime.strptime(raw_date, "%d %b %Y")
-                data["draw_date"] = d.strftime("%d-%m-%Y")
+                data["draw_date"] = d.strftime("%d-%m-%Y")  # 存储为 dd-mm-yyyy，稍后转换
             else:
                 sep = '/' if '/' in raw_date else '-'
                 d = datetime.strptime(raw_date, f"%d{sep}%m{sep}%Y")
@@ -505,13 +525,11 @@ def extract_gd_lotto_from_4dlatest(soup):
     else:
         print("  ⚠️ 未找到日期信息")
 
-    # 期号匹配
     no_match = re.search(r'#?(\d+/\d+)', header_text)
     if no_match:
         data["draw_no"] = no_match.group(1)
         print(f"  ✅ 提取到期号: {data['draw_no']}")
     else:
-        # 如果标题行没有期号，尝试从表格第一行查找
         first_row = target_table.find('tr')
         if first_row:
             row_text = first_row.get_text()
@@ -520,7 +538,6 @@ def extract_gd_lotto_from_4dlatest(soup):
                 data["draw_no"] = no_match.group(1)
                 print(f"  ✅ 从第一行提取到期号: {data['draw_no']}")
 
-    # 4. 遍历表格行提取号码
     rows = target_table.find_all("tr")
     special_mode = False
     consolation_mode = False
@@ -531,7 +548,6 @@ def extract_gd_lotto_from_4dlatest(soup):
         row_text = row.get_text().upper()
         cells = row.find_all("td")
 
-        # 切换模式
         if "SPECIAL" in row_text:
             special_mode = True
             consolation_mode = False
@@ -554,7 +570,6 @@ def extract_gd_lotto_from_4dlatest(soup):
                 data["jackpot"] = amount_match.group(1)
             continue
 
-        # 提取前三
         if "1ST" in row_text:
             for cell in cells:
                 num = cell.get_text(strip=True)
@@ -574,7 +589,6 @@ def extract_gd_lotto_from_4dlatest(soup):
                     data["3rd"] = num
                     break
 
-        # 如果在模式中，继续收集
         if special_mode:
             for cell in cells:
                 num = cell.get_text(strip=True)
@@ -604,14 +618,13 @@ def fetch_singapore_from_4dmoon():
         return None, None
 
     soup = BeautifulSoup(html, "html.parser")
-    # 获取纯文本并保留换行
     text = soup.get_text()
     lines = text.splitlines()
 
     singapore_4d_data = {"draw_date": "", "draw_no": "", "1st": "", "2nd": "", "3rd": "", "special": [], "consolation": []}
     singapore_toto_data = {"draw_date": "", "draw_no": "", "winning_numbers": [], "prize_table": []}
 
-    # ---------- 新加坡 4D 部分（保持原有简单提取）----------
+    # 新加坡 4D 部分
     if 'Singapore 4D' in text:
         date_match = re.search(r'Singapore\s*4D.*?\([A-Za-z]{3}\)\s*(\d{1,2}-[A-Za-z]{3}-\d{4})', text, re.DOTALL)
         if date_match:
@@ -626,8 +639,7 @@ def fetch_singapore_from_4dmoon():
             singapore_4d_data["draw_no"] = no_match.group(1)
             print(f"    ✅ 4D 期号: {singapore_4d_data['draw_no']}")
 
-    # ---------- 新加坡 TOTO 部分（区域定位法）----------
-    # 1. 定位 "Singapore Toto" 区域
+    # 新加坡 TOTO 部分
     toto_start = None
     for i, line in enumerate(lines):
         if 'Singapore Toto' in line:
@@ -636,7 +648,6 @@ def fetch_singapore_from_4dmoon():
 
     if toto_start is not None:
         print("  ✅ 找到新加坡 TOTO 数据")
-        # 提取日期（从标题行）
         header_line = lines[toto_start]
         date_match = re.search(r'\([A-Za-z]{3}\)\s*(\d{1,2}-[A-Za-z]{3}-\d{4})', header_line)
         if date_match:
@@ -647,7 +658,6 @@ def fetch_singapore_from_4dmoon():
             except:
                 pass
 
-        # 2. 从标题行之后查找期号（通常在下一行或附近）
         for j in range(toto_start + 1, min(toto_start + 5, len(lines))):
             line = lines[j].strip()
             if line.startswith('#'):
@@ -655,9 +665,8 @@ def fetch_singapore_from_4dmoon():
                 print(f"    ✅ TOTO 期号: {singapore_toto_data['draw_no']}")
                 break
 
-        # 3. 查找号码行（包含 "+" 的行）
         numbers_line = None
-        for j in range(toto_start + 1, toto_start + 20):  # 向下搜索20行
+        for j in range(toto_start + 1, toto_start + 20):
             if j >= len(lines):
                 break
             line = lines[j].strip()
@@ -666,17 +675,14 @@ def fetch_singapore_from_4dmoon():
                 break
 
         if numbers_line:
-            # 提取所有数字
             all_nums = re.findall(r'\b(\d{1,2})\b', numbers_line)
             if all_nums:
-                # 通常前6个是主号码，最后一个是额外号码
                 if len(all_nums) >= 7:
                     singapore_toto_data["winning_numbers"] = all_nums[:6] + [all_nums[-1]]
                 else:
                     singapore_toto_data["winning_numbers"] = all_nums
                 print(f"    ✅ TOTO 号码: {' '.join(singapore_toto_data['winning_numbers'])}")
 
-        # 4. 查找奖金表（从 "Prize Group" 开始）
         prize_start = None
         for j in range(toto_start + 1, len(lines)):
             if 'Prize Group' in lines[j]:
@@ -684,13 +690,10 @@ def fetch_singapore_from_4dmoon():
                 break
 
         if prize_start:
-            # 从下一行开始解析表格
             for j in range(prize_start + 1, len(lines)):
                 line = lines[j].strip()
                 if not line or (line.startswith('|') is False and '|' not in line):
-                    # 空行或非表格行结束
                     break
-                # 处理可能没有竖线开头的行
                 parts = re.split(r'\s*\|\s*', line)
                 if len(parts) >= 3:
                     group = parts[0].strip()
@@ -713,7 +716,6 @@ def extract_sabah_lotto_from_4dlatest(soup):
         "jackpot2": ""
     }
 
-    # 1. 查找包含 "SABAH88" 和 "LOTTO" 的标题，用于定位表格
     header = soup.find(string=re.compile(r"SABAH88.*LOTTO", re.IGNORECASE))
     if not header:
         print("❌ 未找到 'SABAH88 LOTTO' 标题")
@@ -726,7 +728,6 @@ def extract_sabah_lotto_from_4dlatest(soup):
         print("❌ 未找到数据表格")
         return None
 
-    # 2. 提取开奖号码
     rows = table.find_all("tr")
     for row in rows:
         row_text = row.get_text()
@@ -744,11 +745,10 @@ def extract_sabah_lotto_from_4dlatest(soup):
                 print(f"✅ 提取到开奖号码: {' '.join(numbers)}")
             break
 
-    # 3. 提取日期和期号（在整个页面中搜索第一个有效日期）
     def find_date_and_no():
         date_patterns = [
-            r'(\d{2}/\d{2}/\d{4})',   # dd/mm/yyyy
-            r'(\d{2}-\d{2}-\d{4})'    # dd-mm-yyyy
+            r'(\d{2}/\d{2}/\d{4})',
+            r'(\d{2}-\d{2}-\d{4})'
         ]
         for text_node in soup.find_all(string=True):
             text = text_node.strip()
@@ -764,7 +764,6 @@ def extract_sabah_lotto_from_4dlatest(soup):
                         formatted_date = f"{parts[0]}-{parts[1]}-{parts[2]}"
                     else:
                         formatted_date = raw_date.replace('/', '-')
-                    # 尝试从同一文本中提取期号（如 4166/26）
                     no_match = re.search(r'(\d+/\d+)', text)
                     draw_no = no_match.group(1) if no_match else ""
                     return formatted_date, draw_no
@@ -778,7 +777,6 @@ def extract_sabah_lotto_from_4dlatest(soup):
         data["draw_no"] = draw_no
         print(f"  ✅ 提取到期号: {draw_no}")
 
-    # 4. 提取 Jackpot 金额（优先从包含 RM 的单元格）
     jackpots = []
     rm_cells = table.find_all(string=re.compile(r'RM'))
     for cell in rm_cells:
@@ -787,7 +785,6 @@ def extract_sabah_lotto_from_4dlatest(soup):
         if amount_match:
             amount = amount_match.group(1)
             jackpots.append(amount)
-    # 去重并按出现顺序保留前两个
     seen = set()
     unique_jackpots = []
     for jp in jackpots:
@@ -801,7 +798,6 @@ def extract_sabah_lotto_from_4dlatest(soup):
         data["jackpot2"] = unique_jackpots[1]
         print(f"  ✅ Jackpot 2: {data['jackpot2']}")
 
-    # 5. 如果 jackpot 金额还是 1 或 2（可能是占位符），使用备用方法提取大数字
     if data["jackpot1"] in ["1", "2"] or data["jackpot2"] in ["1", "2"]:
         print("  ⚠️ 检测到可能错误的 jackpot 金额，尝试备用提取方法...")
         all_numbers = []
@@ -813,11 +809,10 @@ def extract_sabah_lotto_from_4dlatest(soup):
                 for m in matches:
                     try:
                         num = float(m.replace(',', ''))
-                        if num > 1000:  # 假设金额大于1000
+                        if num > 1000:
                             all_numbers.append(m)
                     except:
                         pass
-        # 按数值大小降序排列
         all_numbers.sort(key=lambda x: float(x.replace(',', '')), reverse=True)
         if len(all_numbers) >= 1 and (data["jackpot1"] == "1" or data["jackpot1"] == ""):
             data["jackpot1"] = all_numbers[0]
@@ -1138,16 +1133,15 @@ def save_json(company, data):
         json.dump(data, f, ensure_ascii=False, indent=2)
     print(f"✅ 已更新最新文件: {latest_path}")
 
-    draw_date = data.get("draw_date", "")
-    if not draw_date or draw_date == "----":
-        draw_date = datetime.now().strftime("%Y-%m-%d")
+    # 归档时使用 YYYY-MM-DD 目录名（从 draw_date 转换）
+    raw_date = data.get("draw_date", "")
+    if raw_date:
+        ymd_date = dmy_to_ymd(raw_date)
+        if not ymd_date:
+            ymd_date = datetime.now().strftime("%Y-%m-%d")
     else:
-        try:
-            d = datetime.strptime(draw_date, "%d-%m-%Y")
-            draw_date = d.strftime("%Y-%m-%d")
-        except:
-            draw_date = datetime.now().strftime("%Y-%m-%d")
-    archive_dir = os.path.join(base_dir, draw_date)
+        ymd_date = datetime.now().strftime("%Y-%m-%d")
+    archive_dir = os.path.join(base_dir, ymd_date)
     os.makedirs(archive_dir, exist_ok=True)
     archive_path = os.path.join(archive_dir, f"{company}.json")
     with open(archive_path, "w", encoding="utf-8") as f:
@@ -1246,10 +1240,9 @@ def main():
     if html_4dlatest:
         soup_4dlatest = BeautifulSoup(html_4dlatest, "html.parser")
 
-        # 2.1 GDLOTTO 豪龙 (使用最终修复版)
+        # 2.1 GDLOTTO 豪龙
         gd_data = extract_gd_lotto_from_4dlatest(soup_4dlatest)
         if gd_data and (gd_data.get('1st') or gd_data.get('special') or gd_data.get('consolation')):
-            # 尝试从4d2ulive补充日期（如果4dlatest没有提取到）
             if not gd_data.get('draw_date'):
                 gd_from_4d2u = fetch_grand_dragon_from_4d2ulive()
                 if gd_from_4d2u and gd_from_4d2u.get('draw_date'):
@@ -1297,7 +1290,7 @@ def main():
     time.sleep(1)
     sg_4d, sg_toto = fetch_singapore_from_4dmoon()
     if sg_4d and (sg_4d.get('draw_date') or sg_4d.get('1st')):
-        save_json('singapore', sg_4d)  # 注意：公司键是 'singapore' 而不是 'singapore_4d'
+        save_json('singapore', sg_4d)
     else:
         print("⚠️ 新加坡 4D 数据为空")
     if sg_toto and (sg_toto.get('draw_date') or sg_toto.get('winning_numbers')):
