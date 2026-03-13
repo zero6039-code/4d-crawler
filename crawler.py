@@ -37,9 +37,22 @@ def ymd_to_dmy(date_str):
     except:
         return date_str
 
-# ---------- 数据库辅助函数 ----------
+# ---------- 数据库辅助函数（已修复表不存在的问题）----------
 def get_db_connection():
     conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    # 创建表如果不存在（确保数据库结构完整）
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS results (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            company TEXT NOT NULL,
+            type TEXT NOT NULL,
+            number TEXT NOT NULL,
+            draw_date TEXT NOT NULL,
+            UNIQUE(company, type, number, draw_date)
+        )
+    ''')
+    conn.commit()
     return conn
 
 def insert_number(company, type_, number, draw_date):
