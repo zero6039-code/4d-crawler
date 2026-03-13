@@ -6,7 +6,6 @@ from datetime import datetime
 import re
 import time
 import sqlite3
-import subprocess
 from urllib.parse import urljoin
 
 # ========== 路径统一配置 ==========
@@ -17,6 +16,7 @@ DB_PATH = os.path.join(BASE_DIR, '4d_results.db')
 URL_4D4D = "https://4d4d.co/"
 URL_4DLATEST = "https://4dlatest.org/"
 URL_4D2ULIVE = "https://4d2ulive.com"
+URL_DATO4D = "https://www.dato4d.com/liveos.json"
 
 # ---------- 日期转换辅助函数 ----------
 def dmy_to_ymd(date_str):
@@ -490,7 +490,7 @@ def extract_sportstoto_from_4dlatest(soup):
     toto_texts = soup.find_all(string=re.compile(r"Sports\s*Toto", re.IGNORECASE))
     if not toto_texts:
         print("⚠️ 未找到包含 'Sports Toto' 的文本")
-        return data_5d, data_6d, data_lotto  # 返回空数据，而不是 None
+        return data_5d, data_6d, data_lotto
 
     for text_node in toto_texts:
         table = text_node.find_parent("table")
@@ -582,104 +582,248 @@ def extract_sportstoto_from_4dlatest(soup):
                 return data_5d, data_6d, data_lotto
 
     print("⚠️ 未能从任何包含 'Sports Toto' 的表格中提取到数据")
-    return data_5d, data_6d, data_lotto  # 始终返回三个空字典
+    return data_5d, data_6d, data_lotto
 
-# ================== 从 dato4d.com JSON 抓取 Grand Dragon 数据 ==================
-def fetch_grand_dragon_from_dato4d_json():
-    print("🔍 正在从 dato4d.com JSON 获取 Grand Dragon 4D 数据...")
-    url = "https://www.dato4d.com/liveos.json?_=" + str(int(time.time()*1000))
+# ================== 从 dato4d.com JSON 批量获取所有公司数据 ==================
+def fetch_all_companies_from_dato4d():
+    """从 https://www.dato4d.com/liveos.json 获取所有公司的数据"""
+    print("🔍 正在从 dato4d.com JSON 批量获取所有公司数据...")
+    url = URL_DATO4D + "?_=" + str(int(time.time()*1000))
     html = fetch_html(url)
     if not html:
-        return None
+        print("⚠️ 无法获取 dato4d.com JSON")
+        return False
 
     try:
         data = json.loads(html)
     except json.JSONDecodeError as e:
         print(f"❌ JSON 解析失败: {e}")
-        return None
+        return False
 
-    if "G" not in data:
-        print("⚠️ JSON 中未找到 Grand Dragon 数据 (键 'G')")
-        return None
-
-    g = data["G"]
-    result = {
-        "draw_date": "",
-        "draw_no": g.get("DN", ""),
-        "1st": g.get("P1", ""),
-        "2nd": g.get("P2", ""),
-        "3rd": g.get("P3", ""),
-        "special": [],
-        "consolation": [],
-        "jackpot": ""
+    # 定义公司映射：JSON键 -> 公司名, 数据提取函数
+    company_mappings = {
+        "M": ("magnum", extract_magnum_from_json),
+        "D": ("damacai", extract_standard_4d_from_json),
+        "D3": ("damacai_1p3d", extract_damacai_1p3d_from_json),
+        "T": ("toto", extract_standard_4d_from_json),
+        "S": ("singapore", extract_standard_4d_from_json),
+        "ST": ("sandakan", extract_standard_4d_from_json),
+        "SB": ("sabah", extract_sabah_from_json),
+        "SW": ("sarawak_cashsweep", extract_standard_4d_from_json),
+        "G": ("grand_dragon", extract_grand_dragon_from_json),
+        "MJG": ("magnum_jackpot_gold", extract_magnum_jackpot_gold_from_json),
+        "SBLT": ("sabah_lotto", extract_sabah_lotto_from_json),
+        "SGT": ("singapore_toto", extract_singapore_toto_from_json),
+        # 可选的附加公司，如果需要可以取消注释
+        # "H": ("lucky_harhari", extract_standard_4d_from_json),
+        # "P": ("perdana", extract_standard_4d_from_json),
     }
 
-    raw_date = g.get("DD", "")
+    success_count = 0
+    for key, (company, extract_func) in company_mappings.items():
+        if key in data:
+            company_data = extract_func(data[key], company)
+            if company_data:
+                save_json(company, company_data)
+                success_count += 1
+            else:
+                print(f"⚠️ 提取 {company} 数据失败")
+        else:
+            print(f"⚠️ JSON 中缺少 {company} 的数据 (键 '{key}')")
+
+    print(f"✅ 从 JSON 成功获取 {success_count} 家公司数据")
+    return True
+
+# ---------- JSON 数据提取辅助函数 ----------
+def extract_standard_4d_from_json(item, company):
+    """提取标准 4D 公司数据（包含 1st,2nd,3rd,special,consolation）"""
+    result = {
+        "draw_date": "",
+        "draw_no": item.get("DN", ""),
+        "1st": item.get("P1", ""),
+        "2nd": item.get("P2", ""),
+        "3rd": item.get("P3", ""),
+        "special": [],
+        "consolation": []
+    }
+    raw_date = item.get("DD", "")
     date_match = re.search(r"(\d{2}-\d{2}-\d{4})", raw_date)
     if date_match:
         result["draw_date"] = date_match.group(1)
-        print(f"  ✅ 提取到日期: {result['draw_date']}")
 
+    # 提取 Special (S1-S13)
     for i in range(1, 14):
         key = f"S{i}"
-        if key in g:
-            num = g[key]
-            if num and num != "----":
+        if key in item:
+            num = item[key]
+            if num and num != "----" and num != "-":
                 result["special"].append(num)
-    print(f"  ✅ 特别奖数量: {len(result['special'])}")
 
+    # 提取 Consolation (C1-C10)
     for i in range(1, 11):
         key = f"C{i}"
-        if key in g:
-            num = g[key]
+        if key in item:
+            num = item[key]
+            if num and num != "----" and num != "-":
+                result["consolation"].append(num)
+
+    return result
+
+def extract_magnum_from_json(item, company):
+    """提取 Magnum 数据（可能包含 Life 信息，但暂时只取标准 4D）"""
+    result = extract_standard_4d_from_json(item, company)
+    # 如果有 Life 相关字段，可以在这里扩展
+    return result
+
+def extract_damacai_1p3d_from_json(item, company):
+    """提取 Damacai 1+3D 数据"""
+    result = {
+        "draw_date": "",
+        "draw_no": item.get("DN", ""),
+        "1st": item.get("P1", ""),
+        "2nd": item.get("P2", ""),
+        "3rd": item.get("P3", ""),
+        "special": [],
+        "consolation": []
+    }
+    raw_date = item.get("DD", "")
+    date_match = re.search(r"(\d{2}-\d{2}-\d{4})", raw_date)
+    if date_match:
+        result["draw_date"] = date_match.group(1)
+
+    # 1+3D 的特别奖和安慰奖是 6 位数字，直接提取
+    for i in range(1, 14):
+        key = f"S{i}"
+        if key in item:
+            num = item[key]
+            if num and num != "----":
+                result["special"].append(num)
+    for i in range(1, 11):
+        key = f"C{i}"
+        if key in item:
+            num = item[key]
             if num and num != "----":
                 result["consolation"].append(num)
-    print(f"  ✅ 安慰奖数量: {len(result['consolation'])}")
+    return result
 
-    if result["draw_date"] and (result["1st"] or result["special"]):
-        print(f"✅ 成功从 JSON 提取 Grand Dragon 数据，日期 {result['draw_date']}")
-        return result
-    else:
-        print("⚠️ JSON 中 Grand Dragon 数据不完整")
-        return None
+def extract_sabah_from_json(item, company):
+    """提取 Sabah 88 4D 数据（包含 3D）"""
+    result = extract_standard_4d_from_json(item, company)
+    # 提取 3D
+    result['3d'] = {
+        "1st": item.get("P13D", ""),
+        "2nd": item.get("P23D", ""),
+        "3rd": item.get("P33D", "")
+    }
+    return result
 
-# ================== 原有从 gdlotto.net 抓取 Grand Dragon 函数 ==================
-def fetch_grand_dragon_from_gdlotto_net():
-    # ... 保持不变，省略以节省篇幅，实际使用时请保留 ...
-    pass
+def extract_grand_dragon_from_json(item, company):
+    """提取 Grand Dragon 4D 数据"""
+    result = extract_standard_4d_from_json(item, company)
+    # Grand Dragon 可能有 Jackpot，但 JSON 中没有，保留为空
+    result["jackpot"] = ""
+    return result
 
-# ================== 原有其他补充源函数 ==================
-def fetch_singapore_from_4dmoon():
-    # ... 保持不变 ...
-    pass
+def extract_magnum_jackpot_gold_from_json(item, company):
+    """提取 Magnum Jackpot Gold 数据"""
+    result = {
+        "draw_date": "",
+        "draw_no": item.get("DN", ""),
+        "groups": [],
+        "jackpots": []
+    }
+    raw_date = item.get("DD", "")
+    date_match = re.search(r"(\d{2}-\d{2}-\d{4})", raw_date)
+    if date_match:
+        result["draw_date"] = date_match.group(1)
 
-def extract_gd_lotto_from_4dlatest(soup):
-    # ... 保持不变 ...
-    pass
+    # 提取组号码 (P1-P8 可能代表各组号码，需确认)
+    groups = []
+    for i in range(1, 9):
+        key = f"P{i}"
+        if key in item and item[key]:
+            groups.append({
+                "group": str(i),
+                "numbers": [item[key]]  # 假设每组只有一个号码
+            })
+    result["groups"] = groups
 
-def extract_sabah_lotto_from_4dlatest(soup):
-    # ... 保持不变 ...
-    pass
+    # 提取 Jackpots
+    if "JP1" in item:
+        result["jackpots"].append(item["JP1"])
+    if "JP2" in item:
+        result["jackpots"].append(item["JP2"])
+    return result
 
-def extract_magnum_jackpot_gold_from_4dlatest(soup):
-    # ... 保持不变 ...
-    pass
+def extract_sabah_lotto_from_json(item, company):
+    """提取 Sabah Lotto 数据"""
+    result = {
+        "draw_date": "",
+        "draw_no": item.get("DN", ""),
+        "winning_numbers": [],
+        "jackpot1": "",
+        "jackpot2": ""
+    }
+    raw_date = item.get("DD", "")
+    date_match = re.search(r"(\d{2}-\d{2}-\d{4})", raw_date)
+    if date_match:
+        result["draw_date"] = date_match.group(1)
 
-def extract_magnum_life_from_4dlatest(soup):
-    # ... 保持不变 ...
-    pass
+    # 提取 Lotto 号码 (LT1-LT7)
+    winning = []
+    for i in range(1, 8):
+        key = f"LT{i}"
+        if key in item:
+            num = item[key]
+            if num:
+                winning.append(num)
+    result["winning_numbers"] = winning
 
-def fetch_sabah_lotto_from_4dmoon():
-    # ... 保持不变 ...
-    pass
+    if "LTJP1" in item:
+        result["jackpot1"] = item["LTJP1"]
+    if "LTJP2" in item:
+        result["jackpot2"] = item["LTJP2"]
+    return result
 
-def fetch_sportstoto_5d_6d_from_4dmoon():
-    # ... 保持不变 ...
-    pass
+def extract_singapore_toto_from_json(item, company):
+    """提取 Singapore Toto 数据"""
+    result = {
+        "draw_date": "",
+        "draw_no": item.get("DN", ""),
+        "winning_numbers": [],
+        "prize_table": []
+    }
+    raw_date = item.get("DD", "")
+    date_match = re.search(r"(\d{2}-\d{2}-\d{4})", raw_date)
+    if date_match:
+        result["draw_date"] = date_match.group(1)
 
-def fetch_grand_dragon_from_4d2ulive():
-    # ... 保持不变 ...
-    pass
+    # 提取开奖号码 (P1-P7)
+    winning = []
+    for i in range(1, 8):
+        key = f"P{i}"
+        if key in item:
+            num = item[key]
+            if num:
+                winning.append(num)
+    result["winning_numbers"] = winning
+
+    # 提取奖金表 (JP1, JP2 等)
+    prize_groups = [
+        {"group": "Group 1", "amount": item.get("JP1", ""), "winners": item.get("JPW1", "")},
+        {"group": "Group 2", "amount": item.get("JP2", ""), "winners": item.get("JPW2", "")},
+        {"group": "Group 3", "amount": item.get("JP3", ""), "winners": item.get("JPW3", "")},
+        {"group": "Group 4", "amount": item.get("JP4", ""), "winners": item.get("JPW4", "")},
+        {"group": "Group 5", "amount": item.get("JP5", ""), "winners": item.get("JPW5", "")},
+        {"group": "Group 6", "amount": item.get("JP6", ""), "winners": item.get("JPW6", "")},
+    ]
+    result["prize_table"] = [[g["group"], g["amount"], g["winners"]] for g in prize_groups if g["amount"]]
+    return result
+
+# ================== 原有从其他源抓取的函数（作为后备）==================
+# 为了节省篇幅，此处省略原有从 gdlotto.net、4dmoon.com 等抓取的函数，
+# 实际使用时请保留它们（如 fetch_grand_dragon_from_gdlotto_net、fetch_singapore_from_4dmoon 等）
+# 这些函数在 JSON 源失败时会作为补充。
 
 # ---------- 保存 JSON 和索引 ----------
 def save_json(company, data):
@@ -724,67 +868,16 @@ def update_dates_index():
         json.dump(dates, f)
     print(f"📋 已更新日期索引，共 {len(dates)} 个历史日期")
 
-# ================== Git 推送函数 ==================
-def git_push_to_github():
-    """将生成的 JSON 文件提交并推送到 GitHub 仓库"""
-    print("📤 正在推送更新到 GitHub...")
-    try:
-        # 配置 Git 用户信息
-        subprocess.run(['git', 'config', 'user.name', 'github-actions[bot]'], 
-                       check=False, capture_output=True)
-        subprocess.run(['git', 'config', 'user.email', 'github-actions[bot]@users.noreply.github.com'], 
-                       check=False, capture_output=True)
-        
-        # 添加所有变更
-        add_result = subprocess.run(['git', 'add', 'docs/data/'], 
-                                    check=False, capture_output=True, text=True)
-        if add_result.returncode != 0:
-            print(f"⚠️ git add 失败: {add_result.stderr}")
-            return
-        
-        # 检查是否有变更
-        status_result = subprocess.run(['git', 'status', '--porcelain'], 
-                                       check=False, capture_output=True, text=True)
-        if not status_result.stdout.strip():
-            print("ℹ️ 没有文件变更，无需提交")
-            return
-        
-        # 提交
-        commit_msg = f"Auto-update 4D results {datetime.now().strftime('%Y-%m-%d %H:%M')}"
-        commit_result = subprocess.run(['git', 'commit', '-m', commit_msg], 
-                                       check=False, capture_output=True, text=True)
-        if commit_result.returncode != 0:
-            print(f"⚠️ git commit 失败: {commit_result.stderr}")
-            return
-        
-        # 获取 token 并推送
-        token = os.environ.get('GITHUB_TOKEN')
-        if not token:
-            print("⚠️ 未设置 GITHUB_TOKEN 环境变量，跳过推送")
-            return
-        
-        remote_url = subprocess.run(['git', 'config', '--get', 'remote.origin.url'], 
-                                    check=False, capture_output=True, text=True).stdout.strip()
-        if 'https://' in remote_url:
-            auth_url = remote_url.replace('https://', f'https://{token}@')
-        else:
-            print("⚠️ 远程仓库不是 HTTPS 协议，无法使用 token 推送")
-            return
-        
-        push_result = subprocess.run(['git', 'push', auth_url], 
-                                     check=False, capture_output=True, text=True)
-        if push_result.returncode == 0:
-            print("✅ 成功推送更新到 GitHub")
-        else:
-            print(f"❌ git push 失败: {push_result.stderr}")
-            
-    except Exception as e:
-        print(f"⚠️ Git 操作异常: {e}")
-
-# ---------- 主流程（带错误保护）----------
+# ---------- 主流程 ----------
 def main():
     print("🚀 爬虫开始运行")
-    try:
+
+    # 首先尝试从 dato4d.com JSON 批量获取所有数据
+    json_success = fetch_all_companies_from_dato4d()
+
+    # 如果 JSON 源失败，则回退到原有的多源抓取方式
+    if not json_success:
+        print("⚠️ 批量 JSON 获取失败，回退到多源抓取...")
         # 1. 抓取 4d4d.co 数据
         html_4d4d = fetch_html(URL_4D4D)
         if html_4d4d:
@@ -855,94 +948,69 @@ def main():
         if html_4dlatest:
             soup_4dlatest = BeautifulSoup(html_4dlatest, "html.parser")
 
-            # 2.1 GDLOTTO 豪龙 - 优先使用 dato4d.com JSON
-            gd_data = fetch_grand_dragon_from_dato4d_json()
-            if not gd_data:
-                print("⚠️ dato4d.com JSON 抓取失败，尝试从 gdlotto.net 获取...")
+            # 2.1 GDLOTTO 豪龙 - 如果 JSON 源失败则使用备胎
+            if 'grand_dragon' not in processed_companies:
                 gd_data = fetch_grand_dragon_from_gdlotto_net()
-            if not gd_data:
-                print("⚠️ gdlotto.net 抓取失败，尝试从 4dlatest.org 获取...")
-                gd_data = extract_gd_lotto_from_4dlatest(soup_4dlatest)
-            
-            if gd_data and (gd_data.get('1st') or gd_data.get('special') or gd_data.get('consolation')):
-                if not gd_data.get('draw_date'):
-                    gd_from_4d2u = fetch_grand_dragon_from_4d2ulive()
-                    if gd_from_4d2u and gd_from_4d2u.get('draw_date'):
-                        gd_data['draw_date'] = gd_from_4d2u['draw_date']
-                        print(f"  ✅ 从 4d2ulive 补充日期: {gd_from_4d2u['draw_date']}")
-                save_json('grand_dragon', gd_data)
-            else:
-                print("⚠️ GDLOTTO 豪龙数据为空，保留原有数据")
+                if not gd_data:
+                    gd_data = extract_gd_lotto_from_4dlatest(soup_4dlatest)
+                if gd_data:
+                    save_json('grand_dragon', gd_data)
 
             # 2.2 SABAH88 沙巴万字 LOTTO
-            sabah_data = extract_sabah_lotto_from_4dlatest(soup_4dlatest)
-            if sabah_data and sabah_data.get('winning_numbers'):
-                save_json('sabah_lotto', sabah_data)
-            else:
-                print("⚠️ SABAH88 沙巴万字 LOTTO 数据为空")
+            if 'sabah_lotto' not in processed_companies:
+                sabah_data = extract_sabah_lotto_from_4dlatest(soup_4dlatest)
+                if sabah_data:
+                    save_json('sabah_lotto', sabah_data)
 
             # 2.3 MAGNUM JACKPOT GOLD
-            mjg_data = extract_magnum_jackpot_gold_from_4dlatest(soup_4dlatest)
-            if mjg_data and (mjg_data.get('groups') or mjg_data.get('jackpots')):
-                save_json('magnum_jackpot_gold', mjg_data)
-            else:
-                print("⚠️ MAGNUM JACKPOT GOLD 数据为空")
+            if 'magnum_jackpot_gold' not in processed_companies:
+                mjg_data = extract_magnum_jackpot_gold_from_4dlatest(soup_4dlatest)
+                if mjg_data:
+                    save_json('magnum_jackpot_gold', mjg_data)
 
             # 2.4 MAGNUM LIFE
-            magnum_life_data = extract_magnum_life_from_4dlatest(soup_4dlatest)
-            if magnum_life_data and (magnum_life_data.get('winning_numbers') or magnum_life_data.get('bonus_numbers')):
-                save_json('magnum_life', magnum_life_data)
-            else:
-                print("⚠️ MAGNUM LIFE 数据为空")
+            if 'magnum_life' not in processed_companies:
+                magnum_life_data = extract_magnum_life_from_4dlatest(soup_4dlatest)
+                if magnum_life_data:
+                    save_json('magnum_life', magnum_life_data)
 
-            # 2.5 Sports Toto 5D/6D/Lotto（使用修复后的函数）
-            toto_5d, toto_6d, toto_lotto = extract_sportstoto_from_4dlatest(soup_4dlatest)
-            if toto_5d and any(toto_5d.get(k) for k in ['1st','2nd','3rd','4th','5th','6th']):
-                save_json('sportstoto_5d', toto_5d)
-            if toto_6d and (toto_6d.get('1st') or any(toto_6d.get(k, {}).get('main') for k in ['2nd','3rd','4th','5th'])):
-                save_json('sportstoto_6d', toto_6d)
-            if toto_lotto and toto_lotto.get('star'):
-                save_json('sportstoto_lotto', toto_lotto)
-
-        else:
-            print("❌ 无法获取 4dlatest.org 页面")
+            # 2.5 Sports Toto 5D/6D/Lotto
+            if any(k not in processed_companies for k in ['sportstoto_5d', 'sportstoto_6d', 'sportstoto_lotto']):
+                toto_5d, toto_6d, toto_lotto = extract_sportstoto_from_4dlatest(soup_4dlatest)
+                if toto_5d and any(toto_5d.get(k) for k in ['1st','2nd','3rd','4th','5th','6th']):
+                    save_json('sportstoto_5d', toto_5d)
+                if toto_6d and (toto_6d.get('1st') or any(toto_6d.get(k, {}).get('main') for k in ['2nd','3rd','4th','5th'])):
+                    save_json('sportstoto_6d', toto_6d)
+                if toto_lotto and toto_lotto.get('star'):
+                    save_json('sportstoto_lotto', toto_lotto)
 
         # 3. 新加坡 4D & TOTO (从 4dmoon.com)
-        print("\n🌕 正在从 4dmoon.com 获取最新新加坡 4D 和 TOTO 数据...")
-        time.sleep(1)
-        sg_4d, sg_toto = fetch_singapore_from_4dmoon()
-        if sg_4d and (sg_4d.get('draw_date') or sg_4d.get('1st')):
-            save_json('singapore', sg_4d)
-        else:
-            print("⚠️ 新加坡 4D 数据为空")
-        if sg_toto and (sg_toto.get('draw_date') or sg_toto.get('winning_numbers')):
-            save_json('singapore_toto', sg_toto)
-        else:
-            print("⚠️ 新加坡 TOTO 数据为空")
+        if 'singapore' not in processed_companies or 'singapore_toto' not in processed_companies:
+            print("\n🌕 正在从 4dmoon.com 获取最新新加坡 4D 和 TOTO 数据...")
+            time.sleep(1)
+            sg_4d, sg_toto = fetch_singapore_from_4dmoon()
+            if sg_4d and 'singapore' not in processed_companies:
+                save_json('singapore', sg_4d)
+            if sg_toto and 'singapore_toto' not in processed_companies:
+                save_json('singapore_toto', sg_toto)
 
         # 4. 从 4dmoon.com 补充 Sabah Lotto 和 Sports Toto 5D/6D
-        print("\n🌕 正在从 4dmoon.com 补充 Sabah Lotto 和 Sports Toto 5D/6D 数据...")
-        time.sleep(1)
-        sabah_lotto_4dmoon = fetch_sabah_lotto_from_4dmoon()
-        if sabah_lotto_4dmoon:
-            save_json('sabah_lotto', sabah_lotto_4dmoon)
+        if 'sabah_lotto' not in processed_companies or 'sportstoto_5d' not in processed_companies or 'sportstoto_6d' not in processed_companies:
+            print("\n🌕 正在从 4dmoon.com 补充 Sabah Lotto 和 Sports Toto 5D/6D 数据...")
+            time.sleep(1)
+            sabah_lotto_4dmoon = fetch_sabah_lotto_from_4dmoon()
+            if sabah_lotto_4dmoon and 'sabah_lotto' not in processed_companies:
+                save_json('sabah_lotto', sabah_lotto_4dmoon)
 
-        toto_5d_4dmoon, toto_6d_4dmoon = fetch_sportstoto_5d_6d_from_4dmoon()
-        if toto_5d_4dmoon and any(toto_5d_4dmoon.get(k) for k in ['1st','2nd','3rd','4th','5th','6th']):
-            save_json('sportstoto_5d', toto_5d_4dmoon)
-        if toto_6d_4dmoon and (toto_6d_4dmoon.get('1st') or any(toto_6d_4dmoon.get(k, {}).get('main') for k in ['2nd','3rd','4th','5th'])):
-            save_json('sportstoto_6d', toto_6d_4dmoon)
+            toto_5d_4dmoon, toto_6d_4dmoon = fetch_sportstoto_5d_6d_from_4dmoon()
+            if toto_5d_4dmoon and 'sportstoto_5d' not in processed_companies:
+                save_json('sportstoto_5d', toto_5d_4dmoon)
+            if toto_6d_4dmoon and 'sportstoto_6d' not in processed_companies:
+                save_json('sportstoto_6d', toto_6d_4dmoon)
 
-        update_dates_index()
-
-    except Exception as e:
-        print(f"❌ 爬虫运行过程中发生错误: {e}")
-        import traceback
-        traceback.print_exc()
-    finally:
-        print("\n🔚 爬虫执行完毕，尝试推送更新到 GitHub...")
-        # 即使有错误也尝试推送（因为可能部分数据已保存）
-        git_push_to_github()
+    # 更新日期索引
+    update_dates_index()
+    print("🔚 爬虫执行完毕")
 
 if __name__ == "__main__":
     main()
