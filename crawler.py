@@ -468,7 +468,164 @@ def extract_sportstoto_lotto(box, global_date, global_draw_no):
     data['star'], data['power'], data['supreme'], data['jackpots'] = extract_lotto(box)
     return data
 
-# ================== 优化后的核心提取函数 ==================
+# ================== 新增：从 4dmoon.com 补充 Sabah Lotto 和 Sports Toto 5D/6D ==================
+
+def fetch_sabah_lotto_from_4dmoon():
+    """从 4dmoon.com 的沙巴砂拉越页面提取 Sabah Lotto 数据"""
+    print("🔍 正在从 4dmoon.com (沙巴砂拉越页) 获取 Sabah Lotto 数据...")
+    url = "https://www.4dmoon.com/sabah-sarawak-4d-results/"
+    html = fetch_html(url)
+    if not html:
+        return None
+
+    soup = BeautifulSoup(html, "html.parser")
+    data = {
+        "draw_date": "",
+        "draw_no": "",
+        "winning_numbers": [],
+        "jackpot1": "",
+        "jackpot2": ""
+    }
+
+    # 定位包含 "Sabah Lotto" 的标题
+    header = soup.find(string=re.compile(r"Sabah Lotto", re.I))
+    if not header:
+        print("⚠️ 未找到 Sabah Lotto 标题")
+        return None
+
+    # 提取日期和期号（标题通常如 "Sabah Lotto (Wed) 11-Mar-2026 #4168/26"）
+    header_text = header.get_text(" ", strip=True)
+    date_match = re.search(r"(\d{1,2}-[A-Za-z]{3}-\d{4})", header_text)
+    if date_match:
+        try:
+            d = datetime.strptime(date_match.group(1), "%d-%b-%Y")
+            data["draw_date"] = d.strftime("%d-%m-%Y")
+        except:
+            pass
+    no_match = re.search(r"#(\d+/\d+)", header_text)
+    if no_match:
+        data["draw_no"] = no_match.group(1)
+
+    # 找到数据表格（通常是标题后面的表格）
+    table = header.find_parent("table")
+    if not table:
+        table = header.find_next("table")
+    if not table:
+        print("⚠️ 未找到 Sabah Lotto 数据表格")
+        return None
+
+    # 解析表格中的号码和奖池
+    rows = table.find_all("tr")
+    for row in rows:
+        row_text = row.get_text()
+        cells = row.find_all("td")
+        if "Lotto 6/45" in row_text:
+            # 号码行，寻找数字
+            numbers = []
+            for cell in cells:
+                text = cell.get_text(strip=True)
+                if text.isdigit() and len(text) <= 2:  # 号码是1-2位数字
+                    numbers.append(text)
+                elif text == "+":
+                    pass
+            if numbers:
+                data["winning_numbers"] = numbers
+        elif "Jackpot 1" in row_text or "Jackpot 2" in row_text:
+            amount_match = re.search(r'RM\s*([\d,]+(?:\.\d+)?)', row_text)
+            if amount_match:
+                amount = amount_match.group(1)
+                if "Jackpot 1" in row_text:
+                    data["jackpot1"] = amount
+                else:
+                    data["jackpot2"] = amount
+
+    if data["winning_numbers"]:
+        print(f"✅ 提取到 Sabah Lotto: {data['winning_numbers']}, JP1: {data['jackpot1']}, JP2: {data['jackpot2']}")
+        return data
+    else:
+        print("⚠️ 未能提取到 Sabah Lotto 号码")
+        return None
+
+def fetch_sportstoto_5d_6d_from_4dmoon():
+    """从 4dmoon.com 主页提取 Sports Toto 5D 和 6D 数据"""
+    print("🔍 正在从 4dmoon.com 主页获取 Sports Toto 5D/6D 数据...")
+    url = "https://www.4dmoon.com/"
+    html = fetch_html(url)
+    if not html:
+        return None, None
+
+    soup = BeautifulSoup(html, "html.parser")
+    data_5d = {"draw_date": "", "draw_no": "", "type": "5d", "1st": "", "2nd": "", "3rd": "", "4th": "", "5th": "", "6th": ""}
+    data_6d = {"draw_date": "", "draw_no": "", "type": "6d", "1st": "", "2nd": {"main": "", "alt": ""}, "3rd": {"main": "", "alt": ""}, "4th": {"main": "", "alt": ""}, "5th": {"main": "", "alt": ""}}
+
+    # 查找包含 "SportsToto 5D" 的区域
+    header_5d = soup.find(string=re.compile(r"SportsToto\s*5D", re.I))
+    if header_5d:
+        # 提取日期和期号（可能在附近）
+        header_text = header_5d.get_text(" ", strip=True)
+        date_match = re.search(r"(\d{2}-\d{2}-\d{4})", header_text)
+        if date_match:
+            data_5d["draw_date"] = data_6d["draw_date"] = date_match.group(1)
+        # 尝试找到 5D 表格
+        table_5d = header_5d.find_parent("table")
+        if not table_5d:
+            table_5d = header_5d.find_next("table")
+        if table_5d:
+            rows = table_5d.find_all("tr")
+            for row in rows:
+                tds = row.find_all("td")
+                if len(tds) >= 2:
+                    label = tds[0].get_text(strip=True).lower()
+                    number = tds[1].get_text(strip=True)
+                    if "1st" in label:
+                        data_5d["1st"] = number
+                    elif "2nd" in label:
+                        data_5d["2nd"] = number
+                    elif "3rd" in label:
+                        data_5d["3rd"] = number
+                    elif "4th" in label:
+                        data_5d["4th"] = number
+                    elif "5th" in label:
+                        data_5d["5th"] = number
+                    elif "6th" in label:
+                        data_5d["6th"] = number
+
+    # 查找包含 "SportsToto 6D" 的区域
+    header_6d = soup.find(string=re.compile(r"SportsToto\s*6D", re.I))
+    if header_6d:
+        table_6d = header_6d.find_parent("table")
+        if not table_6d:
+            table_6d = header_6d.find_next("table")
+        if table_6d:
+            rows = table_6d.find_all("tr")
+            for row in rows:
+                row_text = row.get_text()
+                tds = row.find_all("td")
+                if len(tds) < 2:
+                    continue
+                label = tds[0].get_text(strip=True).lower()
+                if "1st" in label:
+                    data_6d["1st"] = tds[1].get_text(strip=True)
+                elif "2nd" in label:
+                    main, alt = extract_6d_pair(row_text)
+                    data_6d["2nd"]["main"] = main
+                    data_6d["2nd"]["alt"] = alt
+                elif "3rd" in label:
+                    main, alt = extract_6d_pair(row_text)
+                    data_6d["3rd"]["main"] = main
+                    data_6d["3rd"]["alt"] = alt
+                elif "4th" in label:
+                    main, alt = extract_6d_pair(row_text)
+                    data_6d["4th"]["main"] = main
+                    data_6d["4th"]["alt"] = alt
+                elif "5th" in label:
+                    main, alt = extract_6d_pair(row_text)
+                    data_6d["5th"]["main"] = main
+                    data_6d["5th"]["alt"] = alt
+
+    return data_5d, data_6d
+
+# ================== 原有核心提取函数（保留） ==================
 
 # ---------- 从 4dlatest.org 精确提取 GDLOTTO 豪龙数据 (最终修复版) ----------
 def extract_gd_lotto_from_4dlatest(soup):
@@ -1297,6 +1454,19 @@ def main():
         save_json('singapore_toto', sg_toto)
     else:
         print("⚠️ 新加坡 TOTO 数据为空")
+
+    # 4. 从 4dmoon.com 补充 Sabah Lotto 和 Sports Toto 5D/6D
+    print("\n🌕 正在从 4dmoon.com 补充 Sabah Lotto 和 Sports Toto 5D/6D 数据...")
+    time.sleep(1)
+    sabah_lotto_4dmoon = fetch_sabah_lotto_from_4dmoon()
+    if sabah_lotto_4dmoon:
+        save_json('sabah_lotto', sabah_lotto_4dmoon)
+
+    toto_5d_4dmoon, toto_6d_4dmoon = fetch_sportstoto_5d_6d_from_4dmoon()
+    if toto_5d_4dmoon and any(toto_5d_4dmoon.get(k) for k in ['1st','2nd','3rd','4th','5th','6th']):
+        save_json('sportstoto_5d', toto_5d_4dmoon)
+    if toto_6d_4dmoon and (toto_6d_4dmoon.get('1st') or any(toto_6d_4dmoon.get(k, {}).get('main') for k in ['2nd','3rd','4th','5th'])):
+        save_json('sportstoto_6d', toto_6d_4dmoon)
 
     update_dates_index()
 
