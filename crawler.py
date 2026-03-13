@@ -6,6 +6,7 @@ from datetime import datetime
 import re
 import time
 import sqlite3
+import subprocess
 from urllib.parse import urljoin
 
 # ========== 路径统一配置 ==========
@@ -145,14 +146,342 @@ def fetch_html(url, max_retries=3, timeout=15):
                 return None
     return None
 
-# ---------- 4d4d.co 相关提取函数（保持不变）----------
-# ... 为节省篇幅，此处省略原有所有提取函数，实际使用时请保留 ...
+def find_parent_table(element):
+    while element and element.name != 'table':
+        element = element.parent
+    return element
 
-# ================== 从 dato4d.com JSON 抓取 Grand Dragon 数据（新源）==================
+def parse_4dmoon_date(date_str):
+    try:
+        d = datetime.strptime(date_str.strip(), "%d-%b-%Y")
+        return d.strftime("%d-%m-%Y")
+    except:
+        return None
+
+def extract_global_date(soup):
+    first_box = soup.find("div", class_="outerbox")
+    if not first_box:
+        return None, None
+    draw_row = first_box.find("td", class_="resultdrawdate")
+    if not draw_row:
+        return None, None
+    date_text = draw_row.get_text(strip=True)
+    match = re.search(r"(\d{2}-\d{2}-\d{4})", date_text)
+    date = match.group(1) if match else None
+    next_td = draw_row.find_next("td", class_="resultdrawdate")
+    draw_no = None
+    if next_td:
+        no_text = next_td.get_text(strip=True)
+        draw_no = re.sub(r"Draw No:?", "", no_text).strip()
+    return date, draw_no
+
+# ---------- 4d4d.co 基础提取 ----------
+def base_extract(box, global_date, global_draw_no):
+    data = {
+        "draw_date": "",
+        "draw_no": "",
+        "1st": "",
+        "2nd": "",
+        "3rd": "",
+        "special": [],
+        "consolation": [],
+        "type": None
+    }
+    draw_row = box.find("td", class_="resultdrawdate")
+    if draw_row:
+        date_text = draw_row.get_text(strip=True)
+        match = re.search(r"(\d{2}-\d{2}-\d{4})", date_text)
+        if match:
+            data["draw_date"] = match.group(1)
+        next_td = draw_row.find_next("td", class_="resultdrawdate")
+        if next_td:
+            no_text = next_td.get_text(strip=True)
+            data["draw_no"] = re.sub(r"Draw No:?", "", no_text).strip()
+    if not data["draw_date"] and global_date:
+        data["draw_date"] = global_date
+    if not data["draw_no"] and global_draw_no:
+        data["draw_no"] = global_draw_no
+
+    prize_tds = box.find_all("td", class_="resulttop")
+    if len(prize_tds) >= 3:
+        data["1st"] = prize_tds[0].get_text(strip=True)
+        data["2nd"] = prize_tds[1].get_text(strip=True)
+        data["3rd"] = prize_tds[2].get_text(strip=True)
+
+    special_section = box.find("td", string=re.compile("Special|特別獎"))
+    if special_section:
+        table = special_section.find_parent("table")
+        if table:
+            rows = table.find_all("tr")
+            special_numbers = []
+            for row in rows[1:]:
+                tds = row.find_all("td", class_="resultbottom")
+                for td in tds:
+                    num = td.get_text(strip=True)
+                    if num and num != "----":
+                        special_numbers.append(num)
+            data["special"] = special_numbers
+
+    cons_section = box.find("td", string=re.compile("Consolation|安慰獎"))
+    if cons_section:
+        table = cons_section.find_parent("table")
+        if table:
+            rows = table.find_all("tr")
+            cons_numbers = []
+            for row in rows[1:]:
+                tds = row.find_all("td", class_="resultbottom")
+                for td in tds:
+                    num = td.get_text(strip=True)
+                    if num and num != "----":
+                        cons_numbers.append(num)
+            data["consolation"] = cons_numbers
+    return data
+
+def extract_damacai(box, global_date, global_draw_no):
+    return base_extract(box, global_date, global_draw_no)
+
+def extract_magnum(box, global_date, global_draw_no):
+    return base_extract(box, global_date, global_draw_no)
+
+def extract_toto(box, global_date, global_draw_no):
+    return base_extract(box, global_date, global_draw_no)
+
+def extract_singapore(box, global_date, global_draw_no):
+    data = {
+        "draw_date": global_date,
+        "draw_no": global_draw_no,
+        "1st": "",
+        "2nd": "",
+        "3rd": "",
+        "special": [],
+        "consolation": [],
+        "type": None
+    }
+    prize_tds = box.find_all("td", class_="resulttop")
+    if len(prize_tds) >= 3:
+        data["1st"] = prize_tds[0].get_text(strip=True)
+        data["2nd"] = prize_tds[1].get_text(strip=True)
+        data["3rd"] = prize_tds[2].get_text(strip=True)
+
+    def extract_numbers_from_section(title_pattern):
+        section = box.find("td", string=re.compile(title_pattern))
+        if not section:
+            return []
+        table = section.find_parent("table")
+        if not table:
+            return []
+        rows = table.find_all("tr")[1:]
+        numbers = []
+        for row in rows:
+            cells = row.find_all("td")
+            for cell in cells:
+                text = cell.get_text(strip=True)
+                if text and text not in ["Special", "特別獎", "Consolation", "安慰獎", "----"]:
+                    numbers.append(text)
+        return numbers
+
+    data["special"] = extract_numbers_from_section("Special|特別獎")
+    data["consolation"] = extract_numbers_from_section("Consolation|安慰獎")
+    return data
+
+def extract_damacai_1p3d(box, global_date, global_draw_no):
+    return base_extract(box, global_date, global_draw_no)
+
+def extract_sandakan(box, global_date, global_draw_no):
+    return base_extract(box, global_date, global_draw_no)
+
+def extract_cashsweep(box, global_date, global_draw_no):
+    return base_extract(box, global_date, global_draw_no)
+
+def extract_sabah(box, global_date, global_draw_no):
+    data = base_extract(box, global_date, global_draw_no)
+    data['3d'] = extract_3d(box)
+    return data
+
+def extract_grand_dragon(box, global_date, global_draw_no):
+    return base_extract(box, global_date, global_draw_no)
+
+def extract_3d(box):
+    h3 = box.find("td", string=re.compile("3D"))
+    if not h3:
+        return {}
+    table = h3.find_parent("table")
+    if not table:
+        return {}
+    prize_tds = table.find_all("td", class_="resulttop")
+    if len(prize_tds) >= 3:
+        return {
+            "1st": prize_tds[0].get_text(strip=True),
+            "2nd": prize_tds[1].get_text(strip=True),
+            "3rd": prize_tds[2].get_text(strip=True)
+        }
+    return {}
+
+# ---------- Sports Toto 5D 提取 ----------
+def extract_sportstoto_5d(box, global_date, global_draw_no):
+    data = {
+        "draw_date": global_date,
+        "draw_no": global_draw_no,
+        "type": "5d",
+        "1st": "",
+        "2nd": "",
+        "3rd": "",
+        "4th": "",
+        "5th": "",
+        "6th": ""
+    }
+    header = box.find("td", string=re.compile(r"5D", re.IGNORECASE))
+    if not header:
+        return data
+    table = header.find_parent("table")
+    if not table:
+        return data
+    rows = table.find_all("tr")
+    for row in rows:
+        tds = row.find_all("td")
+        if len(tds) < 2:
+            continue
+        label = tds[0].get_text(strip=True).lower()
+        number = tds[1].get_text(strip=True) if len(tds) > 1 else ""
+        if "1st" in label:
+            data["1st"] = number
+        elif "2nd" in label:
+            data["2nd"] = number
+        elif "3rd" in label:
+            data["3rd"] = number
+        elif "4th" in label:
+            data["4th"] = number
+        elif "5th" in label:
+            data["5th"] = number
+        elif "6th" in label:
+            data["6th"] = number
+    return data
+
+# ---------- Sports Toto 6D 提取 ----------
+def extract_6d_pair(row_text):
+    row_text = re.sub(r'^(2nd|3rd|4th|5th)', '', row_text, flags=re.IGNORECASE).strip()
+    parts = re.split(r'\s+or\s+', row_text, flags=re.IGNORECASE)
+    if len(parts) >= 2:
+        main = parts[0].strip()
+        alt = parts[1].strip()
+    else:
+        main = row_text
+        alt = ""
+    return main, alt
+
+def extract_sportstoto_6d(box, global_date, global_draw_no):
+    data = {
+        "draw_date": global_date,
+        "draw_no": global_draw_no,
+        "type": "6d",
+        "1st": "",
+        "2nd": {"main": "", "alt": ""},
+        "3rd": {"main": "", "alt": ""},
+        "4th": {"main": "", "alt": ""},
+        "5th": {"main": "", "alt": ""}
+    }
+    header = box.find("td", string=re.compile(r"6D", re.IGNORECASE))
+    if not header:
+        return data
+    table = header.find_parent("table")
+    if not table:
+        return data
+    rows = table.find_all("tr")
+    for row in rows:
+        row_text = row.get_text()
+        tds = row.find_all("td")
+        if len(tds) < 2:
+            continue
+        label = tds[0].get_text(strip=True).lower()
+        if "1st" in label:
+            if len(tds) >= 2:
+                data["1st"] = tds[1].get_text(strip=True)
+        elif "2nd" in label:
+            main, alt = extract_6d_pair(row_text)
+            data["2nd"]["main"] = main
+            data["2nd"]["alt"] = alt
+        elif "3rd" in label:
+            main, alt = extract_6d_pair(row_text)
+            data["3rd"]["main"] = main
+            data["3rd"]["alt"] = alt
+        elif "4th" in label:
+            main, alt = extract_6d_pair(row_text)
+            data["4th"]["main"] = main
+            data["4th"]["alt"] = alt
+        elif "5th" in label:
+            main, alt = extract_6d_pair(row_text)
+            data["5th"]["main"] = main
+            data["5th"]["alt"] = alt
+    return data
+
+# ---------- Sports Toto Lotto 提取 ----------
+def extract_lotto(box):
+    star = []
+    power = []
+    supreme = []
+    jackpots = []
+    star_section = box.find("td", string=re.compile("Star Toto 6/50"))
+    if star_section:
+        table = star_section.find_parent("table")
+        if table:
+            rows = table.find_all("tr")
+            if len(rows) >= 2:
+                num_row = rows[1]
+                tds = num_row.find_all("td", class_="resultbottomtoto2")
+                star = [td.get_text(strip=True) for td in tds if td.get_text(strip=True) not in ['+', '']]
+            for row in rows[2:]:
+                jp_tds = row.find_all("td", class_="resultbottomtotojpval")
+                if jp_tds:
+                    jackpots.append(jp_tds[0].get_text(strip=True))
+    power_section = box.find("td", string=re.compile("Power Toto 6/55"))
+    if power_section:
+        table = power_section.find_parent("table")
+        if table:
+            rows = table.find_all("tr")
+            if len(rows) >= 2:
+                num_row = rows[1]
+                tds = num_row.find_all("td", class_="resultbottomtoto2")
+                power = [td.get_text(strip=True) for td in tds]
+            for row in rows:
+                if "Jackpot" in row.get_text():
+                    jp_tds = row.find_all("td")
+                    for td in jp_tds:
+                        text = td.get_text(strip=True)
+                        if text.startswith("RM"):
+                            jackpots.append(text)
+                            break
+                    break
+    supreme_section = box.find("td", string=re.compile("Supreme Toto 6/58"))
+    if supreme_section:
+        table = supreme_section.find_parent("table")
+        if table:
+            rows = table.find_all("tr")
+            if len(rows) >= 2:
+                num_row = rows[1]
+                tds = num_row.find_all("td", class_="resultbottomtoto2")
+                supreme = [td.get_text(strip=True) for td in tds]
+            for row in rows:
+                if "Jackpot" in row.get_text():
+                    jp_tds = row.find_all("td")
+                    for td in jp_tds:
+                        text = td.get_text(strip=True)
+                        if text.startswith("RM"):
+                            jackpots.append(text)
+                            break
+                    break
+    while len(jackpots) < 4:
+        jackpots.append("")
+    return star, power, supreme, jackpots
+
+def extract_sportstoto_lotto(box, global_date, global_draw_no):
+    data = base_extract(box, global_date, global_draw_no)
+    data['type'] = 'lotto'
+    data['star'], data['power'], data['supreme'], data['jackpots'] = extract_lotto(box)
+    return data
+
+# ================== 从 dato4d.com JSON 抓取 Grand Dragon 数据 ==================
 def fetch_grand_dragon_from_dato4d_json():
-    """从 https://www.dato4d.com/liveos.json 获取 Grand Dragon 4D 数据（结构化JSON）"""
     print("🔍 正在从 dato4d.com JSON 获取 Grand Dragon 4D 数据...")
-    # 添加时间戳防止缓存
     url = "https://www.dato4d.com/liveos.json?_=" + str(int(time.time()*1000))
     html = fetch_html(url)
     if not html:
@@ -164,7 +493,6 @@ def fetch_grand_dragon_from_dato4d_json():
         print(f"❌ JSON 解析失败: {e}")
         return None
 
-    # 检查是否存在 Grand Dragon 数据 (键 "G")
     if "G" not in data:
         print("⚠️ JSON 中未找到 Grand Dragon 数据 (键 'G')")
         return None
@@ -178,17 +506,15 @@ def fetch_grand_dragon_from_dato4d_json():
         "3rd": g.get("P3", ""),
         "special": [],
         "consolation": [],
-        "jackpot": ""  # JSON 中无 Jackpot 信息
+        "jackpot": ""
     }
 
-    # 提取日期 (格式如 "13-03-2026 (Fri)")
     raw_date = g.get("DD", "")
     date_match = re.search(r"(\d{2}-\d{2}-\d{4})", raw_date)
     if date_match:
         result["draw_date"] = date_match.group(1)
         print(f"  ✅ 提取到日期: {result['draw_date']}")
 
-    # 提取 Special Prize (S1 到 S13，排除 "----")
     for i in range(1, 14):
         key = f"S{i}"
         if key in g:
@@ -197,7 +523,6 @@ def fetch_grand_dragon_from_dato4d_json():
                 result["special"].append(num)
     print(f"  ✅ 特别奖数量: {len(result['special'])}")
 
-    # 提取 Consolation Prize (C1 到 C10，排除 "----")
     for i in range(1, 11):
         key = f"C{i}"
         if key in g:
@@ -213,46 +538,111 @@ def fetch_grand_dragon_from_dato4d_json():
         print("⚠️ JSON 中 Grand Dragon 数据不完整")
         return None
 
-# ================== 原有从 gdlotto.net 抓取 Grand Dragon 函数（保留作为备胎）==================
+# ================== 原有从 gdlotto.net 抓取 Grand Dragon 函数 ==================
 def fetch_grand_dragon_from_gdlotto_net():
+    print("🔍 正在从 gdlotto.net 获取 Grand Dragon 4D 数据...")
+    url = "https://gdlotto.net/results/ajax/_result.aspx"
+    html = fetch_html(url)
+    if not html:
+        return None
+
+    data = {
+        "draw_date": "",
+        "draw_no": "",
+        "1st": "",
+        "2nd": "",
+        "3rd": "",
+        "special": [],
+        "consolation": [],
+        "jackpot": ""
+    }
+
+    date_match = re.search(r"Date\s*:\s*(\d{2}/\d{2}/\d{4})", html)
+    if date_match:
+        try:
+            d = datetime.strptime(date_match.group(1), "%d/%m/%Y")
+            data["draw_date"] = d.strftime("%d-%m-%Y")
+            print(f"  ✅ 提取到日期: {data['draw_date']}")
+        except:
+            pass
+
+    prize_patterns = [
+        (r"1st\s*Prize.*?\)\s*(\d{4})", "1st"),
+        (r"2nd\s*Prize.*?\)\s*(\d{4})", "2nd"),
+        (r"3rd\s*Prize.*?\)\s*(\d{4})", "3rd")
+    ]
+    for pattern, key in prize_patterns:
+        match = re.search(pattern, html, re.IGNORECASE | re.DOTALL)
+        if match:
+            data[key] = match.group(1)
+            print(f"  ✅ {key}: {data[key]}")
+
+    special_section = re.search(r"Special Prize(.*?)Consolation Prize", html, re.DOTALL | re.IGNORECASE)
+    if special_section:
+        special_text = special_section.group(1)
+        special_numbers = re.findall(r'([A-J])\s+(\d{4})', special_text)
+        special_dict = {letter: num for letter, num in special_numbers}
+        for letter in "ABCDEFGHIJ":
+            if letter in special_dict:
+                data["special"].append(special_dict[letter])
+        print(f"  ✅ 特别奖数量: {len(data['special'])}")
+
+    cons_section = re.search(r"Consolation Prize(.*?)(?=USD|\d{2}\s+[A-Z]|$)", html, re.DOTALL | re.IGNORECASE)
+    if cons_section:
+        cons_text = cons_section.group(1)
+        cons_numbers = re.findall(r'([N-W])\s+(\d{4})', cons_text)
+        cons_dict = {letter: num for letter, num in cons_numbers}
+        for letter in "NOPQRSTUVW":
+            if letter in cons_dict:
+                data["consolation"].append(cons_dict[letter])
+        print(f"  ✅ 安慰奖数量: {len(data['consolation'])}")
+
+    jackpot_match = re.search(r'USD([\d,]+(?:\.\d+)?)', html)
+    if jackpot_match:
+        data["jackpot"] = jackpot_match.group(1).replace(',', '')
+        print(f"  ✅ Jackpot: {data['jackpot']}")
+
+    if data["draw_date"] and (data["1st"] or data["special"]):
+        return data
+    else:
+        print("⚠️ 未能从 gdlotto.net 提取到有效数据")
+        return None
+
+# ================== 原有其他补充源函数（保留） ==================
+def fetch_singapore_from_4dmoon():
     # ... 原有代码保持不变 ...
     pass
 
-# ================== 原有其他补充源函数（保持不变）==================
-def fetch_singapore_from_4dmoon():
-    # ... 保持不变 ...
-    pass
-
 def extract_gd_lotto_from_4dlatest(soup):
-    # ... 保持不变 ...
+    # ... 原有代码保持不变 ...
     pass
 
 def extract_sabah_lotto_from_4dlatest(soup):
-    # ... 保持不变 ...
+    # ... 原有代码保持不变 ...
     pass
 
 def extract_magnum_jackpot_gold_from_4dlatest(soup):
-    # ... 保持不变 ...
+    # ... 原有代码保持不变 ...
     pass
 
 def extract_magnum_life_from_4dlatest(soup):
-    # ... 保持不变 ...
+    # ... 原有代码保持不变 ...
     pass
 
 def extract_sportstoto_from_4dlatest(soup):
-    # ... 保持不变 ...
+    # ... 原有代码保持不变 ...
     pass
 
 def fetch_sabah_lotto_from_4dmoon():
-    # ... 保持不变 ...
+    # ... 原有代码保持不变 ...
     pass
 
 def fetch_sportstoto_5d_6d_from_4dmoon():
-    # ... 保持不变 ...
+    # ... 原有代码保持不变 ...
     pass
 
 def fetch_grand_dragon_from_4d2ulive():
-    # ... 保持不变 ...
+    # ... 原有代码保持不变 ...
     pass
 
 # ---------- 保存 JSON 和索引 ----------
@@ -298,6 +688,65 @@ def update_dates_index():
         json.dump(dates, f)
     print(f"📋 已更新日期索引，共 {len(dates)} 个历史日期")
 
+# ================== Git 推送函数 ==================
+def git_push_to_github():
+    """将生成的 JSON 文件提交并推送到 GitHub 仓库"""
+    print("📤 正在推送更新到 GitHub...")
+    try:
+        # 配置 Git 用户信息（如果未配置）
+        subprocess.run(['git', 'config', 'user.name', 'github-actions[bot]'], 
+                       check=False, capture_output=True)
+        subprocess.run(['git', 'config', 'user.email', 'github-actions[bot]@users.noreply.github.com'], 
+                       check=False, capture_output=True)
+        
+        # 添加所有变更到暂存区
+        add_result = subprocess.run(['git', 'add', 'docs/data/'], 
+                                    check=False, capture_output=True, text=True)
+        if add_result.returncode != 0:
+            print(f"⚠️ git add 失败: {add_result.stderr}")
+            return
+        
+        # 检查是否有变更需要提交
+        status_result = subprocess.run(['git', 'status', '--porcelain'], 
+                                       check=False, capture_output=True, text=True)
+        if not status_result.stdout.strip():
+            print("ℹ️ 没有文件变更，无需提交")
+            return
+        
+        # 提交变更
+        commit_msg = f"Auto-update 4D results {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+        commit_result = subprocess.run(['git', 'commit', '-m', commit_msg], 
+                                       check=False, capture_output=True, text=True)
+        if commit_result.returncode != 0:
+            print(f"⚠️ git commit 失败: {commit_result.stderr}")
+            return
+        
+        # 获取 GitHub Token
+        token = os.environ.get('GITHUB_TOKEN')
+        if not token:
+            print("⚠️ 未设置 GITHUB_TOKEN 环境变量，跳过推送")
+            return
+        
+        # 获取远程仓库 URL 并注入 token
+        remote_url = subprocess.run(['git', 'config', '--get', 'remote.origin.url'], 
+                                    check=False, capture_output=True, text=True).stdout.strip()
+        if 'https://' in remote_url:
+            auth_url = remote_url.replace('https://', f'https://{token}@')
+        else:
+            print("⚠️ 远程仓库不是 HTTPS 协议，无法使用 token 推送")
+            return
+        
+        # 推送
+        push_result = subprocess.run(['git', 'push', auth_url], 
+                                     check=False, capture_output=True, text=True)
+        if push_result.returncode == 0:
+            print("✅ 成功推送更新到 GitHub")
+        else:
+            print(f"❌ git push 失败: {push_result.stderr}")
+            
+    except Exception as e:
+        print(f"⚠️ Git 操作异常: {e}")
+
 # ---------- 主流程 ----------
 def main():
     print("🚀 爬虫开始运行")
@@ -311,8 +760,59 @@ def main():
         outer_boxes = soup_4d4d.find_all("div", class_="outerbox")
         print(f"📦 找到 {len(outer_boxes)} 个 outerbox")
 
-        # ... 原有处理4d4d.co公司的代码保持不变 ...
-        # 为节省篇幅，此处省略，实际使用时保留
+        company_matchers = [
+            (re.compile(r'GRAND\s+DRAGON', re.I), 'grand_dragon', extract_grand_dragon),
+            (re.compile(r'DAMACAI.*4D', re.I), 'damacai', extract_damacai),
+            (re.compile(r'MAGNUM.*4D', re.I), 'magnum', extract_magnum),
+            (re.compile(r'TOTO.*4D', re.I), 'toto', extract_toto),
+            (re.compile(r'SINGAPORE.*4D', re.I), 'singapore', extract_singapore),
+            (re.compile(r'DA MA CAI 1\+3D', re.I), 'damacai_1p3d', extract_damacai_1p3d),
+            (re.compile(r'SABAH.*88.*4D', re.I), 'sabah', extract_sabah),
+            (re.compile(r'SANDAKAN.*4D', re.I), 'sandakan', extract_sandakan),
+            (re.compile(r'CASHWEEP.*4D', re.I), 'sarawak_cashsweep', extract_cashsweep),
+            (re.compile(r'SPORTSTOTO.*5D', re.I), 'sportstoto_5d', extract_sportstoto_5d),
+            (re.compile(r'SPORTSTOTO.*6D', re.I), 'sportstoto_6d', extract_sportstoto_6d),
+            (re.compile(r'SPORTSTOTO.*LOTTO', re.I), 'sportstoto_lotto', extract_sportstoto_lotto),
+            (re.compile(r'MAGNUM.*JACKPOT.*GOLD', re.I), 'magnum_jackpot_gold', extract_grand_dragon),
+            (re.compile(r'MAGNUM.*LIFE', re.I), 'magnum_life', extract_grand_dragon),
+        ]
+
+        processed_companies = set()
+        for idx, box in enumerate(outer_boxes):
+            box_text = box.get_text(" ", strip=True)
+            matched = False
+            for pattern, company_key, extract_func in company_matchers:
+                if pattern.search(box_text):
+                    print(f"🔍 处理 {company_key} (outerbox {idx})")
+                    data = extract_func(box, global_date, global_draw_no)
+                    if data:
+                        save_json(company_key, data)
+                    processed_companies.add(company_key)
+                    matched = True
+                    break
+            if not matched:
+                if "SPORTSTOTO" in box_text.upper():
+                    print(f"🔍 尝试提取 SportsToto 复合数据 (outerbox {idx})")
+                    data_5d = extract_sportstoto_5d(box, global_date, global_draw_no)
+                    if any(data_5d.get(k) for k in ['1st','2nd','3rd','4th','5th','6th']):
+                        save_json('sportstoto_5d', data_5d)
+                        processed_companies.add('sportstoto_5d')
+                    data_6d = extract_sportstoto_6d(box, global_date, global_draw_no)
+                    if data_6d.get('1st') or any(data_6d.get(k, {}).get('main') for k in ['2nd','3rd','4th','5th']):
+                        save_json('sportstoto_6d', data_6d)
+                        processed_companies.add('sportstoto_6d')
+                    data_lotto = extract_sportstoto_lotto(box, global_date, global_draw_no)
+                    if data_lotto.get('star') or data_lotto.get('power') or data_lotto.get('supreme'):
+                        save_json('sportstoto_lotto', data_lotto)
+                        processed_companies.add('sportstoto_lotto')
+                else:
+                    print(f"⚠️ 未识别的 outerbox {idx}，内容: {box_text[:100]}...")
+
+        all_possible = {key for _, key, _ in company_matchers}
+        all_possible.update(['sportstoto_5d', 'sportstoto_6d', 'sportstoto_lotto'])
+        missing = all_possible - processed_companies
+        if missing:
+            print(f"ℹ️ 以下公司当天无数据: {', '.join(missing)}")
 
     # 2. 从 4dlatest.org 抓取补充数据
     print("\n🌕 正在从 4dlatest.org 抓取补充数据...")
@@ -321,7 +821,7 @@ def main():
     if html_4dlatest:
         soup_4dlatest = BeautifulSoup(html_4dlatest, "html.parser")
 
-        # ★★★ 2.1 GDLOTTO 豪龙 - 优先使用 dato4d.com JSON ★★★
+        # 2.1 GDLOTTO 豪龙 - 优先使用 dato4d.com JSON
         gd_data = fetch_grand_dragon_from_dato4d_json()
         if not gd_data:
             print("⚠️ dato4d.com JSON 抓取失败，尝试从 gdlotto.net 获取...")
@@ -403,3 +903,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    git_push_to_github()  # 新增：自动推送到 GitHub
