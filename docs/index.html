@@ -464,8 +464,16 @@
             return localData;
         }
 
+        // ★★★ 修改后的 loadFromLocalCache 函数（增加豪龙特殊处理）★★★
         async function loadFromLocalCache(companyKey, date = null) {
             let startDate = date || selectedDate;
+            
+            // 特殊处理：豪龙在主页默认视图下，从最新日期开始查找
+            if (companyKey === 'grand_dragon' && !date && filteredDates.length > 0 && selectedDate === filteredDates[0]) {
+                startDate = availableDates[0]; // 从最新日期开始
+                console.log(`🔍 豪龙特殊处理：从最新日期 ${startDate} 开始查找`);
+            }
+
             if (!startDate) {
                 try {
                     const url = `data/${companyKey}.json?t=${Date.now()}`;
