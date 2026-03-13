@@ -119,19 +119,52 @@ def store_numbers_from_data(company, data):
                 if num and num != '+':
                     insert_number(company, f'group_{grp_num}', num, draw_date)
 
-# ---------- 辅助函数 ----------
-def fetch_html(url):
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
-    try:
-        print(f"🌐 正在请求: {url}")
-        r = requests.get(url, headers=headers, timeout=15)
-        print(f"  状态码: {r.status_code}")
-        r.encoding = "utf-8"
-        r.raise_for_status()
-        return r.text
-    except Exception as e:
-        print(f"❌ 抓取失败 {url}: {e}")
-        return None
+# ---------- 增强版请求函数（支持重试、会话、完整头）----------
+def fetch_html(url, max_retries=3, timeout=15):
+    """使用会话和完整请求头获取HTML，支持重试"""
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Referer": "https://gdlotto.net/",
+        "Connection": "keep-alive",
+        "Upgrade-Insecure-Requests": "1",
+        "Cache-Control": "max-age=0",
+    }
+    
+    # 创建会话，先访问首页获取可能的 cookies
+    session = requests.Session()
+    session.headers.update(headers)
+    
+    # 对于 gdlotto.net 的特殊处理：先访问首页
+    if "gdlotto.net" in url:
+        try:
+            print("🌐 先访问 gdlotto.net 首页以获取 cookies...")
+            session.get("https://gdlotto.net/", timeout=timeout)
+            time.sleep(1)
+        except Exception as e:
+            print(f"⚠️ 访问首页失败，但仍尝试请求目标URL: {e}")
+
+    for attempt in range(max_retries):
+        try:
+            print(f"🌐 正在请求 {url} (尝试 {attempt+1}/{max_retries})")
+            r = session.get(url, timeout=timeout)
+            print(f"  状态码: {r.status_code}")
+            print(f"  内容长度: {len(r.text)}")
+            # 打印预览（前500字符）
+            preview = r.text[:500].replace('\n', ' ').replace('\r', '')
+            print(f"  内容预览: {preview}...")
+            r.encoding = "utf-8"
+            r.raise_for_status()
+            return r.text
+        except requests.exceptions.RequestException as e:
+            print(f"❌ 抓取失败: {e}")
+            if attempt < max_retries - 1:
+                print(f"⏳ 等待 {attempt+1} 秒后重试...")
+                time.sleep(attempt + 1)
+            else:
+                return None
+    return None
 
 def find_parent_table(element):
     while element and element.name != 'table':
@@ -470,12 +503,18 @@ def extract_sportstoto_lotto(box, global_date, global_draw_no):
 
 # ================== 从 gdlotto.net 抓取 Grand Dragon 数据（优化版） ==================
 def fetch_grand_dragon_from_gdlotto_net():
-    """从 https://gdlotto.net/results/ajax/_result.aspx 获取 Grand Dragon 4D 数据（基于文本的正则版）"""
+    """从 https://gdlotto.net/results/ajax/_result.aspx 获取 Grand Dragon 4D 数据（增强版）"""
     print("🔍 正在从 gdlotto.net 获取 Grand Dragon 4D 数据...")
     url = "https://gdlotto.net/results/ajax/_result.aspx"
-    html = fetch_html(url)
+    html = fetch_html(url)  # 使用增强版 fetch_html
     if not html:
+        print("⚠️ 无法获取页面内容")
         return None
+
+    # 调试：打印完整HTML前2000字符（用于检查）
+    print("===== 获取到的 HTML 前2000字符 =====")
+    print(html[:2000])
+    print("====================================")
 
     data = {
         "draw_date": "",
@@ -497,6 +536,16 @@ def fetch_grand_dragon_from_gdlotto_net():
             print(f"  ✅ 提取到日期: {data['draw_date']}")
         except:
             pass
+    else:
+        # 尝试其他日期格式
+        date_match = re.search(r"(\d{2}\s+[A-Z]{3}\s+\d{4})", html)
+        if date_match:
+            try:
+                d = datetime.strptime(date_match.group(1), "%d %b %Y")
+                data["draw_date"] = d.strftime("%d-%m-%Y")
+                print(f"  ✅ 提取到日期(备用): {data['draw_date']}")
+            except:
+                pass
 
     # --- 2. 提取 4D 前三奖 (格式: 1st Prize | (L) 7891) ---
     prize_patterns = [
@@ -520,6 +569,8 @@ def fetch_grand_dragon_from_gdlotto_net():
             if letter in special_dict:
                 data["special"].append(special_dict[letter])
         print(f"  ✅ 特别奖数量: {len(data['special'])}")
+    else:
+        print("  ⚠️ 未找到 Special Prize 区域")
 
     # --- 4. 提取 Consolation Prize (字母 N-W，排除 '----') ---
     cons_section = re.search(r"Consolation Prize(.*?)(?=USD|\d{2}\s+[A-Z]|$)", html, re.DOTALL | re.IGNORECASE)
@@ -531,6 +582,8 @@ def fetch_grand_dragon_from_gdlotto_net():
             if letter in cons_dict:
                 data["consolation"].append(cons_dict[letter])
         print(f"  ✅ 安慰奖数量: {len(data['consolation'])}")
+    else:
+        print("  ⚠️ 未找到 Consolation Prize 区域")
 
     # --- 5. 提取 Jackpot (USD 金额) ---
     jackpot_match = re.search(r'USD([\d,]+(?:\.\d+)?)', html)
@@ -539,16 +592,16 @@ def fetch_grand_dragon_from_gdlotto_net():
         print(f"  ✅ Jackpot: {data['jackpot']}")
 
     if data["draw_date"] and (data["1st"] or data["special"]):
+        print(f"✅ 成功提取 Grand Dragon 数据，日期 {data['draw_date']}")
         return data
     else:
         print("⚠️ 未能从 gdlotto.net 提取到有效数据")
         return None
 
-# ================== 原有其他补充源函数（保持不变） ==================
+# ================== 原有其他补充源函数（保留） ==================
 def fetch_singapore_from_4dmoon():
     """从 4dmoon.com 获取新加坡 4D 和 TOTO 数据（原始代码保持不变）"""
     # ... 此处保留原始代码内容 ...
-    # 由于篇幅，省略具体实现，实际使用时请确保该函数完整存在
     pass
 
 def extract_gd_lotto_from_4dlatest(soup):
