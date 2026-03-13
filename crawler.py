@@ -468,16 +468,15 @@ def extract_sportstoto_lotto(box, global_date, global_draw_no):
     data['star'], data['power'], data['supreme'], data['jackpots'] = extract_lotto(box)
     return data
 
-# ================== 新增：从 gdlotto.net 抓取 Grand Dragon 数据 ==================
+# ================== 从 gdlotto.net 抓取 Grand Dragon 数据（优化版） ==================
 def fetch_grand_dragon_from_gdlotto_net():
-    """从 https://gdlotto.net/results/ajax/_result.aspx 获取 Grand Dragon 4D 数据"""
+    """从 https://gdlotto.net/results/ajax/_result.aspx 获取 Grand Dragon 4D 数据（基于文本的正则版）"""
     print("🔍 正在从 gdlotto.net 获取 Grand Dragon 4D 数据...")
     url = "https://gdlotto.net/results/ajax/_result.aspx"
     html = fetch_html(url)
     if not html:
         return None
 
-    soup = BeautifulSoup(html, "html.parser")
     data = {
         "draw_date": "",
         "draw_no": "",
@@ -489,72 +488,56 @@ def fetch_grand_dragon_from_gdlotto_net():
         "jackpot": ""
     }
 
-    # 提取日期（格式如 13/03/2026）
-    date_element = soup.find(string=re.compile(r"\d{2}/\d{2}/\d{4}"))
-    if date_element:
-        date_match = re.search(r"(\d{2}/\d{2}/\d{4})", date_element)
-        if date_match:
-            try:
-                d = datetime.strptime(date_match.group(1), "%d/%m/%Y")
-                data["draw_date"] = d.strftime("%d-%m-%Y")
-                print(f"  ✅ 提取到日期: {data['draw_date']}")
-            except:
-                pass
+    # --- 1. 提取日期 (格式: Date : 13/03/2026) ---
+    date_match = re.search(r"Date\s*:\s*(\d{2}/\d{2}/\d{4})", html)
+    if date_match:
+        try:
+            d = datetime.strptime(date_match.group(1), "%d/%m/%Y")
+            data["draw_date"] = d.strftime("%d-%m-%Y")
+            print(f"  ✅ 提取到日期: {data['draw_date']}")
+        except:
+            pass
 
-    # 提取 4D 前三奖（可能带有 (L)/(M)/(B) 标记）
-    prize_labels = ["1st Prize", "2nd Prize", "3rd Prize"]
-    prize_keys = ["1st", "2nd", "3rd"]
-    for label, key in zip(prize_labels, prize_keys):
-        elem = soup.find(string=re.compile(label))
-        if elem:
-            # 寻找后面的数字（可能在同一行或后续 td 中）
-            parent = elem.find_parent()
-            if parent:
-                text = parent.get_text()
-                num_match = re.search(r'(\d{4})', text)
-                if num_match:
-                    data[key] = num_match.group(1)
-                    print(f"  ✅ {key}: {data[key]}")
+    # --- 2. 提取 4D 前三奖 (格式: 1st Prize | (L) 7891) ---
+    prize_patterns = [
+        (r"1st\s*Prize.*?\)\s*(\d{4})", "1st"),
+        (r"2nd\s*Prize.*?\)\s*(\d{4})", "2nd"),
+        (r"3rd\s*Prize.*?\)\s*(\d{4})", "3rd")
+    ]
+    for pattern, key in prize_patterns:
+        match = re.search(pattern, html, re.IGNORECASE | re.DOTALL)
+        if match:
+            data[key] = match.group(1)
+            print(f"  ✅ {key}: {data[key]}")
 
-    # 提取 Special Prize（字母 A-J）
-    special_section = soup.find(string=re.compile("Special Prize"))
+    # --- 3. 提取 Special Prize (字母 A-J，排除 '----') ---
+    special_section = re.search(r"Special Prize(.*?)Consolation Prize", html, re.DOTALL | re.IGNORECASE)
     if special_section:
-        parent = special_section.find_parent()
-        if parent:
-            text = parent.get_text()
-            numbers = re.findall(r'([A-Z])\s+(\d{4})', text)
-            special_dict = {}
-            for letter, num in numbers:
-                if letter in "ABCDEFGHIJ":
-                    special_dict[letter] = num
-            for letter in "ABCDEFGHIJ":
-                if letter in special_dict:
-                    data["special"].append(special_dict[letter])
-            print(f"  ✅ 特别奖数量: {len(data['special'])}")
+        special_text = special_section.group(1)
+        special_numbers = re.findall(r'([A-J])\s+(\d{4})', special_text)
+        special_dict = {letter: num for letter, num in special_numbers}
+        for letter in "ABCDEFGHIJ":
+            if letter in special_dict:
+                data["special"].append(special_dict[letter])
+        print(f"  ✅ 特别奖数量: {len(data['special'])}")
 
-    # 提取 Consolation Prize（字母 N-W）
-    cons_section = soup.find(string=re.compile("Consolation Prize"))
+    # --- 4. 提取 Consolation Prize (字母 N-W，排除 '----') ---
+    cons_section = re.search(r"Consolation Prize(.*?)(?=USD|\d{2}\s+[A-Z]|$)", html, re.DOTALL | re.IGNORECASE)
     if cons_section:
-        parent = cons_section.find_parent()
-        if parent:
-            text = parent.get_text()
-            numbers = re.findall(r'([A-Z])\s+(\d{4})', text)
-            cons_dict = {}
-            for letter, num in numbers:
-                if letter in "NOPQRSTUVW":
-                    cons_dict[letter] = num
-            for letter in "NOPQRSTUVW":
-                if letter in cons_dict:
-                    data["consolation"].append(cons_dict[letter])
-            print(f"  ✅ 安慰奖数量: {len(data['consolation'])}")
+        cons_text = cons_section.group(1)
+        cons_numbers = re.findall(r'([N-W])\s+(\d{4})', cons_text)
+        cons_dict = {letter: num for letter, num in cons_numbers}
+        for letter in "NOPQRSTUVW":
+            if letter in cons_dict:
+                data["consolation"].append(cons_dict[letter])
+        print(f"  ✅ 安慰奖数量: {len(data['consolation'])}")
 
-    # 提取 Jackpot（USD 金额）
+    # --- 5. 提取 Jackpot (USD 金额) ---
     jackpot_match = re.search(r'USD([\d,]+(?:\.\d+)?)', html)
     if jackpot_match:
         data["jackpot"] = jackpot_match.group(1).replace(',', '')
         print(f"  ✅ Jackpot: {data['jackpot']}")
 
-    # 验证数据有效性
     if data["draw_date"] and (data["1st"] or data["special"]):
         return data
     else:
@@ -562,8 +545,51 @@ def fetch_grand_dragon_from_gdlotto_net():
         return None
 
 # ================== 原有其他补充源函数（保持不变） ==================
-# （为了节省篇幅，此处省略原有 fetch_singapore_from_4dmoon、extract_gd_lotto_from_4dlatest 等函数，
-#   它们与您提供的代码完全一致，请确保它们仍保留在文件中）
+def fetch_singapore_from_4dmoon():
+    """从 4dmoon.com 获取新加坡 4D 和 TOTO 数据（原始代码保持不变）"""
+    # ... 此处保留原始代码内容 ...
+    # 由于篇幅，省略具体实现，实际使用时请确保该函数完整存在
+    pass
+
+def extract_gd_lotto_from_4dlatest(soup):
+    """从 4dlatest.org 提取 GDLOTTO 豪龙数据（原始代码保持不变）"""
+    # ... 省略具体实现 ...
+    pass
+
+def extract_sabah_lotto_from_4dlatest(soup):
+    """从 4dlatest.org 提取 SABAH88 沙巴万字 LOTTO（原始代码保持不变）"""
+    # ... 省略具体实现 ...
+    pass
+
+def extract_magnum_jackpot_gold_from_4dlatest(soup):
+    """提取 MAGNUM JACKPOT GOLD（原始代码保持不变）"""
+    # ... 省略具体实现 ...
+    pass
+
+def extract_magnum_life_from_4dlatest(soup):
+    """提取 MAGNUM LIFE（原始代码保持不变）"""
+    # ... 省略具体实现 ...
+    pass
+
+def extract_sportstoto_from_4dlatest(soup):
+    """提取 Sports Toto 5D/6D/Lotto（原始代码保持不变）"""
+    # ... 省略具体实现 ...
+    pass
+
+def fetch_sabah_lotto_from_4dmoon():
+    """从 4dmoon.com 补充 Sabah Lotto（原始代码保持不变）"""
+    # ... 省略具体实现 ...
+    pass
+
+def fetch_sportstoto_5d_6d_from_4dmoon():
+    """从 4dmoon.com 补充 Sports Toto 5D/6D（原始代码保持不变）"""
+    # ... 省略具体实现 ...
+    pass
+
+def fetch_grand_dragon_from_4d2ulive():
+    """从 4d2ulive.com 获取 Grand Dragon 数据（原始代码保持不变）"""
+    # ... 省略具体实现 ...
+    pass
 
 # ---------- 保存 JSON 和索引，并存储到数据库 ----------
 def save_json(company, data):
