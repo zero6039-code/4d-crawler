@@ -137,19 +137,22 @@
     <script>
         // ==================== 配置 ====================
         const API_BASE = 'https://fourd-crawler.onrender.com';  // ⚠️ 请替换为您的 Render 域名
+        
+        // ★★★ 调整公司列表顺序：将 grand_dragon 移到第一位 ★★★
         const COMPANY_LIST = [
+            'grand_dragon',          // 现在 GRAND DRAGON 豪龙 是第一个
             'damacai', 'magnum', 'toto', 'singapore', 'damacai_1p3d',
             'sandakan', 'sarawak_cashsweep', 'sabah', 'sabah_lotto',
-            'grand_dragon', 'singapore_toto', 'sportstoto_lotto',
+            'singapore_toto', 'sportstoto_lotto',
             'magnum_jackpot_gold', 'sportstoto_5d', 'sportstoto_6d',
             'magnum_life', 'sportstoto_fireball'
         ];
 
         const NAME_MAP = {
+            'grand_dragon': 'GRAND DRAGON 豪龙',
             'damacai': 'DAMACAI 4D', 'magnum': 'MAGNUM 4D', 'toto': 'TOTO 4D', 'singapore': 'SINGAPORE 4D',
             'damacai_1p3d': 'DAMACAI 1+3D', 'sandakan': 'SANDAKAN 4D', 'sarawak_cashsweep': 'SARAWAK CASHSWEEP',
             'sabah': 'SABAH 88 4D', 'sabah_lotto': 'SABAH LOTTO',
-            'grand_dragon': 'GRAND DRAGON 豪龙',
             'singapore_toto': 'SINGAPORE TOTO',
             'sportstoto_lotto': 'SPORTS TOTO LOTTO',
             'magnum_jackpot_gold': 'MAGNUM JACKPOT GOLD',
@@ -159,7 +162,7 @@
             'sportstoto_fireball': 'SPORTS TOTO FIREBALL'
         };
 
-        // 特殊公司列表（移除了 sabah_lotto 和 sportstoto_lotto，让它们走普通公司分支）
+        // 特殊公司列表
         const SPECIAL_COMPANIES = [
             'sportstoto_fireball', 'singapore_toto',
             'magnum_jackpot_gold', 'sportstoto_5d', 'sportstoto_6d', 'magnum_life'
@@ -179,7 +182,7 @@
             'singapore_toto': 'singapore-pools.png'
         };
 
-        // ★★★ 隐藏公司列表：新增 sportstoto_lotto 和 sabah_lotto ★★★
+        // 隐藏公司列表（保持不变）
         const HIDDEN_COMPANIES = [
             'magnum_jackpot_gold',
             'sportstoto_5d',
@@ -191,8 +194,17 @@
             'sabah_lotto'
         ];
 
+        // ★★★ 定义用于日历高亮检查的公司列表（排除 grand_dragon）★★★
+        const CALENDAR_CHECK_COMPANIES = [
+            'damacai', 'magnum', 'toto', 'singapore', 'damacai_1p3d',
+            'sandakan', 'sarawak_cashsweep', 'sabah'
+        ];
+
         let availableDates = [];           
         let availableDatesSet = new Set(); 
+        // ★★★ 新增：用于存储过滤后的日期（至少有一个 CALENDAR_CHECK_COMPANIES 公司有数据）★★★
+        let filteredDates = [];             
+        let filteredDatesSet = new Set();
         let selectedDate = null;           
 
         let pollingTimers = {};
@@ -248,6 +260,7 @@
             document.getElementById('date-btn').classList.toggle('active');
         }
 
+        // ★★★ 修改：加载 dates.json 后，生成过滤后的日期列表 filteredDates ★★★
         async function loadDateIndex() {
             try {
                 const res = await fetch(`data/dates.json?t=${Date.now()}`, { cache: 'no-store' });
@@ -255,8 +268,15 @@
                     let dates = await res.json();
                     availableDates = sortDatesDesc(dates);
                     availableDatesSet = new Set(availableDates);
-                    // ★★★ 自动选择最新日期作为默认显示 ★★★
-                    if (availableDates.length > 0) {
+                    
+                    // 生成过滤后的日期列表（排除只有 grand_dragon 有数据的日期）
+                    await generateFilteredDates();
+                    
+                    // 自动选择过滤后的最新日期作为默认显示
+                    if (filteredDates.length > 0) {
+                        selectedDate = filteredDates[0];
+                    } else if (availableDates.length > 0) {
+                        // 如果没有过滤后的日期，回退到全部日期的第一个
                         selectedDate = availableDates[0];
                     }
                 }
@@ -265,22 +285,63 @@
             updateDateBtnWithLatest();
         }
 
+        // ★★★ 新增：生成过滤后的日期列表（检查每个日期下，目标公司是否有数据）★★★
+        async function generateFilteredDates() {
+            filteredDates = [];
+            // 限制并发数，避免请求过多
+            const concurrency = 5;
+            for (let i = 0; i < availableDates.length; i += concurrency) {
+                const batch = availableDates.slice(i, i + concurrency);
+                const batchPromises = batch.map(async (date) => {
+                    const hasData = await checkDateHasData(date);
+                    return { date, hasData };
+                });
+                const results = await Promise.all(batchPromises);
+                results.forEach(result => {
+                    if (result.hasData) {
+                        filteredDates.push(result.date);
+                    }
+                });
+            }
+            filteredDatesSet = new Set(filteredDates);
+            console.log('过滤后的日期:', filteredDates);
+        }
+
+        // ★★★ 新增：检查某个日期下，CALENDAR_CHECK_COMPANIES 中是否有公司有数据 ★★★
+        async function checkDateHasData(dateYmd) {
+            // 并行检查最多 3 个公司，找到第一个存在的就返回 true
+            const checkPromises = CALENDAR_CHECK_COMPANIES.map(async (company) => {
+                const url = `data/${dateYmd}/${company}.json`;
+                try {
+                    const res = await fetch(url, { method: 'HEAD', cache: 'no-store' });
+                    return res.ok;
+                } catch {
+                    return false;
+                }
+            });
+            const results = await Promise.all(checkPromises);
+            return results.some(hasData => hasData === true);
+        }
+
         function updateDateBtnWithLatest() {
             const btnSpan = document.getElementById('selected-date');
-            if (availableDates.length > 0) {
+            if (filteredDates.length > 0) {
+                btnSpan.innerText = selectedDate ? ymdToDmy(selectedDate) : ymdToDmy(filteredDates[0]);
+            } else if (availableDates.length > 0) {
                 btnSpan.innerText = selectedDate ? ymdToDmy(selectedDate) : ymdToDmy(availableDates[0]);
             } else {
                 btnSpan.innerText = '暂无数据';
             }
         }
 
+        // ★★★ 修改：日期下拉列表只显示过滤后的日期 filteredDates ★★★
         function renderDateDropdown() {
             const content = document.getElementById('date-dropdown-content');
-            if (availableDates.length === 0) {
+            if (filteredDates.length === 0) {
                 content.innerHTML = '<div class="loading-history">暂无历史数据</div>';
                 return;
             }
-            const recentDates = availableDates.slice(0, 5);
+            const recentDates = filteredDates.slice(0, 5);
             let html = '<div class="date-option" onclick="selectDate(null)">📌 最新数据</div>';
             recentDates.forEach(date => {
                 const activeClass = (selectedDate === date) ? 'active' : '';
@@ -291,13 +352,13 @@
         }
 
         function selectDate(date) {
-            if (selectedDate === date) return; // 避免重复加载
+            if (selectedDate === date) return;
             selectedDate = date;
             updateDateBtnWithLatest();
             document.getElementById('date-dropdown').classList.remove('show');
             document.getElementById('date-btn').classList.remove('active');
             document.getElementById('calendar-popup').style.display = 'none';
-            stopAllPolling();      // 历史日期不轮询
+            stopAllPolling();
             loadAllCompanies(); 
         }
 
@@ -317,7 +378,8 @@
             popup.style.display = 'block';
         }
 
-        function renderCalendar() {
+        // ★★★ 完全重写 renderCalendar 函数，使用 filteredDatesSet 判断高亮 ★★★
+        async function renderCalendar() {
             const popup = document.getElementById('calendar-popup');
             if (!popup) return;
             let year = currentCalendarYear;
@@ -329,6 +391,7 @@
             let daysInMonth = new Date(year, month, 0).getDate();
             const now = new Date();
             const todayYmd = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,'0')}-${now.getDate().toString().padStart(2,'0')}`;
+            
             let html = `
                 <div class="calendar-header">
                     <button class="calendar-nav" id="prev-month">◀</button>
@@ -339,6 +402,7 @@
                     <thead><tr>${weekdaysEn.map(d => `<th>${d}</th>`).join('')}</tr></thead>
                     <tbody>
             `;
+            
             let date = 1;
             for (let i = 0; i < 6; i++) {
                 html += '<tr>';
@@ -347,7 +411,8 @@
                         html += '<td class="empty"></td>';
                     } else {
                         let dateYmd = `${year}-${month.toString().padStart(2,'0')}-${date.toString().padStart(2,'0')}`;
-                        let hasData = availableDatesSet.has(dateYmd);
+                        // ★★★ 使用 filteredDatesSet 判断是否有数据 ★★★
+                        let hasData = filteredDatesSet.has(dateYmd);
                         let isSelected = (selectedDate === dateYmd) ? 'selected' : '';
                         let isToday = (dateYmd === todayYmd) ? 'today' : '';
                         html += `<td class="${hasData ? 'has-data' : ''} ${isSelected} ${isToday}" onclick="calendarDateClick('${dateYmd}')">${date}</td>`;
@@ -359,6 +424,7 @@
             }
             html += '</tbody></table>';
             popup.innerHTML = html;
+            
             document.getElementById('prev-month').onclick = (e) => { e.stopPropagation(); changeMonth(-1); };
             document.getElementById('next-month').onclick = (e) => { e.stopPropagation(); changeMonth(1); };
         }
@@ -371,24 +437,24 @@
         }
 
         function calendarDateClick(dateYmd) {
-            if (dateYmd) selectDate(dateYmd);
-            else alert('该日期暂无开彩数据');
+            // ★★★ 修改：点击日期时，仅当过滤后的日期集中存在时才允许选择 ★★★
+            if (filteredDatesSet.has(dateYmd)) {
+                selectDate(dateYmd);
+            } else {
+                alert('该日期无主要公司开彩数据');
+            }
         }
 
-        // ==================== 核心数据加载：缓存优先 + 智能回退 + API后台更新 ====================
+        // ==================== 核心数据加载 ====================
         async function loadCompanyData(companyKey) {
-            // 1. 从本地缓存加载（优先使用 selectedDate，如果失败则自动回退到更早日期）
             let localData = await loadFromLocalCache(companyKey, selectedDate);
 
-            // 2. 如果本地加载成功，立即渲染
             if (localData) {
                 renderCompanyCard(companyKey, localData);
             } else {
-                // 如果本地完全无数据（所有日期都失败），显示空卡片
                 renderCompanyCard(companyKey, null);
             }
 
-            // 3. 如果未选择历史日期（即查看最新数据），则从 API 获取最新数据用于后台更新
             if (!selectedDate) {
                 loadFromAPI(companyKey).then(apiResult => {
                     if (apiResult && apiResult.data) {
@@ -402,12 +468,9 @@
             return localData;
         }
 
-        // ★★★ 修改后的本地缓存加载函数：支持自动回退到更早日期 ★★★
         async function loadFromLocalCache(companyKey, date = null) {
-            // 确定起始日期：优先使用传入的 date，否则使用全局 selectedDate
             let startDate = date || selectedDate;
             if (!startDate) {
-                // 如果没有起始日期（极端情况），尝试从根目录加载（备用）
                 try {
                     const url = `data/${companyKey}.json?t=${Date.now()}`;
                     const res = await fetch(url);
@@ -416,14 +479,11 @@
                 return null;
             }
 
-            // 确保 availableDates 已加载且包含起始日期
             if (availableDates.length === 0) return null;
             const startIndex = availableDates.indexOf(startDate);
-            if (startIndex === -1) return null; // 起始日期不在列表中
+            if (startIndex === -1) return null;
 
-            // 候选日期列表：从起始日期开始，向更早方向遍历（availableDates 是降序，所以 slice 后顺序不变）
             const candidateDates = availableDates.slice(startIndex);
-            // 限制最多尝试 10 个日期，避免过多请求
             const maxAttempts = 10;
             for (let i = 0; i < Math.min(candidateDates.length, maxAttempts); i++) {
                 const candidateDate = candidateDates[i];
@@ -435,11 +495,9 @@
                         console.log(`✅ 从本地加载成功: ${url} (回退到 ${candidateDate})`);
                         return data;
                     }
-                } catch (e) {
-                    // 忽略错误，继续尝试下一个日期
-                }
+                } catch (e) {}
             }
-            return null; // 所有尝试都失败
+            return null;
         }
 
         async function loadFromAPI(companyKey) {
@@ -457,7 +515,6 @@
         }
 
         function updateWithApiData(companyKey, apiData) {
-            // 获取当前卡片显示的日期（从 meta 信息中提取）
             const metaDiv = document.getElementById(`meta-${companyKey}`);
             const metaText = metaDiv ? metaDiv.innerText : '';
             const currentDateMatch = metaText.match(/日期 Date: (\d{2}-\d{2}-\d{4})/);
@@ -465,14 +522,10 @@
             const apiDate = apiData.draw_date;
 
             if (!currentDate) {
-                // 如果当前没有数据，直接替换
                 renderCompanyCard(companyKey, apiData);
             } else if (currentDate === apiDate) {
-                // 日期相同：直接替换（因为 API 返回的数据可能更全）
                 renderCompanyCard(companyKey, apiData);
             } else {
-                // 日期不同：需要清空后替换
-                // 清空大奖和特别奖/安慰奖容器
                 const firstElem = document.getElementById(`first-${companyKey}`);
                 const secondElem = document.getElementById(`second-${companyKey}`);
                 const thirdElem = document.getElementById(`third-${companyKey}`);
@@ -483,17 +536,15 @@
                 if (thirdElem) thirdElem.textContent = '----';
                 if (specialContainer) specialContainer.innerHTML = '';
                 if (consolationContainer) consolationContainer.innerHTML = '';
-                // 重新渲染
                 renderCompanyCard(companyKey, apiData);
             }
         }
 
-        // 渲染卡片（支持普通公司和特殊公司如 sabah_lotto, sportstoto_lotto）
+        // 渲染卡片（保持不变，与之前一致）
         function renderCompanyCard(companyKey, data) {
             const contentDiv = document.getElementById(`content-${companyKey}`);
             const metaDiv = document.getElementById(`meta-${companyKey}`);
             if (!data) {
-                // 无数据时显示占位符（空卡片）
                 contentDiv.innerHTML = '<p style="text-align:center;color:#d32f2f;">无数据</p>';
                 metaDiv.innerText = '日期 Date: -- | 期号 Draw Date: --';
                 return;
@@ -508,7 +559,6 @@
 
             let html = '';
 
-            // 特殊公司处理（原 SPECIAL_COMPANIES 中的）
             if (SPECIAL_COMPANIES.includes(companyKey)) {
                 if (companyKey === 'singapore_toto') {
                     let winningNumbers = data.winning_numbers || data.numbers || data.winning || data.wins || [];
@@ -535,9 +585,7 @@
                     html = '<p style="text-align:center; padding:10px;">特殊开彩详见官网</p>';
                 }
             } else {
-                // 普通公司分支（包含 sabah_lotto 和 sportstoto_lotto，但这两个已被隐藏，所以不会执行到这里）
                 if (companyKey === 'sabah_lotto') {
-                    // SABAH LOTTO 特殊渲染
                     html = `<div class="subsection"><div class="subsection-title">开奖号码</div><div class="number-list" id="winning-${companyKey}">`;
                     const winning = data.winning_numbers || [];
                     if (winning.length === 0) {
@@ -546,18 +594,14 @@
                         winning.forEach(n => html += `<span class="number-item">${n}</span>`);
                     }
                     html += `</div></div>`;
-                    // Jackpot 1
                     html += `<div class="subsection"><div class="subsection-title">Jackpot 1</div><div class="number-list">`;
                     html += data.jackpot1 ? `<span class="number-item">RM ${data.jackpot1}</span>` : '<span class="number-item">----</span>';
                     html += `</div></div>`;
-                    // Jackpot 2
                     html += `<div class="subsection"><div class="subsection-title">Jackpot 2</div><div class="number-list">`;
                     html += data.jackpot2 ? `<span class="number-item">RM ${data.jackpot2}</span>` : '<span class="number-item">----</span>';
                     html += `</div></div>`;
                 } else if (companyKey === 'sportstoto_lotto') {
-                    // SPORTS TOTO LOTTO 特殊渲染
                     html = '';
-                    // Star Toto
                     html += `<div class="subsection"><div class="subsection-title">Star Toto 6/50</div><div class="number-list">`;
                     if (data.star && data.star.length) {
                         data.star.forEach(n => html += `<span class="number-item">${n}</span>`);
@@ -565,7 +609,6 @@
                         html += '<span class="number-item">----</span>';
                     }
                     html += `</div></div>`;
-                    // Power Toto
                     html += `<div class="subsection"><div class="subsection-title">Power Toto 6/55</div><div class="number-list">`;
                     if (data.power && data.power.length) {
                         data.power.forEach(n => html += `<span class="number-item">${n}</span>`);
@@ -573,7 +616,6 @@
                         html += '<span class="number-item">----</span>';
                     }
                     html += `</div></div>`;
-                    // Supreme Toto
                     html += `<div class="subsection"><div class="subsection-title">Supreme Toto 6/58</div><div class="number-list">`;
                     if (data.supreme && data.supreme.length) {
                         data.supreme.forEach(n => html += `<span class="number-item">${n}</span>`);
@@ -581,7 +623,6 @@
                         html += '<span class="number-item">----</span>';
                     }
                     html += `</div></div>`;
-                    // Jackpots
                     if (data.jackpots && data.jackpots.length) {
                         html += `<div class="subsection"><div class="subsection-title">Jackpots</div><div class="number-list">`;
                         data.jackpots.forEach((jp, idx) => {
@@ -590,7 +631,6 @@
                         html += `</div></div>`;
                     }
                 } else {
-                    // 标准 4D 公司渲染（大奖 + 特别奖 + 安慰奖）
                     html = `
                         <div class="prize-grid" style="flex-direction:column;align-items:center;">
                             <div class="prize-card" style="width:220px;margin-bottom:8px;"><div class="label">1st Prize</div><div class="number" id="first-${companyKey}">${data['1st'] || data.first || data.prize1 || '----'}</div></div>
@@ -609,7 +649,6 @@
                         html += `</div></div>`;
                     }
 
-                    // 特别奖容器
                     html += `<div class="subsection"><div class="subsection-title">特别奖</div><div class="number-list" id="special-${companyKey}">`;
                     const special = data.special || data.special_numbers || data.special_prizes || data.special_results || [];
                     if (special.length === 0) {
@@ -624,7 +663,6 @@
                     }
                     html += `</div></div>`;
 
-                    // 安慰奖容器
                     html += `<div class="subsection"><div class="subsection-title">安慰奖</div><div class="number-list" id="consolation-${companyKey}">`;
                     const consolation = data.consolation || data.consolation_numbers || data.consolation_prizes || data.consolation_results || [];
                     if (consolation.length === 0) {
@@ -648,10 +686,9 @@
             contentDiv.innerHTML = html;
         }
 
-        // 为了兼容性，保留 updateCompanyCard 别名
         const updateCompanyCard = renderCompanyCard;
 
-        // ==================== 轮询增量数据（仅当天无历史日期时使用）====================
+        // ==================== 轮询增量数据 ====================
         async function pollLatest(companyKey) {
             if (selectedDate) return;
             const lastId = companyLastId[companyKey] || 0;
@@ -666,7 +703,6 @@
                     const currentDate = companyCurrentDate[companyKey];
 
                     if (currentDate !== today) {
-                        // 清空该公司所有可增量区域，并重置大奖为占位符
                         const specialContainer = document.getElementById(`special-${companyKey}`);
                         const consolationContainer = document.getElementById(`consolation-${companyKey}`);
                         const firstElem = document.getElementById(`first-${companyKey}`);
@@ -698,7 +734,6 @@
                         companyCurrentDate[companyKey] = today;
                     }
 
-                    // 处理增量号码：替换第一个占位符为实际号码
                     items.forEach(item => {
                         let containerId = null;
                         if (item.type === 'special') containerId = `special-${companyKey}`;
@@ -759,10 +794,8 @@
         async function loadAllCompanies() {
             const statusText = document.getElementById('status-text');
             statusText.innerHTML = '<span class="status-indicator loading"></span>正在更新...';
-            // 并发加载所有公司数据
             const promises = COMPANY_LIST.map(key => loadCompanyData(key));
-            await Promise.all(promises); // 等待所有数据至少一次返回（缓存或API）
-            // 更新状态
+            await Promise.all(promises);
             statusText.innerHTML = `<span class="status-indicator success"></span>数据已加载`;
             document.getElementById('update-time').innerText = new Date().toLocaleString();
 
@@ -774,7 +807,6 @@
 
         function forceRefresh() {
             stopAllPolling();
-            // 清除公司当前日期记录，强制重新加载
             companyCurrentDate = {};
             companyLastId = {};
             loadAllCompanies();
@@ -806,12 +838,10 @@
                 const calendarBtn = document.getElementById('calendar-btn');
                 const dateDropdown = document.getElementById('date-dropdown');
 
-                // 点击外部关闭日历弹窗
                 if (calendarPopup.style.display === 'block' && !calendarPopup.contains(e.target) && !calendarBtn.contains(e.target)) {
                     calendarPopup.style.display = 'none';
                 }
 
-                // 点击外部关闭日期下拉框
                 if (dateDropdown.classList.contains('show') && !dateDropdown.contains(e.target)) {
                     dateDropdown.classList.remove('show');
                     document.getElementById('date-btn').classList.remove('active');
