@@ -45,24 +45,29 @@ def query_db(query, args=(), one=False):
 def normalize_date(date_str):
     """
     将输入的日期字符串统一转换为 YYYY-MM-DD 格式。
-    支持 dd-mm-yyyy 和 yyyy-mm-dd 两种格式。
-    如果无法解析，返回原字符串。
+    支持 dd-mm-yyyy 和 yyyy-mm-dd 两种格式，自动去除首尾空格。
+    如果无法解析，返回原字符串并记录警告。
     """
     if not date_str:
         return date_str
+    original = date_str
+    date_str = date_str.strip()
     # 尝试解析为 dd-mm-yyyy
     try:
         d = datetime.strptime(date_str, "%d-%m-%Y")
-        return d.strftime("%Y-%m-%d")
+        normalized = d.strftime("%Y-%m-%d")
+        logging.debug(f"日期标准化: {original} -> {normalized}")
+        return normalized
     except ValueError:
         pass
     # 尝试解析为 yyyy-mm-dd
     try:
         d = datetime.strptime(date_str, "%Y-%m-%d")
-        return date_str  # 已经是正确格式
-    except ValueError:
-        logging.warning(f"无法解析的日期格式: {date_str}")
+        logging.debug(f"日期已经是标准格式: {original}")
         return date_str
+    except ValueError:
+        logging.warning(f"无法解析的日期格式: {original}")
+        return original
 
 def format_date_for_display(ymd_date):
     """将 YYYY-MM-DD 转换为 DD-MM-YYYY 用于前端显示"""
@@ -83,7 +88,9 @@ def get_latest_draw_date(company):
     )
     if row:
         raw_date = row['draw_date']
-        return normalize_date(raw_date)  # 统一格式
+        normalized = normalize_date(raw_date)
+        logging.info(f"公司 {company} 最新日期: {raw_date} -> 标准化为 {normalized}")
+        return normalized
     return None
 
 @app.route('/api/company/<company>', methods=['GET'])
@@ -98,6 +105,7 @@ def get_full_data(company):
     )
     if rows:
         target_date = today
+        logging.info(f"使用当天日期: {target_date}")
     else:
         latest = get_latest_draw_date(company)
         if not latest:
@@ -109,7 +117,8 @@ def get_full_data(company):
                 'consolation': [],
                 'prize': []
             })
-        target_date = latest  # 此时已为 YYYY-MM-DD 格式
+        target_date = normalize_date(latest)  # 二次确保标准化
+        logging.info(f"使用最新日期: {target_date}")
         rows = query_db(
             'SELECT id, type, number FROM results WHERE company = ? AND draw_date = ? ORDER BY id',
             [company, target_date]
