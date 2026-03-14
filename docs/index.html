@@ -136,12 +136,12 @@
     <script>
         // ==================== 配置 ====================
         const COMPANY_LIST = [
-    'damacai', 'magnum', 'toto', 'singapore', 'damacai_1p3d', 'grand_dragon',
-    'sandakan', 'sarawak_cashsweep', 'sabah', 'sabah_lotto',
-    'singapore_toto', 'sportstoto_lotto',
-    'magnum_jackpot_gold', 'sportstoto_5d', 'sportstoto_6d',
-    'magnum_life', 'sportstoto_fireball'
-];
+            'damacai', 'magnum', 'toto', 'singapore', 'damacai_1p3d', 'grand_dragon',
+            'sandakan', 'sarawak_cashsweep', 'sabah', 'sabah_lotto',
+            'singapore_toto', 'sportstoto_lotto',
+            'magnum_jackpot_gold', 'sportstoto_5d', 'sportstoto_6d',
+            'magnum_life', 'sportstoto_fireball'
+        ];
 
         const NAME_MAP = {
             'grand_dragon': 'GRAND DRAGON 豪龙',
@@ -260,18 +260,18 @@
                     
                     await generateFilteredDates();
                     
-                    if (filteredDates.length > 0) {
-                        selectedDate = filteredDates[0];
-                    } else if (availableDates.length > 0) {
-                        selectedDate = availableDates[0];
-                    }
-                    console.log('📅 初始 selectedDate:', selectedDate);
-                    console.log('📅 所有可用日期:', availableDates);
+                    // 设置初始选中日期为今天（即使今天无数据）
+                    const today = new Date();
+                    const year = today.getFullYear();
+                    const month = (today.getMonth() + 1).toString().padStart(2, '0');
+                    const day = today.getDate().toString().padStart(2, '0');
+                    selectedDate = `${year}-${month}-${day}`;
+                    console.log('📅 初始 selectedDate (今天):', selectedDate);
                 }
             } catch (e) { console.warn('无法加载 dates.json', e); }
             renderDateDropdown();
             updateDateBtnWithLatest();
-            updateCalendarButtonDate(); // 更新顶部日历按钮
+            updateCalendarButtonDate();
         }
 
         async function generateFilteredDates() {
@@ -341,7 +341,8 @@
             if (selectedDate === date) return;
             selectedDate = date;
             updateDateBtnWithLatest();
-            updateCalendarButtonDate(); // 更新顶部日历按钮
+            updateCalendarButtonDate();
+            renderDateDropdown(); // 更新下拉列表的 active 类
             document.getElementById('date-dropdown').classList.remove('show');
             document.getElementById('date-btn').classList.remove('active');
             document.getElementById('calendar-popup').style.display = 'none';
@@ -352,23 +353,30 @@
         let currentCalendarYear, currentCalendarMonth;
 
         function showCalendar() {
-    const popup = document.getElementById('calendar-popup');
-    if (popup.style.display === 'block') {
-        popup.style.display = 'none';
-        return;
-    }
-    if (selectedDate) {
-        let { year, month } = parseDMY(selectedDate);
-        currentCalendarYear = year;
-        currentCalendarMonth = month;
-    } else {
-        const now = new Date();
-        currentCalendarYear = now.getFullYear();
-        currentCalendarMonth = now.getMonth() + 1;
-    }
-    renderCalendar();
-    popup.style.display = 'block';
-}
+            const popup = document.getElementById('calendar-popup');
+            if (popup.style.display === 'block') {
+                popup.style.display = 'none';
+                return;
+            }
+            let year, month;
+            if (selectedDate) {
+                ({ year, month } = parseDMY(selectedDate));
+            } else {
+                // 使用最新一期日期
+                const latestDate = filteredDates.length > 0 ? filteredDates[0] : (availableDates.length > 0 ? availableDates[0] : null);
+                if (latestDate) {
+                    ({ year, month } = parseDMY(latestDate));
+                } else {
+                    const now = new Date();
+                    year = now.getFullYear();
+                    month = now.getMonth() + 1;
+                }
+            }
+            currentCalendarYear = year;
+            currentCalendarMonth = month;
+            renderCalendar();
+            popup.style.display = 'block';
+        }
 
         async function renderCalendar() {
             const popup = document.getElementById('calendar-popup');
@@ -444,56 +452,51 @@
             }
         }
 
-        // ★★★ 修复后的 loadFromLocalCache 函数：豪龙主页始终使用最新日期 ★★★
+        // ★★★ 修复后的 loadFromLocalCache 函数：严格按指定日期加载 ★★★
         async function loadFromLocalCache(companyKey, date = null) {
-            let startDate;
-            
-            if (companyKey === 'grand_dragon' && !date) {
-                // 主页豪龙：始终使用最新日期
-                startDate = availableDates[0];
-                console.log(`🔍 豪龙主页模式：从最新日期 ${startDate} 开始查找`);
-            } else {
-                // 其他公司或历史查询：使用传入的 date 或全局 selectedDate
-                startDate = date || selectedDate;
-                console.log(`📅 加载 ${companyKey} 日期: ${startDate || '无'}`);
-            }
-
-            if (!startDate) {
-                // 尝试从根目录加载（最新文件）
+            // 如果指定了 date，则只尝试加载该日期的数据
+            if (date) {
+                const url = `data/${date}/${companyKey}.json?t=${Date.now()}`;
                 try {
-                    const url = `data/${companyKey}.json?t=${Date.now()}`;
                     const res = await fetch(url);
-                    if (res.ok) return await res.json();
+                    if (res.ok) {
+                        return await res.json();
+                    } else {
+                        console.warn(`加载失败: ${url} (${res.status})`);
+                        return null;
+                    }
                 } catch (e) {
-                    console.warn(`加载根目录失败: ${companyKey}`, e);
+                    console.warn(`加载异常: ${url}`, e);
+                    return null;
                 }
-                return null;
             }
 
-            if (availableDates.length === 0) return null;
+            // 未指定 date，进行回退查找（用于“最新数据”或豪龙主页模式）
+            let startDate;
+            if (companyKey === 'grand_dragon') {
+                // 豪龙主页：始终从最新日期开始
+                startDate = availableDates[0];
+            } else {
+                // 其他公司：也从最新日期开始
+                startDate = availableDates[0];
+            }
+            if (!startDate) return null;
+
             const startIndex = availableDates.indexOf(startDate);
-            if (startIndex === -1) {
-                console.warn(`起始日期 ${startDate} 不在 availableDates 中`);
-                return null;
-            }
-
             const candidateDates = availableDates.slice(startIndex);
             const maxAttempts = 10;
             for (let i = 0; i < Math.min(candidateDates.length, maxAttempts); i++) {
                 const candidateDate = candidateDates[i];
                 const url = `data/${candidateDate}/${companyKey}.json?t=${Date.now()}`;
-                console.log(`尝试加载: ${url}`);
                 try {
                     const res = await fetch(url);
                     if (res.ok) {
                         const data = await res.json();
-                        console.log(`✅ 从本地加载成功: ${url} (回退到 ${candidateDate})`);
+                        data._isFallback = true; // 标记为回退数据
                         return data;
-                    } else {
-                        console.warn(`加载失败 (${res.status}): ${url}`);
                     }
                 } catch (e) {
-                    console.warn(`加载异常: ${url}`, e);
+                    // 忽略错误，继续尝试
                 }
             }
             return null;
@@ -654,8 +657,13 @@
         function updateCalendarButtonDate() {
             const btn = document.getElementById('calendar-btn');
             if (!btn) return;
-            if (selectedDate) {
-                const display = formatDisplayDate(selectedDate);
+            let displayDate = selectedDate;
+            if (!displayDate) {
+                // 使用最新一期日期
+                displayDate = filteredDates.length > 0 ? filteredDates[0] : (availableDates.length > 0 ? availableDates[0] : null);
+            }
+            if (displayDate) {
+                const display = formatDisplayDate(displayDate);
                 btn.innerHTML = `<span class="calendar-icon">📅</span><span>${display}</span><span class="arrow">▼</span>`;
             } else {
                 btn.innerHTML = `<span class="calendar-icon">📅</span><span>加载中...</span><span class="arrow">▼</span>`;
