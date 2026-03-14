@@ -490,6 +490,292 @@ def extract_sportstoto_lotto(box, global_date, global_draw_no):
     return data
 
 # ================== 从 dato4d.com JSON 批量获取所有公司数据 ==================
+def extract_date_from_dd(dd_str):
+    """从 DD 字段提取纯日期 (dd-mm-yyyy)"""
+    if not dd_str:
+        return ""
+    match = re.search(r"(\d{2}-\d{2}-\d{4})", dd_str)
+    return match.group(1) if match else ""
+
+# ---------- JSON 数据提取辅助函数 ----------
+def extract_standard_4d_from_json(item, company):
+    """提取标准 4D 公司数据（包含 1st,2nd,3rd,special,consolation）"""
+    result = {
+        "draw_date": extract_date_from_dd(item.get("DD", "")),
+        "draw_no": item.get("DN", ""),
+        "1st": item.get("P1", ""),
+        "2nd": item.get("P2", ""),
+        "3rd": item.get("P3", ""),
+        "special": [],
+        "consolation": []
+    }
+
+    # 提取 Special (S1-S13)
+    for i in range(1, 14):
+        key = f"S{i}"
+        if key in item:
+            num = item[key]
+            if num and num not in ["----", "-"]:
+                result["special"].append(num)
+
+    # 提取 Consolation (C1-C10)
+    for i in range(1, 11):
+        key = f"C{i}"
+        if key in item:
+            num = item[key]
+            if num and num not in ["----", "-"]:
+                result["consolation"].append(num)
+
+    return result
+
+def extract_magnum_from_json(item, company):
+    """提取 Magnum 数据（可能包含 Life 信息，但暂时只取标准 4D）"""
+    result = extract_standard_4d_from_json(item, company)
+    # 如果有 Life 相关字段，可以在这里扩展
+    return result
+
+def extract_damacai_1p3d_from_json(item, company):
+    """提取 Damacai 1+3D 数据"""
+    result = {
+        "draw_date": extract_date_from_dd(item.get("DD", "")),
+        "draw_no": item.get("DN", ""),
+        "1st": item.get("P1", ""),
+        "2nd": item.get("P2", ""),
+        "3rd": item.get("P3", ""),
+        "special": [],
+        "consolation": []
+    }
+
+    # 1+3D 的特别奖和安慰奖是 6 位数字，直接提取
+    for i in range(1, 14):
+        key = f"S{i}"
+        if key in item:
+            num = item[key]
+            if num and num != "----":
+                result["special"].append(num)
+    for i in range(1, 11):
+        key = f"C{i}"
+        if key in item:
+            num = item[key]
+            if num and num != "----":
+                result["consolation"].append(num)
+    return result
+
+def extract_sabah_from_json(item, company):
+    """提取 Sabah 88 4D 数据（包含 3D）"""
+    result = extract_standard_4d_from_json(item, company)
+    # 提取 3D
+    result['3d'] = {
+        "1st": item.get("P13D", ""),
+        "2nd": item.get("P23D", ""),
+        "3rd": item.get("P33D", "")
+    }
+    return result
+
+def extract_grand_dragon_from_json(item, company):
+    """提取 Grand Dragon 4D 数据"""
+    result = extract_standard_4d_from_json(item, company)
+    # Grand Dragon 可能有 Jackpot，但 JSON 中没有，保留为空
+    result["jackpot"] = ""
+    return result
+
+def extract_magnum_jackpot_gold_from_json(item, company):
+    """提取 Magnum Jackpot Gold 数据"""
+    result = {
+        "draw_date": extract_date_from_dd(item.get("DD", "")),
+        "draw_no": item.get("DN", ""),
+        "groups": [],
+        "jackpots": []
+    }
+
+    # 提取组号码 (P1-P8 可能代表各组号码，需确认)
+    groups = []
+    for i in range(1, 9):
+        key = f"P{i}"
+        if key in item and item[key]:
+            groups.append({
+                "group": str(i),
+                "numbers": [item[key]]  # 假设每组只有一个号码
+            })
+    result["groups"] = groups
+
+    # 提取 Jackpots
+    if "JP1" in item:
+        result["jackpots"].append(item["JP1"])
+    if "JP2" in item:
+        result["jackpots"].append(item["JP2"])
+    return result
+
+def extract_sabah_lotto_from_json(item, company):
+    """提取 Sabah Lotto 数据"""
+    result = {
+        "draw_date": extract_date_from_dd(item.get("DD", "")),
+        "draw_no": item.get("DN", ""),
+        "winning_numbers": [],
+        "jackpot1": "",
+        "jackpot2": ""
+    }
+
+    # 提取 Lotto 号码 (LT1-LT7)
+    winning = []
+    for i in range(1, 8):
+        key = f"LT{i}"
+        if key in item:
+            num = item[key]
+            if num:
+                winning.append(num)
+    result["winning_numbers"] = winning
+
+    if "LTJP1" in item:
+        result["jackpot1"] = item["LTJP1"]
+    if "LTJP2" in item:
+        result["jackpot2"] = item["LTJP2"]
+    return result
+
+def extract_singapore_toto_from_json(item, company):
+    """提取 Singapore Toto 数据"""
+    result = {
+        "draw_date": extract_date_from_dd(item.get("DD", "")),
+        "draw_no": item.get("DN", ""),
+        "winning_numbers": [],
+        "prize_table": []
+    }
+
+    # 提取开奖号码 (P1-P7)
+    winning = []
+    for i in range(1, 8):
+        key = f"P{i}"
+        if key in item:
+            num = item[key]
+            if num:
+                winning.append(num)
+    result["winning_numbers"] = winning
+
+    # 提取奖金表 (JP1, JP2 等)
+    prize_groups = [
+        {"group": "Group 1", "amount": item.get("JP1", ""), "winners": item.get("JPW1", "")},
+        {"group": "Group 2", "amount": item.get("JP2", ""), "winners": item.get("JPW2", "")},
+        {"group": "Group 3", "amount": item.get("JP3", ""), "winners": item.get("JPW3", "")},
+        {"group": "Group 4", "amount": item.get("JP4", ""), "winners": item.get("JPW4", "")},
+        {"group": "Group 5", "amount": item.get("JP5", ""), "winners": item.get("JPW5", "")},
+        {"group": "Group 6", "amount": item.get("JP6", ""), "winners": item.get("JPW6", "")},
+    ]
+    result["prize_table"] = [[g["group"], g["amount"], g["winners"]] for g in prize_groups if g["amount"]]
+    return result
+
+# ================== 新增 JSON 提取函数 ==================
+def extract_sportstoto_5d_from_json(t_item, company):
+    """从 T 对象提取 Sports Toto 5D 数据"""
+    return {
+        "draw_date": extract_date_from_dd(t_item.get("DD", "")),
+        "draw_no": t_item.get("DN", ""),
+        "type": "5d",
+        "1st": t_item.get("P5D1", ""),
+        "2nd": t_item.get("P5D2", ""),
+        "3rd": t_item.get("P5D3", ""),
+        "4th": t_item.get("P5D4", ""),
+        "5th": t_item.get("P5D5", ""),
+        "6th": t_item.get("P5D6", "")
+    }
+
+def extract_sportstoto_6d_from_json(t_item, company):
+    """从 T 对象提取 Sports Toto 6D 数据"""
+    return {
+        "draw_date": extract_date_from_dd(t_item.get("DD", "")),
+        "draw_no": t_item.get("DN", ""),
+        "type": "6d",
+        "1st": t_item.get("P6D1", ""),
+        "2nd": {
+            "main": t_item.get("P6D2A", ""),
+            "alt": t_item.get("P6D2B", "")
+        },
+        "3rd": {
+            "main": t_item.get("P6D3A", ""),
+            "alt": t_item.get("P6D3B", "")
+        },
+        "4th": {
+            "main": t_item.get("P6D4A", ""),
+            "alt": t_item.get("P6D4B", "")
+        },
+        "5th": {
+            "main": t_item.get("P6D5A", ""),
+            "alt": t_item.get("P6D5B", "")
+        }
+    }
+
+def extract_sportstoto_lotto_from_json(t_item, company):
+    """从 T 对象提取 Sports Toto Lotto (Star/Power/Supreme) 数据"""
+    # 过滤无效值
+    def clean_num(val):
+        return val if val and val not in ["-", "----"] else ""
+
+    star = [
+        clean_num(t_item.get("P6501")),
+        clean_num(t_item.get("P6502")),
+        clean_num(t_item.get("P6503")),
+        clean_num(t_item.get("P6504")),
+        clean_num(t_item.get("P6505")),
+        clean_num(t_item.get("P6506")),
+        clean_num(t_item.get("P650EX"))
+    ]
+    power = [
+        clean_num(t_item.get("P6551")),
+        clean_num(t_item.get("P6552")),
+        clean_num(t_item.get("P6553")),
+        clean_num(t_item.get("P6554")),
+        clean_num(t_item.get("P6555")),
+        clean_num(t_item.get("P6556"))
+    ]
+    supreme = [
+        clean_num(t_item.get("P6581")),
+        clean_num(t_item.get("P6582")),
+        clean_num(t_item.get("P6583")),
+        clean_num(t_item.get("P6584")),
+        clean_num(t_item.get("P6585")),
+        clean_num(t_item.get("P6586"))
+    ]
+    jackpots = [
+        clean_num(t_item.get("P650JP1")),
+        clean_num(t_item.get("P655JP")),
+        clean_num(t_item.get("P658JP"))
+    ]
+    return {
+        "draw_date": extract_date_from_dd(t_item.get("DD", "")),
+        "draw_no": t_item.get("DN", ""),
+        "type": "lotto",
+        "star": [n for n in star if n],
+        "power": [n for n in power if n],
+        "supreme": [n for n in supreme if n],
+        "jackpots": [n for n in jackpots if n]
+    }
+
+def extract_magnum_life_from_json(m_item, company):
+    """从 M 对象提取 Magnum Life 数据"""
+    def clean_num(val):
+        return val if val and val not in ["-", "----"] else ""
+
+    winning = [
+        clean_num(m_item.get("L1")),
+        clean_num(m_item.get("L2")),
+        clean_num(m_item.get("L3")),
+        clean_num(m_item.get("L4")),
+        clean_num(m_item.get("L5")),
+        clean_num(m_item.get("L6")),
+        clean_num(m_item.get("L7")),
+        clean_num(m_item.get("L8"))
+    ]
+    bonus = [
+        clean_num(m_item.get("LB1")),
+        clean_num(m_item.get("LB2"))
+    ]
+    return {
+        "draw_date": extract_date_from_dd(m_item.get("DD", "")),
+        "draw_no": m_item.get("DN", ""),
+        "type": "life",
+        "winning_numbers": [n for n in winning if n],
+        "bonus_numbers": [n for n in bonus if n]
+    }
+
 def fetch_all_companies_from_dato4d():
     """从 https://www.dato4d.com/liveos.json 获取所有公司的数据"""
     print("🔍 正在从 dato4d.com JSON 批量获取所有公司数据...")
@@ -533,194 +819,39 @@ def fetch_all_companies_from_dato4d():
         else:
             print(f"⚠️ JSON 中缺少 {company} 的数据 (键 '{key}')")
 
+    # 额外处理 T 对象中的 Sports Toto 5D/6D/Lotto
+    if "T" in data:
+        t_item = data["T"]
+        # Sports Toto 5D
+        toto_5d_data = extract_sportstoto_5d_from_json(t_item, "sportstoto_5d")
+        if toto_5d_data and any(toto_5d_data.get(k) for k in ['1st','2nd','3rd','4th','5th','6th']):
+            save_json("sportstoto_5d", toto_5d_data)
+            success_count += 1
+        # Sports Toto 6D
+        toto_6d_data = extract_sportstoto_6d_from_json(t_item, "sportstoto_6d")
+        if toto_6d_data and (toto_6d_data.get('1st') or any(toto_6d_data.get(k, {}).get('main') for k in ['2nd','3rd','4th','5th'])):
+            save_json("sportstoto_6d", toto_6d_data)
+            success_count += 1
+        # Sports Toto Lotto
+        toto_lotto_data = extract_sportstoto_lotto_from_json(t_item, "sportstoto_lotto")
+        if toto_lotto_data and (toto_lotto_data.get('star') or toto_lotto_data.get('power') or toto_lotto_data.get('supreme')):
+            save_json("sportstoto_lotto", toto_lotto_data)
+            success_count += 1
+    else:
+        print("⚠️ JSON 中缺少 T (Toto) 的数据")
+
+    # 额外处理 M 对象中的 Magnum Life
+    if "M" in data:
+        m_item = data["M"]
+        magnum_life_data = extract_magnum_life_from_json(m_item, "magnum_life")
+        if magnum_life_data and magnum_life_data.get('winning_numbers'):
+            save_json("magnum_life", magnum_life_data)
+            success_count += 1
+    else:
+        print("⚠️ JSON 中缺少 M (Magnum) 的数据")
+
     print(f"✅ 从 JSON 成功获取 {success_count} 家公司数据")
     return True
-
-# ---------- JSON 数据提取辅助函数 ----------
-def extract_standard_4d_from_json(item, company):
-    """提取标准 4D 公司数据（包含 1st,2nd,3rd,special,consolation）"""
-    result = {
-        "draw_date": "",
-        "draw_no": item.get("DN", ""),
-        "1st": item.get("P1", ""),
-        "2nd": item.get("P2", ""),
-        "3rd": item.get("P3", ""),
-        "special": [],
-        "consolation": []
-    }
-    raw_date = item.get("DD", "")
-    date_match = re.search(r"(\d{2}-\d{2}-\d{4})", raw_date)
-    if date_match:
-        result["draw_date"] = date_match.group(1)
-
-    # 提取 Special (S1-S13)
-    for i in range(1, 14):
-        key = f"S{i}"
-        if key in item:
-            num = item[key]
-            if num and num != "----" and num != "-":
-                result["special"].append(num)
-
-    # 提取 Consolation (C1-C10)
-    for i in range(1, 11):
-        key = f"C{i}"
-        if key in item:
-            num = item[key]
-            if num and num != "----" and num != "-":
-                result["consolation"].append(num)
-
-    return result
-
-def extract_magnum_from_json(item, company):
-    """提取 Magnum 数据（可能包含 Life 信息，但暂时只取标准 4D）"""
-    result = extract_standard_4d_from_json(item, company)
-    # 如果有 Life 相关字段，可以在这里扩展
-    return result
-
-def extract_damacai_1p3d_from_json(item, company):
-    """提取 Damacai 1+3D 数据"""
-    result = {
-        "draw_date": "",
-        "draw_no": item.get("DN", ""),
-        "1st": item.get("P1", ""),
-        "2nd": item.get("P2", ""),
-        "3rd": item.get("P3", ""),
-        "special": [],
-        "consolation": []
-    }
-    raw_date = item.get("DD", "")
-    date_match = re.search(r"(\d{2}-\d{2}-\d{4})", raw_date)
-    if date_match:
-        result["draw_date"] = date_match.group(1)
-
-    # 1+3D 的特别奖和安慰奖是 6 位数字，直接提取
-    for i in range(1, 14):
-        key = f"S{i}"
-        if key in item:
-            num = item[key]
-            if num and num != "----":
-                result["special"].append(num)
-    for i in range(1, 11):
-        key = f"C{i}"
-        if key in item:
-            num = item[key]
-            if num and num != "----":
-                result["consolation"].append(num)
-    return result
-
-def extract_sabah_from_json(item, company):
-    """提取 Sabah 88 4D 数据（包含 3D）"""
-    result = extract_standard_4d_from_json(item, company)
-    # 提取 3D
-    result['3d'] = {
-        "1st": item.get("P13D", ""),
-        "2nd": item.get("P23D", ""),
-        "3rd": item.get("P33D", "")
-    }
-    return result
-
-def extract_grand_dragon_from_json(item, company):
-    """提取 Grand Dragon 4D 数据"""
-    result = extract_standard_4d_from_json(item, company)
-    # Grand Dragon 可能有 Jackpot，但 JSON 中没有，保留为空
-    result["jackpot"] = ""
-    return result
-
-def extract_magnum_jackpot_gold_from_json(item, company):
-    """提取 Magnum Jackpot Gold 数据"""
-    result = {
-        "draw_date": "",
-        "draw_no": item.get("DN", ""),
-        "groups": [],
-        "jackpots": []
-    }
-    raw_date = item.get("DD", "")
-    date_match = re.search(r"(\d{2}-\d{2}-\d{4})", raw_date)
-    if date_match:
-        result["draw_date"] = date_match.group(1)
-
-    # 提取组号码 (P1-P8 可能代表各组号码，需确认)
-    groups = []
-    for i in range(1, 9):
-        key = f"P{i}"
-        if key in item and item[key]:
-            groups.append({
-                "group": str(i),
-                "numbers": [item[key]]  # 假设每组只有一个号码
-            })
-    result["groups"] = groups
-
-    # 提取 Jackpots
-    if "JP1" in item:
-        result["jackpots"].append(item["JP1"])
-    if "JP2" in item:
-        result["jackpots"].append(item["JP2"])
-    return result
-
-def extract_sabah_lotto_from_json(item, company):
-    """提取 Sabah Lotto 数据"""
-    result = {
-        "draw_date": "",
-        "draw_no": item.get("DN", ""),
-        "winning_numbers": [],
-        "jackpot1": "",
-        "jackpot2": ""
-    }
-    raw_date = item.get("DD", "")
-    date_match = re.search(r"(\d{2}-\d{2}-\d{4})", raw_date)
-    if date_match:
-        result["draw_date"] = date_match.group(1)
-
-    # 提取 Lotto 号码 (LT1-LT7)
-    winning = []
-    for i in range(1, 8):
-        key = f"LT{i}"
-        if key in item:
-            num = item[key]
-            if num:
-                winning.append(num)
-    result["winning_numbers"] = winning
-
-    if "LTJP1" in item:
-        result["jackpot1"] = item["LTJP1"]
-    if "LTJP2" in item:
-        result["jackpot2"] = item["LTJP2"]
-    return result
-
-def extract_singapore_toto_from_json(item, company):
-    """提取 Singapore Toto 数据"""
-    result = {
-        "draw_date": "",
-        "draw_no": item.get("DN", ""),
-        "winning_numbers": [],
-        "prize_table": []
-    }
-    raw_date = item.get("DD", "")
-    date_match = re.search(r"(\d{2}-\d{2}-\d{4})", raw_date)
-    if date_match:
-        result["draw_date"] = date_match.group(1)
-
-    # 提取开奖号码 (P1-P7)
-    winning = []
-    for i in range(1, 8):
-        key = f"P{i}"
-        if key in item:
-            num = item[key]
-            if num:
-                winning.append(num)
-    result["winning_numbers"] = winning
-
-    # 提取奖金表 (JP1, JP2 等)
-    prize_groups = [
-        {"group": "Group 1", "amount": item.get("JP1", ""), "winners": item.get("JPW1", "")},
-        {"group": "Group 2", "amount": item.get("JP2", ""), "winners": item.get("JPW2", "")},
-        {"group": "Group 3", "amount": item.get("JP3", ""), "winners": item.get("JPW3", "")},
-        {"group": "Group 4", "amount": item.get("JP4", ""), "winners": item.get("JPW4", "")},
-        {"group": "Group 5", "amount": item.get("JP5", ""), "winners": item.get("JPW5", "")},
-        {"group": "Group 6", "amount": item.get("JP6", ""), "winners": item.get("JPW6", "")},
-    ]
-    result["prize_table"] = [[g["group"], g["amount"], g["winners"]] for g in prize_groups if g["amount"]]
-    return result
 
 # ---------- 保存 JSON 和索引 ----------
 def save_json(company, data):
