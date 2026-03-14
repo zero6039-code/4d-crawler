@@ -12,6 +12,9 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Show start time
+         run: echo "运行时间 $(date)"
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
