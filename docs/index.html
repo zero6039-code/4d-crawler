@@ -461,13 +461,30 @@
 
         // ==================== 核心数据加载 ====================
         async function loadCompanyData(companyKey) {
-            let localData = await loadFromLocalCache(companyKey, selectedDate);
-            if (localData) {
-                renderCompanyCard(companyKey, localData);
-            } else {
-                renderCompanyCard(companyKey, null);
+    let localData = null;
+    if (selectedDate) {
+        localData = await loadFromLocalCache(companyKey, selectedDate);
+    }
+
+    // 如果是 Singapore Toto 且指定日期无数据，则尝试回退到最近有数据的日期（仅当 selectedDate 为最新数据时，即“最新数据”模式）
+    if (companyKey === 'singapore_toto' && !localData && selectedDate && selectedDate === filteredDates[0]) {
+        // 从 filteredDates 中查找第一个有 Singapore Toto 数据的日期
+        for (let date of filteredDates) {
+            const data = await loadFromLocalCache(companyKey, date);
+            if (data) {
+                localData = data;
+                localData._isFallback = true; // 标记为回退数据
+                break;
             }
         }
+    }
+
+    if (localData) {
+        renderCompanyCard(companyKey, localData);
+    } else {
+        renderCompanyCard(companyKey, null);
+    }
+}
 
         async function loadFromLocalCache(companyKey, date = null) {
             if (date) {
