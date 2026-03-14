@@ -136,13 +136,12 @@
     <script>
         // ==================== 配置 ====================
         const COMPANY_LIST = [
-            'grand_dragon',
-            'damacai', 'magnum', 'toto', 'singapore', 'damacai_1p3d',
-            'sandakan', 'sarawak_cashsweep', 'sabah', 'sabah_lotto',
-            'singapore_toto', 'sportstoto_lotto',
-            'magnum_jackpot_gold', 'sportstoto_5d', 'sportstoto_6d',
-            'magnum_life', 'sportstoto_fireball'
-        ];
+    'damacai', 'magnum', 'toto', 'singapore', 'damacai_1p3d', 'grand_dragon',
+    'sandakan', 'sarawak_cashsweep', 'sabah', 'sabah_lotto',
+    'singapore_toto', 'sportstoto_lotto',
+    'magnum_jackpot_gold', 'sportstoto_5d', 'sportstoto_6d',
+    'magnum_life', 'sportstoto_fireball'
+];
 
         const NAME_MAP = {
             'grand_dragon': 'GRAND DRAGON 豪龙',
@@ -353,17 +352,23 @@
         let currentCalendarYear, currentCalendarMonth;
 
         function showCalendar() {
-            const popup = document.getElementById('calendar-popup');
-            if (popup.style.display === 'block') {
-                popup.style.display = 'none';
-                return;
-            }
-            const now = new Date();
-            currentCalendarYear = now.getFullYear();
-            currentCalendarMonth = now.getMonth() + 1;
-            renderCalendar();
-            popup.style.display = 'block';
-        }
+    const popup = document.getElementById('calendar-popup');
+    if (popup.style.display === 'block') {
+        popup.style.display = 'none';
+        return;
+    }
+    if (selectedDate) {
+        let { year, month } = parseDMY(selectedDate);
+        currentCalendarYear = year;
+        currentCalendarMonth = month;
+    } else {
+        const now = new Date();
+        currentCalendarYear = now.getFullYear();
+        currentCalendarMonth = now.getMonth() + 1;
+    }
+    renderCalendar();
+    popup.style.display = 'block';
+}
 
         async function renderCalendar() {
             const popup = document.getElementById('calendar-popup');
