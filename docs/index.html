@@ -197,7 +197,7 @@
         let availableDatesSet = new Set(); 
         let filteredDates = [];             
         let filteredDatesSet = new Set();
-        let selectedDate = null;           
+        let selectedDate = null;           // 当前显示数据的日期
 
         // ==================== 工具函数 ====================
         function ymdToDmy(ymd) {
@@ -251,30 +251,31 @@
         }
 
         async function loadDateIndex() {
-    try {
-        const res = await fetch(`data/dates.json?t=${Date.now()}`, { cache: 'no-store' });
-        if (res.ok) {
-            let dates = await res.json();
-            availableDates = sortDatesDesc(dates);
-            availableDatesSet = new Set(availableDates);
-            
-            await generateFilteredDates();
-            
-            // 设置初始选中日期为最近一期有数据的日期
-            if (filteredDates.length > 0) {
-                selectedDate = filteredDates[0];
-            } else if (availableDates.length > 0) {
-                selectedDate = availableDates[0];
-            } else {
-                selectedDate = null;
-            }
-            console.log('📅 初始 selectedDate (最近有数据):', selectedDate);
+            try {
+                const res = await fetch(`data/dates.json?t=${Date.now()}`, { cache: 'no-store' });
+                if (res.ok) {
+                    let dates = await res.json();
+                    availableDates = sortDatesDesc(dates);
+                    availableDatesSet = new Set(availableDates);
+                    
+                    await generateFilteredDates();
+                    
+                    // 设置初始选中日期为最近一期有数据的日期
+                    if (filteredDates.length > 0) {
+                        selectedDate = filteredDates[0];
+                    } else if (availableDates.length > 0) {
+                        selectedDate = availableDates[0];
+                    } else {
+                        selectedDate = null;
+                    }
+                    console.log('📅 初始 selectedDate (最近有数据):', selectedDate);
+                }
+            } catch (e) { console.warn('无法加载 dates.json', e); }
+            renderDateDropdown();
+            updateDateBtnWithLatest();
+            // 顶部日历按钮始终显示今天，不依赖 selectedDate
+            updateCalendarButtonToToday();
         }
-    } catch (e) { console.warn('无法加载 dates.json', e); }
-    renderDateDropdown();
-    updateDateBtnWithLatest();
-    updateCalendarButtonDate();
-}
 
         async function generateFilteredDates() {
             filteredDates = [];
@@ -343,11 +344,16 @@
             if (selectedDate === date) return;
             selectedDate = date;
             updateDateBtnWithLatest();
-            updateCalendarButtonDate();
             renderDateDropdown(); // 更新下拉列表的 active 类
             document.getElementById('date-dropdown').classList.remove('show');
             document.getElementById('date-btn').classList.remove('active');
-            document.getElementById('calendar-popup').style.display = 'none';
+            
+            // 如果日历弹窗开着，重新渲染日历以更新高亮（保持当前月份）
+            const calendarPopup = document.getElementById('calendar-popup');
+            if (calendarPopup.style.display === 'block') {
+                renderCalendar(); // 保持当前月份
+            }
+            
             loadAllCompanies(); 
         }
 
@@ -364,15 +370,9 @@
             if (selectedDate) {
                 ({ year, month } = parseDMY(selectedDate));
             } else {
-                // 使用最新一期日期
-                const latestDate = filteredDates.length > 0 ? filteredDates[0] : (availableDates.length > 0 ? availableDates[0] : null);
-                if (latestDate) {
-                    ({ year, month } = parseDMY(latestDate));
-                } else {
-                    const now = new Date();
-                    year = now.getFullYear();
-                    month = now.getMonth() + 1;
-                }
+                const now = new Date();
+                year = now.getFullYear();
+                month = now.getMonth() + 1;
             }
             currentCalendarYear = year;
             currentCalendarMonth = month;
@@ -437,11 +437,24 @@
         }
 
         function calendarDateClick(dateYmd) {
-            if (availableDatesSet.has(dateYmd)) {
+            if (filteredDatesSet.has(dateYmd)) {
                 selectDate(dateYmd);
             } else {
                 alert('该日期无开彩数据');
             }
+        }
+
+        // ==================== 顶部日历按钮更新（始终显示今天） ====================
+        function updateCalendarButtonToToday() {
+            const btn = document.getElementById('calendar-btn');
+            if (!btn) return;
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = (now.getMonth() + 1).toString().padStart(2, '0');
+            const day = now.getDate().toString().padStart(2, '0');
+            const todayYmd = `${year}-${month}-${day}`;
+            const display = formatDisplayDate(todayYmd);
+            btn.innerHTML = `<span class="calendar-icon">📅</span><span>${display}</span><span class="arrow">▼</span>`;
         }
 
         // ==================== 核心数据加载 ====================
@@ -454,9 +467,7 @@
             }
         }
 
-        // ★★★ 修复后的 loadFromLocalCache 函数：严格按指定日期加载 ★★★
         async function loadFromLocalCache(companyKey, date = null) {
-            // 如果指定了 date，则只尝试加载该日期的数据
             if (date) {
                 const url = `data/${date}/${companyKey}.json?t=${Date.now()}`;
                 try {
@@ -476,10 +487,8 @@
             // 未指定 date，进行回退查找（用于“最新数据”或豪龙主页模式）
             let startDate;
             if (companyKey === 'grand_dragon') {
-                // 豪龙主页：始终从最新日期开始
                 startDate = availableDates[0];
             } else {
-                // 其他公司：也从最新日期开始
                 startDate = availableDates[0];
             }
             if (!startDate) return null;
@@ -494,23 +503,20 @@
                     const res = await fetch(url);
                     if (res.ok) {
                         const data = await res.json();
-                        data._isFallback = true; // 标记为回退数据
+                        data._isFallback = true;
                         return data;
                     }
                 } catch (e) {
-                    // 忽略错误，继续尝试
                 }
             }
             return null;
         }
 
-        // 辅助函数：过滤无效号码
         function filterValidNumbers(arr) {
             if (!Array.isArray(arr)) return [];
             return arr.filter(num => num && num !== '----' && num !== '****' && num !== '***' && /^\d{4}$/.test(num));
         }
 
-        // 渲染卡片
         function renderCompanyCard(companyKey, data) {
             const contentDiv = document.getElementById(`content-${companyKey}`);
             const metaDiv = document.getElementById(`meta-${companyKey}`);
@@ -601,7 +607,6 @@
                         html += `</div></div>`;
                     }
                 } else {
-                    // 标准 4D 公司
                     html = `
                         <div class="prize-grid" style="flex-direction:column;align-items:center;">
                             <div class="prize-card" style="width:220px;margin-bottom:8px;"><div class="label">1st Prize</div><div class="number" id="first-${companyKey}">${data['1st'] || data.first || data.prize1 || '----'}</div></div>
@@ -620,7 +625,6 @@
                         html += `</div></div>`;
                     }
 
-                    // 特别奖（过滤无效项，保持10个位置）
                     html += `<div class="subsection"><div class="subsection-title">特别奖 SPECIAL</div><div class="number-list" id="special-${companyKey}">`;
                     const specialRaw = data.special || data.special_numbers || data.special_prizes || data.special_results || [];
                     const specialValid = filterValidNumbers(specialRaw);
@@ -633,7 +637,6 @@
                     }
                     html += `</div></div>`;
 
-                    // 安慰奖（过滤无效项，保持10个位置）
                     html += `<div class="subsection"><div class="subsection-title">安慰奖 CONSOLATION</div><div class="number-list" id="consolation-${companyKey}">`;
                     const consolationRaw = data.consolation || data.consolation_numbers || data.consolation_prizes || data.consolation_results || [];
                     const consolationValid = filterValidNumbers(consolationRaw);
@@ -653,23 +656,6 @@
             }
 
             contentDiv.innerHTML = html;
-        }
-
-        // ==================== 顶部日历按钮更新函数 ====================
-        function updateCalendarButtonDate() {
-            const btn = document.getElementById('calendar-btn');
-            if (!btn) return;
-            let displayDate = selectedDate;
-            if (!displayDate) {
-                // 使用最新一期日期
-                displayDate = filteredDates.length > 0 ? filteredDates[0] : (availableDates.length > 0 ? availableDates[0] : null);
-            }
-            if (displayDate) {
-                const display = formatDisplayDate(displayDate);
-                btn.innerHTML = `<span class="calendar-icon">📅</span><span>${display}</span><span class="arrow">▼</span>`;
-            } else {
-                btn.innerHTML = `<span class="calendar-icon">📅</span><span>加载中...</span><span class="arrow">▼</span>`;
-            }
         }
 
         // ==================== 创建卡片骨架 ====================
