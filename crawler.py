@@ -83,14 +83,14 @@ def store_numbers_from_data(company, data):
     
     for field in prize_fields:
         num = data.get(field)
-        if num and num != '----':
+        if num and isinstance(num, str) and num != '----':
             insert_number(company, field, num, draw_date)
     
     for field in list_fields:
         nums = data.get(field, [])
         if isinstance(nums, list):
             for num in nums:
-                if num and num != '----':
+                if num and isinstance(num, str) and num != '----':
                     insert_number(company, field, num, draw_date)
     
     if company == 'sportstoto_6d':
@@ -99,9 +99,9 @@ def store_numbers_from_data(company, data):
             if isinstance(item, dict):
                 main = item.get('main')
                 alt = item.get('alt')
-                if main:
+                if main and isinstance(main, str) and main != '----':
                     insert_number(company, f'{pos}_main', main, draw_date)
-                if alt:
+                if alt and isinstance(alt, str) and alt != '----':
                     insert_number(company, f'{pos}_alt', alt, draw_date)
     
     if company == 'magnum_jackpot_gold':
@@ -110,7 +110,7 @@ def store_numbers_from_data(company, data):
             grp_num = grp.get('group')
             nums = grp.get('numbers', [])
             for num in nums:
-                if num and num != '+':
+                if num and isinstance(num, str) and num != '+':
                     insert_number(company, f'group_{grp_num}', num, draw_date)
 
 # ---------- 增强版请求函数（支持重试、会话、完整头）----------
