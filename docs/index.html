@@ -251,28 +251,30 @@
         }
 
         async function loadDateIndex() {
-            try {
-                const res = await fetch(`data/dates.json?t=${Date.now()}`, { cache: 'no-store' });
-                if (res.ok) {
-                    let dates = await res.json();
-                    availableDates = sortDatesDesc(dates);
-                    availableDatesSet = new Set(availableDates);
-                    
-                    await generateFilteredDates();
-                    
-                    // 设置初始选中日期为今天（即使今天无数据）
-                    const today = new Date();
-                    const year = today.getFullYear();
-                    const month = (today.getMonth() + 1).toString().padStart(2, '0');
-                    const day = today.getDate().toString().padStart(2, '0');
-                    selectedDate = `${year}-${month}-${day}`;
-                    console.log('📅 初始 selectedDate (今天):', selectedDate);
-                }
-            } catch (e) { console.warn('无法加载 dates.json', e); }
-            renderDateDropdown();
-            updateDateBtnWithLatest();
-            updateCalendarButtonDate();
+    try {
+        const res = await fetch(`data/dates.json?t=${Date.now()}`, { cache: 'no-store' });
+        if (res.ok) {
+            let dates = await res.json();
+            availableDates = sortDatesDesc(dates);
+            availableDatesSet = new Set(availableDates);
+            
+            await generateFilteredDates();
+            
+            // 设置初始选中日期为最近一期有数据的日期
+            if (filteredDates.length > 0) {
+                selectedDate = filteredDates[0];
+            } else if (availableDates.length > 0) {
+                selectedDate = availableDates[0];
+            } else {
+                selectedDate = null;
+            }
+            console.log('📅 初始 selectedDate (最近有数据):', selectedDate);
         }
+    } catch (e) { console.warn('无法加载 dates.json', e); }
+    renderDateDropdown();
+    updateDateBtnWithLatest();
+    updateCalendarButtonDate();
+}
 
         async function generateFilteredDates() {
             filteredDates = [];
