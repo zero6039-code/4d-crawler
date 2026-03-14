@@ -331,7 +331,8 @@
                 return;
             }
             const recentDates = filteredDates.slice(0, 5);
-            let html = '<div class="date-option" onclick="selectDate(null)">📌 最新数据</div>';
+            // 修改1：在“最新数据”后添加 Latest Data
+            let html = '<div class="date-option" onclick="selectDate(null)">📌 最新数据 Latest Data</div>';
             recentDates.forEach(date => {
                 const activeClass = (selectedDate === date) ? 'active' : '';
                 const displayDate = ymdToDmy(date);
@@ -436,8 +437,9 @@
             renderCalendar();
         }
 
+        // 修改2：日历点击判断改为 availableDatesSet（即 dates.json 中包含的日期）
         function calendarDateClick(dateYmd) {
-            if (filteredDatesSet.has(dateYmd)) {
+            if (availableDatesSet.has(dateYmd)) {
                 selectDate(dateYmd);
             } else {
                 alert('该日期无开彩数据');
