@@ -760,8 +760,10 @@ def extract_sportstoto_lotto_from_json(t_item, company):
         clean_num(t_item.get("P6585")),
         clean_num(t_item.get("P6586"))
     ]
+    # 提取 Jackpots: 顺序为 Star JP1, Star JP2, Power JP, Supreme JP
     jackpots = [
         clean_num(t_item.get("P650JP1")),
+        clean_num(t_item.get("P650JP2")),
         clean_num(t_item.get("P655JP")),
         clean_num(t_item.get("P658JP"))
     ]
