@@ -167,7 +167,7 @@
         const SPECIAL_COMPANIES = [
             'sportstoto_fireball', 'singapore_toto', 'magnum_jackpot_gold',
             'sportstoto_5d', 'sportstoto_6d', 'magnum_life', 'sportstoto_lotto',
-            'sabah_lotto'   // 新增：Sabah Lotto 需要特殊渲染
+            'sabah_lotto'
         ];
 
         const COMPANY_IMAGE_MAP = {
@@ -584,18 +584,18 @@
                         html += `</table></div>`;
                     }
                 }
-                // ----- Magnum Jackpot Gold -----
+                // ----- Magnum Jackpot Gold (按 Sabah Lotto 样式显示) -----
                 else if (companyKey === 'magnum_jackpot_gold') {
+                    // 收集所有组号码并排序
+                    let allNumbers = [];
                     if (data.groups && data.groups.length) {
-                        html += `<div class="subsection"><div class="subsection-title">中奖组号码</div>`;
-                        data.groups.forEach(group => {
-                            html += `<div class="group-subtitle">Group ${group.group}</div>`;
-                            html += `<div class="number-list">`;
-                            (group.numbers || []).forEach(num => html += `<span class="number-item">${num}</span>`);
-                            html += `</div>`;
-                        });
-                        html += `</div>`;
+                        const sortedGroups = [...data.groups].sort((a,b) => parseInt(a.group) - parseInt(b.group));
+                        allNumbers = sortedGroups.flatMap(g => g.numbers).filter(n => n);
                     }
+                    html = `<div class="subsection"><div class="subsection-title">开奖号码</div><div class="number-list">`;
+                    allNumbers.forEach(num => html += `<span class="number-item">${num}</span>`);
+                    html += `</div></div>`;
+                    
                     if (data.jackpots && data.jackpots.length) {
                         html += `<div class="subsection"><div class="subsection-title">Jackpots</div><div class="number-list">`;
                         data.jackpots.forEach(jp => html += `<span class="number-item">${jp}</span>`);
