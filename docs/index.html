@@ -760,17 +760,87 @@
                     }
                     if (!html) html = '<p style="text-align:center; padding:10px;">无数据</p>';
                 }
-                // ----- Sabah Lotto -----
+                // ----- Sabah Lotto (按新格式显示) -----
                 else if (companyKey === 'sabah_lotto') {
-                    html = `<div class="subsection"><div class="subsection-title">开奖号码</div><div class="number-list">`;
-                    if (data.winning_numbers) data.winning_numbers.forEach(n => html += `<span class="number-item">${n}</span>`);
-                    html += `</div></div>`;
-                    if (data.jackpot1) {
-                        html += `<div class="subsection"><div class="subsection-title">Jackpot 1</div><div class="number-list"><span class="number-item">${data.jackpot1}</span></div></div>`;
+                    // 主号码 (Lotto 6/45)
+                    let mainNumbers = data.winning_numbers || [];
+                    let jackpot1 = data.jackpot1 || '';
+                    let jackpot2 = data.jackpot2 || '';
+
+                    html = `<div class="subsection"><div class="subsection-title">Lotto 6/45</div>`;
+
+                    // 号码行
+                    if (mainNumbers.length >= 7) {
+                        html += `<div class="number-list" style="justify-content:center; margin-bottom:10px;">`;
+                        for (let i = 0; i < 6; i++) {
+                            html += `<span class="number-item">${mainNumbers[i]}</span>`;
+                        }
+                        html += `<span class="number-item">+</span>`;
+                        html += `<span class="number-item">${mainNumbers[6]}</span>`;
+                        html += `</div>`;
+                    } else {
+                        html += `<div class="number-list">数据缺失</div>`;
                     }
-                    if (data.jackpot2) {
-                        html += `<div class="subsection"><div class="subsection-title">Jackpot 2</div><div class="number-list"><span class="number-item">${data.jackpot2}</span></div></div>`;
+
+                    // Jackpot 1 和 2 放在同一行
+                    html += `<div style="display:flex; gap:20px; justify-content:center; margin-top:5px;">`;
+                    if (jackpot1) html += `<div><strong>Jackpot 1</strong><br>${jackpot1}</div>`;
+                    if (jackpot2) html += `<div><strong>Jackpot 2</strong><br>${jackpot2}</div>`;
+                    html += `</div>`;
+                    html += `</div>`; // 结束 Lotto 6/45 subsection
+
+                    // Lotto 6 组
+                    html += `<div class="subsection"><div class="subsection-title">Lotto 6</div>`;
+                    for (let g = 1; g <= 5; g++) {
+                        let nums = [];
+                        for (let i = 1; i <= 5; i++) { // 前5个数字
+                            let key = `LT6G${g}${i}`;
+                            if (data[key] !== undefined) nums.push(data[key]);
+                        }
+                        let extra = data[`LT6G${g}6`] || ''; // 第6个是额外号
+                        let jackpot = data[`LT6G${g}JP`] || '';
+
+                        if (nums.length === 5) {
+                            html += `<div style="margin-bottom:12px;">`;
+                            html += `<div class="number-list" style="justify-content:center;">`;
+                            nums.forEach(n => html += `<span class="number-item">${n}</span>`);
+                            html += `<span class="number-item">+</span>`;
+                            html += `<span class="number-item">${extra}</span>`;
+                            html += `</div>`;
+                            if (jackpot) {
+                                html += `<div style="text-align:center; font-weight:600;">Jackpot ${g}: ${jackpot}</div>`;
+                            }
+                            html += `</div>`;
+                        }
                     }
+                    html += `</div>`;
+
+                    // Lotto 5 组
+                    html += `<div class="subsection"><div class="subsection-title">Lotto 5</div>`;
+                    for (let g = 1; g <= 8; g++) {
+                        let nums = [];
+                        for (let i = 1; i <= 4; i++) { // 前4个数字
+                            let key = `LT5G${g}${i}`;
+                            if (data[key] !== undefined) nums.push(data[key]);
+                        }
+                        let extra = data[`LT5G${g}5`] || ''; // 第5个是额外号
+                        let jackpot = data[`LT5G${g}JP`] || '';
+
+                        if (nums.length === 4) {
+                            html += `<div style="margin-bottom:12px;">`;
+                            html += `<div class="number-list" style="justify-content:center;">`;
+                            nums.forEach(n => html += `<span class="number-item">${n}</span>`);
+                            html += `<span class="number-item">+</span>`;
+                            html += `<span class="number-item">${extra}</span>`;
+                            html += `</div>`;
+                            if (jackpot) {
+                                html += `<div style="text-align:center; font-weight:600;">Jackpot ${g}: ${jackpot}</div>`;
+                            }
+                            html += `</div>`;
+                        }
+                    }
+                    html += `</div>`;
+
                     if (!html) html = '<p style="text-align:center; padding:10px;">无数据</p>';
                 }
                 // 其他特殊公司（占位文字）
