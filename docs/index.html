@@ -95,6 +95,113 @@
         .company-section[data-company="toto"] .company-title { background: linear-gradient(145deg, #b71c1c, #d32f2f); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .company-section[data-company="singapore"] .company-title { background: linear-gradient(145deg, #1e4a6b, #2c6b96); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .jackpot-label { font-weight: 600; margin: 4px 0 2px 0; color: #2c3e50; font-size: 0.95rem; }
+
+        /* ========== 幸运号码小游戏样式 ========== */
+        .lucky-btn {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+            border: none;
+            padding: 8px 25px;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(245,158,11,0.3);
+            transition: all 0.2s;
+            line-height: 1.4;
+        }
+        .lucky-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(245,158,11,0.4);
+        }
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 3000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 32px;
+            padding: 25px 20px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .modal-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #f59e0b;
+            margin-bottom: 20px;
+        }
+        .lucky-digits {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .lucky-digit-box {
+            width: 70px;
+            height: 90px;
+            background: linear-gradient(145deg, #f3f4f6, #e5e7eb);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: #c62828;
+            font-family: 'Courier New', monospace;
+            box-shadow: inset 0 -3px 0 rgba(0,0,0,0.1), 0 8px 16px rgba(0,0,0,0.1);
+            border: 2px solid white;
+        }
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .spin-btn, .close-modal-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .spin-btn {
+            background: #f59e0b;
+            color: white;
+            box-shadow: 0 4px 12px rgba(245,158,11,0.3);
+        }
+        .spin-btn:hover {
+            background: #d97706;
+            transform: scale(1.05);
+        }
+        .close-modal-btn {
+            background: #e2e8f0;
+            color: #2d3748;
+        }
+        .close-modal-btn:hover {
+            background: #cbd5e0;
+        }
+        .spin-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .footer-note {
+            margin-top: 15px;
+            font-size: 0.8rem;
+            color: #7c8b9c;
+        }
     </style>
 </head>
 <body>
@@ -117,6 +224,8 @@
                 </div>
             </div>
             <button class="refresh-btn" id="refresh-btn" onclick="forceRefresh()">Refresh</button>
+            <!-- 幸运号码按钮 -->
+            <button class="lucky-btn" id="lucky-btn">🎰 幸运号码</button>
         </div>
 
         <div id="companies-grid" class="companies-grid">
@@ -131,6 +240,24 @@
             <br>
             更新于 <span id="update-time">-</span>
         </footer>
+    </div>
+
+    <!-- 幸运号码弹窗 -->
+    <div class="modal-overlay" id="lucky-modal">
+        <div class="modal-content">
+            <div class="modal-title">✨ 幸运号码 ✨</div>
+            <div class="lucky-digits">
+                <span class="lucky-digit-box" id="digit1">0</span>
+                <span class="lucky-digit-box" id="digit2">0</span>
+                <span class="lucky-digit-box" id="digit3">0</span>
+                <span class="lucky-digit-box" id="digit4">0</span>
+            </div>
+            <div class="modal-buttons">
+                <button class="spin-btn" id="spin-btn">开始抽奖</button>
+                <button class="close-modal-btn" id="close-modal">关闭</button>
+            </div>
+            <div class="footer-note">点击开始，四个号码依次滚动停下</div>
+        </div>
     </div>
 
     <script>
@@ -944,6 +1071,95 @@
                 }
             });
         });
+
+        // ========== 幸运号码游戏逻辑 ==========
+        (function() {
+            const modal = document.getElementById('lucky-modal');
+            const luckyBtn = document.getElementById('lucky-btn');
+            const closeBtn = document.getElementById('close-modal');
+            const spinBtn = document.getElementById('spin-btn');
+            const digitElements = [
+                document.getElementById('digit1'),
+                document.getElementById('digit2'),
+                document.getElementById('digit3'),
+                document.getElementById('digit4')
+            ];
+
+            let rolling = false;
+            let timeouts = [];
+            let intervals = [];
+
+            // 打开弹窗
+            if (luckyBtn) {
+                luckyBtn.addEventListener('click', () => {
+                    modal.style.display = 'flex';
+                    resetDigits();
+                });
+            }
+
+            // 关闭弹窗
+            const closeModal = () => {
+                modal.style.display = 'none';
+                stopRolling();
+            };
+            if (closeBtn) closeBtn.addEventListener('click', closeModal);
+            if (modal) modal.addEventListener('click', (e) => {
+                if (e.target === modal) closeModal();
+            });
+
+            function resetDigits() {
+                stopRolling();
+                digitElements.forEach(el => el.textContent = '0');
+                spinBtn.disabled = false;
+            }
+
+            function stopRolling() {
+                rolling = false;
+                timeouts.forEach(t => clearTimeout(t));
+                intervals.forEach(i => clearInterval(i));
+                timeouts = [];
+                intervals = [];
+            }
+
+            if (spinBtn) {
+                spinBtn.addEventListener('click', () => {
+                    if (rolling) return;
+                    rolling = true;
+                    spinBtn.disabled = true;
+
+                    digitElements.forEach(el => el.textContent = '0');
+                    rollDigit(0);
+                });
+            }
+
+            function rollDigit(index) {
+                if (!rolling || index >= digitElements.length) {
+                    if (index >= digitElements.length) {
+                        spinBtn.disabled = false;
+                        rolling = false;
+                    }
+                    return;
+                }
+
+                const el = digitElements[index];
+                const interval = setInterval(() => {
+                    if (!rolling) {
+                        clearInterval(interval);
+                        return;
+                    }
+                    el.textContent = Math.floor(Math.random() * 10).toString();
+                }, 80);
+                intervals.push(interval);
+
+                const timeout = setTimeout(() => {
+                    clearInterval(interval);
+                    if (!rolling) return;
+                    el.textContent = Math.floor(Math.random() * 10).toString();
+                    rollDigit(index + 1);
+                }, 1000);
+                timeouts.push(timeout);
+            }
+        })();
     </script>
 </body>
 </html>
