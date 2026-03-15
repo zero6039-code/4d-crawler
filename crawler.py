@@ -607,7 +607,7 @@ def extract_magnum_jackpot_gold_from_json(item, company):
     return result
 
 def extract_sabah_lotto_from_json(item, company):
-    """提取 Sabah Lotto 数据"""
+    """提取 Sabah Lotto 数据（包含 Lotto 6/45、Lotto 6 和 Lotto 5 的所有组）"""
     result = {
         "draw_date": extract_date_from_dd(item.get("DD", "")),
         "draw_no": item.get("DN", ""),
@@ -616,7 +616,7 @@ def extract_sabah_lotto_from_json(item, company):
         "jackpot2": ""
     }
 
-    # 提取 Lotto 号码 (LT1-LT7)
+    # 提取 Lotto 6/45 主号码 (LT1-LT7)
     winning = []
     for i in range(1, 8):
         key = f"LT{i}"
@@ -626,10 +626,36 @@ def extract_sabah_lotto_from_json(item, company):
                 winning.append(num)
     result["winning_numbers"] = winning
 
+    # 提取两个主 Jackpot
     if "LTJP1" in item:
         result["jackpot1"] = item["LTJP1"]
     if "LTJP2" in item:
         result["jackpot2"] = item["LTJP2"]
+
+    # ===== 提取 Lotto 6 组数据（共5组） =====
+    for g in range(1, 6):  # 组号 1-5
+        # 每组6个号码：前5个为普通号码，第6个为额外号
+        for i in range(1, 7):
+            key = f"LT6G{g}{i}"
+            if key in item:
+                result[key] = item[key]
+        # 对应 Jackpot 奖金
+        jp_key = f"LT6G{g}JP"
+        if jp_key in item:
+            result[jp_key] = item[jp_key]
+
+    # ===== 提取 Lotto 5 组数据（共8组） =====
+    for g in range(1, 9):  # 组号 1-8
+        # 每组5个号码：前4个为普通号码，第5个为额外号
+        for i in range(1, 6):
+            key = f"LT5G{g}{i}"
+            if key in item:
+                result[key] = item[key]
+        # 对应 Jackpot 奖金
+        jp_key = f"LT5G{g}JP"
+        if jp_key in item:
+            result[jp_key] = item[jp_key]
+
     return result
 
 def extract_singapore_toto_from_json(item, company):
