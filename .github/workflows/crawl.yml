@@ -2,9 +2,9 @@ name: Daily 4D Crawler
 
 on:
   schedule:
-    # 马来西亚时间 19:00-19:59 (UTC 11:00-11:59) 每5分钟运行一次
-    - cron: '*/5 11 * * *'
-  workflow_dispatch:  # 允许手动触发
+    # 马来西亚时间 18:00-19:59 (UTC 10:00-11:59) 每5分钟运行一次
+    - cron: '*/5 10-11 * * *'
+  workflow_dispatch:
 
 jobs:
   crawl:
