@@ -165,7 +165,8 @@
 
         const SPECIAL_COMPANIES = [
             'sportstoto_fireball', 'singapore_toto',
-            'magnum_jackpot_gold', 'sportstoto_5d', 'sportstoto_6d', 'magnum_life'
+            'magnum_jackpot_gold', 'sportstoto_5d', 'sportstoto_6d', 'magnum_life',
+            'sportstoto_lotto'
         ];
 
         const COMPANY_IMAGE_MAP = {
@@ -331,7 +332,6 @@
                 return;
             }
             const recentDates = filteredDates.slice(0, 5);
-            // 修改1：在“最新数据”后添加 Latest Data
             let html = '<div class="date-option" onclick="selectDate(null)">📌 最新数据 Latest Data</div>';
             recentDates.forEach(date => {
                 const activeClass = (selectedDate === date) ? 'active' : '';
@@ -437,7 +437,6 @@
             renderCalendar();
         }
 
-        // 修改2：日历点击判断改为 availableDatesSet（即 dates.json 中包含的日期）
         function calendarDateClick(dateYmd) {
             if (availableDatesSet.has(dateYmd)) {
                 selectDate(dateYmd);
@@ -461,30 +460,32 @@
 
         // ==================== 核心数据加载 ====================
         async function loadCompanyData(companyKey) {
-    let localData = null;
-    if (selectedDate) {
-        localData = await loadFromLocalCache(companyKey, selectedDate);
-    }
+            let localData = null;
 
-    // 如果是 Singapore Toto 且指定日期无数据，则尝试回退到最近有数据的日期（仅当 selectedDate 为最新数据时，即“最新数据”模式）
-    if (companyKey === 'singapore_toto' && !localData && selectedDate && selectedDate === filteredDates[0]) {
-        // 从 filteredDates 中查找第一个有 Singapore Toto 数据的日期
-        for (let date of filteredDates) {
-            const data = await loadFromLocalCache(companyKey, date);
-            if (data) {
-                localData = data;
-                localData._isFallback = true; // 标记为回退数据
-                break;
+            // 如果当前有选中的日期，先尝试加载该日期的数据
+            if (selectedDate) {
+                localData = await loadFromLocalCache(companyKey, selectedDate);
+            }
+
+            // 针对 Singapore Toto 的回退逻辑：仅在当前日期为“最新数据”模式且无数据时触发
+            if (companyKey === 'singapore_toto' && !localData && selectedDate && selectedDate === filteredDates[0]) {
+                // 从 filteredDates 中寻找第一个有 Singapore Toto 数据的日期
+                for (let date of filteredDates) {
+                    const data = await loadFromLocalCache(companyKey, date);
+                    if (data) {
+                        localData = data;
+                        localData._isFallback = true; // 标记为回退数据
+                        break;
+                    }
+                }
+            }
+
+            if (localData) {
+                renderCompanyCard(companyKey, localData);
+            } else {
+                renderCompanyCard(companyKey, null);
             }
         }
-    }
-
-    if (localData) {
-        renderCompanyCard(companyKey, localData);
-    } else {
-        renderCompanyCard(companyKey, null);
-    }
-}
 
         async function loadFromLocalCache(companyKey, date = null) {
             if (date) {
@@ -533,6 +534,7 @@
 
         function filterValidNumbers(arr) {
             if (!Array.isArray(arr)) return [];
+            // 允许4-6位数字，以适应1+3D的6位号码
             return arr.filter(num => num && num !== '----' && num !== '****' && num !== '***' && /^\d{4,6}$/.test(num));
         }
 
@@ -554,10 +556,12 @@
 
             let html = '';
 
+            // 特殊公司（包括 Singapore Toto, Magnum Jackpot Gold, Sports Toto 5D/6D, Magnum Life, Sports Toto Lotto）
             if (SPECIAL_COMPANIES.includes(companyKey)) {
                 if (companyKey === 'singapore_toto') {
+                    // 渲染 Singapore Toto
                     let winningNumbers = data.winning_numbers || data.numbers || data.winning || data.wins || [];
-                    html += `<div class="subsection"><div class="subsection-title">开奖号码</div><div class="number-list" id="winning-${companyKey}">`;
+                    html += `<div class="subsection"><div class="subsection-title">开奖号码</div><div class="number-list">`;
                     winningNumbers.forEach(n => html += `<span class="number-item">${n}</span>`);
                     html += `</div></div>`;
                     
@@ -576,101 +580,125 @@
                         });
                         html += `</table></div>`;
                     }
+                } else if (companyKey === 'magnum_jackpot_gold') {
+                    // 渲染 Magnum Jackpot Gold
+                    if (data.groups && data.groups.length) {
+                        html += `<div class="subsection"><div class="subsection-title">中奖组号码</div>`;
+                        data.groups.forEach(group => {
+                            html += `<div class="group-subtitle">Group ${group.group}</div>`;
+                            html += `<div class="number-list">`;
+                            (group.numbers || []).forEach(num => html += `<span class="number-item">${num}</span>`);
+                            html += `</div>`;
+                        });
+                        html += `</div>`;
+                    }
+                    if (data.jackpots && data.jackpots.length) {
+                        html += `<div class="subsection"><div class="subsection-title">Jackpots</div><div class="number-list">`;
+                        data.jackpots.forEach(jp => html += `<span class="number-item">${jp}</span>`);
+                        html += `</div></div>`;
+                    }
+                    if (!html) html = '<p style="text-align:center; padding:10px;">无数据</p>';
+                } else if (companyKey === 'sportstoto_5d') {
+                    // 渲染 Sports Toto 5D
+                    html = `<div class="subsection"><div class="subsection-title">5D 号码</div><div class="number-list">`;
+                    ['1st', '2nd', '3rd', '4th', '5th', '6th'].forEach(pos => {
+                        if (data[pos] && data[pos] !== '----') {
+                            html += `<span class="number-item">${data[pos]}</span>`;
+                        }
+                    });
+                    html += `</div></div>`;
+                } else if (companyKey === 'sportstoto_6d') {
+                    // 渲染 Sports Toto 6D（含主副号）
+                    html = `<div class="subsection"><div class="subsection-title">6D 号码</div>`;
+                    if (data['1st']) html += `<div class="prize-card" style="margin-bottom:8px;"><div class="label">1st</div><div class="number">${data['1st']}</div></div>`;
+                    ['2nd', '3rd', '4th', '5th'].forEach(pos => {
+                        if (data[pos] && (data[pos].main || data[pos].alt)) {
+                            html += `<div class="prize-card" style="margin-bottom:4px;"><div class="label">${pos}</div><div class="number">${data[pos].main || ''} / ${data[pos].alt || ''}</div></div>`;
+                        }
+                    });
+                    html += `</div>`;
+                } else if (companyKey === 'magnum_life') {
+                    // 渲染 Magnum Life
+                    html = `<div class="subsection"><div class="subsection-title">开奖号码</div><div class="number-list">`;
+                    if (data.winning_numbers) data.winning_numbers.forEach(n => html += `<span class="number-item">${n}</span>`);
+                    if (data.bonus_numbers) data.bonus_numbers.forEach(n => html += `<span class="number-item">${n}</span>`);
+                    html += `</div></div>`;
+                } else if (companyKey === 'sportstoto_lotto') {
+                    // 渲染 Sports Toto Lotto (Star/Power/Supreme)
+                    html = '';
+                    if (data.star && data.star.length) {
+                        html += `<div class="subsection"><div class="subsection-title">Star Toto 6/50</div><div class="number-list">`;
+                        data.star.forEach(n => html += `<span class="number-item">${n}</span>`);
+                        html += `</div></div>`;
+                    }
+                    if (data.power && data.power.length) {
+                        html += `<div class="subsection"><div class="subsection-title">Power Toto 6/55</div><div class="number-list">`;
+                        data.power.forEach(n => html += `<span class="number-item">${n}</span>`);
+                        html += `</div></div>`;
+                    }
+                    if (data.supreme && data.supreme.length) {
+                        html += `<div class="subsection"><div class="subsection-title">Supreme Toto 6/58</div><div class="number-list">`;
+                        data.supreme.forEach(n => html += `<span class="number-item">${n}</span>`);
+                        html += `</div></div>`;
+                    }
+                    if (data.jackpots && data.jackpots.length) {
+                        html += `<div class="subsection"><div class="subsection-title">Jackpots</div><div class="number-list">`;
+                        data.jackpots.forEach(jp => html += `<span class="number-item">${jp}</span>`);
+                        html += `</div></div>`;
+                    }
+                    if (!html) html = '<p style="text-align:center; padding:10px;">无数据</p>';
                 } else {
+                    // 其他特殊公司（如 sportstoto_fireball）保留占位文字
                     html = '<p style="text-align:center; padding:10px;">特殊开彩详见官网</p>';
                 }
             } else {
-                if (companyKey === 'sabah_lotto') {
-                    html = `<div class="subsection"><div class="subsection-title">开奖号码</div><div class="number-list" id="winning-${companyKey}">`;
-                    const winning = data.winning_numbers || [];
-                    if (winning.length === 0) {
-                        for (let i = 0; i < 7; i++) html += '<span class="number-item">----</span>';
-                    } else {
-                        winning.forEach(n => html += `<span class="number-item">${n}</span>`);
-                    }
-                    html += `</div></div>`;
-                    html += `<div class="subsection"><div class="subsection-title">Jackpot 1</div><div class="number-list">`;
-                    html += data.jackpot1 ? `<span class="number-item">RM ${data.jackpot1}</span>` : '<span class="number-item">----</span>';
-                    html += `</div></div>`;
-                    html += `<div class="subsection"><div class="subsection-title">Jackpot 2</div><div class="number-list">`;
-                    html += data.jackpot2 ? `<span class="number-item">RM ${data.jackpot2}</span>` : '<span class="number-item">----</span>';
-                    html += `</div></div>`;
-                } else if (companyKey === 'sportstoto_lotto') {
-                    html = '';
-                    html += `<div class="subsection"><div class="subsection-title">Star Toto 6/50</div><div class="number-list">`;
-                    if (data.star && data.star.length) {
-                        data.star.forEach(n => html += `<span class="number-item">${n}</span>`);
-                    } else {
-                        html += '<span class="number-item">----</span>';
-                    }
-                    html += `</div></div>`;
-                    html += `<div class="subsection"><div class="subsection-title">Power Toto 6/55</div><div class="number-list">`;
-                    if (data.power && data.power.length) {
-                        data.power.forEach(n => html += `<span class="number-item">${n}</span>`);
-                    } else {
-                        html += '<span class="number-item">----</span>';
-                    }
-                    html += `</div></div>`;
-                    html += `<div class="subsection"><div class="subsection-title">Supreme Toto 6/58</div><div class="number-list">`;
-                    if (data.supreme && data.supreme.length) {
-                        data.supreme.forEach(n => html += `<span class="number-item">${n}</span>`);
-                    } else {
-                        html += '<span class="number-item">----</span>';
-                    }
-                    html += `</div></div>`;
-                    if (data.jackpots && data.jackpots.length) {
-                        html += `<div class="subsection"><div class="subsection-title">Jackpots</div><div class="number-list">`;
-                        data.jackpots.forEach((jp, idx) => {
-                            if (jp) html += `<span class="number-item">RM ${jp}</span>`;
-                        });
-                        html += `</div></div>`;
-                    }
-                } else {
-                    html = `
-                        <div class="prize-grid" style="flex-direction:column;align-items:center;">
-                            <div class="prize-card" style="width:220px;margin-bottom:8px;"><div class="label">1st Prize</div><div class="number" id="first-${companyKey}">${data['1st'] || data.first || data.prize1 || '----'}</div></div>
-                            <div style="display:flex;gap:8px;width:100%;">
-                                <div class="prize-card" style="flex:1;"><div class="label">2nd Prize</div><div class="number" id="second-${companyKey}">${data['2nd'] || data.second || data.prize2 || '----'}</div></div>
-                                <div class="prize-card" style="flex:1;"><div class="label">3rd Prize</div><div class="number" id="third-${companyKey}">${data['3rd'] || data.third || data.prize3 || '----'}</div></div>
-                            </div>
-                        </div>`;
+                // 标准 4D 公司（包含 damacai, magnum, toto, singapore, damacai_1p3d, sandakan, sarawak_cashsweep, sabah, sabah_lotto, grand_dragon）
+                html = `
+                    <div class="prize-grid" style="flex-direction:column;align-items:center;">
+                        <div class="prize-card" style="width:220px;margin-bottom:8px;"><div class="label">1st Prize</div><div class="number" id="first-${companyKey}">${data['1st'] || data.first || data.prize1 || '----'}</div></div>
+                        <div style="display:flex;gap:8px;width:100%;">
+                            <div class="prize-card" style="flex:1;"><div class="label">2nd Prize</div><div class="number" id="second-${companyKey}">${data['2nd'] || data.second || data.prize2 || '----'}</div></div>
+                            <div class="prize-card" style="flex:1;"><div class="label">3rd Prize</div><div class="number" id="third-${companyKey}">${data['3rd'] || data.third || data.prize3 || '----'}</div></div>
+                        </div>
+                    </div>`;
 
-                    if (companyKey === 'sabah' && data['3d'] && (data['3d']['1st'] || data['3d']['2nd'] || data['3d']['3rd'])) {
-                        html += `<div class="subsection"><div class="subsection-title">3D</div>`;
-                        html += `<div style="display:flex;gap:8px;justify-content:center;">`;
-                        html += `<div class="prize-card" style="flex:1;"><div class="label">1st</div><div class="number">${data['3d']['1st'] || '---'}</div></div>`;
-                        html += `<div class="prize-card" style="flex:1;"><div class="label">2nd</div><div class="number">${data['3d']['2nd'] || '---'}</div></div>`;
-                        html += `<div class="prize-card" style="flex:1;"><div class="label">3rd</div><div class="number">${data['3d']['3rd'] || '---'}</div></div>`;
-                        html += `</div></div>`;
-                    }
-
-                    html += `<div class="subsection"><div class="subsection-title">特别奖 SPECIAL</div><div class="number-list" id="special-${companyKey}">`;
-                    const specialRaw = data.special || data.special_numbers || data.special_prizes || data.special_results || [];
-                    const specialValid = filterValidNumbers(specialRaw);
-                    for (let i = 0; i < 10; i++) {
-                        if (i < specialValid.length) {
-                            html += `<span class="number-item">${specialValid[i]}</span>`;
-                        } else {
-                            html += `<span class="number-item">----</span>`;
-                        }
-                    }
+                if (companyKey === 'sabah' && data['3d'] && (data['3d']['1st'] || data['3d']['2nd'] || data['3d']['3rd'])) {
+                    html += `<div class="subsection"><div class="subsection-title">3D</div>`;
+                    html += `<div style="display:flex;gap:8px;justify-content:center;">`;
+                    html += `<div class="prize-card" style="flex:1;"><div class="label">1st</div><div class="number">${data['3d']['1st'] || '---'}</div></div>`;
+                    html += `<div class="prize-card" style="flex:1;"><div class="label">2nd</div><div class="number">${data['3d']['2nd'] || '---'}</div></div>`;
+                    html += `<div class="prize-card" style="flex:1;"><div class="label">3rd</div><div class="number">${data['3d']['3rd'] || '---'}</div></div>`;
                     html += `</div></div>`;
+                }
 
-                    html += `<div class="subsection"><div class="subsection-title">安慰奖 CONSOLATION</div><div class="number-list" id="consolation-${companyKey}">`;
-                    const consolationRaw = data.consolation || data.consolation_numbers || data.consolation_prizes || data.consolation_results || [];
-                    const consolationValid = filterValidNumbers(consolationRaw);
-                    for (let i = 0; i < 10; i++) {
-                        if (i < consolationValid.length) {
-                            html += `<span class="number-item">${consolationValid[i]}</span>`;
-                        } else {
-                            html += `<span class="number-item">----</span>`;
-                        }
+                // 特别奖（过滤无效项，保持10个位置）
+                html += `<div class="subsection"><div class="subsection-title">特别奖 SPECIAL</div><div class="number-list" id="special-${companyKey}">`;
+                const specialRaw = data.special || data.special_numbers || data.special_prizes || data.special_results || [];
+                const specialValid = filterValidNumbers(specialRaw);
+                for (let i = 0; i < 10; i++) {
+                    if (i < specialValid.length) {
+                        html += `<span class="number-item">${specialValid[i]}</span>`;
+                    } else {
+                        html += `<span class="number-item">----</span>`;
                     }
-                    html += `</div></div>`;
+                }
+                html += `</div></div>`;
 
-                    if (companyKey === 'grand_dragon' && data.jackpot) {
-                        html += `<div class="subsection"><div class="subsection-title">Jackpot</div><div class="number-list"><span class="number-item">${data.jackpot}</span></div></div>`;
+                // 安慰奖（过滤无效项，保持10个位置）
+                html += `<div class="subsection"><div class="subsection-title">安慰奖 CONSOLATION</div><div class="number-list" id="consolation-${companyKey}">`;
+                const consolationRaw = data.consolation || data.consolation_numbers || data.consolation_prizes || data.consolation_results || [];
+                const consolationValid = filterValidNumbers(consolationRaw);
+                for (let i = 0; i < 10; i++) {
+                    if (i < consolationValid.length) {
+                        html += `<span class="number-item">${consolationValid[i]}</span>`;
+                    } else {
+                        html += `<span class="number-item">----</span>`;
                     }
+                }
+                html += `</div></div>`;
+
+                if (companyKey === 'grand_dragon' && data.jackpot) {
+                    html += `<div class="subsection"><div class="subsection-title">Jackpot</div><div class="number-list"><span class="number-item">${data.jackpot}</span></div></div>`;
                 }
             }
 
