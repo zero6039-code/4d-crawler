@@ -584,23 +584,127 @@
                         html += `</table></div>`;
                     }
                 }
-                // ----- Magnum Jackpot Gold (按 Sabah Lotto 样式显示) -----
+                // ----- Magnum Jackpot Gold (按新格式显示) -----
                 else if (companyKey === 'magnum_jackpot_gold') {
-                    // 收集所有组号码并排序
-                    let allNumbers = [];
+                    html = '';
+                    
+                    // 从 groups 中提取所有号码 (P1-P8)
+                    let numbers = [];
                     if (data.groups && data.groups.length) {
                         const sortedGroups = [...data.groups].sort((a,b) => parseInt(a.group) - parseInt(b.group));
-                        allNumbers = sortedGroups.flatMap(g => g.numbers).filter(n => n);
+                        numbers = sortedGroups.map(g => g.numbers[0] || '').filter(n => n);
                     }
-                    html = `<div class="subsection"><div class="subsection-title">开奖号码</div><div class="number-list">`;
-                    allNumbers.forEach(num => html += `<span class="number-item">${num}</span>`);
-                    html += `</div></div>`;
                     
-                    if (data.jackpots && data.jackpots.length) {
-                        html += `<div class="subsection"><div class="subsection-title">Jackpots</div><div class="number-list">`;
-                        data.jackpots.forEach(jp => html += `<span class="number-item">${jp}</span>`);
-                        html += `</div></div>`;
+                    // 如果数据格式不同，尝试直接从 data 提取
+                    if (numbers.length === 0) {
+                        for (let i = 1; i <= 8; i++) {
+                            if (data[`P${i}`]) numbers.push(data[`P${i}`]);
+                        }
                     }
+                    
+                    if (numbers.length >= 8) {
+                        const n1 = numbers[0]; // 2
+                        const n2 = numbers[1]; // 1
+                        const n3 = numbers[2]; // 5
+                        const n4 = numbers[3]; // 5
+                        const n5 = numbers[4]; // 2
+                        const n6 = numbers[5]; // 6
+                        const n7 = numbers[6]; // 1
+                        const n8 = numbers[7]; // 9
+                        
+                        // ===== Jackpot 1 =====
+                        html += `<div class="subsection">`;
+                        html += `<div class="subsection-title">Jackpot 1</div>`;
+                        
+                        // 号码行：215526 + 19
+                        html += `<div class="number-list" style="justify-content:center; margin-bottom:5px;">`;
+                        html += `<span class="number-item">${n1}${n2}${n3}${n4}${n5}${n6}</span>`;
+                        html += `<span class="number-item">+</span>`;
+                        html += `<span class="number-item">${n7}${n8}</span>`;
+                        html += `</div>`;
+                        
+                        // 奖金行
+                        if (data.jackpots && data.jackpots[0]) {
+                            html += `<div style="text-align:center; font-weight:600; color:#2c3e50;">Prize: ${data.jackpots[0]}</div>`;
+                        }
+                        html += `</div>`;
+                        
+                        // ===== Jackpot 2 =====
+                        html += `<div class="subsection">`;
+                        html += `<div class="subsection-title">Jackpot 2</div>`;
+                        
+                        // 号码行：21552 + 19 or 15526 + 19
+                        html += `<div class="number-list" style="justify-content:center; margin-bottom:5px;">`;
+                        html += `<span class="number-item">${n1}${n2}${n3}${n4}${n5}</span>`;
+                        html += `<span class="number-item">+</span>`;
+                        html += `<span class="number-item">${n7}${n8}</span>`;
+                        html += `<span class="number-item">or</span>`;
+                        html += `<span class="number-item">${n2}${n3}${n4}${n5}${n6}</span>`;
+                        html += `<span class="number-item">+</span>`;
+                        html += `<span class="number-item">${n7}${n8}</span>`;
+                        html += `</div>`;
+                        
+                        // 奖金行
+                        if (data.jackpots && data.jackpots[1]) {
+                            html += `<div style="text-align:center; font-weight:600; color:#2c3e50;">Prize: ${data.jackpots[1]}</div>`;
+                        }
+                        html += `</div>`;
+                        
+                        // ===== 3rd Prize =====
+                        html += `<div class="subsection">`;
+                        html += `<div class="subsection-title">3rd Prize</div>`;
+                        html += `<div class="number-list" style="justify-content:center;">`;
+                        html += `<span class="number-item">${n1}${n2}${n3}${n4}${n5}${n6}</span>`;
+                        html += `</div>`;
+                        html += `</div>`;
+                        
+                        // ===== 4th Prize =====
+                        html += `<div class="subsection">`;
+                        html += `<div class="subsection-title">4th Prize</div>`;
+                        html += `<div class="number-list" style="justify-content:center;">`;
+                        html += `<span class="number-item">${n1}${n2}${n3}${n4}${n5}</span>`;
+                        html += `<span class="number-item">or</span>`;
+                        html += `<span class="number-item">${n2}${n3}${n4}${n5}${n6}</span>`;
+                        html += `</div>`;
+                        html += `</div>`;
+                        
+                        // ===== 5th Prize =====
+                        html += `<div class="subsection">`;
+                        html += `<div class="subsection-title">5th Prize</div>`;
+                        html += `<div class="number-list" style="justify-content:center;">`;
+                        html += `<span class="number-item">${n1}${n2}${n3}${n4}</span>`;
+                        html += `<span class="number-item">or</span>`;
+                        html += `<span class="number-item">${n3}${n4}${n5}${n6}</span>`;
+                        html += `</div>`;
+                        html += `</div>`;
+                        
+                        // ===== 6th Prize =====
+                        html += `<div class="subsection">`;
+                        html += `<div class="subsection-title">6th Prize</div>`;
+                        html += `<div class="number-list" style="justify-content:center;">`;
+                        html += `<span class="number-item">${n1}${n2}${n3}</span>`;
+                        html += `<span class="number-item">or</span>`;
+                        html += `<span class="number-item">${n4}${n5}${n6}</span>`;
+                        html += `</div>`;
+                        html += `</div>`;
+                        
+                        // ===== 7th Prize =====
+                        html += `<div class="subsection">`;
+                        html += `<div class="subsection-title">7th Prize</div>`;
+                        html += `<div class="number-list" style="justify-content:center;">`;
+                        html += `<span class="number-item">${n1}${n2}</span>`;
+                        html += `<span class="number-item">or</span>`;
+                        html += `<span class="number-item">${n3}${n4}</span>`;
+                        html += `<span class="number-item">or</span>`;
+                        html += `<span class="number-item">${n5}${n6}</span>`;
+                        html += `</div>`;
+                        html += `</div>`;
+                        
+                    } else {
+                        // 如果没有足够的数据，显示占位信息
+                        html = '<p style="text-align:center; padding:10px;">数据格式不正确或缺失</p>';
+                    }
+                    
                     if (!html) html = '<p style="text-align:center; padding:10px;">无数据</p>';
                 }
                 // ----- Sports Toto 5D -----
