@@ -760,7 +760,7 @@
                     }
                     if (!html) html = '<p style="text-align:center; padding:10px;">无数据</p>';
                 }
-                // ----- Sabah Lotto (按新格式显示) -----
+                // ----- Sabah Lotto (按新格式显示：Lotto 6 前5个合并，Lotto 5 前4个合并) -----
                 else if (companyKey === 'sabah_lotto') {
                     // 主号码 (Lotto 6/45)
                     let mainNumbers = data.winning_numbers || [];
@@ -769,7 +769,7 @@
 
                     html = `<div class="subsection"><div class="subsection-title">Lotto 6/45</div>`;
 
-                    // 号码行
+                    // 主号码行：前6个号码单独显示，加号，额外号单独显示（保持原样）
                     if (mainNumbers.length >= 7) {
                         html += `<div class="number-list" style="justify-content:center; margin-bottom:10px;">`;
                         for (let i = 0; i < 6; i++) {
@@ -801,9 +801,10 @@
                         let jackpot = data[`LT6G${g}JP`] || '';
 
                         if (nums.length === 5) {
+                            let combined = nums.join(''); // 合并前5个数字
                             html += `<div style="margin-bottom:12px;">`;
                             html += `<div class="number-list" style="justify-content:center;">`;
-                            nums.forEach(n => html += `<span class="number-item">${n}</span>`);
+                            html += `<span class="number-item">${combined}</span>`;
                             html += `<span class="number-item">+</span>`;
                             html += `<span class="number-item">${extra}</span>`;
                             html += `</div>`;
@@ -827,9 +828,10 @@
                         let jackpot = data[`LT5G${g}JP`] || '';
 
                         if (nums.length === 4) {
+                            let combined = nums.join(''); // 合并前4个数字
                             html += `<div style="margin-bottom:12px;">`;
                             html += `<div class="number-list" style="justify-content:center;">`;
-                            nums.forEach(n => html += `<span class="number-item">${n}</span>`);
+                            html += `<span class="number-item">${combined}</span>`;
                             html += `<span class="number-item">+</span>`;
                             html += `<span class="number-item">${extra}</span>`;
                             html += `</div>`;
