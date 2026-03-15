@@ -653,14 +653,29 @@
                     }
                     if (!html) html = '<p style="text-align:center; padding:10px;">无数据</p>';
                 }
-                // ----- Sports Toto 5D -----
+                // ----- Sports Toto 5D (新两列格式) -----
                 else if (companyKey === 'sportstoto_5d') {
-                    html = `<div class="subsection"><div class="subsection-title">5D 号码</div><div class="number-list">`;
-                    ['1st', '2nd', '3rd', '4th', '5th', '6th'].forEach(pos => {
+                    html = `<div class="subsection"><div class="subsection-title">5D 号码</div>`;
+                    html += `<div style="display:flex; gap:20px; justify-content:space-around;">`;
+                    
+                    // 左列：1st,2nd,3rd
+                    html += `<div>`;
+                    ['1st', '2nd', '3rd'].forEach(pos => {
                         if (data[pos] && data[pos] !== '----') {
-                            html += `<span class="number-item">${data[pos]}</span>`;
+                            html += `<div style="margin-bottom:8px;"><span class="label" style="font-weight:600; margin-right:8px;">${pos}</span><span class="number-item" style="display:inline-block;">${data[pos]}</span></div>`;
                         }
                     });
+                    html += `</div>`;
+                    
+                    // 右列：4th,5th,6th
+                    html += `<div>`;
+                    ['4th', '5th', '6th'].forEach(pos => {
+                        if (data[pos] && data[pos] !== '----') {
+                            html += `<div style="margin-bottom:8px;"><span class="label" style="font-weight:600; margin-right:8px;">${pos}</span><span class="number-item" style="display:inline-block;">${data[pos]}</span></div>`;
+                        }
+                    });
+                    html += `</div>`;
+                    
                     html += `</div></div>`;
                 }
                 // ----- Sports Toto 6D -----
