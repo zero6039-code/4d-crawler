@@ -226,8 +226,9 @@
             max-width: 350px;
         }
         .qr-image {
-            width: 200px;
-            height: 200px;
+            width: 100%;
+            max-width: 200px;
+            height: auto;
             margin: 20px auto;
             display: block;
             border-radius: 16px;
@@ -304,14 +305,14 @@
         </div>
     </div>
 
-    <!-- 打赏弹窗（无标题，添加联系邮箱） -->
+    <!-- 打赏弹窗（无标题，添加联系邮箱，关闭按钮改为Close） -->
     <div class="modal-overlay" id="donate-modal">
         <div class="modal-content donate-modal">
             <img src="images/tng_qr.jpg" alt="TNG 二维码" class="qr-image" onerror="this.src='https://via.placeholder.com/200?text=QR+Code+Not+Found'">
             <p class="donate-note">Please use TNG to scan for support. Your support is my motivation to update. The amount does not need to be much. Please verify name with LOW KEAN WAH. Thank you ❤️</p>
             <p class="contact-email">Contact: zero6039@gmail.com</p>
             <div class="modal-buttons">
-                <button class="close-modal-btn" id="close-donate-modal">关闭</button>
+                <button class="close-modal-btn" id="close-donate-modal">Close</button>
             </div>
         </div>
     </div>
