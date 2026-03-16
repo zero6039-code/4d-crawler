@@ -202,6 +202,43 @@
             font-size: 0.8rem;
             color: #7c8b9c;
         }
+
+        /* ========== 打赏按钮样式 ========== */
+        .donate-btn {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: none;
+            padding: 8px 25px;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(16,185,129,0.3);
+            transition: all 0.2s;
+            line-height: 1.4;
+            margin-left: 8px;  /* 与幸运号码按钮保持间距 */
+        }
+        .donate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(16,185,129,0.4);
+        }
+        .donate-modal .modal-content {
+            max-width: 350px;
+        }
+        .qr-image {
+            width: 200px;
+            height: 200px;
+            margin: 20px auto;
+            display: block;
+            border-radius: 16px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+        .donate-note {
+            color: #4b5563;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            white-space: pre-line; /* 支持换行 */
+        }
     </style>
 </head>
 <body>
@@ -225,7 +262,9 @@
             </div>
             <button class="refresh-btn" id="refresh-btn" onclick="forceRefresh()">Refresh</button>
             <!-- 幸运号码按钮 -->
-            <button class="lucky-btn" id="lucky-btn">🎰 Lucky Number</button>
+            <button class="lucky-btn" id="lucky-btn">🎰 Luckly Number</button>
+            <!-- 打赏按钮 -->
+            <button class="donate-btn" id="donate-btn">❤️ Support</button>
         </div>
 
         <div id="companies-grid" class="companies-grid">
@@ -245,7 +284,7 @@
     <!-- 幸运号码弹窗 -->
     <div class="modal-overlay" id="lucky-modal">
         <div class="modal-content">
-            <div class="modal-title">✨ Lucky Number ✨</div>
+            <div class="modal-title">✨ Luckly Number ✨</div>
             <div class="lucky-digits">
                 <span class="lucky-digit-box" id="digit1">0</span>
                 <span class="lucky-digit-box" id="digit2">0</span>
@@ -253,10 +292,22 @@
                 <span class="lucky-digit-box" id="digit4">0</span>
             </div>
             <div class="modal-buttons">
-                <button class="spin-btn" id="spin-btn">Start</button>
-                <button class="close-modal-btn" id="close-modal">CLOSE</button>
+                <button class="spin-btn" id="spin-btn">开始抽奖</button>
+                <button class="close-modal-btn" id="close-modal">关闭</button>
             </div>
-            <div class="footer-note">Get your Lucky Number Today!</div>
+            <div class="footer-note">点击开始，四个号码依次滚动停下</div>
+        </div>
+    </div>
+
+    <!-- 打赏弹窗 -->
+    <div class="modal-overlay" id="donate-modal">
+        <div class="modal-content donate-modal">
+            <div class="modal-title">❤️ Thank for support</div>
+            <img src="images/tng_qr.jpg" alt="TNG 二维码" class="qr-image" onerror="this.src='https://via.placeholder.com/200?text=QR+Code+Not+Found'">
+            <p class="donate-note">Please use TNG to scan for support. Your support is my motivation to update. The amount does not need to be much. Please verify name with LOW KEAN WAH. Thank you ❤️</p>
+            <div class="modal-buttons">
+                <button class="close-modal-btn" id="close-donate-modal">关闭</button>
+            </div>
         </div>
     </div>
 
@@ -1159,6 +1210,27 @@
                 }, 1000);
                 timeouts.push(timeout);
             }
+        })();
+
+        // ========== 打赏弹窗逻辑 ==========
+        (function() {
+            const donateModal = document.getElementById('donate-modal');
+            const donateBtn = document.getElementById('donate-btn');
+            const closeDonateBtn = document.getElementById('close-donate-modal');
+
+            if (donateBtn) {
+                donateBtn.addEventListener('click', () => {
+                    donateModal.style.display = 'flex';
+                });
+            }
+
+            const closeDonateModal = () => {
+                donateModal.style.display = 'none';
+            };
+            if (closeDonateBtn) closeDonateBtn.addEventListener('click', closeDonateModal);
+            if (donateModal) donateModal.addEventListener('click', (e) => {
+                if (e.target === donateModal) closeDonateModal();
+            });
         })();
     </script>
 </body>
