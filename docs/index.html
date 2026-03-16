@@ -216,7 +216,7 @@
             box-shadow: 0 4px 12px rgba(16,185,129,0.3);
             transition: all 0.2s;
             line-height: 1.4;
-            margin-left: 8px;  /* 与幸运号码按钮保持间距 */
+            margin-left: 8px;
         }
         .donate-btn:hover {
             transform: translateY(-2px);
@@ -237,7 +237,12 @@
             color: #4b5563;
             font-size: 0.9rem;
             margin-top: 10px;
-            white-space: pre-line; /* 支持换行 */
+            white-space: pre-line;
+        }
+        .contact-email {
+            margin-top: 10px;
+            color: #4b5563;
+            font-size: 0.9rem;
         }
     </style>
 </head>
@@ -299,12 +304,12 @@
         </div>
     </div>
 
-    <!-- 打赏弹窗 -->
+    <!-- 打赏弹窗（无标题，添加联系邮箱） -->
     <div class="modal-overlay" id="donate-modal">
         <div class="modal-content donate-modal">
-            <div class="modal-title">❤️ Thank for support</div>
             <img src="images/tng_qr.jpg" alt="TNG 二维码" class="qr-image" onerror="this.src='https://via.placeholder.com/200?text=QR+Code+Not+Found'">
             <p class="donate-note">Please use TNG to scan for support. Your support is my motivation to update. The amount does not need to be much. Please verify name with LOW KEAN WAH. Thank you ❤️</p>
+            <p class="contact-email">Contact: zero6039@gmail.com</p>
             <div class="modal-buttons">
                 <button class="close-modal-btn" id="close-donate-modal">关闭</button>
             </div>
