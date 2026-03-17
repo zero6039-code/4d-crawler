@@ -89,6 +89,11 @@
             .prize-card .number { font-size: 1.6rem; }
             .number-item { font-size: 1.3rem; padding: 6px 12px; min-width: auto; word-break: break-all; white-space: normal; }
             .draw-date { font-size: 0.75rem; }
+
+            /* 加粗数字字体 */
+            .number-item, .prize-card .number, .lucky-digit-box {
+                font-weight: 700;
+            }
         }
         .company-section[data-company="damacai"] .company-title { background: linear-gradient(145deg, #1e5620, #2a7a2d); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .company-section[data-company="magnum"] .company-title { background: linear-gradient(145deg, #aa4a1e, #c95f2a); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
@@ -197,11 +202,6 @@
             cursor: not-allowed;
             transform: none;
         }
-        .footer-note {
-            margin-top: 15px;
-            font-size: 0.8rem;
-            color: #7c8b9c;
-        }
 
         /* ========== 打赏按钮样式 ========== */
         .donate-btn {
@@ -287,7 +287,7 @@
         </footer>
     </div>
 
-    <!-- 幸运号码弹窗 -->
+    <!-- 幸运号码弹窗（按钮文字改为英文，移除提示） -->
     <div class="modal-overlay" id="lucky-modal">
         <div class="modal-content">
             <div class="modal-title">✨ Luckly Number ✨</div>
@@ -298,14 +298,13 @@
                 <span class="lucky-digit-box" id="digit4">0</span>
             </div>
             <div class="modal-buttons">
-                <button class="spin-btn" id="spin-btn">开始抽奖</button>
-                <button class="close-modal-btn" id="close-modal">关闭</button>
+                <button class="spin-btn" id="spin-btn">Start</button>
+                <button class="close-modal-btn" id="close-modal">Close</button>
             </div>
-            <div class="footer-note">点击开始，四个号码依次滚动停下</div>
         </div>
     </div>
 
-    <!-- 打赏弹窗（无标题，添加联系邮箱，关闭按钮改为Close） -->
+    <!-- 打赏弹窗（无标题，添加联系邮箱，关闭按钮为Close） -->
     <div class="modal-overlay" id="donate-modal">
         <div class="modal-content donate-modal">
             <img src="images/tng_qr.jpg" alt="TNG 二维码" class="qr-image" onerror="this.src='https://via.placeholder.com/200?text=QR+Code+Not+Found'">
