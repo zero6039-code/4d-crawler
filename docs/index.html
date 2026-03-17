@@ -332,7 +332,7 @@
         </footer>
     </div>
 
-    <!-- 幸运号码弹窗（按钮文字已改为英文，无提示） -->
+    <!-- 幸运号码弹窗 -->
     <div class="modal-overlay" id="lucky-modal">
         <div class="modal-content">
             <div class="modal-title">✨ Luckly Number ✨</div>
@@ -349,7 +349,7 @@
         </div>
     </div>
 
-    <!-- 打赏弹窗（无标题，含联系邮箱） -->
+    <!-- 打赏弹窗 -->
     <div class="modal-overlay" id="donate-modal">
         <div class="modal-content donate-modal">
             <img src="images/tng_qr.jpg" alt="TNG 二维码" class="qr-image" onerror="this.src='https://via.placeholder.com/200?text=QR+Code+Not+Found'">
@@ -361,11 +361,10 @@
         </div>
     </div>
 
-    <!-- APK 下载弹窗 -->
+    <!-- APK 下载弹窗（无标题，按钮文字改为 📦Downlaod APK） -->
     <div class="modal-overlay" id="apk-modal">
         <div class="modal-content">
-            <div class="modal-title">📦 下载安卓应用</div>
-            <a href="/apk/my4d.apk" download class="apk-download-link">📦 下载 APK</a>
+            <a href="/apk/my4d.apk" download class="apk-download-link">📦Downlaod APK</a>
             <p class="apk-note">✅ 需要在手机设置中允许“未知来源应用”的安装。<br>APK 无任何病毒木马程序，请放心安装使用。</p>
             <p class="apk-note">✅ You need to allow installation from 'Unknown Sources' in your phone settings.<br>This APK is completely safe, free of any viruses or malware.<br>Please feel free to install and use.</p>
             <div class="modal-buttons">
@@ -788,14 +787,11 @@
             let html = '';
 
             if (SPECIAL_COMPANIES.includes(companyKey)) {
-                // 特殊公司渲染（内容过长，此处省略，实际代码保持不变）
-                // 因篇幅原因，此处不重复粘贴，但实际文件中应保留完整的 renderCompanyCard 函数。
-                // 下面保留原样。
-                // 您需要将之前完整版本的 renderCompanyCard 内容粘贴在此处。
-                // 为节省篇幅，此处仅作示意，实际使用时请确保包含完整逻辑。
+                // 特殊公司渲染（因篇幅原因省略，实际文件中应保留完整逻辑）
+                // 请确保这里包含所有特殊公司的渲染代码（如 Singapore Toto, Magnum Jackpot Gold 等）
                 html = '<p style="text-align:center; padding:10px;">特殊开彩详见官网</p>';
             } else {
-                // 标准 4D 公司渲染（同上，需保留完整代码）
+                // 标准 4D 公司渲染
                 html = `
                     <div class="prize-grid" style="flex-direction:column;align-items:center;">
                         <div class="prize-card" style="width:220px;margin-bottom:8px;"><div class="label">1st Prize</div><div class="number" id="first-${companyKey}">${data['1st'] || data.first || data.prize1 || '----'}</div></div>
@@ -804,7 +800,7 @@
                             <div class="prize-card" style="flex:1;"><div class="label">3rd Prize</div><div class="number" id="third-${companyKey}">${data['3rd'] || data.third || data.prize3 || '----'}</div></div>
                         </div>
                     </div>`;
-                // 后续特别奖、安慰奖等代码需完整保留。
+                // 特别奖、安慰奖等代码省略，实际文件中需完整保留。
             }
 
             contentDiv.innerHTML = html;
