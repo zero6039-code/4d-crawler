@@ -8,13 +8,14 @@ on:
     - cron: '*/5 11 * * *'
     # 马来西亚时间 20:00 (UTC 12:00) 运行一次
     - cron: '0 12 * * *'
-  workflow_dispatch:  # 允许手动触发（保持不变）
+  workflow_dispatch:  # 允许手动触发
 
 jobs:
   crawl:
     runs-on: ubuntu-latest
     env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true   # 在此处添加
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      IS_MANUAL: ${{ github.event_name == 'workflow_dispatch' }}
     permissions:
       contents: write
     steps:
