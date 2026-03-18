@@ -928,36 +928,43 @@ def update_dates_index():
 def main():
     print("🚀 爬虫开始运行")
 
-    # 马来西亚时区 UTC+8
-    tz = timezone(timedelta(hours=8))
-    now = datetime.now(tz)
-    
-    # 定义抓取时段：19:00 到 20:00（马来西亚时间）
-    target_start = now.replace(hour=19, minute=0, second=0, microsecond=0)
-    target_end = now.replace(hour=20, minute=0, second=0, microsecond=0)
-    
-    # 如果当前时间不在时段内，则直接退出
-    if now < target_start or now >= target_end:
-        print("当前不在抓取时段（19:00–20:00），退出。")
-        return
+    # 读取环境变量，判断是否为手动触发
+    is_manual = os.getenv('IS_MANUAL') == 'true'
 
-    # 在时段内循环尝试抓取，直到成功或时间结束
-    max_attempts = 12   # 最多尝试 12 次（每次间隔 5 分钟）
-    attempt = 0
-    json_success = False
-    while attempt < max_attempts and not json_success:
-        print(f"第 {attempt+1} 次尝试抓取 JSON 数据...")
-        # 执行 JSON 抓取
-        json_success = fetch_all_companies_from_dato4d()
-        if json_success:
-            print("JSON 抓取成功！")
-            break
-        else:
-            print("JSON 抓取失败，5分钟后重试...")
-            time.sleep(300)   # 等待 5 分钟
-            attempt += 1
+    # 如果不是手动触发，则执行时段检查
+    if not is_manual:
+        from datetime import datetime, timezone, timedelta
+        tz = timezone(timedelta(hours=8))
+        now = datetime.now(tz)
+        
+        target_start = now.replace(hour=19, minute=0, second=0, microsecond=0)
+        target_end = now.replace(hour=20, minute=0, second=0, microsecond=0)
+        
+        if now < target_start or now >= target_end:
+            print("当前不在抓取时段（19:00–20:00），退出。")
+            return
     else:
-        print("时段内多次尝试 JSON 均失败。")
+        print("手动触发模式，跳过时段检查。")
+
+    # 自动模式下循环重试，手动模式只尝试一次
+    if not is_manual:
+        max_attempts = 12
+        attempt = 0
+        json_success = False
+        while attempt < max_attempts and not json_success:
+            print(f"第 {attempt+1} 次尝试抓取 JSON 数据...")
+            json_success = fetch_all_companies_from_dato4d()
+            if json_success:
+                print("JSON 抓取成功！")
+                break
+            else:
+                print("JSON 抓取失败，5分钟后重试...")
+                time.sleep(300)
+                attempt += 1
+        else:
+            print("时段内多次尝试 JSON 均失败。")
+    else:
+        json_success = fetch_all_companies_from_dato4d()
 
     # 如果 JSON 源失败，则回退到 4d4d.co 抓取
     if not json_success:
