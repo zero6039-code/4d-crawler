@@ -1,56 +1,7 @@
 {
-  "draw_date": "21-03-2026",
-  "draw_no": "343/26",
-  "groups": [
-    {
-      "group": "1",
-      "numbers": [
-        "9"
-      ]
-    },
-    {
-      "group": "2",
-      "numbers": [
-        "8"
-      ]
-    },
-    {
-      "group": "3",
-      "numbers": [
-        "3"
-      ]
-    },
-    {
-      "group": "4",
-      "numbers": [
-        "0"
-      ]
-    },
-    {
-      "group": "5",
-      "numbers": [
-        "9"
-      ]
-    },
-    {
-      "group": "6",
-      "numbers": [
-        "7"
-      ]
-    },
-    {
-      "group": "7",
-      "numbers": [
-        "0"
-      ]
-    },
-    {
-      "group": "8",
-      "numbers": [
-        "1"
-      ]
-    }
-  ],
+  "draw_date": "22-03-2026",
+  "draw_no": "",
+  "groups": [],
   "jackpots": [
     "",
     ""
