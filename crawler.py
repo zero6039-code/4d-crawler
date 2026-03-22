@@ -882,7 +882,7 @@ def fetch_all_companies_from_dato4d():
     companies_to_extract = {
         "D": "damacai",
         "M": "magnum",
-        "T": "toto"
+        "T": "sportstoto"
     }
     for key, company_name in companies_to_extract.items():
         if key in data:
