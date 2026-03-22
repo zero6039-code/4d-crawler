@@ -878,6 +878,50 @@ def fetch_all_companies_from_dato4d():
     else:
         print("⚠️ JSON 中缺少 M (Magnum) 的数据")
 
+    # ========== 新增：提取三家公司开奖结果并保存为固定文件 ==========
+    companies_to_extract = {
+        "D": "damacai",
+        "M": "magnum",
+        "T": "toto"
+    }
+    for key, company_name in companies_to_extract.items():
+        if key in data:
+            company_data = data[key]
+            raw_date = company_data.get("DD", "")
+            draw_date_str = extract_date_from_dd(raw_date)
+            ymd_date = dmy_to_ymd(draw_date_str) if draw_date_str else datetime.now().strftime("%Y-%m-%d")
+            if ymd_date:
+                draw_result = {
+                    "1st": company_data.get("P1", ""),
+                    "2nd": company_data.get("P2", ""),
+                    "3rd": company_data.get("P3", ""),
+                    "special": [],
+                    "consolation": []
+                }
+                # 提取特别奖 S1-S13
+                for i in range(1, 14):
+                    s_key = f"S{i}"
+                    if s_key in company_data:
+                        num = company_data[s_key]
+                        if num and num not in ["----", "-"]:
+                            draw_result["special"].append(num)
+                # 提取安慰奖 C1-C10
+                for i in range(1, 11):
+                    c_key = f"C{i}"
+                    if c_key in company_data:
+                        num = company_data[c_key]
+                        if num and num not in ["----", "-"]:
+                            draw_result["consolation"].append(num)
+                # 保存固定文件
+                draw_dir = os.path.join("docs/data", ymd_date)
+                os.makedirs(draw_dir, exist_ok=True)
+                draw_path = os.path.join(draw_dir, f"{company_name}_draw.json")
+                with open(draw_path, "w", encoding="utf-8") as f:
+                    json.dump(draw_result, f, ensure_ascii=False, indent=2)
+                print(f"📌 已保存 {company_name} 开奖结果: {draw_path}")
+        else:
+            print(f"⚠️ 无法从 JSON 中找到 {company_name} 数据，跳过保存")
+
     print(f"✅ 从 JSON 成功获取 {success_count} 家公司数据")
     return True
 
