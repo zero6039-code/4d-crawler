@@ -1,0 +1,56 @@
+/* ========== 模拟下注按钮样式 ========== */
+.betting-btn {
+    background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+    color: white;
+    border: none;
+    padding: 8px 25px;
+    border-radius: 25px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(139,92,246,0.3);
+    transition: all 0.2s;
+    line-height: 1.4;
+    margin-left: 8px;
+}
+.betting-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(139,92,246,0.4);
+}
+
+/* 下注弹窗内表单样式 */
+.bet-input-group {
+    margin-bottom: 15px;
+    text-align: left;
+}
+.bet-input-group label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin-bottom: 4px;
+    color: #4b5563;
+}
+.bet-input-group input, .bet-input-group select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #cbd5e0;
+    border-radius: 8px;
+    font-size: 0.95rem;
+}
+.bet-amount-input {
+    width: 100%;
+}
+.history-item {
+    border-bottom: 1px solid #e2e8f0;
+    padding: 10px 0;
+    text-align: left;
+    font-size: 0.85rem;
+}
+.history-item strong {
+    color: #2d3748;
+}
+.history-date {
+    font-size: 0.7rem;
+    color: #718096;
+    margin-top: 4px;
+}
