@@ -1,58 +1,9 @@
 {
-  "draw_date": "22-03-2026",
-  "draw_no": "344/26",
-  "groups": [
-    {
-      "group": "1",
-      "numbers": [
-        "6"
-      ]
-    },
-    {
-      "group": "2",
-      "numbers": [
-        "0"
-      ]
-    },
-    {
-      "group": "3",
-      "numbers": [
-        "6"
-      ]
-    },
-    {
-      "group": "4",
-      "numbers": [
-        "8"
-      ]
-    },
-    {
-      "group": "5",
-      "numbers": [
-        "9"
-      ]
-    },
-    {
-      "group": "6",
-      "numbers": [
-        "3"
-      ]
-    },
-    {
-      "group": "7",
-      "numbers": [
-        "0"
-      ]
-    },
-    {
-      "group": "8",
-      "numbers": [
-        "2"
-      ]
-    }
-  ],
+  "draw_date": "28-03-2026",
+  "draw_no": "",
+  "groups": [],
   "jackpots": [
-    "RM 12,094,249.17",
-    "RM 126,419.35"
+    "",
+    ""
   ]
 }
