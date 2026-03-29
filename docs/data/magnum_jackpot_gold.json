@@ -1,7 +1,56 @@
 {
   "draw_date": "29-03-2026",
-  "draw_no": "",
-  "groups": [],
+  "draw_no": "347/26",
+  "groups": [
+    {
+      "group": "1",
+      "numbers": [
+        "5"
+      ]
+    },
+    {
+      "group": "2",
+      "numbers": [
+        "9"
+      ]
+    },
+    {
+      "group": "3",
+      "numbers": [
+        "2"
+      ]
+    },
+    {
+      "group": "4",
+      "numbers": [
+        "9"
+      ]
+    },
+    {
+      "group": "5",
+      "numbers": [
+        "1"
+      ]
+    },
+    {
+      "group": "6",
+      "numbers": [
+        "7"
+      ]
+    },
+    {
+      "group": "7",
+      "numbers": [
+        "1"
+      ]
+    },
+    {
+      "group": "8",
+      "numbers": [
+        "5"
+      ]
+    }
+  ],
   "jackpots": [
     "",
     ""
