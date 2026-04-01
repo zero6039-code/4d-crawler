@@ -87,7 +87,12 @@
             .company-title img { height: 3.2rem; }
             .company-section[data-company="damacai_1p3d"] .company-title img { height: 2.5rem; }
             .prize-card .number { font-size: 1.6rem; }
-            .number-item { font-size: 1.3rem; padding: 6px 12px; min-width: auto; word-break: break-all; white-space: normal; }
+            /* 特别奖/安慰奖数字加大 */
+            .number-item { 
+                font-size: 1.2rem !important; 
+                padding: 8px 12px !important;
+                min-width: 60px;
+            }
             .draw-date { font-size: 0.75rem; }
             .number-item, .prize-card .number, .lucky-digit-box { font-weight: 700; }
         }
@@ -327,14 +332,11 @@
             box-shadow: 0 6px 16px rgba(139,92,246,0.4);
         }
 
-        /* ========== 卡片滚动优化（修复手机端过高问题） ========== */
+        /* 移除滚动限制，让卡片内容自然展开 */
         .company-content {
-            max-height: 300px;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-            padding-right: 5px;
-            margin-top: 6px;
+            /* 删除 max-height 和 overflow 相关属性，完全展开 */
         }
+        /* 适当调整间距，让卡片更紧凑但数字更大 */
         .company-section {
             padding: 12px 10px !important;
         }
@@ -349,13 +351,8 @@
             font-size: 1.4rem !important;
         }
         .subsection {
-            padding: 6px 6px !important;
-            margin-top: 8px !important;
-        }
-        .number-item {
-            padding: 4px 8px !important;
-            font-size: 0.9rem !important;
-            margin: 2px !important;
+            padding: 8px 8px !important;
+            margin-top: 10px !important;
         }
         .company-title {
             font-size: 1.4rem !important;
@@ -368,6 +365,13 @@
         .draw-date {
             font-size: 0.7rem !important;
             margin-bottom: 4px !important;
+        }
+        /* 确保特别奖/安慰奖数字在手机端已经增大，这里统一再加强一下 */
+        @media (max-width: 600px) {
+            .number-item {
+                font-size: 1.2rem !important;
+                padding: 8px 12px !important;
+            }
         }
     </style>
 </head>
@@ -806,23 +810,23 @@
             
             let date = 1;
             for (let i = 0; i < 6; i++) {
-                html += '<tr>';
+                html += ' ';
                 for (let j = 0; j < 7; j++) {
                     if ((i === 0 && j < firstDay) || date > daysInMonth) {
-                        html += '<td class="empty"></td>';
+                        html += '<td class="empty"> ';
                     } else {
                         let dateYmd = `${year}-${month.toString().padStart(2,'0')}-${date.toString().padStart(2,'0')}`;
                         let hasData = filteredDatesSet.has(dateYmd);
                         let isSelected = (selectedDate === dateYmd) ? 'selected' : '';
                         let isToday = (dateYmd === todayYmd) ? 'today' : '';
-                        html += `<td class="${hasData ? 'has-data' : ''} ${isSelected} ${isToday}" onclick="calendarDateClick('${dateYmd}')">${date}</td>`;
+                        html += `<td class="${hasData ? 'has-data' : ''} ${isSelected} ${isToday}" onclick="calendarDateClick('${dateYmd}')">${date} `;
                         date++;
                     }
                 }
-                html += '</tr>';
+                html += ' ';
                 if (date > daysInMonth) break;
             }
-            html += '</tbody></table>';
+            html += '</tbody> </table>';
             popup.innerHTML = html;
             
             document.getElementById('prev-month').onclick = (e) => { e.stopPropagation(); changeMonth(-1); };
@@ -948,15 +952,15 @@
                         html += `<div class="subsection"><div class="subsection-title">奖金分配</div><table class="custom-table"><thead><th>Prize Group</th><th>Amount</th><th>Winners</th></thead><tbody>`;
                         prizeTable.forEach(row => {
                             if (Array.isArray(row)) {
-                                html += `<tr><td>${row[0] || ''}</td><td>${row[1] || ''}</td><td>${row[2] || ''}</td></tr>`;
+                                html += ` <td>${row[0] || ''}</td><td>${row[1] || ''}</td><td>${row[2] || ''}</td> `;
                             } else if (typeof row === 'object') {
                                 let group = row.group || row.prize || row.Prize || row.name || '';
                                 let amount = row.amount || row.Amount || row.prize_amount || row.value || '';
                                 let winners = row.winners || row.Winners || row.winner_count || '';
-                                html += `<tr><td>${group}</td><td>${amount}</td><td>${winners}</td></tr>`;
+                                html += ` <td>${group}</td><td>${amount}</td><td>${winners}</td> `;
                             }
                         });
-                        html += `</tbody></table></div>`;
+                        html += `</tbody> </table></div>`;
                     }
                 }
                 else if (companyKey === 'magnum_jackpot_gold') {
