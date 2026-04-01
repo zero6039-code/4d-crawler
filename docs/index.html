@@ -11,9 +11,25 @@
     <style>
         /* ==================== 基础样式 ==================== */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
-        body { background: #f0f2f5; padding: 15px 10px; }
+        body { background: #f0f2f5; padding: 15px 10px; transition: background 0.3s, color 0.3s; }
+        body.dark-mode { background: #1a202c; color: #e2e8f0; }
+        body.dark-mode .company-section { background: #2d3748; border-color: #4a5568; }
+        body.dark-mode .company-title { background: linear-gradient(145deg, #a0aec0, #cbd5e0); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        body.dark-mode .draw-date { color: #a0aec0; }
+        body.dark-mode .prize-card, body.dark-mode .subsection { background: #2d3748; border-color: #4a5568; }
+        body.dark-mode .number-item { background: #1a202c; border-color: #4a5568; color: #e2e8f0; }
+        body.dark-mode .date-btn, body.dark-mode .calendar-btn, body.dark-mode .refresh-btn, 
+        body.dark-mode .lucky-btn, body.dark-mode .donate-btn, body.dark-mode .betting-btn, 
+        body.dark-mode .apk-btn, body.dark-mode .dark-mode-btn { background: #2d3748; color: #e2e8f0; border-color: #4a5568; }
+        body.dark-mode footer { color: #a0aec0; border-top-color: #4a5568; }
+        body.dark-mode .modal-content { background: #2d3748; color: #e2e8f0; }
+        body.dark-mode .modal-title { color: #fbbf24; }
+        body.dark-mode .bet-input-group input, body.dark-mode .bet-input-group select { background: #1a202c; border-color: #4a5568; color: #e2e8f0; }
+        body.dark-mode .close-modal-btn { background: #4a5568; color: #e2e8f0; }
+        body.dark-mode .spin-btn { background: #f59e0b; }
         .container { max-width: 1300px; margin: 0 auto; }
         h1 { font-size: 2.2rem; font-weight: 800; text-align: center; margin-bottom: 15px; background: linear-gradient(135deg, #0b1c2f, #2c3e50); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1px; }
+        body.dark-mode h1 { background: linear-gradient(135deg, #e2e8f0, #a0aec0); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .top-calendar { display: flex; justify-content: center; margin-bottom: 15px; position: relative; }
         .bottom-row { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; position: relative; }
         .date-dropdown { position: relative; display: inline-block; }
@@ -81,27 +97,26 @@
         .status-indicator.loading { background: #ecc94b; animation: blink 1s infinite; }
         @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
         @media (max-width: 900px) { .companies-grid { grid-template-columns: repeat(2, 1fr); } }
-        /* 手机端断点放宽到 800px，确保覆盖所有手机 */
         @media (max-width: 800px) {
             .companies-grid { grid-template-columns: 1fr; }
             .company-title { font-size: 1.5rem; gap: 8px; }
             .company-title img { height: 3.2rem; }
             .company-section[data-company="damacai_1p3d"] .company-title img { height: 2.5rem; }
             .prize-card .number { font-size: 1.6rem; }
-            /* 强制特别奖/安慰奖网格紧凑布局 */
+            /* 手机端特别奖/安慰奖：网格布局每行4个，紧凑样式（数字13px，内边距极小） */
             .company-content .number-list {
                 display: grid !important;
                 grid-template-columns: repeat(4, 1fr) !important;
                 gap: 6px !important;
             }
             .company-content .number-list .number-item {
-                font-size: 1rem !important;
-                padding: 4px 4px !important;
+                font-size: 13px !important;
+                padding: 4px 2px !important;
                 text-align: center !important;
                 min-width: auto !important;
                 white-space: nowrap !important;
-                border-radius: 20px !important;
-                line-height: 1.3 !important;
+                border-radius: 16px !important;
+                line-height: 1.2 !important;
             }
             .draw-date { font-size: 0.75rem; }
             .number-item, .prize-card .number, .lucky-digit-box { font-weight: 700; }
@@ -113,7 +128,7 @@
         .jackpot-label { font-weight: 600; margin: 4px 0 2px 0; color: #2c3e50; font-size: 0.95rem; }
 
         /* ========== 幸运号码小游戏样式 ========== */
-        .lucky-btn {
+        .lucky-btn, .dark-mode-btn {
             background: linear-gradient(135deg, #f59e0b, #d97706);
             color: white;
             border: none;
@@ -126,9 +141,12 @@
             transition: all 0.2s;
             line-height: 1.4;
         }
-        .lucky-btn:hover {
+        .lucky-btn:hover, .dark-mode-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 16px rgba(245,158,11,0.4);
+        }
+        .dark-mode-btn {
+            background: linear-gradient(135deg, #4a5568, #2d3748);
         }
         .modal-overlay {
             display: none;
@@ -343,39 +361,15 @@
         }
 
         /* 卡片内容完全展开，无滚动条 */
-        .company-content {
-            /* 无限制，完全展开 */
-        }
-        /* 调整内部间距，让卡片更紧凑但数字清晰 */
-        .company-section {
-            padding: 12px 10px !important;
-        }
-        .prize-grid {
-            margin: 6px 0 8px !important;
-        }
-        .prize-card {
-            padding: 6px 8px !important;
-            min-width: 70px;
-        }
-        .prize-card .number {
-            font-size: 1.4rem !important;
-        }
-        .subsection {
-            padding: 8px 8px !important;
-            margin-top: 10px !important;
-        }
-        .company-title {
-            font-size: 1.4rem !important;
-            margin-bottom: 2px !important;
-        }
-        .company-title img {
-            max-height: 2.8rem !important;
-            width: auto;
-        }
-        .draw-date {
-            font-size: 0.7rem !important;
-            margin-bottom: 4px !important;
-        }
+        .company-content { /* 无限制，完全展开 */ }
+        .company-section { padding: 12px 10px !important; }
+        .prize-grid { margin: 6px 0 8px !important; }
+        .prize-card { padding: 6px 8px !important; min-width: 70px; }
+        .prize-card .number { font-size: 1.4rem !important; }
+        .subsection { padding: 8px 8px !important; margin-top: 10px !important; }
+        .company-title { font-size: 1.4rem !important; margin-bottom: 2px !important; }
+        .company-title img { max-height: 2.8rem !important; width: auto; }
+        .draw-date { font-size: 0.7rem !important; margin-bottom: 4px !important; }
     </style>
 </head>
 <body>
@@ -402,6 +396,7 @@
             <button class="donate-btn" id="donate-btn">❤️ Support</button>
             <button class="betting-btn" id="betting-btn">🎲 模拟下注</button>
             <button class="apk-btn" id="apk-btn">📦APK ⬇️</button>
+            <button class="dark-mode-btn" id="dark-mode-btn">🌙 深夜模式</button>
         </div>
 
         <div id="companies-grid" class="companies-grid">
@@ -483,8 +478,9 @@
                     </label>
                     <button id="forgot-password-btn" style="background: none; border: none; color: #3b82f6; cursor: pointer; font-size: 0.85rem;">忘记密码？</button>
                 </div>
-                <div class="modal-buttons">
-                    <button id="login-btn" class="spin-btn">登录/注册</button>
+                <div class="modal-buttons" style="gap: 10px;">
+                    <button id="login-btn" class="spin-btn" style="background: #3182ce;">登录</button>
+                    <button id="register-btn" class="spin-btn" style="background: #10b981;">注册</button>
                 </div>
             </div>
             
@@ -955,12 +951,12 @@
                         html += `<div class="subsection"><div class="subsection-title">奖金分配</div><table class="custom-table"><thead><th>Prize Group</th><th>Amount</th><th>Winners</th></thead><tbody>`;
                         prizeTable.forEach(row => {
                             if (Array.isArray(row)) {
-                                html += `  <td>${row[0] || ''}  <td>${row[1] || ''}  <td>${row[2] || ''}  `;
+                                html += `   <td>${row[0] || ''}</td><td>${row[1] || ''}</td><td>${row[2] || ''}</td>  `;
                             } else if (typeof row === 'object') {
                                 let group = row.group || row.prize || row.Prize || row.name || '';
                                 let amount = row.amount || row.Amount || row.prize_amount || row.value || '';
                                 let winners = row.winners || row.Winners || row.winner_count || '';
-                                html += `  <td>${group}  <td>${amount}  <td>${winners}  `;
+                                html += `   <td>${group}</td><td>${amount}</td><td>${winners}</td>  `;
                             }
                         });
                         html += `</tbody>  </div>`;
@@ -1332,14 +1328,30 @@
             });
         })();
 
-        // ========== 模拟下注完整逻辑（内嵌，不再依赖外部JS） ==========
+        // 深夜模式切换
         (function() {
-            // 存储键名
+            const darkModeBtn = document.getElementById('dark-mode-btn');
+            if (darkModeBtn) {
+                darkModeBtn.addEventListener('click', () => {
+                    document.body.classList.toggle('dark-mode');
+                    const isDark = document.body.classList.contains('dark-mode');
+                    localStorage.setItem('darkMode', isDark);
+                    darkModeBtn.textContent = isDark ? '☀️ 日间模式' : '🌙 深夜模式';
+                });
+                // 加载保存的主题
+                if (localStorage.getItem('darkMode') === 'true') {
+                    document.body.classList.add('dark-mode');
+                    darkModeBtn.textContent = '☀️ 日间模式';
+                }
+            }
+        })();
+
+        // ========== 模拟下注完整逻辑（内嵌，分离登录/注册） ==========
+        (function() {
             const STORAGE_KEY = 'betting_system_data';
             let currentUser = null;
             let users = {};
 
-            // 初始化或加载数据
             function loadData() {
                 const stored = localStorage.getItem(STORAGE_KEY);
                 if (stored) {
@@ -1350,7 +1362,6 @@
                     } catch(e) { console.error(e); }
                 }
                 if (Object.keys(users).length === 0) {
-                    // 演示用默认用户
                     users = {
                         'test': {
                             password: '123',
@@ -1372,7 +1383,6 @@
                 }));
             }
 
-            // 检查并发放每周本金
             function checkWeeklyBonus() {
                 if (!currentUser) return;
                 const user = users[currentUser];
@@ -1380,7 +1390,6 @@
                 const lastDate = user.lastWeekly ? new Date(user.lastWeekly) : null;
                 const today = now.toDateString();
                 if (!lastDate || lastDate.toDateString() !== today) {
-                    // 检查是否周一
                     if (now.getDay() === 1) {
                         user.balance = (user.balance || 0) + 100;
                         user.lastWeekly = today;
@@ -1391,8 +1400,8 @@
                 }
             }
 
-            // 登录/注册
-            function login(username, password, email) {
+            // 登录函数
+            function login(username, password) {
                 username = username.trim();
                 if (!username) {
                     alert('请输入用户名');
@@ -1410,24 +1419,38 @@
                         return false;
                     }
                 } else {
-                    // 新用户注册
-                    if (!email || !email.includes('@')) {
-                        alert('请输入有效的邮箱地址');
-                        return false;
-                    }
-                    users[username] = {
-                        password: password,
-                        email: email,
-                        balance: 100,
-                        history: [],
-                        lastWeekly: new Date().toDateString()
-                    };
-                    currentUser = username;
-                    saveData();
-                    updateUIForLoginState();
-                    alert(`注册成功！获得 100 RM 本金`);
-                    return true;
+                    alert('用户名不存在，请先注册');
+                    return false;
                 }
+            }
+
+            // 注册函数
+            function register(username, password, email) {
+                username = username.trim();
+                if (!username) {
+                    alert('请输入用户名');
+                    return false;
+                }
+                if (users[username]) {
+                    alert('用户名已存在');
+                    return false;
+                }
+                if (!email || !email.includes('@')) {
+                    alert('请输入有效的邮箱地址');
+                    return false;
+                }
+                users[username] = {
+                    password: password,
+                    email: email,
+                    balance: 100,
+                    history: [],
+                    lastWeekly: new Date().toDateString()
+                };
+                currentUser = username;
+                saveData();
+                updateUIForLoginState();
+                alert(`注册成功！获得 100 RM 本金`);
+                return true;
             }
 
             function logout() {
@@ -1446,7 +1469,6 @@
                 } else {
                     loginSection.style.display = 'block';
                     userSection.style.display = 'none';
-                    // 清空输入框
                     document.getElementById('login-username').value = '';
                     document.getElementById('login-password').value = '';
                     document.getElementById('login-email').value = '';
@@ -1548,7 +1570,7 @@
             }
 
             function forgotPassword() {
-                const email = prompt('请输入注册时使用的邮箱：');
+                const email = prompt('请输入注册时使用的邮箱：\nPlease enter the email used for registration:');
                 if (!email) return;
                 let foundUser = null;
                 for (let u in users) {
@@ -1558,15 +1580,15 @@
                     }
                 }
                 if (foundUser) {
-                    const newPass = prompt(`找到用户 ${foundUser}，请输入新密码：`);
+                    const newPass = prompt(`找到用户 ${foundUser}，请输入新密码：\nUser found, please enter new password:`);
                     if (newPass && newPass.trim()) {
                         users[foundUser].password = newPass;
                         saveData();
-                        alert('密码已重置，请重新登录');
+                        alert('密码已重置，请重新登录\nPassword reset, please log in again');
                         if (currentUser === foundUser) logout();
                     }
                 } else {
-                    alert('未找到该邮箱对应的用户');
+                    alert('未找到该邮箱对应的用户\nNo user found with that email');
                 }
             }
 
@@ -1592,21 +1614,26 @@
                 });
             }
 
-            // 绑定登录按钮
+            // 登录按钮
             document.getElementById('login-btn').addEventListener('click', () => {
                 const username = document.getElementById('login-username').value;
                 const password = document.getElementById('login-password').value;
-                const email = document.getElementById('login-email').value;
-                login(username, password, email);
+                login(username, password);
             });
-            // 绑定下注按钮
+            // 注册按钮
+            document.getElementById('register-btn').addEventListener('click', () => {
+                const username = document.getElementById('login-username').value;
+                const password = document.getElementById('login-password').value;
+                const email = document.getElementById('login-email').value;
+                register(username, password, email);
+            });
+            // 下注按钮
             document.getElementById('place-bet-btn').addEventListener('click', () => {
                 const company = document.getElementById('bet-company').value;
                 const type = document.getElementById('bet-type').value;
                 const amount = document.getElementById('bet-amount').value;
                 const number = document.getElementById('bet-number').value;
                 placeBet(company, type, amount, number);
-                // 清空号码输入框
                 document.getElementById('bet-number').value = '';
             });
             // 导出数据
@@ -1615,7 +1642,7 @@
             document.getElementById('clear-history-btn').addEventListener('click', clearHistory);
             // 忘记密码
             document.getElementById('forgot-password-btn').addEventListener('click', forgotPassword);
-            // 记住账号（简单实现：自动填充上次登录的用户名）
+            // 记住账号
             const savedUser = localStorage.getItem('last_betting_user');
             if (savedUser) {
                 document.getElementById('login-username').value = savedUser;
