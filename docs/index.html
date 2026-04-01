@@ -87,16 +87,18 @@
             .company-title img { height: 3.2rem; }
             .company-section[data-company="damacai_1p3d"] .company-title img { height: 2.5rem; }
             .prize-card .number { font-size: 1.6rem; }
-            /* 手机端特别奖/安慰奖：使用flex换行，自然向下展开，不固定每行个数 */
+            /* 手机端特别奖/安慰奖：改为网格布局，每行4个，类似 GRAND DRAGON 样式 */
             .number-list {
-                display: flex;
-                flex-wrap: wrap;
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
                 gap: 8px;
             }
             .number-item {
                 font-size: 1.2rem !important;
-                padding: 8px 12px !important;
-                min-width: 60px;
+                padding: 8px 6px !important;
+                text-align: center;
+                min-width: auto;
+                white-space: nowrap;
             }
             .draw-date { font-size: 0.75rem; }
             .number-item, .prize-card .number, .lucky-digit-box { font-weight: 700; }
@@ -950,12 +952,12 @@
                         html += `<div class="subsection"><div class="subsection-title">奖金分配</div><table class="custom-table"><thead><th>Prize Group</th><th>Amount</th><th>Winners</th></thead><tbody>`;
                         prizeTable.forEach(row => {
                             if (Array.isArray(row)) {
-                                html += `  <td>${row[0] || ''}</td><td>${row[1] || ''}</td><td>${row[2] || ''}</td>  `;
+                                html += `  <td>${row[0] || ''}  <td>${row[1] || ''}  <td>${row[2] || ''}  `;
                             } else if (typeof row === 'object') {
                                 let group = row.group || row.prize || row.Prize || row.name || '';
                                 let amount = row.amount || row.Amount || row.prize_amount || row.value || '';
                                 let winners = row.winners || row.Winners || row.winner_count || '';
-                                html += `  <td>${group}</td><td>${amount}</td><td>${winners}</td>  `;
+                                html += `  <td>${group}  <td>${amount}  <td>${winners}  `;
                             }
                         });
                         html += `</tbody>  </div>`;
