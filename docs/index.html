@@ -81,13 +81,14 @@
         .status-indicator.loading { background: #ecc94b; animation: blink 1s infinite; }
         @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
         @media (max-width: 900px) { .companies-grid { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 600px) {
+        /* 手机端断点放宽到 800px，确保覆盖所有手机 */
+        @media (max-width: 800px) {
             .companies-grid { grid-template-columns: 1fr; }
             .company-title { font-size: 1.5rem; gap: 8px; }
             .company-title img { height: 3.2rem; }
             .company-section[data-company="damacai_1p3d"] .company-title img { height: 2.5rem; }
             .prize-card .number { font-size: 1.6rem; }
-            /* 手机端特别奖/安慰奖：网格布局每行4个，紧凑样式（加强权重） */
+            /* 强制特别奖/安慰奖网格紧凑布局 */
             .company-content .number-list {
                 display: grid !important;
                 grid-template-columns: repeat(4, 1fr) !important;
