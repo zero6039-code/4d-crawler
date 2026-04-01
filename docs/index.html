@@ -87,11 +87,17 @@
             .company-title img { height: 3.2rem; }
             .company-section[data-company="damacai_1p3d"] .company-title img { height: 2.5rem; }
             .prize-card .number { font-size: 1.6rem; }
-            /* 特别奖/安慰奖数字加大 */
-            .number-item { 
-                font-size: 1.2rem !important; 
-                padding: 8px 12px !important;
-                min-width: 60px;
+            /* 手机端特别奖/安慰奖：改为网格布局，每行3个，向下完全展开 */
+            .number-list {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 8px;
+            }
+            .number-item {
+                font-size: 1.2rem !important;
+                padding: 8px 6px !important;
+                text-align: center;
+                min-width: auto;
             }
             .draw-date { font-size: 0.75rem; }
             .number-item, .prize-card .number, .lucky-digit-box { font-weight: 700; }
@@ -334,7 +340,7 @@
 
         /* 移除滚动限制，让卡片内容自然展开 */
         .company-content {
-            /* 删除 max-height 和 overflow 相关属性，完全展开 */
+            /* 无滚动条，完全展开 */
         }
         /* 适当调整间距，让卡片更紧凑但数字更大 */
         .company-section {
@@ -365,13 +371,6 @@
         .draw-date {
             font-size: 0.7rem !important;
             margin-bottom: 4px !important;
-        }
-        /* 确保特别奖/安慰奖数字在手机端已经增大，这里统一再加强一下 */
-        @media (max-width: 600px) {
-            .number-item {
-                font-size: 1.2rem !important;
-                padding: 8px 12px !important;
-            }
         }
     </style>
 </head>
@@ -952,15 +951,15 @@
                         html += `<div class="subsection"><div class="subsection-title">奖金分配</div><table class="custom-table"><thead><th>Prize Group</th><th>Amount</th><th>Winners</th></thead><tbody>`;
                         prizeTable.forEach(row => {
                             if (Array.isArray(row)) {
-                                html += ` <td>${row[0] || ''}</td><td>${row[1] || ''}</td><td>${row[2] || ''}</td> `;
+                                html += ` <td>${row[0] || ''}  <td>${row[1] || ''}  <td>${row[2] || ''}  `;
                             } else if (typeof row === 'object') {
                                 let group = row.group || row.prize || row.Prize || row.name || '';
                                 let amount = row.amount || row.Amount || row.prize_amount || row.value || '';
                                 let winners = row.winners || row.Winners || row.winner_count || '';
-                                html += ` <td>${group}</td><td>${amount}</td><td>${winners}</td> `;
+                                html += `  <td>${group}  <td>${amount}  <td>${winners}  `;
                             }
                         });
-                        html += `</tbody> </table></div>`;
+                        html += `</tbody>  </div>`;
                     }
                 }
                 else if (companyKey === 'magnum_jackpot_gold') {
