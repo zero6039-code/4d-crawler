@@ -87,18 +87,19 @@
             .company-title img { height: 3.2rem; }
             .company-section[data-company="damacai_1p3d"] .company-title img { height: 2.5rem; }
             .prize-card .number { font-size: 1.6rem; }
-            /* 手机端特别奖/安慰奖：改为网格布局，每行4个，类似 GRAND DRAGON 样式 */
+            /* 手机端特别奖/安慰奖：网格布局每行4个，紧凑样式 */
             .number-list {
                 display: grid;
                 grid-template-columns: repeat(4, 1fr);
-                gap: 8px;
+                gap: 6px;
             }
             .number-item {
-                font-size: 1.2rem !important;
-                padding: 8px 6px !important;
+                font-size: 1rem !important;
+                padding: 4px 4px !important;
                 text-align: center;
                 min-width: auto;
                 white-space: nowrap;
+                border-radius: 20px;
             }
             .draw-date { font-size: 0.75rem; }
             .number-item, .prize-card .number, .lucky-digit-box { font-weight: 700; }
