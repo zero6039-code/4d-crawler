@@ -1,1634 +1,348 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>4D 成绩 Malaysia · 实时更新</title>
     <link rel="icon" type="image/png" href="/my4d.png">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
     <style>
-        /* ==================== 基础样式 ==================== */
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
-        body { background: #f0f2f5; padding: 15px 10px; }
-        .container { max-width: 1300px; margin: 0 auto; }
-        h1 { font-size: 2.2rem; font-weight: 800; text-align: center; margin-bottom: 15px; background: linear-gradient(135deg, #0b1c2f, #2c3e50); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1px; }
-        .top-calendar { display: flex; justify-content: center; margin-bottom: 15px; position: relative; }
-        .bottom-row { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; position: relative; }
-        .date-dropdown { position: relative; display: inline-block; }
-        .date-btn { background: #ffffffcc; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.8); border-radius: 25px; padding: 8px 20px; font-size: 1rem; font-weight: 500; color: #2c3e50; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: all 0.2s; }
-        .date-btn:hover { background: #ffffff; box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
-        .date-btn .arrow { font-size: 0.8rem; transition: transform 0.2s; }
-        .date-btn.active .arrow { transform: rotate(180deg); }
-        .date-dropdown-content { display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); background: white; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); min-width: 220px; max-height: 300px; overflow-y: auto; z-index: 1000; margin-top: 8px; border: 1px solid #e2e8f0; }
-        .date-dropdown.show .date-dropdown-content { display: block; }
-        .date-option { padding: 10px 16px; cursor: pointer; transition: background 0.2s; border-bottom: 1px solid #f0f0f0; }
-        .date-option:hover { background: #f0f2f5; }
-        .date-option.active { background: #e6f0ff; color: #3182ce; font-weight: 600; }
-        .date-option .draw-no { font-size: 0.75rem; color: #7c8b9c; }
-        .loading-history { text-align: center; padding: 20px; color: #7c8b9c; }
-        .refresh-btn { background: linear-gradient(135deg, #3182ce, #2c5282); color: white; border: none; padding: 8px 25px; border-radius: 25px; cursor: pointer; font-size: 1rem; font-weight: 600; transition: all 0.2s; box-shadow: 0 2px 8px rgba(49,130,206,0.3); line-height: 1.4; }
-        .refresh-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(49,130,206,0.4); }
-        .calendar-btn { background: #ffffffcc; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.8); border-radius: 25px; padding: 8px 20px; font-size: 1rem; font-weight: 500; color: #2c3e50; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: all 0.2s; }
-        .calendar-btn:hover { background: #ffffff; box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
-        .calendar-btn .arrow { font-size: 0.8rem; transition: transform 0.2s; }
-        .calendar-icon { font-size: 1.9rem; line-height: 1; display: inline-block; }
-        .calendar-popup { position: absolute; background: white; border-radius: 20px; box-shadow: 0 12px 30px rgba(0,0,0,0.2); padding: 16px; z-index: 2000; width: 320px; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 8px; border: 1px solid #e2e8f0; backdrop-filter: blur(4px); }
-        .calendar-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; font-weight: 600; color: #2d3748; }
-        .calendar-nav { background: none; border: none; font-size: 1.2rem; cursor: pointer; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #f0f2f5; transition: 0.2s; }
-        .calendar-nav:hover { background: #e2e8f0; }
-        .calendar-table { width: 100%; border-collapse: collapse; text-align: center; table-layout: fixed; }
-        .calendar-table th, .calendar-table td { width: 36px; }
-        .calendar-table th { font-size: 0.8rem; font-weight: 600; color: #718096; padding: 6px 0; }
-        .calendar-table td { padding: 0; height: 36px; line-height: 36px; font-size: 0.9rem; cursor: pointer; border-radius: 50%; transition: 0.1s; text-align: center; vertical-align: middle; }
-        .calendar-table td.has-data { background: #c6e0ff; font-weight: 600; color: #1e4a6b; }
-        .calendar-table td.today { background: transparent; box-shadow: 0 0 0 2px #a0c4ff; font-weight: 600; }
-        .calendar-table td.selected { background: #3182ce !important; color: white !important; font-weight: 600; }
-        .calendar-table td:hover { background: #e2e8f0 !important; }
-        .calendar-table td.has-data:hover { background: #a9c9f0 !important; }
-        .calendar-month-year { font-size: 1.1rem; }
-        .companies-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
-        .company-section { background: white; border-radius: 24px; box-shadow: 0 8px 20px rgba(0,20,30,0.1); margin-bottom: 0; padding: 14px 12px; border: 1px solid rgba(255,255,255,0.5); transition: transform 0.15s ease; }
-        .company-section:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(0,0,0,0.12); }
-        .company-section.loading { opacity: 0.6; pointer-events: none; }
-        .company-section.error { border-color: #d32f2f; background: #ffebee; }
-        .hidden-company { display: none; }
-        .company-title { font-size: 1.6rem; font-weight: 800; margin-bottom: 4px; padding-left: 4px; background: linear-gradient(145deg, #1e2b3a, #2b3d55); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1px; display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
-        .company-title img { height: 4rem; width: auto; margin-left: 8px; vertical-align: middle; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); transition: transform 0.2s; }
-        .company-title img:hover { transform: scale(1.05); }
-        .company-section[data-company="damacai_1p3d"] .company-title img { height: 3rem; }
-        .draw-date { font-size: 0.8rem; color: #4a5568; margin-bottom: 8px; padding-left: 4px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .prize-grid { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 12px 0 16px; }
-        .prize-card { background: #f8fafd; border-radius: 16px; padding: 10px 12px; flex: 1 1 90px; min-width: 80px; text-align: center; box-shadow: inset 0 1px 4px #ffffff, 0 5px 10px rgba(0,0,0,0.04); border: 1px solid #e9ecf0; }
-        .prize-card .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #5f6b7a; font-weight: 500; margin-bottom: 4px; }
-        .prize-card .number { font-size: 1.7rem; font-weight: 800; color: #c62828; line-height: 1.2; text-shadow: 2px 2px 0 rgba(198,40,40,0.1); font-family: 'Courier New', monospace; }
-        .subsection { margin-top: 16px; background: #f9fbfd; border-radius: 16px; padding: 12px 10px; border: 1px solid #e2e8f0; }
-        .subsection-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 4px; color: #1e2f3e; }
-        .subsection-title::before { content: "✨"; font-size: 1.2rem; }
-        .number-list { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-start; }
-        .number-item { background: #ffffff; padding: 6px 10px; border-radius: 28px; font-family: 'Courier New', monospace; font-size: 1.1rem; font-weight: 600; color: #0b2a41; box-shadow: 0 3px 8px rgba(0,0,0,0.03); border: 1px solid #d4deec; min-width: 50px; text-align: center; transition: all 0.1s; white-space: pre-line; line-height: 1.4; }
-        .number-item:hover { background: #e6f0ff; border-color: #8a9cb0; }
-        .custom-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.9rem; }
-        .custom-table th { background: #e2e8f0; padding: 8px 4px; text-align: center; font-weight: 600; color: #2d3748; border: 1px solid #cbd5e0; }
-        .custom-table td { padding: 6px 4px; text-align: center; border: 1px solid #cbd5e0; background: white; }
-        .custom-table .alt-number { color: #3182ce; font-weight: 500; }
-        .group-subtitle { font-size: 0.95rem; font-weight: 600; margin: 8px 0 4px 0; color: #2c3e50; width: 100%; }
-        footer { text-align: center; margin-top: 30px; color: #7c8b9c; font-size: 0.8rem; border-top: 1px solid #dbe1ea; padding-top: 16px; }
-        .status-indicator { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
-        .status-indicator.success { background: #48bb78; }
-        .status-indicator.error { background: #f56565; }
-        .status-indicator.loading { background: #ecc94b; animation: blink 1s infinite; }
-        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
-        @media (max-width: 900px) { .companies-grid { grid-template-columns: repeat(2, 1fr); } }
-        /* 手机端断点放宽到 800px，确保覆盖所有手机 */
-        @media (max-width: 800px) {
+        /* ==================== 全局变量 ==================== */
+        :root {
+            --bg: #f0f2f5;
+            --card-bg: #ffffff;
+            --text-main: #1a202c;
+            --text-sub: #718096;
+            --primary: #3182ce;
+            --accent: #f59e0b;
+            --danger: #e53e3e;
+            --border: #e2e8f0;
+            --shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        /* 深夜模式配置 */
+        [data-theme="dark"] {
+            --bg: #1a202c;
+            --card-bg: #2d3748;
+            --text-main: #edf2f7;
+            --text-sub: #a0aec0;
+            --primary: #63b3ed;
+            --border: #4a5568;
+        }
+
+        /* ==================== 基础布局 ==================== */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background: var(--bg); color: var(--text-main); transition: background 0.3s; padding-bottom: 50px; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 15px; }
+
+        header { text-align: center; margin-bottom: 20px; }
+        h1 { font-size: 1.8rem; font-weight: 800; background: linear-gradient(135deg, var(--primary), #2c5282); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        /* ==================== 导航工具栏 ==================== */
+        .toolbar { 
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 20px; 
+            position: sticky; top: 10px; z-index: 100;
+        }
+        .btn { 
+            padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border); 
+            background: var(--card-bg); color: var(--text-main); cursor: pointer; 
+            font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; gap: 5px;
+            transition: all 0.2s; box-shadow: var(--shadow); text-decoration: none;
+        }
+        .btn:hover { transform: translateY(-1px); box-shadow: 0 6px 15px rgba(0,0,0,0.1); }
+        .btn-primary { background: var(--primary); color: white; border: none; }
+        .btn-accent { background: var(--accent); color: white; border: none; }
+        .btn-success { background: #10b981; color: white; border: none; }
+
+        /* ==================== 成绩卡片样式 ==================== */
+        .companies-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 15px; }
+        .card { background: var(--card-bg); border-radius: 16px; padding: 15px; border: 1px solid var(--border); box-shadow: var(--shadow); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+        .company-info { display: flex; align-items: center; gap: 10px; }
+        .company-logo { height: 35px; width: auto; object-fit: contain; }
+        .draw-info { font-size: 0.75rem; color: var(--text-sub); text-align: right; }
+
+        .prize-main { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 15px; }
+        .prize-row-top { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .prize-box { background: var(--bg); padding: 10px 5px; border-radius: 12px; text-align: center; border: 1px solid var(--border); }
+        .prize-label { font-size: 0.7rem; color: var(--text-sub); text-transform: uppercase; margin-bottom: 4px; }
+        .prize-num { font-size: 1.5rem; font-weight: 800; color: var(--danger); font-family: 'Courier New', monospace; }
+        
+        .prize-sub-title { font-size: 0.85rem; font-weight: 700; margin: 12px 0 8px; display: flex; align-items: center; gap: 5px; }
+        .num-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+        .num-item { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 5px 2px; text-align: center; font-size: 0.9rem; font-weight: 600; font-family: monospace; }
+
+        /* ==================== 弹窗系统 ==================== */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
+        .modal-content { background: var(--card-bg); padding: 25px; border-radius: 24px; width: 90%; max-width: 400px; position: relative; max-height: 90vh; overflow-y: auto; }
+        .close-btn { position: absolute; right: 20px; top: 15px; font-size: 1.5rem; cursor: pointer; color: var(--text-sub); }
+        
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 0.85rem; margin-bottom: 5px; color: var(--text-sub); }
+        .form-group input, .form-group select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text-main); font-size: 1rem; }
+
+        /* ==================== 响应式微调 ==================== */
+        @media (max-width: 600px) {
             .companies-grid { grid-template-columns: 1fr; }
-            .company-title { font-size: 1.5rem; gap: 8px; }
-            .company-title img { height: 3.2rem; }
-            .company-section[data-company="damacai_1p3d"] .company-title img { height: 2.5rem; }
-            .prize-card .number { font-size: 1.6rem; }
-            /* 强制特别奖/安慰奖网格紧凑布局 */
-            .company-content .number-list {
-                display: grid !important;
-                grid-template-columns: repeat(4, 1fr) !important;
-                gap: 6px !important;
-            }
-            .company-content .number-list .number-item {
-                font-size: 1rem !important;
-                padding: 4px 4px !important;
-                text-align: center !important;
-                min-width: auto !important;
-                white-space: nowrap !important;
-                border-radius: 20px !important;
-                line-height: 1.3 !important;
-            }
-            .draw-date { font-size: 0.75rem; }
-            .number-item, .prize-card .number, .lucky-digit-box { font-weight: 700; }
-        }
-        .company-section[data-company="damacai"] .company-title { background: linear-gradient(145deg, #1e5620, #2a7a2d); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .company-section[data-company="magnum"] .company-title { background: linear-gradient(145deg, #aa4a1e, #c95f2a); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .company-section[data-company="toto"] .company-title { background: linear-gradient(145deg, #b71c1c, #d32f2f); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .company-section[data-company="singapore"] .company-title { background: linear-gradient(145deg, #1e4a6b, #2c6b96); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .jackpot-label { font-weight: 600; margin: 4px 0 2px 0; color: #2c3e50; font-size: 0.95rem; }
-
-        /* ========== 幸运号码小游戏样式 ========== */
-        .lucky-btn {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            color: white;
-            border: none;
-            padding: 8px 25px;
-            border-radius: 25px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(245,158,11,0.3);
-            transition: all 0.2s;
-            line-height: 1.4;
-        }
-        .lucky-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(245,158,11,0.4);
-        }
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            backdrop-filter: blur(4px);
-            z-index: 3000;
-            align-items: center;
-            justify-content: center;
-        }
-        .modal-content {
-            background: white;
-            border-radius: 32px;
-            padding: 25px 20px;
-            max-width: 500px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-            text-align: center;
-            border: 1px solid rgba(255,255,255,0.3);
-        }
-        .modal-title {
-            font-size: 1.8rem;
-            font-weight: 800;
-            color: #f59e0b;
-            margin-bottom: 20px;
-        }
-        .lucky-digits {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin: 20px 0;
-        }
-        .lucky-digit-box {
-            width: 70px;
-            height: 90px;
-            background: linear-gradient(145deg, #f3f4f6, #e5e7eb);
-            border-radius: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 3.5rem;
-            font-weight: 800;
-            color: #c62828;
-            font-family: 'Courier New', monospace;
-            box-shadow: inset 0 -3px 0 rgba(0,0,0,0.1), 0 8px 16px rgba(0,0,0,0.1);
-            border: 2px solid white;
-        }
-        .modal-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-top: 20px;
-        }
-        .spin-btn, .close-modal-btn, .bet-btn {
-            padding: 12px 25px;
-            border: none;
-            border-radius: 30px;
-            font-weight: 600;
-            font-size: 1.1rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .spin-btn {
-            background: #f59e0b;
-            color: white;
-            box-shadow: 0 4px 12px rgba(245,158,11,0.3);
-        }
-        .spin-btn:hover {
-            background: #d97706;
-            transform: scale(1.05);
-        }
-        .close-modal-btn {
-            background: #e2e8f0;
-            color: #2d3748;
-        }
-        .close-modal-btn:hover {
-            background: #cbd5e0;
-        }
-        .spin-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        /* ========== 打赏按钮样式 ========== */
-        .donate-btn {
-            background: linear-gradient(135deg, #10b981, #059669);
-            color: white;
-            border: none;
-            padding: 8px 25px;
-            border-radius: 25px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(16,185,129,0.3);
-            transition: all 0.2s;
-            line-height: 1.4;
-            margin-left: 8px;
-        }
-        .donate-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(16,185,129,0.4);
-        }
-        .donate-modal .modal-content {
-            max-width: 350px;
-        }
-        .qr-image {
-            width: 100%;
-            max-width: 200px;
-            height: auto;
-            margin: 20px auto;
-            display: block;
-            border-radius: 16px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-        }
-        .donate-note {
-            color: #4b5563;
-            font-size: 0.9rem;
-            margin-top: 10px;
-            white-space: pre-line;
-        }
-        .contact-email {
-            margin-top: 10px;
-            color: #4b5563;
-            font-size: 0.9rem;
-        }
-
-        /* ========== APK 下载按钮样式 ========== */
-        .apk-btn {
-            background: linear-gradient(135deg, #3b82f6, #1e4a6b);
-            color: white;
-            border: none;
-            padding: 8px 25px;
-            border-radius: 25px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(59,130,246,0.3);
-            transition: all 0.2s;
-            line-height: 1.4;
-            margin-left: 8px;
-        }
-        .apk-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(59,130,246,0.4);
-        }
-        .apk-download-link {
-            display: inline-block;
-            background: #3b82f6;
-            color: white;
-            padding: 12px 30px;
-            border-radius: 30px;
-            font-weight: 600;
-            font-size: 1.2rem;
-            text-decoration: none;
-            margin: 15px 0;
-            box-shadow: 0 4px 12px rgba(59,130,246,0.3);
-            transition: all 0.2s;
-        }
-        .apk-download-link:hover {
-            background: #1e4a6b;
-            transform: scale(1.05);
-        }
-        .apk-note {
-            color: #4b5563;
-            font-size: 0.9rem;
-            margin: 5px 0;
-            white-space: pre-line;
-        }
-
-        /* ========== 模拟下注样式 ========== */
-        .bet-input-group {
-            margin-bottom: 12px;
-            text-align: left;
-        }
-        .bet-input-group label {
-            display: block;
-            margin-bottom: 4px;
-            font-weight: 500;
-            color: #2d3748;
-        }
-        .bet-input-group input, .bet-input-group select {
-            width: 100%;
-            padding: 8px 12px;
-            border: 1px solid #cbd5e0;
-            border-radius: 12px;
-            font-size: 1rem;
-        }
-        .bet-amount-input {
-            width: 100%;
-        }
-        .betting-btn {
-            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
-            color: white;
-            border: none;
-            padding: 8px 25px;
-            border-radius: 25px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(139,92,246,0.3);
-            transition: all 0.2s;
-            line-height: 1.4;
-            margin-left: 8px;
-        }
-        .betting-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(139,92,246,0.4);
-        }
-
-        /* 卡片内容完全展开，无滚动条 */
-        .company-content {
-            /* 无限制，完全展开 */
-        }
-        /* 调整内部间距，让卡片更紧凑但数字清晰 */
-        .company-section {
-            padding: 12px 10px !important;
-        }
-        .prize-grid {
-            margin: 6px 0 8px !important;
-        }
-        .prize-card {
-            padding: 6px 8px !important;
-            min-width: 70px;
-        }
-        .prize-card .number {
-            font-size: 1.4rem !important;
-        }
-        .subsection {
-            padding: 8px 8px !important;
-            margin-top: 10px !important;
-        }
-        .company-title {
-            font-size: 1.4rem !important;
-            margin-bottom: 2px !important;
-        }
-        .company-title img {
-            max-height: 2.8rem !important;
-            width: auto;
-        }
-        .draw-date {
-            font-size: 0.7rem !important;
-            margin-bottom: 4px !important;
+            .prize-num { font-size: 1.3rem; }
+            h1 { font-size: 1.4rem; }
+            .btn { padding: 6px 12px; font-size: 0.8rem; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>MY 4D RESULT MALAYSIA</h1>
+
+<div class="container">
+    <header>
+        <h1>MY 4D RESULT LIVE</h1>
+    </header>
+
+    <div class="toolbar">
+        <button class="btn" onclick="toggleTheme()" id="theme-toggle">🌙 深夜模式</button>
+        <button class="btn" onclick="forceRefresh()">🔄 刷新数据</button>
+        <button class="btn btn-accent" onclick="openModal('lucky')">🎰 幸运号码</button>
+        <button class="btn btn-primary" onclick="openModal('betting')">🎲 模拟下注</button>
+        <button class="btn btn-success" onclick="openModal('donate')">❤️ 支持作者</button>
+        <a href="/my4d.apk" class="btn">📦 APK 下载</a>
+    </div>
+
+    <div id="companies-grid" class="companies-grid">
+        <p style="text-align: center; grid-column: 1/-1;">正在连接服务器同步开彩结果...</p>
+    </div>
+
+    <footer style="text-align: center; margin-top: 40px; color: var(--text-sub); font-size: 0.8rem;">
+        <p>⚠️ 结果仅供参考，请以官方公告为准</p>
+        <p id="update-time">最后更新: --:--:--</p>
+    </footer>
+</div>
+
+<div id="modal-lucky" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeAllModals()">&times;</span>
+        <h2 style="text-align: center; margin-bottom: 20px;">✨ 财运号码 ✨</h2>
+        <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 20px;">
+            <div id="digit-1" class="prize-box" style="width: 60px; font-size: 2rem; font-weight: 800;">0</div>
+            <div id="digit-2" class="prize-box" style="width: 60px; font-size: 2rem; font-weight: 800;">0</div>
+            <div id="digit-3" class="prize-box" style="width: 60px; font-size: 2rem; font-weight: 800;">0</div>
+            <div id="digit-4" class="prize-box" style="width: 60px; font-size: 2rem; font-weight: 800;">0</div>
+        </div>
+        <button class="btn btn-accent" style="width: 100%; justify-content: center; padding: 15px;" onclick="spinLucky()">开始摇号</button>
+    </div>
+</div>
+
+<div id="modal-betting" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeAllModals()">&times;</span>
         
-        <div class="top-calendar">
-            <button class="calendar-btn" id="calendar-btn"></button>
-            <div id="calendar-popup" class="calendar-popup" style="display: none;"></div>
-        </div>
-        
-        <div class="bottom-row">
-            <div class="date-dropdown" id="date-dropdown">
-                <button class="date-btn" id="date-btn" onclick="toggleDateDropdown()">
-                    <span id="selected-date">加载中...</span>
-                    <span class="arrow">▼</span>
-                </button>
-                <div class="date-dropdown-content" id="date-dropdown-content">
-                    <div class="loading-history">🔄 加载历史数据...</div>
-                </div>
-            </div>
-            <button class="refresh-btn" id="refresh-btn" onclick="forceRefresh()">Refresh</button>
-            <button class="lucky-btn" id="lucky-btn">🎰 Luckly Number</button>
-            <button class="donate-btn" id="donate-btn">❤️ Support</button>
-            <button class="betting-btn" id="betting-btn">🎲 模拟下注</button>
-            <button class="apk-btn" id="apk-btn">📦APK ⬇️</button>
+        <div id="bet-login-view">
+            <h2 style="margin-bottom: 15px;">会员登录</h2>
+            <div class="form-group"><input type="text" id="login-user" placeholder="用户名"></div>
+            <div class="form-group"><input type="password" id="login-pass" placeholder="密码"></div>
+            <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="handleLogin()">登录 / 注册</button>
         </div>
 
-        <div id="companies-grid" class="companies-grid">
-            <p style="text-align: center; grid-column: 1/-1; color: #666;">🔄 正在加载数据...</p>
-        </div>
-
-        <footer>
-            ⚠️ 数据仅供参考，请以官方公告为准。<br>
-            <span id="status-text">
-                <span class="status-indicator loading"></span>正在加载...
-            </span>
-            <br>
-            更新于 <span id="update-time">-</span>
-        </footer>
-    </div>
-
-    <!-- 幸运号码弹窗 -->
-    <div class="modal-overlay" id="lucky-modal">
-        <div class="modal-content">
-            <div class="modal-title">✨ Luckly Number ✨</div>
-            <div class="lucky-digits">
-                <span class="lucky-digit-box" id="digit1">0</span>
-                <span class="lucky-digit-box" id="digit2">0</span>
-                <span class="lucky-digit-box" id="digit3">0</span>
-                <span class="lucky-digit-box" id="digit4">0</span>
+        <div id="bet-main-view" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 id="display-username">玩家</h3>
+                <span style="color: var(--accent); font-weight: 700;">余额: <span id="display-balance">0</span> RM</span>
             </div>
-            <div class="modal-buttons">
-                <button class="spin-btn" id="spin-btn">Start</button>
-                <button class="close-modal-btn" id="close-modal">Close</button>
+            <div class="form-group">
+                <label>选择公司</label>
+                <select id="bet-comp">
+                    <option value="Magnum">Magnum 4D</option>
+                    <option value="Damacai">Damacai 1+3D</option>
+                    <option value="Toto">Sports Toto</option>
+                </select>
             </div>
+            <div class="form-group">
+                <label>4D 号码</label>
+                <input type="text" id="bet-num" maxlength="4" placeholder="例如: 8888">
+            </div>
+            <div class="form-group">
+                <label>下注金额 (RM)</label>
+                <input type="number" id="bet-amt" value="1" min="1">
+            </div>
+            <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="submitBet()">确认下注</button>
+            <button class="btn" style="width: 100%; margin-top: 10px; justify-content: center;" onclick="handleLogout()">退出登录</button>
         </div>
     </div>
+</div>
 
-    <!-- 打赏弹窗 -->
-    <div class="modal-overlay" id="donate-modal">
-        <div class="modal-content donate-modal">
-            <img src="images/tng_qr.jpg" alt="TNG 二维码" class="qr-image" onerror="this.src='https://via.placeholder.com/200?text=QR+Code+Not+Found'">
-            <p class="donate-note">Please use TNG to scan for support. Your support is my motivation to update. The amount does not need to be much. Please verify name with LOW KEAN WAH. Thank you ❤️</p>
-            <p class="contact-email">Contact: zero6039@gmail.com</p>
-            <div class="modal-buttons">
-                <button class="close-modal-btn" id="close-donate-modal">Close</button>
-            </div>
-        </div>
+<div id="modal-donate" class="modal">
+    <div class="modal-content" style="text-align: center;">
+        <span class="close-btn" onclick="closeAllModals()">&times;</span>
+        <h2>感谢支持 ❤️</h2>
+        <img src="images/tng_qr.jpg" alt="TNG QR" style="width: 200px; margin: 15px auto; border-radius: 10px; box-shadow: var(--shadow);">
+        <p style="font-size: 0.85rem; color: var(--text-sub);">您的打赏是我更新维护的最大动力！请核对姓名：LOW KEAN WAH</p>
     </div>
+</div>
 
-    <!-- APK 下载弹窗 -->
-    <div class="modal-overlay" id="apk-modal">
-        <div class="modal-content">
-            <a href="/my4d.apk" download class="apk-download-link">📦Downlaod APK</a>
-            <p class="apk-note">✅ 需要在手机设置中允许“未知来源应用”的安装。<br>APK 无任何病毒木马程序，请放心安装使用。</p>
-            <p class="apk-note">✅ You need to allow installation from 'Unknown Sources' in your phone settings.<br>This APK is completely safe, free of any viruses or malware.<br>Please feel free to install and use.</p>
-            <div class="modal-buttons">
-                <button class="close-modal-btn" id="close-apk-modal">Close</button>
-            </div>
-        </div>
-    </div>
+<script>
+    // ==================== 核心数据配置 ====================
+    const COMPANIES = [
+        { id: 'magnum', name: 'MAGNUM 4D', logo: 'magnum.png' },
+        { id: 'damacai', name: 'DAMACAI 1+3D', logo: 'damacai.png' },
+        { id: 'toto', name: 'SPORTS TOTO', logo: 'toto.png' },
+        { id: 'singapore', name: 'SINGAPORE 4D', logo: 'singapore4d.png' },
+        { id: 'sabah', name: 'SABAH 88', logo: 'sabah88.png' },
+        { id: 'sandakan', name: 'STC 4D', logo: 'sandakan_logo.png' }
+    ];
 
-    <!-- 模拟下注弹窗 -->
-    <div class="modal-overlay" id="betting-modal">
-        <div class="modal-content" style="max-width: 500px;">
-            <div class="modal-title">🎲 模拟下注游戏</div>
-            
-            <div id="login-section">
-                <div class="bet-input-group">
-                    <label>用户名</label>
-                    <input type="text" id="login-username" placeholder="输入用户名" autocomplete="username">
-                </div>
-                <div class="bet-input-group">
-                    <label>密码</label>
-                    <input type="password" id="login-password" placeholder="密码" autocomplete="current-password">
-                </div>
-                <div class="bet-input-group">
-                    <label>邮箱（用于找回密码）</label>
-                    <input type="email" id="login-email" placeholder="example@email.com">
-                </div>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <label style="display: flex; align-items: center; gap: 5px;">
-                        <input type="checkbox" id="remember-checkbox"> 记住账号
-                    </label>
-                    <button id="forgot-password-btn" style="background: none; border: none; color: #3b82f6; cursor: pointer; font-size: 0.85rem;">忘记密码？</button>
-                </div>
-                <div class="modal-buttons">
-                    <button id="login-btn" class="spin-btn">登录/注册</button>
-                </div>
-            </div>
-            
-            <div id="user-section" style="display: none;">
-                <div style="background: #f3f4f6; border-radius: 16px; padding: 15px; margin-bottom: 20px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div><strong>👤 玩家：</strong> <span id="username-display"></span></div>
-                        <div><strong>💰 本金：</strong> <span id="balance-display">0</span> RM</div>
-                    </div>
-                    <div style="font-size: 0.8rem; color: #6b7280; margin-top: 5px;">
-                        ⏰ 每周一早上8点自动发放 100 RM
-                    </div>
-                </div>
-                
-                <div style="margin-bottom: 20px;">
-                    <h4 style="margin-bottom: 12px; text-align: left;">📝 下注</h4>
-                    <div class="bet-input-group">
-                        <label>公司</label>
-                        <select id="bet-company">
-                            <option value="damacai">Damacai</option>
-                            <option value="magnum">Magnum</option>
-                            <option value="toto">Toto</option>
-                        </select>
-                    </div>
-                    <div class="bet-input-group">
-                        <label>玩法</label>
-                        <select id="bet-type">
-                            <option value="BIG">BIG</option>
-                            <option value="SMALL">SMALL</option>
-                        </select>
-                    </div>
-                    <div class="bet-input-group">
-                        <label>金额 (RM)</label>
-                        <input type="number" id="bet-amount" value="1" min="1" max="100" step="1" class="bet-amount-input">
-                    </div>
-                    <div class="bet-input-group">
-                        <label>4D 号码 (4位数字)</label>
-                        <input type="text" id="bet-number" maxlength="4" placeholder="例如 1234" style="text-align: center;">
-                    </div>
-                    <button id="place-bet-btn" class="spin-btn" style="margin-top: 12px; width: 100%;">🎯 下注</button>
-                </div>
-                
-                <div>
-                    <h4 style="margin-bottom: 12px; text-align: left;">📜 我的投注记录</h4>
-                    <div id="bet-history-list" style="max-height: 200px; overflow-y: auto; font-size: 0.85rem; text-align: left;">
-                        <p class="loading-history">暂无投注记录</p>
-                    </div>
-                    <div style="display: flex; gap: 8px; margin-top: 12px;">
-                        <button id="export-data-btn" class="close-modal-btn" style="flex: 1;">📤 导出数据</button>
-                        <button id="clear-history-btn" class="close-modal-btn" style="flex: 1; background: #fee2e2;">🗑️ 清空记录</button>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="modal-buttons" style="margin-top: 20px;">
-                <button class="close-modal-btn" id="close-betting-modal">关闭</button>
-            </div>
-        </div>
-    </div>
+    // ==================== 初始化与主题 ====================
+    function toggleTheme() {
+        const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+        document.getElementById('theme-toggle').innerText = theme === 'dark' ? '☀️ 日间模式' : '🌙 深夜模式';
+    }
 
-    <script>
-        // ==================== 原有全部 JavaScript 代码 ====================
-        // 配置
-        const COMPANY_LIST = [
-            'damacai', 'magnum', 'toto', 'singapore', 'damacai_1p3d', 'grand_dragon',
-            'sandakan', 'sarawak_cashsweep', 'sabah', 'sabah_lotto',
-            'singapore_toto', 'sportstoto_lotto',
-            'magnum_jackpot_gold', 'sportstoto_5d', 'sportstoto_6d',
-            'magnum_life', 'sportstoto_fireball'
-        ];
+    if (localStorage.getItem('theme') === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        document.getElementById('theme-toggle').innerText = '☀️ 日间模式';
+    }
 
-        const NAME_MAP = {
-            'grand_dragon': 'GRAND DRAGON 豪龙',
-            'damacai': 'DAMACAI 4D',
-            'magnum': 'MAGNUM 4D',
-            'toto': 'TOTO 4D',
-            'singapore': 'SINGAPORE 4D',
-            'damacai_1p3d': 'DAMACAI 1+3D',
-            'sandakan': 'SANDAKAN 4D',
-            'sarawak_cashsweep': 'SARAWAK CASHSWEEP',
-            'sabah': 'SABAH 88 4D',
-            'sabah_lotto': 'SABAH LOTTO',
-            'singapore_toto': 'SINGAPORE TOTO',
-            'sportstoto_lotto': 'SPORTS TOTO LOTTO',
-            'magnum_jackpot_gold': 'MAGNUM JACKPOT GOLD',
-            'sportstoto_5d': 'SPORTS TOTO 5D',
-            'sportstoto_6d': 'SPORTS TOTO 6D',
-            'magnum_life': 'MAGNUM LIFE',
-            'sportstoto_fireball': 'SPORTS TOTO FIREBALL'
-        };
+    // ==================== 数据渲染逻辑 ====================
+    async function loadData() {
+        const grid = document.getElementById('companies-grid');
+        grid.innerHTML = ''; // 清空加载提示
 
-        const SPECIAL_COMPANIES = [
-            'sportstoto_fireball', 'singapore_toto', 'magnum_jackpot_gold',
-            'sportstoto_5d', 'sportstoto_6d', 'magnum_life', 'sportstoto_lotto',
-            'sabah_lotto'
-        ];
-
-        const COMPANY_IMAGE_MAP = {
-            'damacai': 'damacai.png',
-            'damacai_1p3d': 'damacai1+3.png',
-            'sandakan': 'sandakan_logo.png',
-            'sarawak_cashsweep': 'sarawak.png',
-            'sabah': 'sabah88.png',
-            'sabah_lotto': 'sabahlotto.png',
-            'grand_dragon': 'granddragon.png',
-            'magnum': 'magnum.png',
-            'toto': 'toto.png',
-            'singapore': 'singapore4d.png',
-            'singapore_toto': 'singapore-pools.png'
-        };
-
-        const HIDDEN_COMPANIES = [
-            'sportstoto_fireball'
-        ];
-
-        const CALENDAR_CHECK_COMPANIES = [
-            'damacai', 'magnum', 'toto', 'singapore', 'damacai_1p3d',
-            'sandakan', 'sarawak_cashsweep', 'sabah'
-        ];
-
-        let availableDates = [];           
-        let availableDatesSet = new Set(); 
-        let filteredDates = [];             
-        let filteredDatesSet = new Set();
-        let selectedDate = null;
-
-        // 工具函数
-        function ymdToDmy(ymd) {
-            if (!ymd) return '';
-            let parts = ymd.split('-');
-            if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
-            return ymd;
-        }
-
-        function dmyToYmd(dmy) {
-            if (!dmy) return '';
-            let parts = dmy.split('-');
-            if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
-            return dmy;
-        }
-
-        function parseDMY(dateStr) {
-            let parts = dateStr.split('-');
-            let d, m, y;
-            if (parts[0].length === 4) {
-                [y, m, d] = parts.map(Number);
-            } else {
-                [d, m, y] = parts.map(Number);
-            }
-            return { year: y, month: m, day: d };
-        }
-
-        function toSortKey(dateStr) {
-            let { year, month, day } = parseDMY(dateStr);
-            return year * 10000 + month * 100 + day;
-        }
-
-        function sortDatesDesc(dates) {
-            return dates.sort((a, b) => toSortKey(b) - toSortKey(a));
-        }
-
-        function formatDisplayDate(dateStr) {
-            if (!dateStr) return '加载中...';
-            let dmy = ymdToDmy(dateStr);
-            let parts = dmy.split('-');
-            let d = new Date(parts[2], parts[1]-1, parts[0]);
-            let weekday = d.toLocaleDateString('en-US', { weekday: 'short' });
-            return `${dmy} ${weekday}`;
-        }
-
-        // 日期选择器
-        function toggleDateDropdown() {
-            document.getElementById('date-dropdown').classList.toggle('show');
-            document.getElementById('date-btn').classList.toggle('active');
-        }
-
-        async function loadDateIndex() {
+        for (const comp of COMPANIES) {
             try {
-                const res = await fetch(`data/dates.json?t=${Date.now()}`, { cache: 'no-store' });
-                if (res.ok) {
-                    let dates = await res.json();
-                    availableDates = sortDatesDesc(dates);
-                    availableDatesSet = new Set(availableDates);
-                    
-                    await generateFilteredDates();
-                    
-                    if (filteredDates.length > 0) {
-                        selectedDate = filteredDates[0];
-                    } else if (availableDates.length > 0) {
-                        selectedDate = availableDates[0];
-                    } else {
-                        selectedDate = null;
-                    }
-                    console.log('📅 初始 selectedDate:', selectedDate);
-                }
-            } catch (e) { console.warn('无法加载 dates.json', e); }
-            renderDateDropdown();
-            updateDateBtnWithLatest();
-            updateCalendarButtonToToday();
-        }
-
-        async function generateFilteredDates() {
-            filteredDates = [];
-            const concurrency = 5;
-            for (let i = 0; i < availableDates.length; i += concurrency) {
-                const batch = availableDates.slice(i, i + concurrency);
-                const batchPromises = batch.map(async (date) => {
-                    const hasData = await checkDateHasData(date);
-                    return { date, hasData };
-                });
-                const results = await Promise.all(batchPromises);
-                results.forEach(result => {
-                    if (result.hasData) {
-                        filteredDates.push(result.date);
-                    }
-                });
-            }
-            filteredDatesSet = new Set(filteredDates);
-            console.log('过滤后的日期:', filteredDates);
-        }
-
-        async function checkDateHasData(dateYmd) {
-            const checkPromises = CALENDAR_CHECK_COMPANIES.map(async (company) => {
-                const url = `data/${dateYmd}/${company}.json`;
-                try {
-                    const res = await fetch(url, { method: 'HEAD', cache: 'no-store' });
-                    return res.ok;
-                } catch {
-                    return false;
-                }
-            });
-            const results = await Promise.all(checkPromises);
-            return results.some(hasData => hasData === true);
-        }
-
-        function updateDateBtnWithLatest() {
-            const btnSpan = document.getElementById('selected-date');
-            if (selectedDate) {
-                btnSpan.innerText = ymdToDmy(selectedDate);
-            } else if (filteredDates.length > 0) {
-                btnSpan.innerText = ymdToDmy(filteredDates[0]);
-            } else if (availableDates.length > 0) {
-                btnSpan.innerText = ymdToDmy(availableDates[0]);
-            } else {
-                btnSpan.innerText = '暂无数据';
+                // 模拟加载最新日期的数据，实际请根据你的日期逻辑拼接 URL
+                const response = await fetch(`data/latest/${comp.id}.json?t=${Date.now()}`);
+                const data = response.ok ? await response.json() : getMockData(comp.name);
+                renderCard(comp, data);
+            } catch (e) {
+                renderCard(comp, getMockData(comp.name));
             }
         }
+        document.getElementById('update-time').innerText = `最后更新: ${new Date().toLocaleTimeString()}`;
+    }
 
-        function renderDateDropdown() {
-            const content = document.getElementById('date-dropdown-content');
-            if (filteredDates.length === 0) {
-                content.innerHTML = '<div class="loading-history">暂无历史数据</div>';
-                return;
-            }
-            const recentDates = filteredDates.slice(0, 5);
-            let html = '<div class="date-option" onclick="selectDate(null)">📌 最新数据 Latest Data</div>';
-            recentDates.forEach(date => {
-                const activeClass = (selectedDate === date) ? 'active' : '';
-                const displayDate = ymdToDmy(date);
-                html += `<div class="date-option ${activeClass}" onclick="selectDate('${date}')">📅 ${displayDate}</div>`;
-            });
-            content.innerHTML = html;
-        }
-
-        function selectDate(date) {
-            if (selectedDate === date) return;
-            selectedDate = date;
-            updateDateBtnWithLatest();
-            renderDateDropdown();
-            document.getElementById('date-dropdown').classList.remove('show');
-            document.getElementById('date-btn').classList.remove('active');
-            
-            const calendarPopup = document.getElementById('calendar-popup');
-            if (calendarPopup.style.display === 'block') {
-                renderCalendar();
-            }
-            
-            loadAllCompanies(); 
-        }
-
-        // 日历
-        let currentCalendarYear, currentCalendarMonth;
-
-        function showCalendar() {
-            const popup = document.getElementById('calendar-popup');
-            if (popup.style.display === 'block') {
-                popup.style.display = 'none';
-                return;
-            }
-            let year, month;
-            if (selectedDate) {
-                ({ year, month } = parseDMY(selectedDate));
-            } else {
-                const now = new Date();
-                year = now.getFullYear();
-                month = now.getMonth() + 1;
-            }
-            currentCalendarYear = year;
-            currentCalendarMonth = month;
-            renderCalendar();
-            popup.style.display = 'block';
-        }
-
-        async function renderCalendar() {
-            const popup = document.getElementById('calendar-popup');
-            if (!popup) return;
-            let year = currentCalendarYear;
-            let month = currentCalendarMonth;
-            const monthNamesEn = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            const monthNamesZh = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
-            let firstDay = new Date(year, month - 1, 1).getDay();
-            let daysInMonth = new Date(year, month, 0).getDate();
-            const now = new Date();
-            const todayYmd = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,'0')}-${now.getDate().toString().padStart(2,'0')}`;
-            
-            let html = `
-                <div class="calendar-header">
-                    <button class="calendar-nav" id="prev-month">◀</button>
-                    <span class="calendar-month-year">${monthNamesEn[month-1]} ${monthNamesZh[month-1]} ${year}</span>
-                    <button class="calendar-nav" id="next-month">▶</button>
+    function renderCard(comp, data) {
+        const grid = document.getElementById('companies-grid');
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+            <div class="card-header">
+                <div class="company-info">
+                    <img src="images/${comp.logo}" class="company-logo" onerror="this.style.display='none'">
+                    <span style="font-weight:800; font-size:1.1rem;">${comp.name}</span>
                 </div>
-                <table class="calendar-table">
-                    <thead> <th>Sun</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th> </thead>
-                    <tbody>
-            `;
-            
-            let date = 1;
-            for (let i = 0; i < 6; i++) {
-                html += ' ';
-                for (let j = 0; j < 7; j++) {
-                    if ((i === 0 && j < firstDay) || date > daysInMonth) {
-                        html += '<td class="empty"> ';
-                    } else {
-                        let dateYmd = `${year}-${month.toString().padStart(2,'0')}-${date.toString().padStart(2,'0')}`;
-                        let hasData = filteredDatesSet.has(dateYmd);
-                        let isSelected = (selectedDate === dateYmd) ? 'selected' : '';
-                        let isToday = (dateYmd === todayYmd) ? 'today' : '';
-                        html += `<td class="${hasData ? 'has-data' : ''} ${isSelected} ${isToday}" onclick="calendarDateClick('${dateYmd}')">${date} `;
-                        date++;
-                    }
-                }
-                html += ' ';
-                if (date > daysInMonth) break;
-            }
-            html += '</tbody>  ';
-            popup.innerHTML = html;
-            
-            document.getElementById('prev-month').onclick = (e) => { e.stopPropagation(); changeMonth(-1); };
-            document.getElementById('next-month').onclick = (e) => { e.stopPropagation(); changeMonth(1); };
-        }
+                <div class="draw-info">
+                    <div>${data.draw_date || '2026-04-01'}</div>
+                    <div>#${data.draw_no || '5678/26'}</div>
+                </div>
+            </div>
+            <div class="prize-main">
+                <div class="prize-row-top">
+                    <div class="prize-box"><div class="prize-label">1st Prize</div><div class="prize-num">${data['1st'] || '----'}</div></div>
+                    <div class="prize-box"><div class="prize-label">2nd Prize</div><div class="prize-num">${data['2nd'] || '----'}</div></div>
+                    <div class="prize-box"><div class="prize-label">3rd Prize</div><div class="prize-num">${data['3rd'] || '----'}</div></div>
+                </div>
+            </div>
+            <div class="prize-sub-title">✨ SPECIAL</div>
+            <div class="num-grid">
+                ${(data.special || Array(10).fill('----')).map(n => `<div class="num-item">${n}</div>`).join('')}
+            </div>
+            <div class="prize-sub-title">🎗️ CONSOLATION</div>
+            <div class="num-grid">
+                ${(data.consolation || Array(10).fill('----')).map(n => `<div class="num-item">${n}</div>`).join('')}
+            </div>
+        `;
+        grid.appendChild(card);
+    }
 
-        function changeMonth(delta) {
-            currentCalendarMonth += delta;
-            if (currentCalendarMonth > 12) { currentCalendarMonth = 1; currentCalendarYear++; }
-            else if (currentCalendarMonth < 1) { currentCalendarMonth = 12; currentCalendarYear--; }
-            renderCalendar();
-        }
+    function getMockData(name) {
+        return { '1st': '1234', '2nd': '5678', '3rd': '9012', special: Array(10).fill('8888'), consolation: Array(10).fill('6666') };
+    }
 
-        function calendarDateClick(dateYmd) {
-            if (availableDatesSet.has(dateYmd)) {
-                selectDate(dateYmd);
-            } else {
-                alert('该日期无开彩数据');
-            }
-        }
-
-        function updateCalendarButtonToToday() {
-            const btn = document.getElementById('calendar-btn');
-            if (!btn) return;
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = (now.getMonth() + 1).toString().padStart(2, '0');
-            const day = now.getDate().toString().padStart(2, '0');
-            const todayYmd = `${year}-${month}-${day}`;
-            const display = formatDisplayDate(todayYmd);
-            btn.innerHTML = `<span class="calendar-icon">📅</span><span>${display}</span><span class="arrow">▼</span>`;
-        }
-
-        // 核心数据加载
-        async function loadCompanyData(companyKey) {
-            let localData = null;
-
-            if (selectedDate) {
-                localData = await loadFromLocalCache(companyKey, selectedDate);
-            }
-
-            if (companyKey === 'grand_dragon' && selectedDate && selectedDate === filteredDates[0]) {
-                const now = new Date();
-                const year = now.getFullYear();
-                const month = (now.getMonth() + 1).toString().padStart(2, '0');
-                const day = now.getDate().toString().padStart(2, '0');
-                const todayYmd = `${year}-${month}-${day}`;
-                const todayData = await loadFromLocalCache(companyKey, todayYmd);
-                if (todayData) localData = todayData;
-            }
-
-            if (companyKey === 'singapore_toto' && !localData && selectedDate && selectedDate === filteredDates[0]) {
-                let attempts = 0;
-                for (let date of availableDates) {
-                    if (attempts++ > 15) break;
-                    const data = await loadFromLocalCache(companyKey, date);
-                    if (data) {
-                        localData = data;
-                        localData._isFallback = true;
-                        break;
-                    }
-                }
-            }
-
-            if (localData) {
-                renderCompanyCard(companyKey, localData);
-            } else {
-                renderCompanyCard(companyKey, null);
-            }
-        }
-
-        async function loadFromLocalCache(companyKey, date = null) {
-            if (date) {
-                const url = `data/${date}/${companyKey}.json?t=${Date.now()}`;
-                try {
-                    const res = await fetch(url);
-                    if (res.ok) {
-                        return await res.json();
-                    } else {
-                        console.warn(`加载失败: ${url} (${res.status})`);
-                        return null;
-                    }
-                } catch (e) {
-                    console.warn(`加载异常: ${url}`, e);
-                    return null;
-                }
-            }
-            return null;
-        }
-
-        function filterValidNumbers(arr) {
-            if (!Array.isArray(arr)) return [];
-            return arr.filter(num => num && num !== '----' && num !== '****' && num !== '***' && /^\d{4,6}$/.test(num));
-        }
-
-        function renderCompanyCard(companyKey, data) {
-            const contentDiv = document.getElementById(`content-${companyKey}`);
-            const metaDiv = document.getElementById(`meta-${companyKey}`);
-            if (!data) {
-                contentDiv.innerHTML = '<p style="text-align:center;color:#d32f2f;">无数据</p>';
-                metaDiv.innerText = '日期 Date: -- | 期号 Draw Date: --';
-                return;
-            }
-            
-            let dateStr = data.draw_date || '';
-            let drawNoStr = data.draw_no || data.drawNo || data.draw_number || data.drawNumber || data.no || '';
-            
-            let metaText = `日期 Date: ${dateStr || '--'} | 期号 Draw Date: ${drawNoStr || '--'}`;
-            if (data._isFallback && selectedDate) metaText += ` (最近一期)`;
-            metaDiv.innerText = metaText;
-
-            let html = '';
-
-            if (SPECIAL_COMPANIES.includes(companyKey)) {
-                if (companyKey === 'singapore_toto') {
-                    let winningNumbers = data.winning_numbers || data.numbers || data.winning || data.wins || [];
-                    html += `<div class="subsection"><div class="subsection-title">开奖号码</div><div class="number-list">`;
-                    winningNumbers.forEach(n => html += `<span class="number-item">${n}</span>`);
-                    html += `</div></div>`;
-                    
-                    let prizeTable = data.prize_table || data.prizes || data.prizeTable || data.prize_table_data || [];
-                    if (prizeTable && prizeTable.length > 0) {
-                        html += `<div class="subsection"><div class="subsection-title">奖金分配</div><table class="custom-table"><thead><th>Prize Group</th><th>Amount</th><th>Winners</th></thead><tbody>`;
-                        prizeTable.forEach(row => {
-                            if (Array.isArray(row)) {
-                                html += `  <td>${row[0] || ''}  <td>${row[1] || ''}  <td>${row[2] || ''}  `;
-                            } else if (typeof row === 'object') {
-                                let group = row.group || row.prize || row.Prize || row.name || '';
-                                let amount = row.amount || row.Amount || row.prize_amount || row.value || '';
-                                let winners = row.winners || row.Winners || row.winner_count || '';
-                                html += `  <td>${group}  <td>${amount}  <td>${winners}  `;
-                            }
-                        });
-                        html += `</tbody>  </div>`;
-                    }
-                }
-                else if (companyKey === 'magnum_jackpot_gold') {
-                    html = '';
-                    let numbers = [];
-                    if (data.groups && data.groups.length) {
-                        const sortedGroups = [...data.groups].sort((a,b) => parseInt(a.group) - parseInt(b.group));
-                        numbers = sortedGroups.map(g => g.numbers[0] || '').filter(n => n);
-                    }
-                    if (numbers.length === 0) {
-                        for (let i = 1; i <= 8; i++) {
-                            if (data[`P${i}`]) numbers.push(data[`P${i}`]);
-                        }
-                    }
-                    if (numbers.length >= 8) {
-                        const n1 = numbers[0];
-                        const n2 = numbers[1];
-                        const n3 = numbers[2];
-                        const n4 = numbers[3];
-                        const n5 = numbers[4];
-                        const n6 = numbers[5];
-                        const n7 = numbers[6];
-                        const n8 = numbers[7];
-                        
-                        html += `<div class="subsection"><div class="subsection-title">Jackpot 1</div><div class="number-list" style="justify-content:center; margin-bottom:5px;"><span class="number-item">${n1}${n2}${n3}${n4}${n5}${n6}</span><span class="number-item">+</span><span class="number-item">${n7}${n8}</span></div>`;
-                        if (data.jackpots && data.jackpots[0]) html += `<div style="text-align:center; font-weight:600;">Prize: ${data.jackpots[0]}</div>`;
-                        html += `</div>`;
-                        html += `<div class="subsection"><div class="subsection-title">Jackpot 2</div><div class="number-list" style="justify-content:center; margin-bottom:5px;"><span class="number-item">${n1}${n2}${n3}${n4}${n5}</span><span class="number-item">+</span><span class="number-item">${n7}${n8}</span><span class="number-item">or</span><span class="number-item">${n2}${n3}${n4}${n5}${n6}</span><span class="number-item">+</span><span class="number-item">${n7}${n8}</span></div>`;
-                        if (data.jackpots && data.jackpots[1]) html += `<div style="text-align:center; font-weight:600;">Prize: ${data.jackpots[1]}</div>`;
-                        html += `</div>`;
-                        html += `<div class="subsection"><div class="subsection-title">3rd Prize</div><div class="number-list" style="justify-content:center;"><span class="number-item">${n1}${n2}${n3}${n4}${n5}${n6}</span></div></div>`;
-                        html += `<div class="subsection"><div class="subsection-title">4th Prize</div><div class="number-list" style="justify-content:center;"><span class="number-item">${n1}${n2}${n3}${n4}${n5}</span><span class="number-item">or</span><span class="number-item">${n2}${n3}${n4}${n5}${n6}</span></div></div>`;
-                        html += `<div class="subsection"><div class="subsection-title">5th Prize</div><div class="number-list" style="justify-content:center;"><span class="number-item">${n1}${n2}${n3}${n4}</span><span class="number-item">or</span><span class="number-item">${n3}${n4}${n5}${n6}</span></div></div>`;
-                        html += `<div class="subsection"><div class="subsection-title">6th Prize</div><div class="number-list" style="justify-content:center;"><span class="number-item">${n1}${n2}${n3}</span><span class="number-item">or</span><span class="number-item">${n4}${n5}${n6}</span></div></div>`;
-                        html += `<div class="subsection"><div class="subsection-title">7th Prize</div><div class="number-list" style="justify-content:center;"><span class="number-item">${n1}${n2}</span><span class="number-item">or</span><span class="number-item">${n3}${n4}</span><span class="number-item">or</span><span class="number-item">${n5}${n6}</span></div></div>`;
-                    } else {
-                        html = '<p style="text-align:center; padding:10px;">数据格式不正确或缺失</p>';
-                    }
-                }
-                else if (companyKey === 'sportstoto_5d') {
-                    html = `<div class="subsection"><div class="subsection-title">5D 号码</div><div style="display:flex; gap:20px; justify-content:space-around;"><div>`;
-                    ['1st', '2nd', '3rd'].forEach(pos => {
-                        if (data[pos] && data[pos] !== '----') {
-                            html += `<div style="margin-bottom:8px;"><span class="label" style="font-weight:600; margin-right:8px;">${pos}</span><span class="number-item" style="display:inline-block;">${data[pos]}</span></div>`;
-                        }
-                    });
-                    html += `</div><div>`;
-                    ['4th', '5th', '6th'].forEach(pos => {
-                        if (data[pos] && data[pos] !== '----') {
-                            html += `<div style="margin-bottom:8px;"><span class="label" style="font-weight:600; margin-right:8px;">${pos}</span><span class="number-item" style="display:inline-block;">${data[pos]}</span></div>`;
-                        }
-                    });
-                    html += `</div></div></div>`;
-                }
-                else if (companyKey === 'sportstoto_6d') {
-                    html = `<div class="subsection"><div class="subsection-title">6D 号码</div>`;
-                    if (data['1st']) html += `<div class="prize-card" style="margin-bottom:8px;"><div class="label">1st</div><div class="number">${data['1st']}</div></div>`;
-                    ['2nd', '3rd', '4th', '5th'].forEach(pos => {
-                        if (data[pos] && (data[pos].main || data[pos].alt)) {
-                            html += `<div class="prize-card" style="margin-bottom:4px;"><div class="label">${pos}</div><div class="number">${data[pos].main || ''} / ${data[pos].alt || ''}</div></div>`;
-                        }
-                    });
-                    html += `</div>`;
-                }
-                else if (companyKey === 'magnum_life') {
-                    html = `<div class="subsection"><div class="subsection-title">开奖号码</div><div class="number-list">`;
-                    if (data.winning_numbers) data.winning_numbers.forEach(n => html += `<span class="number-item">${n}</span>`);
-                    if (data.bonus_numbers) data.bonus_numbers.forEach(n => html += `<span class="number-item">${n}</span>`);
-                    html += `</div></div>`;
-                }
-                else if (companyKey === 'sportstoto_lotto') {
-                    html = '';
-                    if (data.star && data.star.length) {
-                        html += `<div class="subsection"><div class="subsection-title">Star Toto 6/50</div><div class="number-list" style="justify-content:center; margin-bottom:10px;">`;
-                        for (let i = 0; i < 6; i++) html += `<span class="number-item">${data.star[i]}</span>`;
-                        html += `<span class="number-item">+</span><span class="number-item">${data.star[6]}</span></div>`;
-                        if (data.jackpots && data.jackpots.length >= 2) {
-                            html += `<div><strong>Jackpot 1:</strong> ${data.jackpots[0]}</div><div><strong>Jackpot 2:</strong> ${data.jackpots[1]}</div>`;
-                        }
-                        html += `</div>`;
-                    }
-                    if (data.power && data.power.length) {
-                        html += `<div class="subsection"><div class="subsection-title">Power Toto 6/55</div><div class="number-list" style="justify-content:center; margin-bottom:10px;">`;
-                        data.power.forEach(n => html += `<span class="number-item">${n}</span>`);
-                        html += `</div>`;
-                        if (data.jackpots && data.jackpots.length >= 3) html += `<div><strong>Jackpot:</strong> ${data.jackpots[2]}</div>`;
-                        html += `</div>`;
-                    }
-                    if (data.supreme && data.supreme.length) {
-                        html += `<div class="subsection"><div class="subsection-title">Supreme Toto 6/58</div><div class="number-list" style="justify-content:center; margin-bottom:10px;">`;
-                        data.supreme.forEach(n => html += `<span class="number-item">${n}</span>`);
-                        html += `</div>`;
-                        if (data.jackpots && data.jackpots.length >= 4) html += `<div><strong>Jackpot:</strong> ${data.jackpots[3]}</div>`;
-                        html += `</div>`;
-                    }
-                    if (!html) html = '<p style="text-align:center; padding:10px;">无数据</p>';
-                }
-                else if (companyKey === 'sabah_lotto') {
-                    let mainNumbers = data.winning_numbers || [];
-                    let jackpot1 = data.jackpot1 || '';
-                    let jackpot2 = data.jackpot2 || '';
-                    html = `<div class="subsection"><div class="subsection-title">Lotto 6/45</div>`;
-                    if (mainNumbers.length >= 7) {
-                        html += `<div class="number-list" style="justify-content:center; margin-bottom:10px;">`;
-                        for (let i = 0; i < 6; i++) html += `<span class="number-item">${mainNumbers[i]}</span>`;
-                        html += `<span class="number-item">+</span><span class="number-item">${mainNumbers[6]}</span></div>`;
-                    } else html += `<div class="number-list">数据缺失</div>`;
-                    html += `<div style="display:flex; gap:20px; justify-content:center; margin-top:5px;">`;
-                    if (jackpot1) html += `<div><strong>Jackpot 1</strong><br>${jackpot1}</div>`;
-                    if (jackpot2) html += `<div><strong>Jackpot 2</strong><br>${jackpot2}</div>`;
-                    html += `</div></div>`;
-                    html += `<div class="subsection"><div class="subsection-title">Lotto 6</div>`;
-                    for (let g = 1; g <= 5; g++) {
-                        let nums = [];
-                        for (let i = 1; i <= 5; i++) {
-                            let key = `LT6G${g}${i}`;
-                            if (data[key] !== undefined) nums.push(data[key]);
-                        }
-                        let extra = data[`LT6G${g}6`] || '';
-                        let jackpot = data[`LT6G${g}JP`] || '';
-                        if (nums.length === 5) {
-                            let combined = nums.join('');
-                            html += `<div style="margin-bottom:12px;"><div class="number-list" style="justify-content:center;"><span class="number-item">${combined}</span><span class="number-item">+</span><span class="number-item">${extra}</span></div>`;
-                            if (jackpot) html += `<div style="text-align:center; font-weight:600;">Jackpot ${g}: ${jackpot}</div>`;
-                            html += `</div>`;
-                        }
-                    }
-                    html += `</div><div class="subsection"><div class="subsection-title">Lotto 5</div>`;
-                    for (let g = 1; g <= 8; g++) {
-                        let nums = [];
-                        for (let i = 1; i <= 4; i++) {
-                            let key = `LT5G${g}${i}`;
-                            if (data[key] !== undefined) nums.push(data[key]);
-                        }
-                        let extra = data[`LT5G${g}5`] || '';
-                        let jackpot = data[`LT5G${g}JP`] || '';
-                        if (nums.length === 4) {
-                            let combined = nums.join('');
-                            html += `<div style="margin-bottom:12px;"><div class="number-list" style="justify-content:center;"><span class="number-item">${combined}</span><span class="number-item">+</span><span class="number-item">${extra}</span></div>`;
-                            if (jackpot) html += `<div style="text-align:center; font-weight:600;">Jackpot ${g}: ${jackpot}</div>`;
-                            html += `</div>`;
-                        }
-                    }
-                    html += `</div>`;
-                }
-                else {
-                    html = '<p style="text-align:center; padding:10px;">特殊开彩详见官网</p>';
-                }
-            } 
-            else {
-                html = `
-                    <div class="prize-grid" style="flex-direction:column;align-items:center;">
-                        <div class="prize-card" style="width:220px;margin-bottom:8px;"><div class="label">1st Prize</div><div class="number" id="first-${companyKey}">${data['1st'] || data.first || data.prize1 || '----'}</div></div>
-                        <div style="display:flex;gap:8px;width:100%;">
-                            <div class="prize-card" style="flex:1;"><div class="label">2nd Prize</div><div class="number" id="second-${companyKey}">${data['2nd'] || data.second || data.prize2 || '----'}</div></div>
-                            <div class="prize-card" style="flex:1;"><div class="label">3rd Prize</div><div class="number" id="third-${companyKey}">${data['3rd'] || data.third || data.prize3 || '----'}</div></div>
-                        </div>
-                    </div>`;
-
-                if (companyKey === 'sabah' && data['3d'] && (data['3d']['1st'] || data['3d']['2nd'] || data['3d']['3rd'])) {
-                    html += `<div class="subsection"><div class="subsection-title">3D</div><div style="display:flex;gap:8px;justify-content:center;"><div class="prize-card" style="flex:1;"><div class="label">1st</div><div class="number">${data['3d']['1st'] || '---'}</div></div><div class="prize-card" style="flex:1;"><div class="label">2nd</div><div class="number">${data['3d']['2nd'] || '---'}</div></div><div class="prize-card" style="flex:1;"><div class="label">3rd</div><div class="number">${data['3d']['3rd'] || '---'}</div></div></div></div>`;
-                }
-
-                html += `<div class="subsection"><div class="subsection-title">特别奖 SPECIAL</div><div class="number-list" id="special-${companyKey}">`;
-                const specialRaw = data.special || data.special_numbers || data.special_prizes || data.special_results || [];
-                const specialValid = filterValidNumbers(specialRaw);
-                for (let i = 0; i < 10; i++) {
-                    html += i < specialValid.length ? `<span class="number-item">${specialValid[i]}</span>` : `<span class="number-item">----</span>`;
-                }
-                html += `</div></div>`;
-
-                html += `<div class="subsection"><div class="subsection-title">安慰奖 CONSOLATION</div><div class="number-list" id="consolation-${companyKey}">`;
-                const consolationRaw = data.consolation || data.consolation_numbers || data.consolation_prizes || data.consolation_results || [];
-                const consolationValid = filterValidNumbers(consolationRaw);
-                for (let i = 0; i < 10; i++) {
-                    html += i < consolationValid.length ? `<span class="number-item">${consolationValid[i]}</span>` : `<span class="number-item">----</span>`;
-                }
-                html += `</div></div>`;
-
-                if (companyKey === 'grand_dragon' && data.jackpot) {
-                    html += `<div class="subsection"><div class="subsection-title">Jackpot</div><div class="number-list"><span class="number-item">${data.jackpot}</span></div></div>`;
-                }
-            }
-
-            contentDiv.innerHTML = html;
-        }
-
-        // 创建卡片骨架
-        function createCompanySkeletons() {
-            const grid = document.getElementById('companies-grid');
-            grid.innerHTML = '';
-            COMPANY_LIST.forEach(companyKey => {
-                const imageFile = COMPANY_IMAGE_MAP[companyKey];
-                let titleHtml = NAME_MAP[companyKey];
-                if (imageFile) {
-                    titleHtml = `${NAME_MAP[companyKey]} <img src="images/${imageFile}" alt="${companyKey} logo" onerror="this.style.display='none'">`;
-                }
-                const hiddenClass = HIDDEN_COMPANIES.includes(companyKey) ? 'hidden-company' : '';
-                grid.innerHTML += `
-                    <div class="company-section ${hiddenClass}" id="company-${companyKey}" data-company="${companyKey}">
-                        <div class="company-title">${titleHtml}</div>
-                        <div class="draw-date" id="meta-${companyKey}">日期 Date: -- | 期号 Draw Date: --</div>
-                        <div class="company-content" id="content-${companyKey}"></div>
-                    </div>`;
-            });
-        }
-
-        async function loadAllCompanies() {
-            const statusText = document.getElementById('status-text');
-            statusText.innerHTML = '<span class="status-indicator loading"></span>正在更新...';
-            const promises = COMPANY_LIST.map(key => loadCompanyData(key));
-            await Promise.all(promises);
-            statusText.innerHTML = `<span class="status-indicator success"></span>数据已加载`;
-            document.getElementById('update-time').innerText = new Date().toLocaleString();
-        }
-
-        function forceRefresh() {
-            loadAllCompanies();
-        }
-
-        // 初始化
-        document.addEventListener('DOMContentLoaded', async () => {
-            await loadDateIndex();
-            createCompanySkeletons();
-            document.getElementById('calendar-btn').onclick = showCalendar;
-            loadAllCompanies();
-            document.addEventListener('click', (e) => {
-                const calendarPopup = document.getElementById('calendar-popup');
-                const calendarBtn = document.getElementById('calendar-btn');
-                const dateDropdown = document.getElementById('date-dropdown');
-                if (calendarPopup.style.display === 'block' && !calendarPopup.contains(e.target) && !calendarBtn.contains(e.target)) {
-                    calendarPopup.style.display = 'none';
-                }
-                if (dateDropdown.classList.contains('show') && !dateDropdown.contains(e.target)) {
-                    dateDropdown.classList.remove('show');
-                    document.getElementById('date-btn').classList.remove('active');
-                }
-            });
+    function forceRefresh() {
+        const btn = event.target;
+        btn.innerText = '⌛ 同步中...';
+        loadData().then(() => {
+            btn.innerText = '🔄 刷新数据';
         });
+    }
 
-        // 幸运号码游戏
-        (function() {
-            const modal = document.getElementById('lucky-modal');
-            const luckyBtn = document.getElementById('lucky-btn');
-            const closeBtn = document.getElementById('close-modal');
-            const spinBtn = document.getElementById('spin-btn');
-            const digitElements = [
-                document.getElementById('digit1'),
-                document.getElementById('digit2'),
-                document.getElementById('digit3'),
-                document.getElementById('digit4')
-            ];
+    // ==================== 弹窗逻辑控制 ====================
+    function openModal(id) {
+        document.getElementById(`modal-${id}`).style.display = 'flex';
+        if (id === 'betting') checkBetStatus();
+    }
 
-            let rolling = false;
-            let timeouts = [];
-            let intervals = [];
+    function closeAllModals() {
+        document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+    }
 
-            if (luckyBtn) {
-                luckyBtn.addEventListener('click', () => {
-                    modal.style.display = 'flex';
-                    resetDigits();
-                });
+    window.onclick = (e) => { if (e.target.className === 'modal') closeAllModals(); };
+
+    // ==================== 模拟下注逻辑 ====================
+    let userSession = JSON.parse(localStorage.getItem('user_session')) || null;
+
+    function checkBetStatus() {
+        const loginView = document.getElementById('bet-login-view');
+        const mainView = document.getElementById('bet-main-view');
+        if (userSession) {
+            loginView.style.display = 'none';
+            mainView.style.display = 'block';
+            document.getElementById('display-username').innerText = `👤 ${userSession.username}`;
+            document.getElementById('display-balance').innerText = userSession.balance;
+        } else {
+            loginView.style.display = 'block';
+            mainView.style.display = 'none';
+        }
+    }
+
+    function handleLogin() {
+        const user = document.getElementById('login-user').value.trim();
+        const pass = document.getElementById('login-pass').value.trim();
+        if (!user || !pass) return alert("请输入完整信息");
+        
+        // 模拟登录/注册：只要输入就创建账号，默认1000本金
+        userSession = { username: user, balance: 1000 };
+        localStorage.setItem('user_session', JSON.stringify(userSession));
+        checkBetStatus();
+    }
+
+    function handleLogout() {
+        userSession = null;
+        localStorage.removeItem('user_session');
+        checkBetStatus();
+    }
+
+    function submitBet() {
+        const num = document.getElementById('bet-num').value;
+        const amt = parseInt(document.getElementById('bet-amt').value);
+        if (num.length !== 4) return alert("请输入4位数字");
+        if (userSession.balance < amt) return alert("余额不足");
+
+        userSession.balance -= amt;
+        document.getElementById('display-balance').innerText = userSession.balance;
+        localStorage.setItem('user_session', JSON.stringify(userSession));
+        alert(`下注成功！单号: ${num} 金额: ${amt}RM`);
+    }
+
+    // ==================== 幸运号码逻辑 ====================
+    function spinLucky() {
+        const btn = event.target;
+        btn.disabled = true;
+        let count = 0;
+        const timer = setInterval(() => {
+            for (let i = 1; i <= 4; i++) {
+                document.getElementById(`digit-${i}`).innerText = Math.floor(Math.random() * 10);
             }
-
-            const closeModal = () => {
-                modal.style.display = 'none';
-                stopRolling();
-            };
-            if (closeBtn) closeBtn.addEventListener('click', closeModal);
-            if (modal) modal.addEventListener('click', (e) => {
-                if (e.target === modal) closeModal();
-            });
-
-            function resetDigits() {
-                stopRolling();
-                digitElements.forEach(el => el.textContent = '0');
-                spinBtn.disabled = false;
+            count++;
+            if (count > 20) {
+                clearInterval(timer);
+                btn.disabled = false;
             }
+        }, 50);
+    }
 
-            function stopRolling() {
-                rolling = false;
-                timeouts.forEach(t => clearTimeout(t));
-                intervals.forEach(i => clearInterval(i));
-                timeouts = [];
-                intervals = [];
-            }
+    // 页面加载启动
+    loadData();
+</script>
 
-            if (spinBtn) {
-                spinBtn.addEventListener('click', () => {
-                    if (rolling) return;
-                    rolling = true;
-                    spinBtn.disabled = true;
-                    digitElements.forEach(el => el.textContent = '0');
-                    rollDigit(0);
-                });
-            }
-
-            function rollDigit(index) {
-                if (!rolling || index >= digitElements.length) {
-                    if (index >= digitElements.length) {
-                        spinBtn.disabled = false;
-                        rolling = false;
-                    }
-                    return;
-                }
-
-                const el = digitElements[index];
-                const interval = setInterval(() => {
-                    if (!rolling) {
-                        clearInterval(interval);
-                        return;
-                    }
-                    el.textContent = Math.floor(Math.random() * 10).toString();
-                }, 80);
-                intervals.push(interval);
-
-                const timeout = setTimeout(() => {
-                    clearInterval(interval);
-                    if (!rolling) return;
-                    el.textContent = Math.floor(Math.random() * 10).toString();
-                    rollDigit(index + 1);
-                }, 1000);
-                timeouts.push(timeout);
-            }
-        })();
-
-        // 打赏弹窗
-        (function() {
-            const donateModal = document.getElementById('donate-modal');
-            const donateBtn = document.getElementById('donate-btn');
-            const closeDonateBtn = document.getElementById('close-donate-modal');
-
-            if (donateBtn) {
-                donateBtn.addEventListener('click', () => {
-                    donateModal.style.display = 'flex';
-                });
-            }
-
-            const closeDonateModal = () => {
-                donateModal.style.display = 'none';
-            };
-            if (closeDonateBtn) closeDonateBtn.addEventListener('click', closeDonateModal);
-            if (donateModal) donateModal.addEventListener('click', (e) => {
-                if (e.target === donateModal) closeDonateModal();
-            });
-        })();
-
-        // APK 下载弹窗
-        (function() {
-            const apkModal = document.getElementById('apk-modal');
-            const apkBtn = document.getElementById('apk-btn');
-            const closeApkBtn = document.getElementById('close-apk-modal');
-
-            if (apkBtn) {
-                apkBtn.addEventListener('click', () => {
-                    apkModal.style.display = 'flex';
-                });
-            }
-
-            const closeApkModal = () => {
-                apkModal.style.display = 'none';
-            };
-            if (closeApkBtn) closeApkBtn.addEventListener('click', closeApkModal);
-            if (apkModal) apkModal.addEventListener('click', (e) => {
-                if (e.target === apkModal) closeApkModal();
-            });
-        })();
-
-        // ========== 模拟下注完整逻辑（内嵌，不再依赖外部JS） ==========
-        (function() {
-            // 存储键名
-            const STORAGE_KEY = 'betting_system_data';
-            let currentUser = null;
-            let users = {};
-
-            // 初始化或加载数据
-            function loadData() {
-                const stored = localStorage.getItem(STORAGE_KEY);
-                if (stored) {
-                    try {
-                        const data = JSON.parse(stored);
-                        users = data.users || {};
-                        currentUser = data.currentUser || null;
-                    } catch(e) { console.error(e); }
-                }
-                if (Object.keys(users).length === 0) {
-                    // 演示用默认用户
-                    users = {
-                        'test': {
-                            password: '123',
-                            email: 'test@example.com',
-                            balance: 100,
-                            history: [],
-                            lastWeekly: new Date().toDateString()
-                        }
-                    };
-                    saveData();
-                }
-                updateUIForLoginState();
-            }
-
-            function saveData() {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify({
-                    users: users,
-                    currentUser: currentUser
-                }));
-            }
-
-            // 检查并发放每周本金
-            function checkWeeklyBonus() {
-                if (!currentUser) return;
-                const user = users[currentUser];
-                const now = new Date();
-                const lastDate = user.lastWeekly ? new Date(user.lastWeekly) : null;
-                const today = now.toDateString();
-                if (!lastDate || lastDate.toDateString() !== today) {
-                    // 检查是否周一
-                    if (now.getDay() === 1) {
-                        user.balance = (user.balance || 0) + 100;
-                        user.lastWeekly = today;
-                        saveData();
-                        updateUserUI();
-                        alert(`🎉 每周福利：已为您添加 100 RM 本金！当前余额：${user.balance} RM`);
-                    }
-                }
-            }
-
-            // 登录/注册
-            function login(username, password, email) {
-                username = username.trim();
-                if (!username) {
-                    alert('请输入用户名');
-                    return false;
-                }
-                if (users[username]) {
-                    if (users[username].password === password) {
-                        currentUser = username;
-                        saveData();
-                        updateUIForLoginState();
-                        checkWeeklyBonus();
-                        return true;
-                    } else {
-                        alert('密码错误');
-                        return false;
-                    }
-                } else {
-                    // 新用户注册
-                    if (!email || !email.includes('@')) {
-                        alert('请输入有效的邮箱地址');
-                        return false;
-                    }
-                    users[username] = {
-                        password: password,
-                        email: email,
-                        balance: 100,
-                        history: [],
-                        lastWeekly: new Date().toDateString()
-                    };
-                    currentUser = username;
-                    saveData();
-                    updateUIForLoginState();
-                    alert(`注册成功！获得 100 RM 本金`);
-                    return true;
-                }
-            }
-
-            function logout() {
-                currentUser = null;
-                saveData();
-                updateUIForLoginState();
-            }
-
-            function updateUIForLoginState() {
-                const loginSection = document.getElementById('login-section');
-                const userSection = document.getElementById('user-section');
-                if (currentUser) {
-                    loginSection.style.display = 'none';
-                    userSection.style.display = 'block';
-                    updateUserUI();
-                } else {
-                    loginSection.style.display = 'block';
-                    userSection.style.display = 'none';
-                    // 清空输入框
-                    document.getElementById('login-username').value = '';
-                    document.getElementById('login-password').value = '';
-                    document.getElementById('login-email').value = '';
-                }
-            }
-
-            function updateUserUI() {
-                if (!currentUser) return;
-                const user = users[currentUser];
-                document.getElementById('username-display').innerText = currentUser;
-                document.getElementById('balance-display').innerText = user.balance;
-                renderBetHistory();
-            }
-
-            function renderBetHistory() {
-                const historyDiv = document.getElementById('bet-history-list');
-                const user = users[currentUser];
-                if (!user || !user.history || user.history.length === 0) {
-                    historyDiv.innerHTML = '<p class="loading-history">暂无投注记录</p>';
-                    return;
-                }
-                let html = '<div style="display:flex; flex-direction:column; gap:8px;">';
-                user.history.slice().reverse().forEach(bet => {
-                    html += `<div style="background:#f9fafb; padding:8px; border-radius:12px; border-left:4px solid #f59e0b;">
-                        <div><strong>${bet.company}</strong> | ${bet.type} | ${bet.amount} RM</div>
-                        <div>号码: ${bet.number}</div>
-                        <div style="font-size:0.75rem; color:#6b7280;">${new Date(bet.timestamp).toLocaleString()}</div>
-                    </div>`;
-                });
-                html += '</div>';
-                historyDiv.innerHTML = html;
-            }
-
-            function placeBet(company, type, amount, number) {
-                if (!currentUser) {
-                    alert('请先登录');
-                    return false;
-                }
-                if (!/^\d{4}$/.test(number)) {
-                    alert('请输入4位数字号码');
-                    return false;
-                }
-                amount = parseInt(amount);
-                if (isNaN(amount) || amount < 1 || amount > 100) {
-                    alert('下注金额必须在 1-100 RM 之间');
-                    return false;
-                }
-                const user = users[currentUser];
-                if (user.balance < amount) {
-                    alert('余额不足');
-                    return false;
-                }
-                user.balance -= amount;
-                const betRecord = {
-                    company: company,
-                    type: type,
-                    amount: amount,
-                    number: number,
-                    timestamp: new Date().toISOString()
-                };
-                user.history = user.history || [];
-                user.history.push(betRecord);
-                saveData();
-                updateUserUI();
-                alert(`下注成功！已扣除 ${amount} RM，余额 ${user.balance} RM`);
-                return true;
-            }
-
-            function exportData() {
-                if (!currentUser) {
-                    alert('请先登录');
-                    return;
-                }
-                const user = users[currentUser];
-                const dataStr = JSON.stringify({
-                    username: currentUser,
-                    balance: user.balance,
-                    history: user.history,
-                    exportTime: new Date().toISOString()
-                }, null, 2);
-                const blob = new Blob([dataStr], {type: 'application/json'});
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `betting_data_${currentUser}.json`;
-                a.click();
-                URL.revokeObjectURL(url);
-                alert('数据已导出');
-            }
-
-            function clearHistory() {
-                if (!currentUser) return;
-                if (confirm('确定要清空所有投注记录吗？此操作不可恢复。')) {
-                    users[currentUser].history = [];
-                    saveData();
-                    renderBetHistory();
-                    alert('记录已清空');
-                }
-            }
-
-            function forgotPassword() {
-                const email = prompt('请输入注册时使用的邮箱：');
-                if (!email) return;
-                let foundUser = null;
-                for (let u in users) {
-                    if (users[u].email === email) {
-                        foundUser = u;
-                        break;
-                    }
-                }
-                if (foundUser) {
-                    const newPass = prompt(`找到用户 ${foundUser}，请输入新密码：`);
-                    if (newPass && newPass.trim()) {
-                        users[foundUser].password = newPass;
-                        saveData();
-                        alert('密码已重置，请重新登录');
-                        if (currentUser === foundUser) logout();
-                    }
-                } else {
-                    alert('未找到该邮箱对应的用户');
-                }
-            }
-
-            // 绑定弹窗事件
-            const bettingModal = document.getElementById('betting-modal');
-            const bettingBtn = document.getElementById('betting-btn');
-            const closeBettingModal = document.getElementById('close-betting-modal');
-
-            if (bettingBtn) {
-                bettingBtn.addEventListener('click', () => {
-                    loadData();
-                    bettingModal.style.display = 'flex';
-                });
-            }
-            if (closeBettingModal) {
-                closeBettingModal.addEventListener('click', () => {
-                    bettingModal.style.display = 'none';
-                });
-            }
-            if (bettingModal) {
-                bettingModal.addEventListener('click', (e) => {
-                    if (e.target === bettingModal) bettingModal.style.display = 'none';
-                });
-            }
-
-            // 绑定登录按钮
-            document.getElementById('login-btn').addEventListener('click', () => {
-                const username = document.getElementById('login-username').value;
-                const password = document.getElementById('login-password').value;
-                const email = document.getElementById('login-email').value;
-                login(username, password, email);
-            });
-            // 绑定下注按钮
-            document.getElementById('place-bet-btn').addEventListener('click', () => {
-                const company = document.getElementById('bet-company').value;
-                const type = document.getElementById('bet-type').value;
-                const amount = document.getElementById('bet-amount').value;
-                const number = document.getElementById('bet-number').value;
-                placeBet(company, type, amount, number);
-                // 清空号码输入框
-                document.getElementById('bet-number').value = '';
-            });
-            // 导出数据
-            document.getElementById('export-data-btn').addEventListener('click', exportData);
-            // 清空记录
-            document.getElementById('clear-history-btn').addEventListener('click', clearHistory);
-            // 忘记密码
-            document.getElementById('forgot-password-btn').addEventListener('click', forgotPassword);
-            // 记住账号（简单实现：自动填充上次登录的用户名）
-            const savedUser = localStorage.getItem('last_betting_user');
-            if (savedUser) {
-                document.getElementById('login-username').value = savedUser;
-            }
-            document.getElementById('remember-checkbox').addEventListener('change', (e) => {
-                if (e.target.checked) {
-                    const username = document.getElementById('login-username').value;
-                    if (username) localStorage.setItem('last_betting_user', username);
-                } else {
-                    localStorage.removeItem('last_betting_user');
-                }
-            });
-        })();
-    </script>
 </body>
 </html>
