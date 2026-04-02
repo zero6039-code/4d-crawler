@@ -84,6 +84,7 @@
         .subsection { margin-top: 16px; background: #f9fbfd; border-radius: 16px; padding: 12px 10px; border: 1px solid #e2e8f0; }
         .subsection-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 4px; color: #1e2f3e; }
         .subsection-title::before { content: "✨"; font-size: 1.2rem; }
+        /* 默认 number-list 样式（桌面端） */
         .number-list { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-start; }
         .number-item { background: #ffffff; padding: 6px 10px; border-radius: 28px; font-family: 'Courier New', monospace; font-size: 1.1rem; font-weight: 600; color: #0b2a41; box-shadow: 0 3px 8px rgba(0,0,0,0.03); border: 1px solid #d4deec; min-width: 50px; text-align: center; transition: all 0.1s; white-space: pre-line; line-height: 1.4; }
         .number-item:hover { background: #e6f0ff; border-color: #8a9cb0; }
@@ -99,12 +100,44 @@
         .status-indicator.loading { background: #ecc94b; animation: blink 1s infinite; }
         @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
         @media (max-width: 900px) { .companies-grid { grid-template-columns: repeat(2, 1fr); } }
+        /* 手机端样式 - 加强权重 */
         @media (max-width: 800px) {
             .companies-grid { grid-template-columns: 1fr; }
             .company-title { font-size: 1.5rem; gap: 8px; }
             .company-title img { height: 3.2rem; }
             .company-section[data-company="damacai_1p3d"] .company-title img { height: 2.5rem; }
             .prize-card .number { font-size: 1.6rem; }
+            /* 强制覆盖 number-list 为网格布局 */
+            body .company-section .company-content .number-list,
+            .company-section .company-content .number-list {
+                display: grid !important;
+                grid-template-columns: repeat(4, 1fr) !important;
+                gap: 4px !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                list-style: none !important;
+            }
+            body .company-section .company-content .number-list .number-item,
+            .company-section .company-content .number-list .number-item {
+                font-size: 16px !important;
+                padding: 2px 2px !important;
+                margin: 0 !important;
+                text-align: center !important;
+                min-width: 0 !important;
+                width: auto !important;
+                white-space: nowrap !important;
+                border-radius: 8px !important;
+                line-height: 1.2 !important;
+                background: #ffffff !important;
+                border: 1px solid #d4deec !important;
+                box-shadow: none !important;
+                display: block !important;
+            }
+            body.dark-mode .company-section .company-content .number-list .number-item {
+                background: #1a202c !important;
+                border-color: #4a5568 !important;
+                color: #e2e8f0 !important;
+            }
             .draw-date { font-size: 0.75rem; }
             .prize-grid {
                 flex-direction: row !important;
@@ -352,7 +385,7 @@
                 </div>
             </div>
             <button class="refresh-btn" id="refresh-btn" onclick="forceRefresh()">Refresh</button>
-            <button class="lucky-btn" id="lucky-btn">🎰 Luckly Number</button>
+            <button class="lucky-btn" id="lucky-btn">🎰 Lucky Number</button>
             <button class="donate-btn" id="donate-btn">❤️ Support</button>
             <button class="betting-btn" id="betting-btn">🎲 模拟下注</button>
             <button class="apk-btn" id="apk-btn">📦APK ⬇️</button>
@@ -376,7 +409,7 @@
     <!-- 幸运号码弹窗 -->
     <div class="modal-overlay" id="lucky-modal">
         <div class="modal-content">
-            <div class="modal-title">✨ Luckly Number ✨</div>
+            <div class="modal-title">✨ Lucky Number ✨</div>
             <div class="lucky-digits">
                 <span class="lucky-digit-box" id="digit1">0</span>
                 <span class="lucky-digit-box" id="digit2">0</span>
@@ -405,7 +438,7 @@
     <!-- APK 下载弹窗 -->
     <div class="modal-overlay" id="apk-modal">
         <div class="modal-content">
-            <a href="/my4d.apk" download class="apk-download-link">📦Downlaod APK</a>
+            <a href="/my4d.apk" download class="apk-download-link">📦Download APK</a>
             <p class="apk-note">✅ 需要在手机设置中允许“未知来源应用”的安装。<br>APK 无任何病毒木马程序，请放心安装使用。</p>
             <p class="apk-note">✅ You need to allow installation from 'Unknown Sources' in your phone settings.<br>This APK is completely safe, free of any viruses or malware.<br>Please feel free to install and use.</p>
             <div class="modal-buttons">
@@ -1156,40 +1189,6 @@
                     document.getElementById('date-btn').classList.remove('active');
                 }
             });
-            
-            // ========== 动态注入终极紧凑样式（确保覆盖任何旧样式） ==========
-            const style = document.createElement('style');
-            style.textContent = `
-                @media (max-width: 800px) {
-                    body .company-section .company-content .number-list {
-                        display: grid !important;
-                        grid-template-columns: repeat(4, 1fr) !important;
-                        gap: 4px !important;
-                        margin: 0 !important;
-                        padding: 0 !important;
-                    }
-                    body .company-section .company-content .number-list .number-item {
-                        font-size: 16px !important;
-                        padding: 2px 2px !important;
-                        margin: 0 !important;
-                        text-align: center !important;
-                        min-width: 0 !important;
-                        width: auto !important;
-                        white-space: nowrap !important;
-                        border-radius: 8px !important;
-                        line-height: 1.2 !important;
-                        background: #ffffff !important;
-                        border: 1px solid #d4deec !important;
-                        box-shadow: none !important;
-                    }
-                    body.dark-mode .company-section .company-content .number-list .number-item {
-                        background: #1a202c !important;
-                        border-color: #4a5568 !important;
-                        color: #e2e8f0 !important;
-                    }
-                }
-            `;
-            document.head.appendChild(style);
         });
 
         // 幸运号码游戏
