@@ -66,6 +66,9 @@
         .calendar-month-year { font-size: 1.1rem; }
         .companies-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
         .company-section { background: white; border-radius: 24px; box-shadow: 0 8px 20px rgba(0,20,30,0.1); margin-bottom: 0; padding: 14px 12px; border: 1px solid rgba(255,255,255,0.5); transition: transform 0.15s ease; }
+        /* 公司卡片底部淡淡发光 */
+        .company-section { box-shadow: 0 4px 12px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.05); }
+        body.dark-mode .company-section { box-shadow: 0 4px 12px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2); }
         .company-section:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(0,0,0,0.12); }
         .company-section.loading { opacity: 0.6; pointer-events: none; }
         .company-section.error { border-color: #d32f2f; background: #ffebee; }
@@ -75,8 +78,9 @@
         .company-title img:hover { transform: scale(1.05); }
         .company-section[data-company="damacai_1p3d"] .company-title img { height: 3rem; }
         .draw-date { font-size: 0.8rem; color: #4a5568; margin-bottom: 8px; padding-left: 4px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .prize-grid { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 12px 0 16px; }
-        .prize-card { background: #f8fafd; border-radius: 16px; padding: 10px 12px; flex: 1 1 90px; min-width: 80px; text-align: center; box-shadow: inset 0 1px 4px #ffffff, 0 5px 10px rgba(0,0,0,0.04); border: 1px solid #e9ecf0; }
+        /* 奖品网格改为水平一行（左到右） */
+        .prize-grid { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 12px 0 16px; flex-direction: row; }
+        .prize-card { background: #f8fafd; border-radius: 16px; padding: 8px 12px; flex: 1 1 0px; min-width: 80px; text-align: center; box-shadow: inset 0 1px 4px #ffffff, 0 5px 10px rgba(0,0,0,0.04); border: 1px solid #e9ecf0; }
         .prize-card .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #5f6b7a; font-weight: 500; margin-bottom: 4px; }
         .prize-card .number { font-size: 1.7rem; font-weight: 800; color: #c62828; line-height: 1.2; text-shadow: 2px 2px 0 rgba(198,40,40,0.1); font-family: 'Courier New', monospace; }
         .subsection { margin-top: 16px; background: #f9fbfd; border-radius: 16px; padding: 12px 10px; border: 1px solid #e2e8f0; }
@@ -103,14 +107,14 @@
             .company-title img { height: 3.2rem; }
             .company-section[data-company="damacai_1p3d"] .company-title img { height: 2.5rem; }
             .prize-card .number { font-size: 1.6rem; }
-            /* 手机端特别奖/安慰奖：网格布局每行4个，紧凑样式（数字13px，内边距极小） */
+            /* 手机端特别奖/安慰奖：网格每行4个，字体16px，内边距小 */
             .company-content .number-list {
                 display: grid !important;
                 grid-template-columns: repeat(4, 1fr) !important;
                 gap: 6px !important;
             }
             .company-content .number-list .number-item {
-                font-size: 13px !important;
+                font-size: 16px !important;
                 padding: 4px 2px !important;
                 text-align: center !important;
                 min-width: auto !important;
@@ -127,6 +131,21 @@
         .company-section[data-company="singapore"] .company-title { background: linear-gradient(145deg, #1e4a6b, #2c6b96); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .jackpot-label { font-weight: 600; margin: 4px 0 2px 0; color: #2c3e50; font-size: 0.95rem; }
 
+        /* ========== 按钮公共发光效果 ========== */
+        .refresh-btn, .lucky-btn, .donate-btn, .betting-btn, .apk-btn, .dark-mode-btn, .date-btn, .calendar-btn {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.05);
+            transition: all 0.2s;
+        }
+        .refresh-btn:hover, .lucky-btn:hover, .donate-btn:hover, .betting-btn:hover, .apk-btn:hover, .dark-mode-btn:hover, .date-btn:hover, .calendar-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+        }
+        body.dark-mode .refresh-btn, body.dark-mode .lucky-btn, body.dark-mode .donate-btn,
+        body.dark-mode .betting-btn, body.dark-mode .apk-btn, body.dark-mode .dark-mode-btn,
+        body.dark-mode .date-btn, body.dark-mode .calendar-btn {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
         /* ========== 幸运号码小游戏样式 ========== */
         .lucky-btn, .dark-mode-btn {
             background: linear-gradient(135deg, #f59e0b, #d97706);
@@ -137,13 +156,8 @@
             font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(245,158,11,0.3);
             transition: all 0.2s;
             line-height: 1.4;
-        }
-        .lucky-btn:hover, .dark-mode-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(245,158,11,0.4);
         }
         .dark-mode-btn {
             background: linear-gradient(135deg, #4a5568, #2d3748);
@@ -238,20 +252,7 @@
         .donate-btn {
             background: linear-gradient(135deg, #10b981, #059669);
             color: white;
-            border: none;
-            padding: 8px 25px;
-            border-radius: 25px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(16,185,129,0.3);
-            transition: all 0.2s;
-            line-height: 1.4;
             margin-left: 8px;
-        }
-        .donate-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(16,185,129,0.4);
         }
         .donate-modal .modal-content {
             max-width: 350px;
@@ -281,20 +282,7 @@
         .apk-btn {
             background: linear-gradient(135deg, #3b82f6, #1e4a6b);
             color: white;
-            border: none;
-            padding: 8px 25px;
-            border-radius: 25px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(59,130,246,0.3);
-            transition: all 0.2s;
-            line-height: 1.4;
             margin-left: 8px;
-        }
-        .apk-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(59,130,246,0.4);
         }
         .apk-download-link {
             display: inline-block;
@@ -344,20 +332,7 @@
         .betting-btn {
             background: linear-gradient(135deg, #8b5cf6, #6d28d9);
             color: white;
-            border: none;
-            padding: 8px 25px;
-            border-radius: 25px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(139,92,246,0.3);
-            transition: all 0.2s;
-            line-height: 1.4;
             margin-left: 8px;
-        }
-        .betting-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(139,92,246,0.4);
         }
 
         /* 卡片内容完全展开，无滚动条 */
@@ -951,12 +926,12 @@
                         html += `<div class="subsection"><div class="subsection-title">奖金分配</div><table class="custom-table"><thead><th>Prize Group</th><th>Amount</th><th>Winners</th></thead><tbody>`;
                         prizeTable.forEach(row => {
                             if (Array.isArray(row)) {
-                                html += `   <td>${row[0] || ''}</td><td>${row[1] || ''}</td><td>${row[2] || ''}</td>  `;
+                                html += `    <td>${row[0] || ''}</td><td>${row[1] || ''}</td><td>${row[2] || ''}</td>  `;
                             } else if (typeof row === 'object') {
                                 let group = row.group || row.prize || row.Prize || row.name || '';
                                 let amount = row.amount || row.Amount || row.prize_amount || row.value || '';
                                 let winners = row.winners || row.Winners || row.winner_count || '';
-                                html += `   <td>${group}</td><td>${amount}</td><td>${winners}</td>  `;
+                                html += `    <td>${group}</td><td>${amount}</td><td>${winners}</td>  `;
                             }
                         });
                         html += `</tbody>  </div>`;
@@ -1111,12 +1086,10 @@
             } 
             else {
                 html = `
-                    <div class="prize-grid" style="flex-direction:column;align-items:center;">
-                        <div class="prize-card" style="width:220px;margin-bottom:8px;"><div class="label">1st Prize</div><div class="number" id="first-${companyKey}">${data['1st'] || data.first || data.prize1 || '----'}</div></div>
-                        <div style="display:flex;gap:8px;width:100%;">
-                            <div class="prize-card" style="flex:1;"><div class="label">2nd Prize</div><div class="number" id="second-${companyKey}">${data['2nd'] || data.second || data.prize2 || '----'}</div></div>
-                            <div class="prize-card" style="flex:1;"><div class="label">3rd Prize</div><div class="number" id="third-${companyKey}">${data['3rd'] || data.third || data.prize3 || '----'}</div></div>
-                        </div>
+                    <div class="prize-grid" style="flex-direction:row;">
+                        <div class="prize-card"><div class="label">1st Prize</div><div class="number">${data['1st'] || data.first || data.prize1 || '----'}</div></div>
+                        <div class="prize-card"><div class="label">2nd Prize</div><div class="number">${data['2nd'] || data.second || data.prize2 || '----'}</div></div>
+                        <div class="prize-card"><div class="label">3rd Prize</div><div class="number">${data['3rd'] || data.third || data.prize3 || '----'}</div></div>
                     </div>`;
 
                 if (companyKey === 'sabah' && data['3d'] && (data['3d']['1st'] || data['3d']['2nd'] || data['3d']['3rd'])) {
@@ -1338,7 +1311,6 @@
                     localStorage.setItem('darkMode', isDark);
                     darkModeBtn.textContent = isDark ? '☀️ 日间模式' : '🌙 深夜模式';
                 });
-                // 加载保存的主题
                 if (localStorage.getItem('darkMode') === 'true') {
                     document.body.classList.add('dark-mode');
                     darkModeBtn.textContent = '☀️ 日间模式';
@@ -1400,7 +1372,6 @@
                 }
             }
 
-            // 登录函数
             function login(username, password) {
                 username = username.trim();
                 if (!username) {
@@ -1424,7 +1395,6 @@
                 }
             }
 
-            // 注册函数
             function register(username, password, email) {
                 username = username.trim();
                 if (!username) {
@@ -1614,20 +1584,17 @@
                 });
             }
 
-            // 登录按钮
             document.getElementById('login-btn').addEventListener('click', () => {
                 const username = document.getElementById('login-username').value;
                 const password = document.getElementById('login-password').value;
                 login(username, password);
             });
-            // 注册按钮
             document.getElementById('register-btn').addEventListener('click', () => {
                 const username = document.getElementById('login-username').value;
                 const password = document.getElementById('login-password').value;
                 const email = document.getElementById('login-email').value;
                 register(username, password, email);
             });
-            // 下注按钮
             document.getElementById('place-bet-btn').addEventListener('click', () => {
                 const company = document.getElementById('bet-company').value;
                 const type = document.getElementById('bet-type').value;
@@ -1636,13 +1603,9 @@
                 placeBet(company, type, amount, number);
                 document.getElementById('bet-number').value = '';
             });
-            // 导出数据
             document.getElementById('export-data-btn').addEventListener('click', exportData);
-            // 清空记录
             document.getElementById('clear-history-btn').addEventListener('click', clearHistory);
-            // 忘记密码
             document.getElementById('forgot-password-btn').addEventListener('click', forgotPassword);
-            // 记住账号
             const savedUser = localStorage.getItem('last_betting_user');
             if (savedUser) {
                 document.getElementById('login-username').value = savedUser;
