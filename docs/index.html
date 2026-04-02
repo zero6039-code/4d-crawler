@@ -66,7 +66,6 @@
         .calendar-month-year { font-size: 1.1rem; }
         .companies-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
         .company-section { background: white; border-radius: 24px; box-shadow: 0 8px 20px rgba(0,20,30,0.1); margin-bottom: 0; padding: 14px 12px; border: 1px solid rgba(255,255,255,0.5); transition: transform 0.15s ease; }
-        /* 公司卡片底部淡淡发光 */
         .company-section { box-shadow: 0 4px 12px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.05); }
         body.dark-mode .company-section { box-shadow: 0 4px 12px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2); }
         .company-section:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(0,0,0,0.12); }
@@ -78,7 +77,6 @@
         .company-title img:hover { transform: scale(1.05); }
         .company-section[data-company="damacai_1p3d"] .company-title img { height: 3rem; }
         .draw-date { font-size: 0.8rem; color: #4a5568; margin-bottom: 8px; padding-left: 4px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        /* 奖品网格强制水平排列（左到右） */
         .prize-grid { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 12px 0 16px; flex-direction: row !important; }
         .prize-card { background: #f8fafd; border-radius: 16px; padding: 8px 12px; flex: 1 1 0px; min-width: 80px; text-align: center; box-shadow: inset 0 1px 4px #ffffff, 0 5px 10px rgba(0,0,0,0.04); border: 1px solid #e9ecf0; }
         .prize-card .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #5f6b7a; font-weight: 500; margin-bottom: 4px; }
@@ -107,27 +105,27 @@
             .company-title img { height: 3.2rem; }
             .company-section[data-company="damacai_1p3d"] .company-title img { height: 2.5rem; }
             .prize-card .number { font-size: 1.6rem; }
-            /* 手机端特别奖/安慰奖：网格每行4个，字体16px，内边距小 */
-            .company-content .number-list {
+            /* 手机端特别奖/安慰奖：网格每行4个，字体16px，内边距极小 */
+            body .company-content .number-list {
                 display: grid !important;
                 grid-template-columns: repeat(4, 1fr) !important;
-                gap: 6px !important;
+                gap: 4px !important;
             }
-            .company-content .number-list .number-item {
+            body .company-content .number-list .number-item {
                 font-size: 16px !important;
-                padding: 4px 2px !important;
+                padding: 2px 2px !important;
                 text-align: center !important;
                 min-width: auto !important;
                 white-space: nowrap !important;
-                border-radius: 16px !important;
+                border-radius: 12px !important;
                 line-height: 1.2 !important;
+                margin: 0 !important;
             }
             .draw-date { font-size: 0.75rem; }
             .number-item, .prize-card .number, .lucky-digit-box { font-weight: 700; }
-            /* 确保手机端奖品也水平排列 */
+            /* 确保手机端奖品水平排列 */
             .prize-grid {
                 flex-direction: row !important;
-                flex-wrap: wrap;
             }
         }
         .company-section[data-company="damacai"] .company-title { background: linear-gradient(145deg, #1e5620, #2a7a2d); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
@@ -931,12 +929,12 @@
                         html += `<div class="subsection"><div class="subsection-title">奖金分配</div><table class="custom-table"><thead><th>Prize Group</th><th>Amount</th><th>Winners</th></thead><tbody>`;
                         prizeTable.forEach(row => {
                             if (Array.isArray(row)) {
-                                html += `    <td>${row[0] || ''}   was<td>${row[1] || ''}   was<td>${row[2] || ''}   `;
+                                html += `     <td>${row[0] || ''}</td><td>${row[1] || ''}</td><td>${row[2] || ''}</td> `;
                             } else if (typeof row === 'object') {
                                 let group = row.group || row.prize || row.Prize || row.name || '';
                                 let amount = row.amount || row.Amount || row.prize_amount || row.value || '';
                                 let winners = row.winners || row.Winners || row.winner_count || '';
-                                html += `     <td>${group}   <td>${amount}   <td>${winners}   `;
+                                html += `      <td>${group}</td><td>${amount}</td><td>${winners}</td> `;
                             }
                         });
                         html += `</tbody>   </div>`;
