@@ -105,33 +105,6 @@
             .company-title img { height: 3.2rem; }
             .company-section[data-company="damacai_1p3d"] .company-title img { height: 2.5rem; }
             .prize-card .number { font-size: 1.6rem; }
-            /* 终极紧凑样式：使用最高权重选择器强制压缩 */
-            body .company-section .company-content .number-list {
-                display: grid !important;
-                grid-template-columns: repeat(4, 1fr) !important;
-                gap: 4px !important;
-                margin: 0 !important;
-                padding: 0 !important;
-            }
-            body .company-section .company-content .number-list .number-item {
-                font-size: 16px !important;
-                padding: 2px 2px !important;
-                margin: 0 !important;
-                text-align: center !important;
-                min-width: 0 !important;
-                width: auto !important;
-                white-space: nowrap !important;
-                border-radius: 8px !important;
-                line-height: 1.2 !important;
-                background: #ffffff !important;
-                border: 1px solid #d4deec !important;
-                box-shadow: none !important;
-            }
-            body.dark-mode .company-section .company-content .number-list .number-item {
-                background: #1a202c !important;
-                border-color: #4a5568 !important;
-                color: #e2e8f0 !important;
-            }
             .draw-date { font-size: 0.75rem; }
             .prize-grid {
                 flex-direction: row !important;
@@ -1183,6 +1156,40 @@
                     document.getElementById('date-btn').classList.remove('active');
                 }
             });
+            
+            // ========== 动态注入终极紧凑样式（确保覆盖任何旧样式） ==========
+            const style = document.createElement('style');
+            style.textContent = `
+                @media (max-width: 800px) {
+                    body .company-section .company-content .number-list {
+                        display: grid !important;
+                        grid-template-columns: repeat(4, 1fr) !important;
+                        gap: 4px !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                    }
+                    body .company-section .company-content .number-list .number-item {
+                        font-size: 16px !important;
+                        padding: 2px 2px !important;
+                        margin: 0 !important;
+                        text-align: center !important;
+                        min-width: 0 !important;
+                        width: auto !important;
+                        white-space: nowrap !important;
+                        border-radius: 8px !important;
+                        line-height: 1.2 !important;
+                        background: #ffffff !important;
+                        border: 1px solid #d4deec !important;
+                        box-shadow: none !important;
+                    }
+                    body.dark-mode .company-section .company-content .number-list .number-item {
+                        background: #1a202c !important;
+                        border-color: #4a5568 !important;
+                        color: #e2e8f0 !important;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
         });
 
         // 幸运号码游戏
