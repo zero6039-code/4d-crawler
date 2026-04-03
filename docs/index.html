@@ -80,7 +80,8 @@
         .prize-grid { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 12px 0 16px; flex-direction: row !important; }
         .prize-card { background: #f8fafd; border-radius: 16px; padding: 8px 12px; flex: 1 1 0px; min-width: 80px; text-align: center; box-shadow: inset 0 1px 4px #ffffff, 0 5px 10px rgba(0,0,0,0.04); border: 1px solid #e9ecf0; }
         .prize-card .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #5f6b7a; font-weight: 500; margin-bottom: 4px; }
-        .prize-card .number { font-size: 1.7rem; font-weight: 800; color: #c62828; line-height: 1.2; text-shadow: 2px 2px 0 rgba(198,40,40,0.1); font-family: 'Courier New', monospace; }
+        /* 开彩数字加大 */
+        .prize-card .number { font-size: 2rem; font-weight: 800; color: #c62828; line-height: 1.2; text-shadow: 2px 2px 0 rgba(198,40,40,0.1); font-family: 'Courier New', monospace; }
         .subsection { margin-top: 16px; background: #f9fbfd; border-radius: 16px; padding: 12px 10px; border: 1px solid #e2e8f0; }
         .subsection-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 4px; color: #1e2f3e; }
         .subsection-title::before { content: "✨"; font-size: 1.2rem; }
@@ -104,9 +105,36 @@
             .company-title { font-size: 1.5rem; gap: 8px; }
             .company-title img { height: 3.2rem; }
             .company-section[data-company="damacai_1p3d"] .company-title img { height: 2.5rem; }
-            .prize-card .number { font-size: 1.6rem; }
+            .prize-card .number { font-size: 1.8rem; }
             .draw-date { font-size: 0.75rem; }
             .prize-grid { flex-direction: row !important; }
+            /* 手机端内框更小 */
+            body .company-section .company-content .number-list {
+                display: grid !important;
+                grid-template-columns: repeat(4, 1fr) !important;
+                gap: 2px !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            body .company-section .company-content .number-list .number-item {
+                font-size: 16px !important;
+                padding: 1px 2px !important;
+                margin: 0 !important;
+                text-align: center !important;
+                min-width: 0 !important;
+                width: auto !important;
+                white-space: nowrap !important;
+                border-radius: 6px !important;
+                line-height: 1.2 !important;
+                background: #ffffff !important;
+                border: 1px solid #d4deec !important;
+                box-shadow: none !important;
+            }
+            body.dark-mode .company-section .company-content .number-list .number-item {
+                background: #1a202c !important;
+                border-color: #4a5568 !important;
+                color: #fbbf24 !important;  /* 深色模式下特别奖/安慰奖字体亮黄色 */
+            }
         }
         .company-section[data-company="damacai"] .company-title { background: linear-gradient(145deg, #1e5620, #2a7a2d); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .company-section[data-company="magnum"] .company-title { background: linear-gradient(145deg, #aa4a1e, #c95f2a); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
@@ -123,10 +151,11 @@
             transform: translateY(-2px);
             box-shadow: 0 6px 16px rgba(0,0,0,0.15);
         }
+        /* 深夜模式按钮背光发光 */
         body.dark-mode .refresh-btn, body.dark-mode .lucky-btn, body.dark-mode .donate-btn,
         body.dark-mode .betting-btn, body.dark-mode .apk-btn, body.dark-mode .dark-mode-btn,
         body.dark-mode .date-btn, body.dark-mode .calendar-btn {
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            box-shadow: 0 0 8px 2px rgba(255,255,200,0.5), 0 2px 8px rgba(0,0,0,0.3);
         }
 
         /* ========== 幸运号码小游戏样式 ========== */
@@ -144,6 +173,9 @@
         }
         .dark-mode-btn {
             background: linear-gradient(135deg, #4a5568, #2d3748);
+            /* 只显示图标，去掉文字 */
+            font-size: 1.2rem;
+            padding: 8px 20px;
         }
         .modal-overlay {
             display: none;
@@ -323,7 +355,6 @@
         .company-section { padding: 12px 10px !important; }
         .prize-grid { margin: 6px 0 8px !important; }
         .prize-card { padding: 6px 8px !important; min-width: 70px; }
-        .prize-card .number { font-size: 1.4rem !important; }
         .subsection { padding: 8px 8px !important; margin-top: 10px !important; }
         .company-title { font-size: 1.4rem !important; margin-bottom: 2px !important; }
         .company-title img { max-height: 2.8rem !important; width: auto; }
@@ -354,7 +385,7 @@
             <button class="donate-btn" id="donate-btn">❤️ Support</button>
             <button class="betting-btn" id="betting-btn">🎲 模拟下注</button>
             <button class="apk-btn" id="apk-btn">📦APK ⬇️</button>
-            <button class="dark-mode-btn" id="dark-mode-btn">🌙 深夜模式</button>
+            <button class="dark-mode-btn" id="dark-mode-btn">🌙</button>
         </div>
 
         <div id="companies-grid" class="companies-grid">
@@ -914,7 +945,7 @@
                                 let group = row.group || row.prize || row.Prize || row.name || '';
                                 let amount = row.amount || row.Amount || row.prize_amount || row.value || '';
                                 let winners = row.winners || row.Winners || row.winner_count || '';
-                                html += `       <tr>${group}</td><td>${amount}</td><td>${winners}</td> `;
+                                html += `       <td>${group}</td><td>${amount}</td><td>${winners}</td> `;
                             }
                         });
                         html += `</tbody>   </div>`;
@@ -1131,26 +1162,22 @@
             statusText.innerHTML = `<span class="status-indicator success"></span>数据已加载`;
             document.getElementById('update-time').innerText = new Date().toLocaleString();
             
-            // ========== 关键修复：强制应用手机端紧凑样式（内联样式） ==========
+            // ========== 强制应用手机端紧凑样式（内联样式） ==========
             if (window.innerWidth <= 800) {
-                // 强制奖品水平排列
-                document.querySelectorAll('.prize-grid').forEach(el => {
-                    el.style.flexDirection = 'row';
-                });
-                // 强制特别奖/安慰奖网格布局
+                document.querySelectorAll('.prize-grid').forEach(el => el.style.flexDirection = 'row');
                 document.querySelectorAll('.company-content .number-list').forEach(el => {
                     el.style.display = 'grid';
                     el.style.gridTemplateColumns = 'repeat(4, 1fr)';
-                    el.style.gap = '4px';
+                    el.style.gap = '2px';
                     el.style.margin = '0';
                     el.style.padding = '0';
                 });
                 document.querySelectorAll('.company-content .number-list .number-item').forEach(el => {
                     el.style.fontSize = '16px';
-                    el.style.padding = '2px 2px';
+                    el.style.padding = '1px 2px';
                     el.style.textAlign = 'center';
                     el.style.whiteSpace = 'nowrap';
-                    el.style.borderRadius = '8px';
+                    el.style.borderRadius = '6px';
                     el.style.lineHeight = '1.2';
                 });
             }
@@ -1165,9 +1192,8 @@
             await loadDateIndex();
             createCompanySkeletons();
             document.getElementById('calendar-btn').onclick = showCalendar;
-            await loadAllCompanies();  // 确保数据加载后执行强制样式
+            await loadAllCompanies();
             
-            // 监听窗口大小变化，重新应用样式
             window.addEventListener('resize', () => {
                 if (window.innerWidth <= 800) {
                     setTimeout(() => {
@@ -1175,11 +1201,11 @@
                         document.querySelectorAll('.company-content .number-list').forEach(el => {
                             el.style.display = 'grid';
                             el.style.gridTemplateColumns = 'repeat(4, 1fr)';
-                            el.style.gap = '4px';
+                            el.style.gap = '2px';
                         });
                         document.querySelectorAll('.company-content .number-list .number-item').forEach(el => {
                             el.style.fontSize = '16px';
-                            el.style.padding = '2px 2px';
+                            el.style.padding = '1px 2px';
                         });
                     }, 100);
                 }
@@ -1335,11 +1361,11 @@
                     document.body.classList.toggle('dark-mode');
                     const isDark = document.body.classList.contains('dark-mode');
                     localStorage.setItem('darkMode', isDark);
-                    darkModeBtn.textContent = isDark ? '☀️ 日间模式' : '🌙 深夜模式';
+                    darkModeBtn.textContent = isDark ? '☀️' : '🌙';
                 });
                 if (localStorage.getItem('darkMode') === 'true') {
                     document.body.classList.add('dark-mode');
-                    darkModeBtn.textContent = '☀️ 日间模式';
+                    darkModeBtn.textContent = '☀️';
                 }
             }
         })();
