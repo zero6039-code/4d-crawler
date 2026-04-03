@@ -88,12 +88,17 @@
         .prize-grid { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 12px 0 16px; flex-direction: row !important; }
         .prize-card { background: #f8fafd; border-radius: 16px; padding: 8px 12px; flex: 1 1 0px; min-width: 80px; text-align: center; box-shadow: inset 0 1px 4px #ffffff, 0 5px 10px rgba(0,0,0,0.04); border: 1px solid #e9ecf0; }
         .prize-card .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #5f6b7a; font-weight: 500; margin-bottom: 4px; }
+        /* 所有公司默认奖品数字大小 */
         .prize-card .number { font-size: 2.4rem; font-weight: 800; color: #c62828; line-height: 1.2; text-shadow: 2px 2px 0 rgba(198,40,40,0.1); font-family: 'Courier New', monospace; }
+        /* DAMACAI 1+3D 单独调小奖品数字 */
+        .company-section[data-company="damacai_1p3d"] .prize-card .number {
+            font-size: 1.8rem;
+        }
         .subsection { margin-top: 16px; background: #f9fbfd; border-radius: 16px; padding: 12px 10px; border: 1px solid #e2e8f0; }
         .subsection-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 4px; color: #1e2f3e; }
         .subsection-title::before { content: "✨"; font-size: 1.2rem; }
         .number-list { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-start; }
-        /* 基础特别奖/安慰奖数字大小（桌面） */
+        /* 特别奖/安慰奖数字大小（桌面） */
         .number-item { background: #ffffff; padding: 6px 10px; border-radius: 28px; font-family: 'Courier New', monospace; font-size: 1.5rem; font-weight: 600; color: #0b2a41; box-shadow: 0 3px 8px rgba(0,0,0,0.03); border: 1px solid #d4deec; min-width: 50px; text-align: center; transition: all 0.1s; white-space: pre-line; line-height: 1.4; }
         .number-item:hover { background: #e6f0ff; border-color: #8a9cb0; }
         .custom-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 1rem; }
@@ -114,6 +119,10 @@
             .company-title img { height: 3.2rem; }
             .company-section[data-company="damacai_1p3d"] .company-title img { height: 2.5rem; }
             .prize-card .number { font-size: 2rem; }
+            /* DAMACAI 1+3D 手机端奖品数字进一步调小 */
+            .company-section[data-company="damacai_1p3d"] .prize-card .number {
+                font-size: 1.4rem;
+            }
             .draw-date { font-size: 0.75rem; }
             .prize-grid { flex-direction: row !important; }
             body .company-section .company-content .number-list {
@@ -124,7 +133,7 @@
                 padding: 0 !important;
             }
             body .company-section .company-content .number-list .number-item {
-                font-size: 20px !important;  /* 手机端特别奖/安慰奖数字加大 */
+                font-size: 20px !important;
                 padding: 0px 1px !important;
                 margin: 0 !important;
                 text-align: center !important;
@@ -947,7 +956,6 @@
                     winningNumbers.forEach(n => html += `<span class="number-item">${n}</span>`);
                     html += `</div></div>`;
                     
-                    // 修复奖金分配表格
                     let prizeTable = data.prize_table || data.prizes || data.prizeTable || data.prize_table_data || [];
                     if (prizeTable && prizeTable.length > 0) {
                         html += `<div class="subsection"><div class="subsection-title">奖金分配</div><table class="custom-table"><thead><tr><th>Prize Group</th><th>Amount</th><th>Winners</th></tr></thead><tbody>`;
