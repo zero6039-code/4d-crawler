@@ -17,10 +17,19 @@
         body.dark-mode .company-title { background: linear-gradient(145deg, #a0aec0, #cbd5e0); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         body.dark-mode .draw-date { color: #a0aec0; }
         body.dark-mode .prize-card, body.dark-mode .subsection { background: #2d3748; border-color: #4a5568; }
-        body.dark-mode .number-item { background: #1a202c; border-color: #4a5568; color: #e2e8f0; }
+        body.dark-mode .number-item { background: #1a202c; border-color: #4a5568; color: #e2e8f0; } /* 恢复亮白色 */
+        body.dark-mode .subsection-title { color: #fbbf24; } /* 标题亮黄色 */
+        body.dark-mode .prize-card .number { color: #fbbf24; } /* 开彩号码保持亮黄色 */
         body.dark-mode .date-btn, body.dark-mode .calendar-btn, body.dark-mode .refresh-btn, 
         body.dark-mode .lucky-btn, body.dark-mode .donate-btn, body.dark-mode .betting-btn, 
-        body.dark-mode .apk-btn, body.dark-mode .dark-mode-btn { background: #2d3748; color: #e2e8f0; border-color: #4a5568; }
+        body.dark-mode .apk-btn { background: #2d3748; color: #e2e8f0; border-color: #4a5568; }
+        /* 深夜模式按钮单独处理：去掉背景框 */
+        body.dark-mode .dark-mode-btn {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            color: #e2e8f0 !important;
+        }
         body.dark-mode footer { color: #a0aec0; border-top-color: #4a5568; }
         body.dark-mode .modal-content { background: #2d3748; color: #e2e8f0; }
         body.dark-mode .modal-title { color: #fbbf24; }
@@ -80,17 +89,16 @@
         .prize-grid { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 12px 0 16px; flex-direction: row !important; }
         .prize-card { background: #f8fafd; border-radius: 16px; padding: 8px 12px; flex: 1 1 0px; min-width: 80px; text-align: center; box-shadow: inset 0 1px 4px #ffffff, 0 5px 10px rgba(0,0,0,0.04); border: 1px solid #e9ecf0; }
         .prize-card .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #5f6b7a; font-weight: 500; margin-bottom: 4px; }
-        /* 开彩数字加大 */
-        .prize-card .number { font-size: 2rem; font-weight: 800; color: #c62828; line-height: 1.2; text-shadow: 2px 2px 0 rgba(198,40,40,0.1); font-family: 'Courier New', monospace; }
+        .prize-card .number { font-size: 2.4rem; font-weight: 800; color: #c62828; line-height: 1.2; text-shadow: 2px 2px 0 rgba(198,40,40,0.1); font-family: 'Courier New', monospace; }
         .subsection { margin-top: 16px; background: #f9fbfd; border-radius: 16px; padding: 12px 10px; border: 1px solid #e2e8f0; }
         .subsection-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 4px; color: #1e2f3e; }
         .subsection-title::before { content: "✨"; font-size: 1.2rem; }
         .number-list { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-start; }
-        .number-item { background: #ffffff; padding: 6px 10px; border-radius: 28px; font-family: 'Courier New', monospace; font-size: 1.1rem; font-weight: 600; color: #0b2a41; box-shadow: 0 3px 8px rgba(0,0,0,0.03); border: 1px solid #d4deec; min-width: 50px; text-align: center; transition: all 0.1s; white-space: pre-line; line-height: 1.4; }
+        .number-item { background: #ffffff; padding: 6px 10px; border-radius: 28px; font-family: 'Courier New', monospace; font-size: 1.3rem; font-weight: 600; color: #0b2a41; box-shadow: 0 3px 8px rgba(0,0,0,0.03); border: 1px solid #d4deec; min-width: 50px; text-align: center; transition: all 0.1s; white-space: pre-line; line-height: 1.4; }
         .number-item:hover { background: #e6f0ff; border-color: #8a9cb0; }
-        .custom-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.9rem; }
+        .custom-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 1rem; }
         .custom-table th { background: #e2e8f0; padding: 8px 4px; text-align: center; font-weight: 600; color: #2d3748; border: 1px solid #cbd5e0; }
-        .custom-table td { padding: 6px 4px; text-align: center; border: 1px solid #cbd5e0; background: white; }
+        .custom-table td { padding: 6px 4px; text-align: center; border: 1px solid #cbd5e0; background: white; font-size: 1rem; }
         .custom-table .alt-number { color: #3182ce; font-weight: 500; }
         .group-subtitle { font-size: 0.95rem; font-weight: 600; margin: 8px 0 4px 0; color: #2c3e50; width: 100%; }
         footer { text-align: center; margin-top: 30px; color: #7c8b9c; font-size: 0.8rem; border-top: 1px solid #dbe1ea; padding-top: 16px; }
@@ -105,26 +113,26 @@
             .company-title { font-size: 1.5rem; gap: 8px; }
             .company-title img { height: 3.2rem; }
             .company-section[data-company="damacai_1p3d"] .company-title img { height: 2.5rem; }
-            .prize-card .number { font-size: 1.8rem; }
+            .prize-card .number { font-size: 2rem; }
             .draw-date { font-size: 0.75rem; }
             .prize-grid { flex-direction: row !important; }
-            /* 手机端内框更小 */
+            /* 进一步缩小内边距和间隙 */
             body .company-section .company-content .number-list {
                 display: grid !important;
                 grid-template-columns: repeat(4, 1fr) !important;
-                gap: 2px !important;
+                gap: 1px !important;
                 margin: 0 !important;
                 padding: 0 !important;
             }
             body .company-section .company-content .number-list .number-item {
-                font-size: 16px !important;
-                padding: 1px 2px !important;
+                font-size: 18px !important;
+                padding: 0px 1px !important;
                 margin: 0 !important;
                 text-align: center !important;
                 min-width: 0 !important;
                 width: auto !important;
                 white-space: nowrap !important;
-                border-radius: 6px !important;
+                border-radius: 4px !important;
                 line-height: 1.2 !important;
                 background: #ffffff !important;
                 border: 1px solid #d4deec !important;
@@ -133,8 +141,10 @@
             body.dark-mode .company-section .company-content .number-list .number-item {
                 background: #1a202c !important;
                 border-color: #4a5568 !important;
-                color: #fbbf24 !important;  /* 深色模式下特别奖/安慰奖字体亮黄色 */
+                color: #e2e8f0 !important;
             }
+            .custom-table { font-size: 0.9rem; }
+            .custom-table td { font-size: 0.9rem; }
         }
         .company-section[data-company="damacai"] .company-title { background: linear-gradient(145deg, #1e5620, #2a7a2d); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .company-section[data-company="magnum"] .company-title { background: linear-gradient(145deg, #aa4a1e, #c95f2a); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
@@ -143,18 +153,17 @@
         .jackpot-label { font-weight: 600; margin: 4px 0 2px 0; color: #2c3e50; font-size: 0.95rem; }
 
         /* ========== 按钮公共发光效果 ========== */
-        .refresh-btn, .lucky-btn, .donate-btn, .betting-btn, .apk-btn, .dark-mode-btn, .date-btn, .calendar-btn {
+        .refresh-btn, .lucky-btn, .donate-btn, .betting-btn, .apk-btn, .date-btn, .calendar-btn {
             box-shadow: 0 2px 8px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.05);
             transition: all 0.2s;
         }
-        .refresh-btn:hover, .lucky-btn:hover, .donate-btn:hover, .betting-btn:hover, .apk-btn:hover, .dark-mode-btn:hover, .date-btn:hover, .calendar-btn:hover {
+        .refresh-btn:hover, .lucky-btn:hover, .donate-btn:hover, .betting-btn:hover, .apk-btn:hover, .date-btn:hover, .calendar-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 16px rgba(0,0,0,0.15);
         }
-        /* 深夜模式按钮背光发光 */
+        /* 深夜模式下其他按钮保持发光，但深色模式按钮特殊处理已在上面 */
         body.dark-mode .refresh-btn, body.dark-mode .lucky-btn, body.dark-mode .donate-btn,
-        body.dark-mode .betting-btn, body.dark-mode .apk-btn, body.dark-mode .dark-mode-btn,
-        body.dark-mode .date-btn, body.dark-mode .calendar-btn {
+        body.dark-mode .betting-btn, body.dark-mode .apk-btn, body.dark-mode .date-btn, body.dark-mode .calendar-btn {
             box-shadow: 0 0 8px 2px rgba(255,255,200,0.5), 0 2px 8px rgba(0,0,0,0.3);
         }
 
@@ -171,11 +180,17 @@
             transition: all 0.2s;
             line-height: 1.4;
         }
+        /* 深夜模式按钮：无背景、无边框、仅图标 */
         .dark-mode-btn {
-            background: linear-gradient(135deg, #4a5568, #2d3748);
-            /* 只显示图标，去掉文字 */
-            font-size: 1.2rem;
-            padding: 8px 20px;
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 8px 12px !important;
+            font-size: 1.4rem !important;
+            color: #2c3e50 !important;
+        }
+        body.dark-mode .dark-mode-btn {
+            color: #e2e8f0 !important;
         }
         .modal-overlay {
             display: none;
@@ -945,7 +960,7 @@
                                 let group = row.group || row.prize || row.Prize || row.name || '';
                                 let amount = row.amount || row.Amount || row.prize_amount || row.value || '';
                                 let winners = row.winners || row.Winners || row.winner_count || '';
-                                html += `       <td>${group}</td><td>${amount}</td><td>${winners}</td> `;
+                                html += `       <tr>${group}</td><td>${amount}</td><td>${winners}</td> `;
                             }
                         });
                         html += `</tbody>   </div>`;
@@ -1162,22 +1177,22 @@
             statusText.innerHTML = `<span class="status-indicator success"></span>数据已加载`;
             document.getElementById('update-time').innerText = new Date().toLocaleString();
             
-            // ========== 强制应用手机端紧凑样式（内联样式） ==========
+            // 强制应用手机端紧凑样式
             if (window.innerWidth <= 800) {
                 document.querySelectorAll('.prize-grid').forEach(el => el.style.flexDirection = 'row');
                 document.querySelectorAll('.company-content .number-list').forEach(el => {
                     el.style.display = 'grid';
                     el.style.gridTemplateColumns = 'repeat(4, 1fr)';
-                    el.style.gap = '2px';
+                    el.style.gap = '1px';
                     el.style.margin = '0';
                     el.style.padding = '0';
                 });
                 document.querySelectorAll('.company-content .number-list .number-item').forEach(el => {
-                    el.style.fontSize = '16px';
-                    el.style.padding = '1px 2px';
+                    el.style.fontSize = '18px';
+                    el.style.padding = '0px 1px';
                     el.style.textAlign = 'center';
                     el.style.whiteSpace = 'nowrap';
-                    el.style.borderRadius = '6px';
+                    el.style.borderRadius = '4px';
                     el.style.lineHeight = '1.2';
                 });
             }
@@ -1201,11 +1216,11 @@
                         document.querySelectorAll('.company-content .number-list').forEach(el => {
                             el.style.display = 'grid';
                             el.style.gridTemplateColumns = 'repeat(4, 1fr)';
-                            el.style.gap = '2px';
+                            el.style.gap = '1px';
                         });
                         document.querySelectorAll('.company-content .number-list .number-item').forEach(el => {
-                            el.style.fontSize = '16px';
-                            el.style.padding = '1px 2px';
+                            el.style.fontSize = '18px';
+                            el.style.padding = '0px 1px';
                         });
                     }, 100);
                 }
