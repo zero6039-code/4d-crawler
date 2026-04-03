@@ -818,8 +818,9 @@
             `;
             
             let date = 1;
+            // 生成6行（最多6周）
             for (let i = 0; i < 6; i++) {
-                html += ' ';
+                html += '<tr>';
                 for (let j = 0; j < 7; j++) {
                     if ((i === 0 && j < firstDay) || date > daysInMonth) {
                         html += '<td class="empty"> ';
@@ -832,10 +833,14 @@
                         date++;
                     }
                 }
-                html += ' ';
-                if (date > daysInMonth) break;
+                html += '</tr>';
+                if (date > daysInMonth) {
+                    // 如果已经填完所有日期，后面的行全部填空单元格
+                    // 但为了保持表格完整，继续循环填充空单元格
+                    // 这里不需要 break，因为空单元格会由上面的条件处理
+                }
             }
-            html += '</tbody>  ';
+            html += '</tbody></table>';
             popup.innerHTML = html;
             
             document.getElementById('prev-month').onclick = (e) => { e.stopPropagation(); changeMonth(-1); };
@@ -860,13 +865,9 @@
         function updateCalendarButtonToToday() {
             const btn = document.getElementById('calendar-btn');
             if (!btn) return;
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = (now.getMonth() + 1).toString().padStart(2, '0');
-            const day = now.getDate().toString().padStart(2, '0');
-            const todayYmd = `${year}-${month}-${day}`;
-            const display = formatDisplayDate(todayYmd);
-            btn.innerHTML = `<span class="calendar-icon">📅</span><span>${display}</span><span class="arrow">▼</span>`;
+            // 如果有选中的日期，显示选中日期，否则显示今天
+            let displayDate = selectedDate ? formatDisplayDate(selectedDate) : formatDisplayDate(new Date().toISOString().slice(0,10));
+            btn.innerHTML = `<span class="calendar-icon">📅</span><span>${displayDate}</span><span class="arrow">▼</span>`;
         }
 
         // 核心数据加载
