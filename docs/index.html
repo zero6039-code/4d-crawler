@@ -17,13 +17,12 @@
         body.dark-mode .company-title { background: linear-gradient(145deg, #a0aec0, #cbd5e0); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         body.dark-mode .draw-date { color: #a0aec0; }
         body.dark-mode .prize-card, body.dark-mode .subsection { background: #2d3748; border-color: #4a5568; }
-        body.dark-mode .number-item { background: #1a202c; border-color: #4a5568; color: #e2e8f0; } /* 恢复亮白色 */
-        body.dark-mode .subsection-title { color: #fbbf24; } /* 标题亮黄色 */
-        body.dark-mode .prize-card .number { color: #fbbf24; } /* 开彩号码保持亮黄色 */
+        body.dark-mode .number-item { background: #1a202c; border-color: #4a5568; color: #e2e8f0; }
+        body.dark-mode .subsection-title { color: #fbbf24; }
+        body.dark-mode .prize-card .number { color: #fbbf24; }
         body.dark-mode .date-btn, body.dark-mode .calendar-btn, body.dark-mode .refresh-btn, 
         body.dark-mode .lucky-btn, body.dark-mode .donate-btn, body.dark-mode .betting-btn, 
         body.dark-mode .apk-btn { background: #2d3748; color: #e2e8f0; border-color: #4a5568; }
-        /* 深夜模式按钮单独处理：去掉背景框 */
         body.dark-mode .dark-mode-btn {
             background: transparent !important;
             border: none !important;
@@ -94,7 +93,8 @@
         .subsection-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 4px; color: #1e2f3e; }
         .subsection-title::before { content: "✨"; font-size: 1.2rem; }
         .number-list { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-start; }
-        .number-item { background: #ffffff; padding: 6px 10px; border-radius: 28px; font-family: 'Courier New', monospace; font-size: 1.3rem; font-weight: 600; color: #0b2a41; box-shadow: 0 3px 8px rgba(0,0,0,0.03); border: 1px solid #d4deec; min-width: 50px; text-align: center; transition: all 0.1s; white-space: pre-line; line-height: 1.4; }
+        /* 基础特别奖/安慰奖数字大小（桌面） */
+        .number-item { background: #ffffff; padding: 6px 10px; border-radius: 28px; font-family: 'Courier New', monospace; font-size: 1.5rem; font-weight: 600; color: #0b2a41; box-shadow: 0 3px 8px rgba(0,0,0,0.03); border: 1px solid #d4deec; min-width: 50px; text-align: center; transition: all 0.1s; white-space: pre-line; line-height: 1.4; }
         .number-item:hover { background: #e6f0ff; border-color: #8a9cb0; }
         .custom-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 1rem; }
         .custom-table th { background: #e2e8f0; padding: 8px 4px; text-align: center; font-weight: 600; color: #2d3748; border: 1px solid #cbd5e0; }
@@ -116,7 +116,6 @@
             .prize-card .number { font-size: 2rem; }
             .draw-date { font-size: 0.75rem; }
             .prize-grid { flex-direction: row !important; }
-            /* 进一步缩小内边距和间隙 */
             body .company-section .company-content .number-list {
                 display: grid !important;
                 grid-template-columns: repeat(4, 1fr) !important;
@@ -125,7 +124,7 @@
                 padding: 0 !important;
             }
             body .company-section .company-content .number-list .number-item {
-                font-size: 18px !important;
+                font-size: 20px !important;  /* 手机端特别奖/安慰奖数字加大 */
                 padding: 0px 1px !important;
                 margin: 0 !important;
                 text-align: center !important;
@@ -161,7 +160,6 @@
             transform: translateY(-2px);
             box-shadow: 0 6px 16px rgba(0,0,0,0.15);
         }
-        /* 深夜模式下其他按钮保持发光，但深色模式按钮特殊处理已在上面 */
         body.dark-mode .refresh-btn, body.dark-mode .lucky-btn, body.dark-mode .donate-btn,
         body.dark-mode .betting-btn, body.dark-mode .apk-btn, body.dark-mode .date-btn, body.dark-mode .calendar-btn {
             box-shadow: 0 0 8px 2px rgba(255,255,200,0.5), 0 2px 8px rgba(0,0,0,0.3);
@@ -180,7 +178,6 @@
             transition: all 0.2s;
             line-height: 1.4;
         }
-        /* 深夜模式按钮：无背景、无边框、仅图标 */
         .dark-mode-btn {
             background: transparent !important;
             border: none !important;
@@ -950,20 +947,24 @@
                     winningNumbers.forEach(n => html += `<span class="number-item">${n}</span>`);
                     html += `</div></div>`;
                     
+                    // 修复奖金分配表格
                     let prizeTable = data.prize_table || data.prizes || data.prizeTable || data.prize_table_data || [];
                     if (prizeTable && prizeTable.length > 0) {
-                        html += `<div class="subsection"><div class="subsection-title">奖金分配</div><table class="custom-table"><thead><th>Prize Group</th><th>Amount</th><th>Winners</th></thead><tbody>`;
+                        html += `<div class="subsection"><div class="subsection-title">奖金分配</div><table class="custom-table"><thead><tr><th>Prize Group</th><th>Amount</th><th>Winners</th></tr></thead><tbody>`;
                         prizeTable.forEach(row => {
+                            let group = '', amount = '', winners = '';
                             if (Array.isArray(row)) {
-                                html += `      <tr>${row[0] || ''}</td><td>${row[1] || ''}</td><td>${row[2] || ''}</td> `;
+                                group = row[0] || '';
+                                amount = row[1] || '';
+                                winners = row[2] || '';
                             } else if (typeof row === 'object') {
-                                let group = row.group || row.prize || row.Prize || row.name || '';
-                                let amount = row.amount || row.Amount || row.prize_amount || row.value || '';
-                                let winners = row.winners || row.Winners || row.winner_count || '';
-                                html += `       <tr>${group}</td><td>${amount}</td><td>${winners}</td> `;
+                                group = row.group || row.prize || row.Prize || row.name || '';
+                                amount = row.amount || row.Amount || row.prize_amount || row.value || '';
+                                winners = row.winners || row.Winners || row.winner_count || '';
                             }
+                            html += `<tr><td>${group}</td><td>${amount}</td><td>${winners}</td></tr>`;
                         });
-                        html += `</tbody>   </div>`;
+                        html += `</tbody></table></div>`;
                     }
                 }
                 else if (companyKey === 'magnum_jackpot_gold') {
@@ -1188,7 +1189,7 @@
                     el.style.padding = '0';
                 });
                 document.querySelectorAll('.company-content .number-list .number-item').forEach(el => {
-                    el.style.fontSize = '18px';
+                    el.style.fontSize = '20px';
                     el.style.padding = '0px 1px';
                     el.style.textAlign = 'center';
                     el.style.whiteSpace = 'nowrap';
@@ -1219,7 +1220,7 @@
                             el.style.gap = '1px';
                         });
                         document.querySelectorAll('.company-content .number-list .number-item').forEach(el => {
-                            el.style.fontSize = '18px';
+                            el.style.fontSize = '20px';
                             el.style.padding = '0px 1px';
                         });
                     }, 100);
