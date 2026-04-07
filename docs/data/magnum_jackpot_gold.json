@@ -1,58 +1,58 @@
 {
-  "draw_date": "05-04-2026",
-  "draw_no": "350/26",
+  "draw_date": "07-04-2026",
+  "draw_no": "351/26",
   "groups": [
     {
       "group": "1",
       "numbers": [
-        "8"
+        "5"
       ]
     },
     {
       "group": "2",
       "numbers": [
-        "9"
+        "3"
       ]
     },
     {
       "group": "3",
       "numbers": [
-        "9"
+        "5"
       ]
     },
     {
       "group": "4",
       "numbers": [
-        "2"
+        "1"
       ]
     },
     {
       "group": "5",
       "numbers": [
-        "0"
+        "9"
       ]
     },
     {
       "group": "6",
       "numbers": [
-        "1"
+        "2"
       ]
     },
     {
       "group": "7",
       "numbers": [
-        "1"
+        "0"
       ]
     },
     {
       "group": "8",
       "numbers": [
-        "0"
+        "2"
       ]
     }
   ],
   "jackpots": [
-    "RM 11,412,413.37",
-    "RM 257,307.68"
+    "",
+    ""
   ]
 }
