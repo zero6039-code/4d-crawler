@@ -1,58 +1,9 @@
 {
-  "draw_date": "08-04-2026",
-  "draw_no": "352/26",
-  "groups": [
-    {
-      "group": "1",
-      "numbers": [
-        "0"
-      ]
-    },
-    {
-      "group": "2",
-      "numbers": [
-        "4"
-      ]
-    },
-    {
-      "group": "3",
-      "numbers": [
-        "0"
-      ]
-    },
-    {
-      "group": "4",
-      "numbers": [
-        "4"
-      ]
-    },
-    {
-      "group": "5",
-      "numbers": [
-        "3"
-      ]
-    },
-    {
-      "group": "6",
-      "numbers": [
-        "9"
-      ]
-    },
-    {
-      "group": "7",
-      "numbers": [
-        "1"
-      ]
-    },
-    {
-      "group": "8",
-      "numbers": [
-        "2"
-      ]
-    }
-  ],
+  "draw_date": "11-04-2026",
+  "draw_no": "",
+  "groups": [],
   "jackpots": [
-    "RM 11,551,098.31",
-    "RM 255,291.64"
+    "",
+    ""
   ]
 }
