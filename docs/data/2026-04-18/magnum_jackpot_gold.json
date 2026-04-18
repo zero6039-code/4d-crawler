@@ -1,7 +1,56 @@
 {
   "draw_date": "18-04-2026",
-  "draw_no": "",
-  "groups": [],
+  "draw_no": "356/26",
+  "groups": [
+    {
+      "group": "1",
+      "numbers": [
+        "1"
+      ]
+    },
+    {
+      "group": "2",
+      "numbers": [
+        "2"
+      ]
+    },
+    {
+      "group": "3",
+      "numbers": [
+        "0"
+      ]
+    },
+    {
+      "group": "4",
+      "numbers": [
+        "6"
+      ]
+    },
+    {
+      "group": "5",
+      "numbers": [
+        "6"
+      ]
+    },
+    {
+      "group": "6",
+      "numbers": [
+        "3"
+      ]
+    },
+    {
+      "group": "7",
+      "numbers": [
+        "0"
+      ]
+    },
+    {
+      "group": "8",
+      "numbers": [
+        "8"
+      ]
+    }
+  ],
   "jackpots": [
     "",
     ""
