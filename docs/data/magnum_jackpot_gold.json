@@ -1,35 +1,35 @@
 {
-  "draw_date": "09-05-2026",
-  "draw_no": "365/26",
+  "draw_date": "10-05-2026",
+  "draw_no": "366/26",
   "groups": [
     {
       "group": "1",
       "numbers": [
-        "6"
+        "0"
       ]
     },
     {
       "group": "2",
       "numbers": [
-        "5"
+        "2"
       ]
     },
     {
       "group": "3",
       "numbers": [
-        "5"
+        "2"
       ]
     },
     {
       "group": "4",
       "numbers": [
-        "3"
+        "8"
       ]
     },
     {
       "group": "5",
       "numbers": [
-        "8"
+        "0"
       ]
     },
     {
@@ -47,7 +47,7 @@
     {
       "group": "8",
       "numbers": [
-        "9"
+        "5"
       ]
     }
   ],
