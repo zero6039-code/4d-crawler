@@ -1,0 +1,58 @@
+{
+  "draw_date": "03-06-2026",
+  "draw_no": "376/26",
+  "groups": [
+    {
+      "group": "1",
+      "numbers": [
+        "6"
+      ]
+    },
+    {
+      "group": "2",
+      "numbers": [
+        "9"
+      ]
+    },
+    {
+      "group": "3",
+      "numbers": [
+        "3"
+      ]
+    },
+    {
+      "group": "4",
+      "numbers": [
+        "0"
+      ]
+    },
+    {
+      "group": "5",
+      "numbers": [
+        "4"
+      ]
+    },
+    {
+      "group": "6",
+      "numbers": [
+        "7"
+      ]
+    },
+    {
+      "group": "7",
+      "numbers": [
+        "0"
+      ]
+    },
+    {
+      "group": "8",
+      "numbers": [
+        "4"
+      ]
+    }
+  ],
+  "jackpots": [
+    "RM 10,986,430.80",
+    "RM 166,810.62"
+  ]
+}
