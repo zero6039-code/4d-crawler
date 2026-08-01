@@ -1,53 +1,53 @@
 {
-  "draw_date": "26-07-2026",
-  "draw_no": "399/26",
+  "draw_date": "01-08-2026",
+  "draw_no": "402/26",
   "groups": [
     {
       "group": "1",
       "numbers": [
-        "6"
+        "2"
       ]
     },
     {
       "group": "2",
       "numbers": [
-        "7"
+        "3"
       ]
     },
     {
       "group": "3",
       "numbers": [
-        "5"
+        "3"
       ]
     },
     {
       "group": "4",
       "numbers": [
-        "4"
+        "2"
       ]
     },
     {
       "group": "5",
       "numbers": [
-        "8"
+        "7"
       ]
     },
     {
       "group": "6",
       "numbers": [
-        "9"
+        "1"
       ]
     },
     {
       "group": "7",
       "numbers": [
-        "0"
+        "1"
       ]
     },
     {
       "group": "8",
       "numbers": [
-        "5"
+        "8"
       ]
     }
   ],
