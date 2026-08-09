@@ -1,7 +1,56 @@
 {
   "draw_date": "09-08-2026",
-  "draw_no": "",
-  "groups": [],
+  "draw_no": "406/26",
+  "groups": [
+    {
+      "group": "1",
+      "numbers": [
+        "0"
+      ]
+    },
+    {
+      "group": "2",
+      "numbers": [
+        "5"
+      ]
+    },
+    {
+      "group": "3",
+      "numbers": [
+        "1"
+      ]
+    },
+    {
+      "group": "4",
+      "numbers": [
+        "5"
+      ]
+    },
+    {
+      "group": "5",
+      "numbers": [
+        "4"
+      ]
+    },
+    {
+      "group": "6",
+      "numbers": [
+        "8"
+      ]
+    },
+    {
+      "group": "7",
+      "numbers": [
+        "0"
+      ]
+    },
+    {
+      "group": "8",
+      "numbers": [
+        "0"
+      ]
+    }
+  ],
   "jackpots": [
     "",
     ""
