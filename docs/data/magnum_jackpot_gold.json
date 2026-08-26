@@ -1,58 +1,9 @@
 {
-  "draw_date": "23-08-2026",
-  "draw_no": "412/26",
-  "groups": [
-    {
-      "group": "1",
-      "numbers": [
-        "5"
-      ]
-    },
-    {
-      "group": "2",
-      "numbers": [
-        "6"
-      ]
-    },
-    {
-      "group": "3",
-      "numbers": [
-        "8"
-      ]
-    },
-    {
-      "group": "4",
-      "numbers": [
-        "3"
-      ]
-    },
-    {
-      "group": "5",
-      "numbers": [
-        "0"
-      ]
-    },
-    {
-      "group": "6",
-      "numbers": [
-        "4"
-      ]
-    },
-    {
-      "group": "7",
-      "numbers": [
-        "1"
-      ]
-    },
-    {
-      "group": "8",
-      "numbers": [
-        "4"
-      ]
-    }
-  ],
+  "draw_date": "26-08-2026",
+  "draw_no": "",
+  "groups": [],
   "jackpots": [
-    "RM 13,018,870.42",
-    "RM 195,478.37"
+    "",
+    ""
   ]
 }
