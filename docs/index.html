@@ -49,38 +49,21 @@
         .date-option.active { background: #e6f0ff; color: #3182ce; font-weight: 600; }
         .loading-history { text-align: center; padding: 20px; color: #7c8b9c; }
         
-        /* ========== 现代高级按钮样式 (修复悬停) ========== */
+        /* ========== 现代高级按钮样式 ========== */
         .action-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 12px;
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 10px 20px; border: none; border-radius: 12px; font-size: 0.95rem; font-weight: 600;
+            cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
-            color: white;
-            letter-spacing: 0.3px;
-            pointer-events: auto; /* 确保按钮可被点击 */
+            color: white; letter-spacing: 0.3px; pointer-events: auto;
         }
         .action-btn svg {
-            width: 18px;
-            height: 18px;
-            stroke: currentColor;
-            stroke-width: 2.2;
-            fill: none;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-            transition: transform 0.2s;
-            pointer-events: none; /* 关键修复：让 SVG 不拦截鼠标事件，确保悬停和点击效果完美作用在按钮上 */
+            width: 18px; height: 18px; stroke: currentColor; stroke-width: 2.2;
+            fill: none; stroke-linecap: round; stroke-linejoin: round;
+            transition: transform 0.2s; pointer-events: none;
         }
         .action-btn:hover {
-            transform: translateY(-2px);
-            filter: brightness(1.1); /* 增加亮度提升，让悬停反馈更明显 */
+            transform: translateY(-2px); filter: brightness(1.1);
             box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
         }
         .action-btn:active { transform: translateY(0); }
@@ -89,13 +72,10 @@
         .refresh-btn:hover { background: linear-gradient(135deg, #4338ca, #3730a3); }
         .refresh-btn svg { transition: transform 0.4s ease; }
         .refresh-btn:hover svg { transform: rotate(180deg); }
-
         .lucky-btn { background: linear-gradient(135deg, #f59e0b, #d97706); }
         .lucky-btn:hover { background: linear-gradient(135deg, #d97706, #b45309); }
-        
         .donate-btn { background: linear-gradient(135deg, #10b981, #059669); }
         .donate-btn:hover { background: linear-gradient(135deg, #059669, #047857); }
-        
         .apk-btn { background: linear-gradient(135deg, #3b82f6, #2563eb); }
         .apk-btn:hover { background: linear-gradient(135deg, #2563eb, #1d4ed8); }
         
@@ -106,27 +86,8 @@
         body.dark-mode .donate-btn { background: linear-gradient(135deg, #34d399, #10b981); color: #1a202c; }
         body.dark-mode .apk-btn { background: linear-gradient(135deg, #60a5fa, #3b82f6); }
 
-        .dark-mode-btn {
-            background: transparent;
-            border: none;
-            box-shadow: none;
-            padding: 10px;
-            color: #4a5568;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .dark-mode-btn svg {
-            width: 22px;
-            height: 22px;
-            stroke: currentColor;
-            stroke-width: 2;
-            fill: none;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-        }
+        .dark-mode-btn { background: transparent; border: none; box-shadow: none; padding: 10px; color: #4a5568; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+        .dark-mode-btn svg { width: 22px; height: 22px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
         .dark-mode-btn:hover { transform: scale(1.1); color: #1a202c; }
         body.dark-mode .dark-mode-btn { color: #e2e8f0; }
         body.dark-mode .dark-mode-btn:hover { color: #fbbf24; }
@@ -162,10 +123,13 @@
         .company-section[data-company="damacai_1p3d"] .company-title img { height: 3rem; }
         .draw-date { font-size: 0.8rem; color: #4a5568; margin-bottom: 8px; padding-left: 4px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .prize-grid { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 12px 0 16px; flex-direction: row !important; }
-        .prize-card { background: #f8fafd; border-radius: 16px; padding: 8px 12px; flex: 1 1 0px; min-width: 80px; text-align: center; box-shadow: inset 0 1px 4px #ffffff, 0 5px 10px rgba(0,0,0,0.04); border: 1px solid #e9ecf0; }
+        .prize-card { background: #f8fafd; border-radius: 16px; padding: 8px 12px; flex: 1 1 0px; min-width: 0; text-align: center; box-shadow: inset 0 1px 4px #ffffff, 0 5px 10px rgba(0,0,0,0.04); border: 1px solid #e9ecf0; }
         .prize-card .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #5f6b7a; font-weight: 500; margin-bottom: 4px; }
-        .prize-card .number { font-size: 2.4rem; font-weight: 800; color: #c62828; line-height: 1.2; text-shadow: 2px 2px 0 rgba(198,40,40,0.1); font-family: 'Courier New', monospace; }
-        .company-section[data-company="damacai_1p3d"] .prize-card .number { font-size: 1.8rem; }
+        .prize-card .number { font-size: 2.4rem; font-weight: 800; color: #c62828; line-height: 1.2; text-shadow: 2px 2px 0 rgba(198,40,40,0.1); font-family: 'Courier New', monospace; word-break: break-all; }
+        
+        /* 关键修复：将 1+3D 的数字字体从 1.8rem 缩小到 1.2rem，让 6 位数字完美容纳 */
+        .company-section[data-company="damacai_1p3d"] .prize-card .number { font-size: 1.2rem; letter-spacing: -0.5px; }
+        
         .subsection { margin-top: 16px; background: #f9fbfd; border-radius: 16px; padding: 12px 10px; border: 1px solid #e2e8f0; }
         .subsection-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 4px; color: #1e2f3e; }
         .subsection-title::before { content: "✨"; font-size: 1.2rem; }
@@ -183,6 +147,7 @@
         .status-indicator.error { background: #f56565; }
         .status-indicator.loading { background: #ecc94b; animation: blink 1s infinite; }
         @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+        
         @media (max-width: 900px) { .companies-grid { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 800px) {
             .companies-grid { grid-template-columns: 1fr; }
@@ -190,7 +155,8 @@
             .company-title img { height: 3.2rem; }
             .company-section[data-company="damacai_1p3d"] .company-title img { height: 2.5rem; }
             .prize-card .number { font-size: 2rem; }
-            .company-section[data-company="damacai_1p3d"] .prize-card .number { font-size: 1.4rem; }
+            /* 手机端进一步缩小 1+3D 字体，保证不溢出 */
+            .company-section[data-company="damacai_1p3d"] .prize-card .number { font-size: 1rem !important; letter-spacing: -0.5px; }
             .draw-date { font-size: 0.75rem; }
             .prize-grid { flex-direction: row !important; }
             body .company-section .company-content .number-list { display: grid !important; grid-template-columns: repeat(4, 1fr) !important; gap: 1px !important; margin: 0 !important; padding: 0 !important; }
@@ -207,25 +173,9 @@
         .company-section[data-company="singapore"] .company-title { background: linear-gradient(145deg, #1e4a6b, #2c6b96); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .jackpot-label { font-weight: 600; margin: 4px 0 2px 0; color: #2c3e50; font-size: 0.95rem; }
 
-        .fallback-banner {
-            display: none;
-            background: #fef3c7;
-            color: #92400e;
-            padding: 10px;
-            border-radius: 12px;
-            margin-bottom: 15px;
-            text-align: center;
-            font-weight: 500;
-            font-size: 0.95rem;
-            border: 1px solid #fcd34d;
-        }
-        body.dark-mode .fallback-banner {
-            background: #78350f;
-            color: #fef3c7;
-            border-color: #b45309;
-        }
+        .fallback-banner { display: none; background: #fef3c7; color: #92400e; padding: 10px; border-radius: 12px; margin-bottom: 15px; text-align: center; font-weight: 500; font-size: 0.95rem; border: 1px solid #fcd34d; }
+        body.dark-mode .fallback-banner { background: #78350f; color: #fef3c7; border-color: #b45309; }
         
-        /* 修复弹窗显示问题：移除 !important，改用普通 display: none */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 3000; align-items: center; justify-content: center; }
         .modal-content { background: white; border-radius: 32px; padding: 25px 20px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.2); text-align: center; border: 1px solid rgba(255,255,255,0.3); }
         .modal-title { font-size: 1.8rem; font-weight: 800; color: #f59e0b; margin-bottom: 20px; }
@@ -246,16 +196,9 @@
     </style>
 </head>
 <body>
-    <!-- 关键修复：将弹窗控制函数直接放在 body 最前面，确保无论后面脚本是否报错，点击绝对有效 -->
     <script>
-        function openModal(id) {
-            var el = document.getElementById(id);
-            if (el) el.style.display = 'flex';
-        }
-        function closeModal(id) {
-            var el = document.getElementById(id);
-            if (el) el.style.display = 'none';
-        }
+        function openModal(id) { var el = document.getElementById(id); if (el) el.style.display = 'flex'; }
+        function closeModal(id) { var el = document.getElementById(id); if (el) el.style.display = 'none'; }
         function toggleDarkMode() {
             document.body.classList.toggle('dark-mode');
             var isDark = document.body.classList.contains('dark-mode');
@@ -329,7 +272,6 @@
         </footer>
     </div>
 
-    <!-- 弹窗区域 -->
     <div class="modal-overlay" id="lucky-modal" role="dialog" aria-modal="true">
         <div class="modal-content">
             <div class="modal-title">✨ Lucky Number ✨</div>
@@ -368,7 +310,6 @@
     </div>
 
     <script>
-        // ==================== 常量定义 ====================
         const COMPANY_LIST = ['damacai', 'magnum', 'toto', 'singapore', 'damacai_1p3d', 'grand_dragon','sandakan', 'sarawak_cashsweep', 'sabah', 'sabah_lotto','singapore_toto', 'sportstoto_lotto','magnum_jackpot_gold', 'sportstoto_5d', 'sportstoto_6d','magnum_life', 'sportstoto_fireball'];
         const NAME_MAP = {'grand_dragon': 'GRAND DRAGON 豪龙', 'damacai': 'DAMACAI 4D', 'magnum': 'MAGNUM 4D','toto': 'TOTO 4D', 'singapore': 'SINGAPORE 4D', 'damacai_1p3d': 'DAMACAI 1+3D','sandakan': 'SANDAKAN 4D', 'sarawak_cashsweep': 'SARAWAK CASHSWEEP', 'sabah': 'SABAH 88 4D','sabah_lotto': 'SABAH LOTTO', 'singapore_toto': 'SINGAPORE TOTO', 'sportstoto_lotto': 'SPORTS TOTO LOTTO','magnum_jackpot_gold': 'MAGNUM JACKPOT GOLD', 'sportstoto_5d': 'SPORTS TOTO 5D','sportstoto_6d': 'SPORTS TOTO 6D', 'magnum_life': 'MAGNUM LIFE', 'sportstoto_fireball': 'SPORTS TOTO FIREBALL'};
         const SPECIAL_COMPANIES = ['sportstoto_fireball', 'singapore_toto', 'magnum_jackpot_gold', 'sportstoto_5d', 'sportstoto_6d', 'magnum_life', 'sportstoto_lotto', 'sabah_lotto'];
@@ -377,7 +318,6 @@
 
         let availableDates = [], availableDatesSet = new Set(), selectedDate = null, currentCalendarDate = new Date(), isFallbackMode = false;
 
-        // 日期工具
         const ymdToDmy = ymd => { if(!ymd) return ''; let p = ymd.split('-'); return p.length===3 ? `${p[2]}-${p[1]}-${p[0]}` : ymd; };
         const parseDMY = str => { let p = str.split('-'); let d,m,y; if(p[0].length===4){[y,m,d]=p.map(Number);}else{[d,m,y]=p.map(Number);} return {year:y,month:m,day:d}; };
         const toSortKey = str => { let {year,month,day} = parseDMY(str); return year*10000+month*100+day; };
@@ -393,7 +333,6 @@
             if (!popup.contains(e.target) && e.target !== btn) popup.style.display = 'none';
         });
 
-        // 加载数据
         async function loadDateIndex() {
             try {
                 const res = await fetch(`data/dates.json?t=${Date.now()}`, { cache: 'no-store' });
@@ -421,7 +360,6 @@
         window.forceRefresh = () => { if (selectedDate) { isFallbackMode = false; document.getElementById('fallback-banner').style.display = 'none'; fetchAndRenderData(selectedDate, true); } };
         function updateStatus(type, text, updateTime = null) { const span = document.getElementById('status-text'); const ind = span.querySelector('.status-indicator'); ind.className = `status-indicator ${type}`; span.innerHTML = `${ind.outerHTML}${text}`; if (updateTime) document.getElementById('update-time').innerText = updateTime; }
 
-        // 核心逻辑
         async function fetchAndRenderData(dateStr, isRefresh = false) {
             const grid = document.getElementById('companies-grid');
             grid.innerHTML = '<p style="text-align:center;grid-column:1/-1;color:#666;">🔄 正在加载数据...</p>';
@@ -464,7 +402,7 @@
             COMPANY_LIST.forEach(key => {
                 if (HIDDEN_COMPANIES.includes(key)) return; const cd = dataMap[key]; if (!cd) return;
                 const name = NAME_MAP[key] || key; const img = COMPANY_IMAGE_MAP[key] ? `images/${COMPANY_IMAGE_MAP[key]}` : null; const isSpecial = SPECIAL_COMPANIES.includes(key);
-                html += `<div class="company-section"><div class="company-title">${name}${img?`<img src="${img}" onerror="this.style.display='none'">`:''}</div><div class="draw-date">${cd.draw_date || '未知'} ${cd.draw_no?'| Draw No: '+cd.draw_no:''}</div><div class="company-content">`;
+                html += `<div class="company-section" data-company="${key}"><div class="company-title">${name}${img?`<img src="${img}" onerror="this.style.display='none'">`:''}</div><div class="draw-date">${cd.draw_date || '未知'} ${cd.draw_no?'| Draw No: '+cd.draw_no:''}</div><div class="company-content">`;
                 
                 if (isSpecial) {
                     let rendered = false;
@@ -489,7 +427,6 @@
             grid.innerHTML = html;
         }
 
-        // 日历逻辑
         function initCalendar() {
             const popup = document.getElementById('calendar-popup'), btn = document.getElementById('calendar-btn');
             btn.addEventListener('click', e => { e.stopPropagation(); if(popup.style.display==='none'||popup.style.display===''){popup.style.display='block'; renderCalendar();} else popup.style.display='none'; });
@@ -507,7 +444,6 @@
         window.changeCalendarMonth = (delta, e) => { if(e) e.stopPropagation(); currentCalendarDate.setMonth(currentCalendarDate.getMonth()+delta); renderCalendar(); };
         window.selectDateFromCalendar = (str, e) => { if(e) e.stopPropagation(); if(!availableDatesSet.has(str)) return; selectedDate = str; isFallbackMode = false; document.getElementById('fallback-banner').style.display='none'; document.getElementById('calendar-popup').style.display='none'; updateDateBtnWithLatest(); renderDateDropdown(); fetchAndRenderData(str); };
 
-        // 初始化
         document.addEventListener('DOMContentLoaded', () => {
             initCalendar();
             if (localStorage.getItem('darkMode')==='enabled') { document.body.classList.add('dark-mode'); document.getElementById('dark-mode-btn').innerHTML = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>'; }
