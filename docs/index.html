@@ -528,19 +528,20 @@
                     let rendered = false;
 
                     // ====== 专门针对 SPORTS TOTO 5D 的处理 ======
-                    if (companyData.type === '5d' || (companyData['1st'] && companyData['5th'])) {
+                    // 优先检查 type，如果 type 缺失则判断其结构特征
+                    const is5D = companyData.type === '5d' || (!companyData.type && companyData['1st'] && typeof companyData['1st'] === 'string' && companyData['6th'] && !companyData['2nd']?.main);
+                    if (is5D) {
                         html += `<div class="subsection"><div class="subsection-title">5D Results</div><div class="number-list">`;
                         ['1st', '2nd', '3rd', '4th', '5th', '6th'].forEach(key => {
-                            if (companyData[key]) {
-                                html += `<span class="number-item">${companyData[key]}</span>`;
-                            }
+                            if (companyData[key]) html += `<span class="number-item">${companyData[key]}</span>`;
                         });
                         html += `</div></div>`;
                         rendered = true;
                     }
 
                     // ====== 专门针对 SPORTS TOTO 6D 的处理 ======
-                    if (companyData.type === '6d' || (companyData['1st'] && companyData['2nd'] && companyData['2nd'].main)) {
+                    const is6D = companyData.type === '6d' || (!companyData.type && companyData['1st'] && companyData['2nd'] && companyData['2nd'].main);
+                    if (is6D) {
                         html += `<div class="subsection"><div class="subsection-title">6D Results</div><div class="number-list">`;
                         if (companyData['1st']) html += `<span class="number-item">${companyData['1st']}</span>`;
                         ['2nd', '3rd', '4th', '5th'].forEach(key => {
@@ -556,7 +557,7 @@
                         rendered = true;
                     }
 
-                    // ====== 原有的通用处理逻辑 ======
+                    // ====== 通用处理逻辑 ======
                     const winNumbers = companyData.winning_numbers || companyData.numbers || companyData.results;
                     if (winNumbers && Array.isArray(winNumbers) && winNumbers.length > 0) {
                         const title = companyData.winning_numbers ? 'Winning Numbers' : 'Results';
