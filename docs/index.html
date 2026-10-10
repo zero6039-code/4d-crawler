@@ -352,6 +352,14 @@
                 dropdown.classList.remove('show');
                 document.getElementById('date-btn').classList.remove('active');
             }
+
+            const popup = document.getElementById('calendar-popup');
+            const btn = document.getElementById('calendar-btn');
+            // 确保点击日历内部或按钮时不关闭日历
+            if (popup.contains(event.target) || btn.contains(event.target)) {
+                return;
+            }
+            popup.style.display = 'none';
         });
 
         // ==================== 数据加载与 UI 更新逻辑 ====================
@@ -528,7 +536,6 @@
                     let rendered = false;
 
                     // ====== 专门针对 SPORTS TOTO 5D 的处理 ======
-                    // 优先检查 type，如果 type 缺失则判断其结构特征
                     const is5D = companyData.type === '5d' || (!companyData.type && companyData['1st'] && typeof companyData['1st'] === 'string' && companyData['6th'] && !companyData['2nd']?.main);
                     if (is5D) {
                         html += `<div class="subsection"><div class="subsection-title">5D Results</div><div class="number-list">`;
@@ -675,9 +682,9 @@
             
             let html = `
                 <div class="calendar-header">
-                    <button class="calendar-nav" onclick="changeCalendarMonth(-1)">‹</button>
+                    <button class="calendar-nav" onclick="changeCalendarMonth(-1, event)">‹</button>
                     <span class="calendar-month-year">${monthNames[month]} ${year}</span>
-                    <button class="calendar-nav" onclick="changeCalendarMonth(1)">›</button>
+                    <button class="calendar-nav" onclick="changeCalendarMonth(1, event)">›</button>
                 </div>
                 <table class="calendar-table">
                     <thead><tr><th>Su</th><th>Mo</th><th>Tu</th><th>We</th><th>Th</th><th>Fr</th><th>Sa</th></tr></thead>
@@ -700,7 +707,7 @@
                         if (hasData) classes.push('has-data');
                         if (isSelected) classes.push('selected');
                         
-                        html += `<td class="${classes.join(' ')}" onclick="selectDateFromCalendar('${dateStr}')">${day}</td>`;
+                        html += `<td class="${classes.join(' ')}" onclick="selectDateFromCalendar('${dateStr}', event)">${day}</td>`;
                         day++;
                     }
                 }
@@ -712,12 +719,14 @@
             popup.innerHTML = html;
         }
 
-        window.changeCalendarMonth = function(delta) {
+        window.changeCalendarMonth = function(delta, event) {
+            if (event) event.stopPropagation(); // 关键修复：阻止事件冒泡，防止日历被意外关闭
             currentCalendarDate.setMonth(currentCalendarDate.getMonth() + delta);
             renderCalendar();
         }
 
-        window.selectDateFromCalendar = function(dateStr) {
+        window.selectDateFromCalendar = function(dateStr, event) {
+            if (event) event.stopPropagation(); // 阻止事件冒泡，防止干扰
             if (!availableDatesSet.has(dateStr)) return;
             selectedDate = dateStr;
             isFallbackMode = false;
