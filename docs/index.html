@@ -4,14 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     
-    <!-- ==================== 核心 SEO 优化 (深度学习 AI 亲和型) ==================== -->
     <title>4D 成绩 Malaysia · 实时更新 | Live Malaysia 4D Results</title>
     <meta name="description" content="提供最快、最及时的马来西亚 4D 实时开奖成绩。涵盖 Magnum 万能、Sports Toto 博彩、Damacai 大马彩、新加坡 4D 以及沙巴、砂拉越、豪龙等各大博彩公司的最新开奖结果及历史查询。">
     <meta name="keywords" content="4d成绩, 马来西亚4d, 4d results, live 4d, magnum 4d, sports toto, damacai, gd lotto, 豪龙, 万能4d, 大马彩">
     <meta name="author" content="LOW KEAN WAH">
     <link rel="canonical" href="https://github.com/zero6039-code/4d-crawler">
 
-    <!-- Open Graph 社交媒体分享名片协议 (微信/Discord/X 完美支持) -->
     <meta property="og:type" content="website">
     <meta property="og:title" content="4D 成绩 Malaysia · 实时更新 | Live Malaysia 4D Results">
     <meta property="og:description" content="最快速的马来西亚与新加坡 4D 实时开奖结果，支持历史日期查询与幸运号码摇号游戏。">
@@ -23,7 +21,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <style>
-        /* ==================== 基础样式 ==================== */
+        /* ==================== 基础样式 (保持不变) ==================== */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
         body { background: #f0f2f5; padding: 15px 10px; transition: background 0.3s, color 0.3s; }
         body.dark-mode { background: #1a202c; color: #e2e8f0; }
@@ -36,12 +34,7 @@
         body.dark-mode .prize-card .number { color: #fbbf24; }
         body.dark-mode .date-btn, body.dark-mode .calendar-btn, body.dark-mode .refresh-btn, 
         body.dark-mode .lucky-btn, body.dark-mode .donate-btn, body.dark-mode .apk-btn { background: #2d3748; color: #e2e8f0; border-color: #4a5568; }
-        body.dark-mode .dark-mode-btn {
-            background: transparent !important;
-            border: none !important;
-            box-shadow: none !important;
-            color: #e2e8f0 !important;
-        }
+        body.dark-mode .dark-mode-btn { background: transparent !important; border: none !important; box-shadow: none !important; color: #e2e8f0 !important; }
         body.dark-mode footer { color: #a0aec0; border-top-color: #4a5568; }
         body.dark-mode .modal-content { background: #2d3748; color: #e2e8f0; }
         body.dark-mode .modal-title { color: #fbbf24; }
@@ -102,9 +95,7 @@
         .prize-card { background: #f8fafd; border-radius: 16px; padding: 8px 12px; flex: 1 1 0px; min-width: 80px; text-align: center; box-shadow: inset 0 1px 4px #ffffff, 0 5px 10px rgba(0,0,0,0.04); border: 1px solid #e9ecf0; }
         .prize-card .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #5f6b7a; font-weight: 500; margin-bottom: 4px; }
         .prize-card .number { font-size: 2.4rem; font-weight: 800; color: #c62828; line-height: 1.2; text-shadow: 2px 2px 0 rgba(198,40,40,0.1); font-family: 'Courier New', monospace; }
-        .company-section[data-company="damacai_1p3d"] .prize-card .number {
-            font-size: 1.8rem;
-        }
+        .company-section[data-company="damacai_1p3d"] .prize-card .number { font-size: 1.8rem; }
         .subsection { margin-top: 16px; background: #f9fbfd; border-radius: 16px; padding: 12px 10px; border: 1px solid #e2e8f0; }
         .subsection-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 4px; color: #1e2f3e; }
         .subsection-title::before { content: "✨"; font-size: 1.2rem; }
@@ -129,37 +120,12 @@
             .company-title img { height: 3.2rem; }
             .company-section[data-company="damacai_1p3d"] .company-title img { height: 2.5rem; }
             .prize-card .number { font-size: 2rem; }
-            .company-section[data-company="damacai_1p3d"] .prize-card .number {
-                font-size: 1.4rem;
-            }
+            .company-section[data-company="damacai_1p3d"] .prize-card .number { font-size: 1.4rem; }
             .draw-date { font-size: 0.75rem; }
             .prize-grid { flex-direction: row !important; }
-            body .company-section .company-content .number-list {
-                display: grid !important;
-                grid-template-columns: repeat(4, 1fr) !important;
-                gap: 1px !important;
-                margin: 0 !important;
-                padding: 0 !important;
-            }
-            body .company-section .company-content .number-list .number-item {
-                font-size: 20px !important;
-                padding: 0px 1px !important;
-                margin: 0 !important;
-                text-align: center !important;
-                min-width: 0 !important;
-                width: auto !important;
-                white-space: nowrap !important;
-                border-radius: 4px !important;
-                line-height: 1.2 !important;
-                background: #ffffff !important;
-                border: 1px solid #d4deec !important;
-                box-shadow: none !important;
-            }
-            body.dark-mode .company-section .company-content .number-list .number-item {
-                background: #1a202c !important;
-                border-color: #4a5568 !important;
-                color: #e2e8f0 !important;
-            }
+            body .company-section .company-content .number-list { display: grid !important; grid-template-columns: repeat(4, 1fr) !important; gap: 1px !important; margin: 0 !important; padding: 0 !important; }
+            body .company-section .company-content .number-list .number-item { font-size: 20px !important; padding: 0px 1px !important; margin: 0 !important; text-align: center !important; min-width: 0 !important; width: auto !important; white-space: nowrap !important; border-radius: 4px !important; line-height: 1.2 !important; background: #ffffff !important; border: 1px solid #d4deec !important; box-shadow: none !important; }
+            body.dark-mode .company-section .company-content .number-list .number-item { background: #1a202c !important; border-color: #4a5568 !important; color: #e2e8f0 !important; }
             .custom-table { font-size: 0.9rem; }
             .custom-table td { font-size: 0.9rem; }
         }
@@ -169,232 +135,40 @@
         .company-section[data-company="singapore"] .company-title { background: linear-gradient(145deg, #1e4a6b, #2c6b96); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .jackpot-label { font-weight: 600; margin: 4px 0 2px 0; color: #2c3e50; font-size: 0.95rem; }
 
-        /* ========== 按钮公共发光效果 ========== */
-        .refresh-btn, .lucky-btn, .donate-btn, .apk-btn, .date-btn, .calendar-btn {
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.05);
-            transition: all 0.2s;
-        }
-        .refresh-btn:hover, .lucky-btn:hover, .donate-btn:hover, .apk-btn:hover, .date-btn:hover, .calendar-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(0,0,0,0.15);
-        }
-        body.dark-mode .refresh-btn, body.dark-mode .lucky-btn, body.dark-mode .donate-btn,
-        body.dark-mode .apk-btn, body.dark-mode .date-btn, body.dark-mode .calendar-btn {
-            box-shadow: 0 0 8px 2px rgba(255,255,200,0.5), 0 2px 8px rgba(0,0,0,0.3);
-        }
+        .refresh-btn, .lucky-btn, .donate-btn, .apk-btn, .date-btn, .calendar-btn { box-shadow: 0 2px 8px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.05); transition: all 0.2s; }
+        .refresh-btn:hover, .lucky-btn:hover, .donate-btn:hover, .apk-btn:hover, .date-btn:hover, .calendar-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.15); }
+        body.dark-mode .refresh-btn, body.dark-mode .lucky-btn, body.dark-mode .donate-btn, body.dark-mode .apk-btn, body.dark-mode .date-btn, body.dark-mode .calendar-btn { box-shadow: 0 0 8px 2px rgba(255,255,200,0.5), 0 2px 8px rgba(0,0,0,0.3); }
 
-        /* ========== 幸运号码小游戏样式 ========== */
-        .lucky-btn, .dark-mode-btn {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            color: white;
-            border: none;
-            padding: 8px 18px;
-            border-radius: 25px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            line-height: 1.4;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .lucky-btn .emoji {
-            font-size: 1.3rem;
-        }
-        .dark-mode-btn {
-            background: transparent !important;
-            border: none !important;
-            box-shadow: none !important;
-            padding: 8px 12px !important;
-            font-size: 1.4rem !important;
-            color: #2c3e50 !important;
-        }
-        body.dark-mode .dark-mode-btn {
-            color: #e2e8f0 !important;
-        }
-        .donate-btn {
-            background: linear-gradient(135deg, #10b981, #059669);
-            color: white;
-            margin-left: 8px;
-            padding: 8px 22px;
-            font-size: 1.1rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .donate-btn .emoji {
-            font-size: 1.3rem;
-        }
-        .apk-btn {
-            background: linear-gradient(135deg, #3b82f6, #1e4a6b);
-            color: white;
-            margin-left: 8px;
-            padding: 8px 22px;
-            font-size: 1rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            backdrop-filter: blur(4px);
-            z-index: 3000;
-            align-items: center;
-            justify-content: center;
-        }
-        .modal-content {
-            background: white;
-            border-radius: 32px;
-            padding: 25px 20px;
-            max-width: 500px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-            text-align: center;
-            border: 1px solid rgba(255,255,255,0.3);
-        }
-        .modal-title {
-            font-size: 1.8rem;
-            font-weight: 800;
-            color: #f59e0b;
-            margin-bottom: 20px;
-        }
-        .lucky-digits {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin: 20px 0;
-        }
-        .lucky-digit-box {
-            width: 70px;
-            height: 90px;
-            background: linear-gradient(145deg, #f3f4f6, #e5e7eb);
-            border-radius: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 3.5rem;
-            font-weight: 800;
-            color: #c62828;
-            font-family: 'Courier New', monospace;
-            box-shadow: inset 0 -3px 0 rgba(0,0,0,0.1), 0 8px 16px rgba(0,0,0,0.1);
-            border: 2px solid white;
-        }
-        .modal-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-top: 20px;
-        }
-        .spin-btn, .close-modal-btn, .bet-btn {
-            padding: 12px 25px;
-            border: none;
-            border-radius: 30px;
-            font-weight: 600;
-            font-size: 1.1rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .spin-btn {
-            background: #f59e0b;
-            color: white;
-            box-shadow: 0 4px 12px rgba(245,158,11,0.3);
-        }
-        .spin-btn:hover {
-            background: #d97706;
-            transform: scale(1.05);
-        }
-        .close-modal-btn {
-            background: #e2e8f0;
-            color: #2d3748;
-        }
-        .close-modal-btn:hover {
-            background: #cbd5e0;
-        }
-        .spin-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
+        .lucky-btn, .dark-mode-btn { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border: none; padding: 8px 18px; border-radius: 25px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s; line-height: 1.4; display: inline-flex; align-items: center; gap: 6px; }
+        .lucky-btn .emoji { font-size: 1.3rem; }
+        .dark-mode-btn { background: transparent !important; border: none !important; box-shadow: none !important; padding: 8px 12px !important; font-size: 1.4rem !important; color: #2c3e50 !important; }
+        body.dark-mode .dark-mode-btn { color: #e2e8f0 !important; }
+        .donate-btn { background: linear-gradient(135deg, #10b981, #059669); color: white; margin-left: 8px; padding: 8px 22px; font-size: 1.1rem; display: inline-flex; align-items: center; gap: 8px; }
+        .donate-btn .emoji { font-size: 1.3rem; }
+        .apk-btn { background: linear-gradient(135deg, #3b82f6, #1e4a6b); color: white; margin-left: 8px; padding: 8px 22px; font-size: 1rem; display: inline-flex; align-items: center; gap: 6px; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 3000; align-items: center; justify-content: center; }
+        .modal-content { background: white; border-radius: 32px; padding: 25px 20px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.2); text-align: center; border: 1px solid rgba(255,255,255,0.3); }
+        .modal-title { font-size: 1.8rem; font-weight: 800; color: #f59e0b; margin-bottom: 20px; }
+        .lucky-digits { display: flex; justify-content: center; gap: 15px; margin: 20px 0; }
+        .lucky-digit-box { width: 70px; height: 90px; background: linear-gradient(145deg, #f3f4f6, #e5e7eb); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 3.5rem; font-weight: 800; color: #c62828; font-family: 'Courier New', monospace; box-shadow: inset 0 -3px 0 rgba(0,0,0,0.1), 0 8px 16px rgba(0,0,0,0.1); border: 2px solid white; }
+        .modal-buttons { display: flex; justify-content: center; gap: 15px; margin-top: 20px; }
+        .spin-btn, .close-modal-btn, .bet-btn { padding: 12px 25px; border: none; border-radius: 30px; font-weight: 600; font-size: 1.1rem; cursor: pointer; transition: all 0.2s; }
+        .spin-btn { background: #f59e0b; color: white; box-shadow: 0 4px 12px rgba(245,158,11,0.3); }
+        .spin-btn:hover { background: #d97706; transform: scale(1.05); }
+        .close-modal-btn { background: #e2e8f0; color: #2d3748; }
+        .close-modal-btn:hover { background: #cbd5e0; }
+        .spin-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-        /* ========== 打赏弹窗样式 ========== */
-        .donate-modal .modal-content {
-            max-width: 350px;
-        }
-        .qr-image {
-            width: 100%;
-            max-width: 200px;
-            height: auto;
-            margin: 20px auto;
-            display: block;
-            border-radius: 16px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-        }
-        .donate-note {
-            color: #4b5563;
-            font-size: 0.9rem;
-            margin-top: 10px;
-            white-space: pre-line;
-        }
-        .contact-email {
-            margin-top: 10px;
-            color: #4b5563;
-            font-size: 0.9rem;
-        }
-
-        /* ========== APK 下载弹窗样式 ========== */
-        .apk-download-link {
-            display: inline-block;
-            background: #3b82f6;
-            color: white;
-            padding: 12px 30px;
-            border-radius: 30px;
-            font-weight: 600;
-            font-size: 1.2rem;
-            text-decoration: none;
-            margin: 15px 0;
-            box-shadow: 0 4px 12px rgba(59,130,246,0.3);
-            transition: all 0.2s;
-        }
-        .apk-download-link:hover {
-            background: #1e4a6b;
-            transform: scale(1.05);
-        }
-        .apk-note {
-            color: #4b5563;
-            font-size: 0.9rem;
-            margin: 5px 0;
-            white-space: pre-line;
-        }
-
-        /* ========== 模拟下注样式 ========== */
-        .bet-input-group {
-            margin-bottom: 12px;
-            text-align: left;
-        }
-        .bet-input-group label {
-            display: block;
-            margin-bottom: 4px;
-            font-weight: 500;
-            color: #2d3748;
-        }
-        .bet-input-group input, .bet-input-group select {
-            width: 100%;
-            padding: 8px 12px;
-            border: 1px solid #cbd5e0;
-            border-radius: 12px;
-            font-size: 1rem;
-        }
-        .bet-amount-input {
-            width: 100%;
-        }
-
-        /* 卡片内容完全展开 */
+        .donate-modal .modal-content { max-width: 350px; }
+        .donate-note { color: #4b5563; font-size: 0.95rem; margin-top: 15px; white-space: pre-line; line-height: 1.6; }
+        .contact-email { margin-top: 15px; color: #4b5563; font-size: 0.9rem; }
+        .apk-download-link { display: inline-block; background: #3b82f6; color: white; padding: 12px 30px; border-radius: 30px; font-weight: 600; font-size: 1.2rem; text-decoration: none; margin: 15px 0; box-shadow: 0 4px 12px rgba(59,130,246,0.3); transition: all 0.2s; }
+        .apk-download-link:hover { background: #1e4a6b; transform: scale(1.05); }
+        .apk-note { color: #4b5563; font-size: 0.9rem; margin: 5px 0; white-space: pre-line; }
+        .bet-input-group { margin-bottom: 12px; text-align: left; }
+        .bet-input-group label { display: block; margin-bottom: 4px; font-weight: 500; color: #2d3748; }
+        .bet-input-group input, .bet-input-group select { width: 100%; padding: 8px 12px; border: 1px solid #cbd5e0; border-radius: 12px; font-size: 1rem; }
+        .bet-amount-input { width: 100%; }
         .company-section { padding: 12px 10px !important; }
         .prize-grid { margin: 6px 0 8px !important; }
         .prize-card { padding: 6px 8px !important; min-width: 70px; }
@@ -405,18 +179,13 @@
     </style>
 </head>
 <body>
-    <!-- 使用完整的 HTML5 结构化容器 -->
     <div class="container">
-        
-        <!-- 头部导航与标题区域化 (Header) -->
         <header role="banner">
             <h1>MY 4D RESULT MALAYSIA</h1>
-            
             <nav class="top-calendar" aria-label="Date Selection Calendar">
                 <button class="calendar-btn" id="calendar-btn" aria-haspopup="dialog" aria-expanded="false">选择日历</button>
                 <div id="calendar-popup" class="calendar-popup" style="display: none;" role="dialog" aria-label="日历选择器"></div>
             </nav>
-            
             <section class="bottom-row" aria-label="Control Panel">
                 <div class="date-dropdown" id="date-dropdown">
                     <button class="date-btn" id="date-btn" onclick="toggleDateDropdown()" aria-haspopup="listbox" aria-expanded="false">
@@ -435,12 +204,10 @@
             </section>
         </header>
 
-        <!-- 核心内容展示区 (Main)，迎合 AI 对核心内容的语义抓取 -->
         <main id="companies-grid" class="companies-grid" aria-live="polite">
             <p style="text-align: center; grid-column: 1/-1; color: #666;">🔄 正在加载数据...</p>
         </main>
 
-        <!-- 规范化页脚 (Footer) -->
         <footer role="contentinfo">
             <p>⚠️ 数据仅供参考，请以官方公告为准。</p>
             <span id="status-text">
@@ -468,11 +235,9 @@
         </div>
     </div>
 
-    <!-- 打赏弹窗 -->
+    <!-- 打赏弹窗 (已移除 tng_qr.jpg 图片) -->
     <div class="modal-overlay" id="donate-modal" role="dialog" aria-modal="true" aria-labelledby="donate-modal-title">
         <div class="modal-content donate-modal">
-            <!-- 补全 alt 属性，现代智能 AI 会扫描此文本从而关联网站质量 -->
-            <img src="images/tng_qr.jpg" alt="Touch 'n Go E-Wallet QR Code for Support" class="qr-image" onerror="this.src='https://via.placeholder.com/200?text=QR+Code+Not+Found'">
             <p class="donate-note" id="donate-modal-title">Please use TNG to scan for support. Your support is my motivation to update. The amount does not need to be much. Please verify name with LOW KEAN WAH. Thank you ❤️</p>
             <p class="contact-email">Contact: zero6039@gmail.com</p>
             <div class="modal-buttons">
@@ -494,7 +259,7 @@
     </div>
 
     <script>
-        // ==================== 完整 JavaScript 代码 ====================
+        // ==================== 常量定义 ====================
         const COMPANY_LIST = [
             'damacai', 'magnum', 'toto', 'singapore', 'damacai_1p3d', 'grand_dragon',
             'sandakan', 'sarawak_cashsweep', 'sabah', 'sabah_lotto',
@@ -504,60 +269,35 @@
         ];
 
         const NAME_MAP = {
-            'grand_dragon': 'GRAND DRAGON 豪龙',
-            'damacai': 'DAMACAI 4D',
-            'magnum': 'MAGNUM 4D',
-            'toto': 'TOTO 4D',
-            'singapore': 'SINGAPORE 4D',
-            'damacai_1p3d': 'DAMACAI 1+3D',
-            'sandakan': 'SANDAKAN 4D',
-            'sarawak_cashsweep': 'SARAWAK CASHSWEEP',
-            'sabah': 'SABAH 88 4D',
-            'sabah_lotto': 'SABAH LOTTO',
-            'singapore_toto': 'SINGAPORE TOTO',
-            'sportstoto_lotto': 'SPORTS TOTO LOTTO',
-            'magnum_jackpot_gold': 'MAGNUM JACKPOT GOLD',
-            'sportstoto_5d': 'SPORTS TOTO 5D',
-            'sportstoto_6d': 'SPORTS TOTO 6D',
-            'magnum_life': 'MAGNUM LIFE',
-            'sportstoto_fireball': 'SPORTS TOTO FIREBALL'
+            'grand_dragon': 'GRAND DRAGON 豪龙', 'damacai': 'DAMACAI 4D', 'magnum': 'MAGNUM 4D',
+            'toto': 'TOTO 4D', 'singapore': 'SINGAPORE 4D', 'damacai_1p3d': 'DAMACAI 1+3D',
+            'sandakan': 'SANDAKAN 4D', 'sarawak_cashsweep': 'SARAWAK CASHSWEEP', 'sabah': 'SABAH 88 4D',
+            'sabah_lotto': 'SABAH LOTTO', 'singapore_toto': 'SINGAPORE TOTO', 'sportstoto_lotto': 'SPORTS TOTO LOTTO',
+            'magnum_jackpot_gold': 'MAGNUM JACKPOT GOLD', 'sportstoto_5d': 'SPORTS TOTO 5D',
+            'sportstoto_6d': 'SPORTS TOTO 6D', 'magnum_life': 'MAGNUM LIFE', 'sportstoto_fireball': 'SPORTS TOTO FIREBALL'
         };
 
-        const SPECIAL_COMPANIES = [
-            'sportstoto_fireball', 'singapore_toto', 'magnum_jackpot_gold',
-            'sportstoto_5d', 'sportstoto_6d', 'magnum_life', 'sportstoto_lotto',
-            'sabah_lotto'
-        ];
-
+        const SPECIAL_COMPANIES = ['sportstoto_fireball', 'singapore_toto', 'magnum_jackpot_gold', 'sportstoto_5d', 'sportstoto_6d', 'magnum_life', 'sportstoto_lotto', 'sabah_lotto'];
+        
         const COMPANY_IMAGE_MAP = {
-            'damacai': 'damacai.png',
-            'damacai_1p3d': 'damacai1+3.png',
-            'sandakan': 'sandakan_logo.png',
-            'sarawak_cashsweep': 'sarawak.png',
-            'sabah': 'sabah88.png',
-            'sabah_lotto': 'sabahlotto.png',
-            'grand_dragon': 'granddragon.png',
-            'magnum': 'magnum.png',
-            'toto': 'toto.png',
-            'singapore': 'singapore4d.png',
-            'singapore_toto': 'singapore-pools.png'
+            'damacai': 'damacai.png', 'damacai_1p3d': 'damacai1+3.png', 'sandakan': 'sandakan_logo.png',
+            'sarawak_cashsweep': 'sarawak.png', 'sabah': 'sabah88.png', 'sabah_lotto': 'sabahlotto.png',
+            'grand_dragon': 'granddragon.png', 'magnum': 'magnum.png', 'toto': 'toto.png',
+            'singapore': 'singapore4d.png', 'singapore_toto': 'singapore-pools.png'
         };
 
-        const HIDDEN_COMPANIES = [
-            'sportstoto_fireball'
-        ];
+        const HIDDEN_COMPANIES = ['sportstoto_fireball'];
+        const CALENDAR_CHECK_COMPANIES = ['damacai', 'magnum', 'toto', 'singapore', 'damacai_1p3d', 'sandakan', 'sarawak_cashsweep', 'sabah'];
 
-        const CALENDAR_CHECK_COMPANIES = [
-            'damacai', 'magnum', 'toto', 'singapore', 'damacai_1p3d',
-            'sandakan', 'sarawak_cashsweep', 'sabah'
-        ];
-
+        // ==================== 全局状态 ====================
         let availableDates = [];           
         let availableDatesSet = new Set(); 
         let filteredDates = [];             
-        let filteredDatesSet = new Set();
         let selectedDate = null;
+        let currentCalendarDate = new Date(); // 用于日历弹窗
+        let currentRenderData = null; // 用于保存当前获取到的数据，方便刷新
 
+        // ==================== 日期工具函数 ====================
         function ymdToDmy(ymd) {
             if (!ymd) return '';
             let parts = ymd.split('-');
@@ -575,11 +315,8 @@
         function parseDMY(dateStr) {
             let parts = dateStr.split('-');
             let d, m, y;
-            if (parts[0].length === 4) {
-                [y, m, d] = parts.map(Number);
-            } else {
-                [d, m, y] = parts.map(Number);
-            }
+            if (parts[0].length === 4) { [y, m, d] = parts.map(Number); } 
+            else { [d, m, y] = parts.map(Number); }
             return { year: y, month: m, day: d };
         }
 
@@ -606,6 +343,17 @@
             document.getElementById('date-btn').classList.toggle('active');
         }
 
+        // 点击外部关闭下拉框
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('date-dropdown');
+            if (!dropdown.contains(event.target)) {
+                dropdown.classList.remove('show');
+                document.getElementById('date-btn').classList.remove('active');
+            }
+        });
+
+        // ==================== 数据加载与 UI 更新逻辑 ====================
+        
         async function loadDateIndex() {
             try {
                 const res = await fetch(`data/dates.json?t=${Date.now()}`, { cache: 'no-store' });
@@ -623,30 +371,366 @@
                     } else {
                         selectedDate = null;
                     }
+                } else {
+                    console.error("无法获取 dates.json, 状态码:", res.status);
+                    document.getElementById('date-dropdown-content').innerHTML = '<div class="loading-history">暂无历史数据</div>';
                 }
-            } catch (e) { console.warn('无法加载 dates.json', e); }
+            } catch (e) { 
+                console.warn('无法加载 dates.json', e); 
+                document.getElementById('date-dropdown-content').innerHTML = '<div class="loading-history">加载失败，请检查网络或 data/dates.json 文件</div>';
+            }
+            
             renderDateDropdown();
             updateDateBtnWithLatest();
             updateCalendarButtonToToday();
+            
+            // 加载完日期后，自动加载当天的数据
+            if (selectedDate) {
+                await fetchAndRenderData(selectedDate);
+            } else {
+                document.getElementById('companies-grid').innerHTML = '<p style="text-align: center; grid-column: 1/-1; color: #666;">暂无数据</p>';
+                updateStatus('error', '暂无数据');
+            }
         }
 
         async function generateFilteredDates() {
-            filteredDates = [];
-            const concurrency = 5;
-            for (let i = 0; i < availableDates.length; i += concurrency) {
-                const batch = availableDates.slice(i, i + concurrency);
-                const batchPromises = batch.map(async (date) => {
-                    const hasData = true; // 保持原有逻辑框架
-                    return { date, hasData };
-                });
-                const results = await Promise.all(batchPromises);
-                for (let r of results) {
-                    if (r.hasData) {
-                        filteredDates.push(r.date);
-                    }
-                }
+            // 原有逻辑框架，未实际校验数据是否存在，目前默认所有日期都有数据
+            // 真实场景可能需要并发请求检查每个日期的数据文件
+            filteredDates = [...availableDates]; 
+        }
+
+        function renderDateDropdown() {
+            const container = document.getElementById('date-dropdown-content');
+            if (!filteredDates || filteredDates.length === 0) {
+                container.innerHTML = '<div class="loading-history">暂无可用日期</div>';
+                return;
+            }
+            
+            let html = '';
+            filteredDates.forEach(date => {
+                const isActive = date === selectedDate ? 'active' : '';
+                html += `<div class="date-option ${isActive}" onclick="selectDate('${date}')">
+                            ${formatDisplayDate(date)}
+                        </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function selectDate(date) {
+            selectedDate = date;
+            renderDateDropdown();
+            updateDateBtnWithLatest();
+            toggleDateDropdown(); // 选中后关闭下拉框
+            fetchAndRenderData(date); // 获取该日期的数据
+        }
+
+        function updateDateBtnWithLatest() {
+            const btnText = document.getElementById('selected-date');
+            if (selectedDate) {
+                btnText.innerText = formatDisplayDate(selectedDate);
+            } else {
+                btnText.innerText = '选择日期';
             }
         }
+
+        function forceRefresh() {
+            if (!selectedDate) return;
+            fetchAndRenderData(selectedDate, true);
+        }
+
+        function updateStatus(type, text, updateTime = null) {
+            const statusSpan = document.getElementById('status-text');
+            const timeSpan = document.getElementById('update-time');
+            const indicator = statusSpan.querySelector('.status-indicator');
+            
+            indicator.className = `status-indicator ${type}`;
+            statusSpan.innerHTML = `${indicator.outerHTML}${text}`;
+            
+            if (updateTime) {
+                timeSpan.innerText = updateTime;
+            }
+        }
+
+        // ==================== 日历组件逻辑 ====================
+        
+        function updateCalendarButtonToToday() {
+            const calendarBtn = document.getElementById('calendar-btn');
+            const today = new Date();
+            const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+            // 这里简单显示，用户点击日历后打开弹窗
+            calendarBtn.innerText = '📅 选择日历';
+        }
+
+        function initCalendar() {
+            const popup = document.getElementById('calendar-popup');
+            const btn = document.getElementById('calendar-btn');
+            
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (popup.style.display === 'none') {
+                    popup.style.display = 'block';
+                    renderCalendar();
+                } else {
+                    popup.style.display = 'none';
+                }
+            });
+
+            // 点击外部关闭日历
+            document.addEventListener('click', (e) => {
+                if (!popup.contains(e.target) && e.target !== btn) {
+                    popup.style.display = 'none';
+                }
+            });
+        }
+
+        function renderCalendar() {
+            const popup = document.getElementById('calendar-popup');
+            const year = currentCalendarDate.getFullYear();
+            const month = currentCalendarDate.getMonth();
+            
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            
+            let html = `
+                <div class="calendar-header">
+                    <button class="calendar-nav" onclick="changeCalendarMonth(-1)">‹</button>
+                    <span class="calendar-month-year">${monthNames[month]} ${year}</span>
+                    <button class="calendar-nav" onclick="changeCalendarMonth(1)">›</button>
+                </div>
+                <table class="calendar-table">
+                    <thead>
+                        <tr><th>Su</th><th>Mo</th><th>Tu</th><th>We</th><th>Th</th><th>Fr</th><th>Sa</th></tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            let day = 1;
+            for (let i = 0; i < 6; i++) {
+                html += '<tr>';
+                for (let j = 0; j < 7; j++) {
+                    if (i === 0 && j < firstDay) {
+                        html += '<td></td>';
+                    } else if (day > daysInMonth) {
+                        html += '<td></td>';
+                    } else {
+                        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                        const hasData = availableDatesSet.has(dateStr);
+                        const isSelected = dateStr === selectedDate;
+                        let classes = [];
+                        if (hasData) classes.push('has-data');
+                        if (isSelected) classes.push('selected');
+                        
+                        html += `<td class="${classes.join(' ')}" onclick="selectDateFromCalendar('${dateStr}')">${day}</td>`;
+                        day++;
+                    }
+                }
+                html += '</tr>';
+                if (day > daysInMonth) break;
+            }
+            
+            html += `</tbody></table>`;
+            popup.innerHTML = html;
+        }
+
+        function changeCalendarMonth(delta) {
+            currentCalendarDate.setMonth(currentCalendarDate.getMonth() + delta);
+            renderCalendar();
+        }
+
+        function selectDateFromCalendar(dateStr) {
+            if (!availableDatesSet.has(dateStr)) return; // 没有数据不可选
+            selectedDate = dateStr;
+            document.getElementById('calendar-popup').style.display = 'none';
+            updateDateBtnWithLatest();
+            renderDateDropdown();
+            fetchAndRenderData(dateStr);
+        }
+
+        // ==================== 获取并渲染 4D 数据 ====================
+        
+        async function fetchAndRenderData(dateStr, isRefresh = false) {
+            const grid = document.getElementById('companies-grid');
+            grid.innerHTML = '<p style="text-align: center; grid-column: 1/-1; color: #666;">🔄 正在加载数据...</p>';
+            updateStatus('loading', '正在加载...');
+
+            try {
+                // 假设你的数据文件存放在 data/YYYY-MM-DD.json
+                const res = await fetch(`data/${dateStr}.json?t=${Date.now()}`, { cache: 'no-store' });
+                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                
+                const data = await res.json();
+                currentRenderData = data; // 保存数据以备后续使用
+                
+                renderCompanies(data);
+                
+                const now = new Date();
+                const timeStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+                updateStatus('success', '加载完成', timeStr);
+                
+            } catch (error) {
+                console.error('获取数据失败:', error);
+                grid.innerHTML = `<p style="text-align: center; grid-column: 1/-1; color: #e53e3e;">❌ 加载失败：找不到 ${dateStr} 的数据或网络错误。</p>`;
+                updateStatus('error', '加载失败');
+            }
+        }
+
+        function renderCompanies(data) {
+            const grid = document.getElementById('companies-grid');
+            let html = '';
+            
+            // 注意：这里的 data 结构需要根据你实际 API 的 JSON 结构调整！
+            // 假设 data 是一个对象，key 是公司代号，value 是数据内容
+            // 例如: { "magnum": { "drawDate": "...", "firstPrize": "1234", ... }, ... }
+            
+            // 遍历 COMPANY_LIST 保证顺序
+            COMPANY_LIST.forEach(companyKey => {
+                if (HIDDEN_COMPANIES.includes(companyKey)) return; // 隐藏不需要的公司
+                
+                const companyData = data[companyKey];
+                if (!companyData) return; // 没有这家公司的数据就跳过
+                
+                const companyName = NAME_MAP[companyKey] || companyKey;
+                const imageName = COMPANY_IMAGE_MAP[companyKey] ? `images/${COMPANY_IMAGE_MAP[companyKey]}` : null;
+                
+                html += `
+                <div class="company-section" data-company="${companyKey}">
+                    <div class="company-title">
+                        ${companyName}
+                        ${imageName ? `<img src="${imageName}" alt="${companyName} Logo">` : ''}
+                    </div>
+                    <div class="draw-date">${companyData.drawDate || '开奖日期未知'}</div>
+                    <div class="company-content">
+                `;
+                
+                // 根据不同公司类型渲染内容 (这里只是基础示例，你需要根据你的实际 JSON 结构修改)
+                if (SPECIAL_COMPANIES.includes(companyKey)) {
+                    // 特殊公司比如 Jackpot, 5D, 6D 的渲染逻辑
+                    html += `<div class="subsection"><div class="subsection-title">Results</div>`;
+                    html += `<div class="number-list">`;
+                    if (companyData.numbers) {
+                        companyData.numbers.forEach(num => {
+                            html += `<span class="number-item">${num}</span>`;
+                        });
+                    } else {
+                        html += `<span class="number-item">暂无数据</span>`;
+                    }
+                    html += `</div></div>`;
+                } else {
+                    // 普通 4D 公司 (Magnum, Toto, Damacai 等)
+                    html += `
+                        <div class="prize-grid">
+                            <div class="prize-card">
+                                <div class="label">First Prize</div>
+                                <div class="number">${companyData.firstPrize || '----'}</div>
+                            </div>
+                            <div class="prize-card">
+                                <div class="label">Second Prize</div>
+                                <div class="number">${companyData.secondPrize || '----'}</div>
+                            </div>
+                            <div class="prize-card">
+                                <div class="label">Third Prize</div>
+                                <div class="number">${companyData.thirdPrize || '----'}</div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Special / Consolation
+                    if (companyData.special || companyData.consolation) {
+                        html += `<div class="subsection">`;
+                        if (companyData.special) {
+                            html += `<div class="subsection-title">Special</div><div class="number-list">`;
+                            companyData.special.forEach(num => { html += `<span class="number-item">${num}</span>`; });
+                            html += `</div>`;
+                        }
+                        if (companyData.consolation) {
+                            html += `<div class="subsection-title">Consolation</div><div class="number-list">`;
+                            companyData.consolation.forEach(num => { html += `<span class="number-item">${num}</span>`; });
+                            html += `</div>`;
+                        }
+                        html += `</div>`;
+                    }
+                }
+                
+                html += `</div></div>`; // 关闭 company-content 和 company-section
+            });
+            
+            if (html === '') {
+                html = '<p style="text-align: center; grid-column: 1/-1; color: #666;">当日暂无开奖数据</p>';
+            }
+            
+            grid.innerHTML = html;
+        }
+
+        // ==================== 弹窗与交互事件绑定 ====================
+        
+        function bindEvents() {
+            // 刷新按钮
+            // 注意: refresh-btn 已在 HTML 里绑定了 onclick="forceRefresh()"，这里不需要重复绑定
+            
+            // 幸运号码弹窗
+            const luckyModal = document.getElementById('lucky-modal');
+            document.getElementById('lucky-btn').addEventListener('click', () => { luckyModal.style.display = 'flex'; });
+            document.getElementById('close-modal').addEventListener('click', () => { luckyModal.style.display = 'none'; });
+            
+            // 打赏弹窗
+            const donateModal = document.getElementById('donate-modal');
+            document.getElementById('donate-btn').addEventListener('click', () => { donateModal.style.display = 'flex'; });
+            document.getElementById('close-donate-modal').addEventListener('click', () => { donateModal.style.display = 'none'; });
+            
+            // APK 弹窗
+            const apkModal = document.getElementById('apk-modal');
+            document.getElementById('apk-btn').addEventListener('click', () => { apkModal.style.display = 'flex'; });
+            document.getElementById('close-apk-modal').addEventListener('click', () => { apkModal.style.display = 'none'; });
+            
+            // 点击遮罩层关闭弹窗
+            document.querySelectorAll('.modal-overlay').forEach(overlay => {
+                overlay.addEventListener('click', (e) => {
+                    if (e.target === overlay) overlay.style.display = 'none';
+                });
+            });
+
+            // 暗黑模式切换
+            const darkModeBtn = document.getElementById('dark-mode-btn');
+            darkModeBtn.addEventListener('click', () => {
+                document.body.classList.toggle('dark-mode');
+                const isDark = document.body.classList.contains('dark-mode');
+                darkModeBtn.innerText = isDark ? '☀️' : '🌙';
+                localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
+            });
+
+            // 检查本地存储的暗黑模式
+            if (localStorage.getItem('darkMode') === 'enabled') {
+                document.body.classList.add('dark-mode');
+                darkModeBtn.innerText = '☀️';
+            }
+
+            // 幸运号码滚动逻辑
+            const spinBtn = document.getElementById('spin-btn');
+            spinBtn.addEventListener('click', () => {
+                spinBtn.disabled = true;
+                let count = 0;
+                const interval = setInterval(() => {
+                    document.getElementById('digit1').innerText = Math.floor(Math.random() * 10);
+                    document.getElementById('digit2').innerText = Math.floor(Math.random() * 10);
+                    document.getElementById('digit3').innerText = Math.floor(Math.random() * 10);
+                    document.getElementById('digit4').innerText = Math.floor(Math.random() * 10);
+                    count++;
+                    if (count > 15) {
+                        clearInterval(interval);
+                        spinBtn.disabled = false;
+                    }
+                }, 80);
+            });
+        }
+
+        // ==================== 初始化启动 ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            initCalendar();
+            bindEvents();
+            loadDateIndex();
+        });
     </script>
 </body>
 </html>
