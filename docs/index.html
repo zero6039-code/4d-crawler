@@ -169,7 +169,6 @@
         .company-title img { max-height: 2.8rem !important; width: auto; }
         .draw-date { font-size: 0.7rem !important; margin-bottom: 4px !important; }
 
-        /* 新增：回退提示横幅样式 */
         .fallback-banner {
             display: none;
             background: #fef3c7;
@@ -215,7 +214,6 @@
             </section>
         </header>
 
-        <!-- 提示横幅 -->
         <div id="fallback-banner" class="fallback-banner"></div>
 
         <main id="companies-grid" class="companies-grid" aria-live="polite">
@@ -307,7 +305,7 @@
         let availableDatesSet = new Set(); 
         let selectedDate = null;
         let currentCalendarDate = new Date();
-        let isFallbackMode = false; // 是否是自动回退模式
+        let isFallbackMode = false;
 
         // ==================== 日期工具函数 ====================
         function ymdToDmy(ymd) {
@@ -403,8 +401,8 @@
 
         window.selectDate = function(date) {
             selectedDate = date;
-            isFallbackMode = false; // 手动选择时退出回退模式
-            document.getElementById('fallback-banner').style.display = 'none'; // 隐藏提示
+            isFallbackMode = false;
+            document.getElementById('fallback-banner').style.display = 'none';
             renderDateDropdown();
             updateDateBtnWithLatest();
             document.getElementById('date-dropdown').classList.remove('show');
@@ -435,7 +433,6 @@
             if (updateTime) timeSpan.innerText = updateTime;
         }
 
-        // 核心：并发抓取所有公司数据，并支持自动回退
         async function fetchAndRenderData(dateStr, isRefresh = false) {
             const grid = document.getElementById('companies-grid');
             grid.innerHTML = '<p style="text-align: center; grid-column: 1/-1; color: #666;">🔄 正在加载数据...</p>';
@@ -464,9 +461,8 @@
 
             results.forEach(item => { 
                 if (item.data) {
-                    // 简单判断是否有真实数据（比如是不是空数组、是否缺少关键字段）
                     let hasData = false;
-                    if (item.data['1st'] && item.data['1st'].trim() !== '') hasData = true;
+                    if (item.data['1st'] && typeof item.data['1st'] === 'string' && item.data['1st'].trim() !== '') hasData = true;
                     if (item.data.winning_numbers && item.data.winning_numbers.length > 0) hasData = true;
                     if (item.data.star && item.data.star.length > 0) hasData = true;
                     
@@ -477,43 +473,34 @@
                 }
             });
 
-            // 如果没有任何有效数据，并且当前不是回退模式，尝试回退
             if (validCount === 0 && !isFallbackMode && availableDates.length > 1) {
                 const currentIndex = availableDates.indexOf(dateStr);
-                // 如果不是最后一天，就找下一个
                 if (currentIndex >= 0 && currentIndex + 1 < availableDates.length) {
                     const fallbackDate = availableDates[currentIndex + 1];
                     
-                    // 显示横幅提示
                     const banner = document.getElementById('fallback-banner');
                     banner.innerHTML = `⚠️ <b>${formatDisplayDate(dateStr)}</b> 暂无开奖数据，已自动为您显示 <b>${formatDisplayDate(fallbackDate)}</b> 的最新成绩。`;
                     banner.style.display = 'block';
                     
                     isFallbackMode = true;
-                    // 改变按钮显示，虽然已回退，但 UI 还是显示用户选的日期
-                    // selectedDate = fallbackDate; // 这一步会改变下拉框高亮，不建议在此处改
-                    
-                    // 递归调用自身，获取回退日期的数据
                     await fetchAndRenderData(fallbackDate, true);
                     return;
                 }
             }
 
             if (validCount === 0) {
-                // 如果回退后依然没有数据，说明历史数据也挂了
                 grid.innerHTML = '<p style="text-align: center; grid-column: 1/-1; color: #e53e3e;">❌ 目前暂无任何可用的开奖数据，请稍后再试。</p>';
                 updateStatus('error', '加载失败');
                 return;
             }
 
-            renderCompanies(dataMap, dateStr);
+            renderCompanies(dataMap);
             
             const now = new Date();
             const timeStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
             updateStatus('success', '加载完成', timeStr);
         }
 
-        // 根据你的 JSON 结构智能渲染卡片
         function renderCompanies(dataMap) {
             const grid = document.getElementById('companies-grid');
             let html = '';
@@ -540,6 +527,36 @@
                 if (isSpecial) {
                     let rendered = false;
 
+                    // ====== 专门针对 SPORTS TOTO 5D 的处理 ======
+                    if (companyData.type === '5d' || (companyData['1st'] && companyData['5th'])) {
+                        html += `<div class="subsection"><div class="subsection-title">5D Results</div><div class="number-list">`;
+                        ['1st', '2nd', '3rd', '4th', '5th', '6th'].forEach(key => {
+                            if (companyData[key]) {
+                                html += `<span class="number-item">${companyData[key]}</span>`;
+                            }
+                        });
+                        html += `</div></div>`;
+                        rendered = true;
+                    }
+
+                    // ====== 专门针对 SPORTS TOTO 6D 的处理 ======
+                    if (companyData.type === '6d' || (companyData['1st'] && companyData['2nd'] && companyData['2nd'].main)) {
+                        html += `<div class="subsection"><div class="subsection-title">6D Results</div><div class="number-list">`;
+                        if (companyData['1st']) html += `<span class="number-item">${companyData['1st']}</span>`;
+                        ['2nd', '3rd', '4th', '5th'].forEach(key => {
+                            if (companyData[key]) {
+                                if (typeof companyData[key] === 'object' && companyData[key].main) {
+                                    html += `<span class="number-item">${companyData[key].main} / ${companyData[key].alt}</span>`;
+                                } else if (typeof companyData[key] === 'string') {
+                                    html += `<span class="number-item">${companyData[key]}</span>`;
+                                }
+                            }
+                        });
+                        html += `</div></div>`;
+                        rendered = true;
+                    }
+
+                    // ====== 原有的通用处理逻辑 ======
                     const winNumbers = companyData.winning_numbers || companyData.numbers || companyData.results;
                     if (winNumbers && Array.isArray(winNumbers) && winNumbers.length > 0) {
                         const title = companyData.winning_numbers ? 'Winning Numbers' : 'Results';
