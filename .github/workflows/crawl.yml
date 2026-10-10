@@ -1,14 +1,17 @@
 name: Daily 4D Crawler
 
 on:
+  # 移除了原本拥挤且不靠谱的 GitHub 定时器
+  # 改为由 cron-job.org 精准调用 workflow_dispatch
+  # 保留一个备用兜底 (每天 MYT 21:00 / UTC 13:00 跑一次)
   schedule:
-    # UTC 10:55 (MYT 18:55) 触发一次
-    - cron: '55 10 * * *'
-    # 马来西亚时间 19:00-19:59 (UTC 11:00-11:59) 每5分钟运行一次
-    - cron: '*/5 11 * * *'
-    # 马来西亚时间 20:00 (UTC 12:00) 运行一次
-    - cron: '0 12 * * *'
-  workflow_dispatch:  # 允许手动触发
+    - cron: '0 13 * * *' 
+  workflow_dispatch:  # 允许外部 API 和手动触发
+
+# 防止多个任务同时运行导致 git push 冲突
+concurrency:
+  group: 4d-crawler-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   crawl:
@@ -25,7 +28,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Show start time
-        run: echo "运行时间 $(date)"
+        run: echo "运行时间 $(TZ='Asia/Kuala_Lumpur' date)"
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -44,5 +47,9 @@ jobs:
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           git add docs/data/
-          git diff --quiet && git diff --staged --quiet || git commit -m "Auto-update 4D results $(date +'%Y-%m-%d %H:%M')"
+          # 如果没有文件变更，跳过 commit，不会报错
+          git diff --quiet && git diff --staged --quiet || git commit -m "Auto-update 4D results $(TZ='Asia/Kuala_Lumpur' date +'%Y-%m-%d %H:%M')"
+          
+          # 【关键修复】拉取远程最新更改并进行变基，防止并发推送被拒绝
+          git pull --rebase origin main
           git push
