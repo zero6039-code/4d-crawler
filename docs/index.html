@@ -21,7 +21,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <style>
-        /* ==================== 基础样式 (保持不变) ==================== */
+        /* ==================== 基础样式 ==================== */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
         body { background: #f0f2f5; padding: 15px 10px; transition: background 0.3s, color 0.3s; }
         body.dark-mode { background: #1a202c; color: #e2e8f0; }
@@ -38,7 +38,6 @@
         body.dark-mode footer { color: #a0aec0; border-top-color: #4a5568; }
         body.dark-mode .modal-content { background: #2d3748; color: #e2e8f0; }
         body.dark-mode .modal-title { color: #fbbf24; }
-        body.dark-mode .bet-input-group input, body.dark-mode .bet-input-group select { background: #1a202c; border-color: #4a5568; color: #e2e8f0; }
         body.dark-mode .close-modal-btn { background: #4a5568; color: #e2e8f0; }
         body.dark-mode .spin-btn { background: #f59e0b; }
         .container { max-width: 1300px; margin: 0 auto; }
@@ -56,14 +55,11 @@
         .date-option { padding: 10px 16px; cursor: pointer; transition: background 0.2s; border-bottom: 1px solid #f0f0f0; }
         .date-option:hover { background: #f0f2f5; }
         .date-option.active { background: #e6f0ff; color: #3182ce; font-weight: 600; }
-        .date-option .draw-no { font-size: 0.75rem; color: #7c8b9c; }
         .loading-history { text-align: center; padding: 20px; color: #7c8b9c; }
         .refresh-btn { background: linear-gradient(135deg, #3182ce, #2c5282); color: white; border: none; padding: 8px 18px; border-radius: 25px; cursor: pointer; font-size: 1rem; font-weight: 600; transition: all 0.2s; box-shadow: 0 2px 8px rgba(49,130,206,0.3); line-height: 1.4; }
         .refresh-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(49,130,206,0.4); }
         .calendar-btn { background: #ffffffcc; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.8); border-radius: 25px; padding: 8px 20px; font-size: 1rem; font-weight: 500; color: #2c3e50; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: all 0.2s; }
         .calendar-btn:hover { background: #ffffff; box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
-        .calendar-btn .arrow { font-size: 0.8rem; transition: transform 0.2s; }
-        .calendar-icon { font-size: 1.9rem; line-height: 1; display: inline-block; }
         .calendar-popup { position: absolute; background: white; border-radius: 20px; box-shadow: 0 12px 30px rgba(0,0,0,0.2); padding: 16px; z-index: 2000; width: 320px; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 8px; border: 1px solid #e2e8f0; backdrop-filter: blur(4px); }
         .calendar-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; font-weight: 600; color: #2d3748; }
         .calendar-nav { background: none; border: none; font-size: 1.2rem; cursor: pointer; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #f0f2f5; transition: 0.2s; }
@@ -152,7 +148,7 @@
         .lucky-digits { display: flex; justify-content: center; gap: 15px; margin: 20px 0; }
         .lucky-digit-box { width: 70px; height: 90px; background: linear-gradient(145deg, #f3f4f6, #e5e7eb); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 3.5rem; font-weight: 800; color: #c62828; font-family: 'Courier New', monospace; box-shadow: inset 0 -3px 0 rgba(0,0,0,0.1), 0 8px 16px rgba(0,0,0,0.1); border: 2px solid white; }
         .modal-buttons { display: flex; justify-content: center; gap: 15px; margin-top: 20px; }
-        .spin-btn, .close-modal-btn, .bet-btn { padding: 12px 25px; border: none; border-radius: 30px; font-weight: 600; font-size: 1.1rem; cursor: pointer; transition: all 0.2s; }
+        .spin-btn, .close-modal-btn { padding: 12px 25px; border: none; border-radius: 30px; font-weight: 600; font-size: 1.1rem; cursor: pointer; transition: all 0.2s; }
         .spin-btn { background: #f59e0b; color: white; box-shadow: 0 4px 12px rgba(245,158,11,0.3); }
         .spin-btn:hover { background: #d97706; transform: scale(1.05); }
         .close-modal-btn { background: #e2e8f0; color: #2d3748; }
@@ -165,10 +161,6 @@
         .apk-download-link { display: inline-block; background: #3b82f6; color: white; padding: 12px 30px; border-radius: 30px; font-weight: 600; font-size: 1.2rem; text-decoration: none; margin: 15px 0; box-shadow: 0 4px 12px rgba(59,130,246,0.3); transition: all 0.2s; }
         .apk-download-link:hover { background: #1e4a6b; transform: scale(1.05); }
         .apk-note { color: #4b5563; font-size: 0.9rem; margin: 5px 0; white-space: pre-line; }
-        .bet-input-group { margin-bottom: 12px; text-align: left; }
-        .bet-input-group label { display: block; margin-bottom: 4px; font-weight: 500; color: #2d3748; }
-        .bet-input-group input, .bet-input-group select { width: 100%; padding: 8px 12px; border: 1px solid #cbd5e0; border-radius: 12px; font-size: 1rem; }
-        .bet-amount-input { width: 100%; }
         .company-section { padding: 12px 10px !important; }
         .prize-grid { margin: 6px 0 8px !important; }
         .prize-card { padding: 6px 8px !important; min-width: 70px; }
@@ -287,15 +279,12 @@
         };
 
         const HIDDEN_COMPANIES = ['sportstoto_fireball'];
-        const CALENDAR_CHECK_COMPANIES = ['damacai', 'magnum', 'toto', 'singapore', 'damacai_1p3d', 'sandakan', 'sarawak_cashsweep', 'sabah'];
 
         // ==================== 全局状态 ====================
         let availableDates = [];           
         let availableDatesSet = new Set(); 
-        let filteredDates = [];             
         let selectedDate = null;
-        let currentCalendarDate = new Date(); // 用于日历弹窗
-        let currentRenderData = null; // 用于保存当前获取到的数据，方便刷新
+        let currentCalendarDate = new Date();
 
         // ==================== 日期工具函数 ====================
         function ymdToDmy(ymd) {
@@ -303,13 +292,6 @@
             let parts = ymd.split('-');
             if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
             return ymd;
-        }
-
-        function dmyToYmd(dmy) {
-            if (!dmy) return '';
-            let parts = dmy.split('-');
-            if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
-            return dmy;
         }
 
         function parseDMY(dateStr) {
@@ -338,7 +320,7 @@
             return `${dmy} ${weekday}`;
         }
 
-        function toggleDateDropdown() {
+        window.toggleDateDropdown = function() {
             document.getElementById('date-dropdown').classList.toggle('show');
             document.getElementById('date-btn').classList.toggle('active');
         }
@@ -362,29 +344,22 @@
                     availableDates = sortDatesDesc(dates);
                     availableDatesSet = new Set(availableDates);
                     
-                    await generateFilteredDates();
-                    
-                    if (filteredDates.length > 0) {
-                        selectedDate = filteredDates[0];
-                    } else if (availableDates.length > 0) {
-                        selectedDate = availableDates[0];
+                    if (availableDates.length > 0) {
+                        selectedDate = availableDates[0]; // 默认选最新日期
                     } else {
                         selectedDate = null;
                     }
                 } else {
-                    console.error("无法获取 dates.json, 状态码:", res.status);
                     document.getElementById('date-dropdown-content').innerHTML = '<div class="loading-history">暂无历史数据</div>';
                 }
             } catch (e) { 
-                console.warn('无法加载 dates.json', e); 
-                document.getElementById('date-dropdown-content').innerHTML = '<div class="loading-history">加载失败，请检查网络或 data/dates.json 文件</div>';
+                document.getElementById('date-dropdown-content').innerHTML = '<div class="loading-history">加载失败</div>';
             }
             
             renderDateDropdown();
             updateDateBtnWithLatest();
             updateCalendarButtonToToday();
             
-            // 加载完日期后，自动加载当天的数据
             if (selectedDate) {
                 await fetchAndRenderData(selectedDate);
             } else {
@@ -393,49 +368,32 @@
             }
         }
 
-        async function generateFilteredDates() {
-            // 原有逻辑框架，未实际校验数据是否存在，目前默认所有日期都有数据
-            // 真实场景可能需要并发请求检查每个日期的数据文件
-            filteredDates = [...availableDates]; 
-        }
-
         function renderDateDropdown() {
             const container = document.getElementById('date-dropdown-content');
-            if (!filteredDates || filteredDates.length === 0) {
-                container.innerHTML = '<div class="loading-history">暂无可用日期</div>';
-                return;
-            }
-            
+            if (!availableDates || availableDates.length === 0) return;
             let html = '';
-            filteredDates.forEach(date => {
+            availableDates.forEach(date => {
                 const isActive = date === selectedDate ? 'active' : '';
-                html += `<div class="date-option ${isActive}" onclick="selectDate('${date}')">
-                            ${formatDisplayDate(date)}
-                        </div>`;
+                html += `<div class="date-option ${isActive}" onclick="selectDate('${date}')">${formatDisplayDate(date)}</div>`;
             });
             container.innerHTML = html;
         }
 
-        function selectDate(date) {
+        window.selectDate = function(date) {
             selectedDate = date;
             renderDateDropdown();
             updateDateBtnWithLatest();
-            toggleDateDropdown(); // 选中后关闭下拉框
-            fetchAndRenderData(date); // 获取该日期的数据
+            document.getElementById('date-dropdown').classList.remove('show');
+            fetchAndRenderData(date);
         }
 
         function updateDateBtnWithLatest() {
             const btnText = document.getElementById('selected-date');
-            if (selectedDate) {
-                btnText.innerText = formatDisplayDate(selectedDate);
-            } else {
-                btnText.innerText = '选择日期';
-            }
+            btnText.innerText = selectedDate ? formatDisplayDate(selectedDate) : '选择日期';
         }
 
-        function forceRefresh() {
-            if (!selectedDate) return;
-            fetchAndRenderData(selectedDate, true);
+        window.forceRefresh = function() {
+            if (selectedDate) fetchAndRenderData(selectedDate, true);
         }
 
         function updateStatus(type, text, updateTime = null) {
@@ -446,19 +404,117 @@
             indicator.className = `status-indicator ${type}`;
             statusSpan.innerHTML = `${indicator.outerHTML}${text}`;
             
-            if (updateTime) {
-                timeSpan.innerText = updateTime;
+            if (updateTime) timeSpan.innerText = updateTime;
+        }
+
+        // 核心：并发抓取所有公司数据（修复路径匹配问题）
+        async function fetchAndRenderData(dateStr, isRefresh = false) {
+            const grid = document.getElementById('companies-grid');
+            grid.innerHTML = '<p style="text-align: center; grid-column: 1/-1; color: #666;">🔄 正在加载数据...</p>';
+            updateStatus('loading', '正在加载...');
+
+            // 判断是不是最新日期（最新数据在根目录，历史数据在日期文件夹）
+            const isLatest = availableDates.length > 0 && dateStr === availableDates[0];
+            
+            const fetchPromises = COMPANY_LIST.map(async (companyKey) => {
+                if (HIDDEN_COMPANIES.includes(companyKey)) return { key: companyKey, data: null };
+                
+                // 历史数据：data/2026-10-09/grand_dragon.json
+                // 最新数据：data/grand_dragon.json
+                const basePath = isLatest ? `data` : `data/${dateStr}`;
+                const url = `${basePath}/${companyKey}.json?t=${Date.now()}`;
+                
+                try {
+                    const res = await fetch(url, { cache: 'no-store' });
+                    if (!res.ok) throw new Error('404');
+                    const data = await res.json();
+                    return { key: companyKey, data: data };
+                } catch (e) {
+                    return { key: companyKey, data: null };
+                }
+            });
+
+            const results = await Promise.all(fetchPromises);
+            const dataMap = {};
+            results.forEach(item => { if (item.data) dataMap[item.key] = item.data; });
+
+            renderCompanies(dataMap);
+            
+            const now = new Date();
+            const timeStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+            updateStatus('success', '加载完成', timeStr);
+        }
+
+        // 根据你的 JSON 结构渲染卡片
+        function renderCompanies(dataMap) {
+            const grid = document.getElementById('companies-grid');
+            let html = '';
+            
+            COMPANY_LIST.forEach(companyKey => {
+                if (HIDDEN_COMPANIES.includes(companyKey)) return;
+                const companyData = dataMap[companyKey];
+                if (!companyData) return; 
+
+                const companyName = NAME_MAP[companyKey] || companyKey;
+                const imageName = COMPANY_IMAGE_MAP[companyKey] ? `images/${COMPANY_IMAGE_MAP[companyKey]}` : null;
+                const isSpecial = SPECIAL_COMPANIES.includes(companyKey);
+
+                html += `
+                <div class="company-section" data-company="${companyKey}">
+                    <div class="company-title">
+                        ${companyName}
+                        ${imageName ? `<img src="${imageName}" alt="${companyName} Logo" onerror="this.style.display='none'">` : ''}
+                    </div>
+                    <div class="draw-date">${companyData.draw_date || '日期未知'} ${companyData.draw_no ? '| Draw No: ' + companyData.draw_no : ''}</div>
+                    <div class="company-content">
+                `;
+
+                if (isSpecial) {
+                    html += `<div class="subsection"><div class="subsection-title">Results</div><div class="number-list">`;
+                    if (companyData.jackpot) {
+                        html += `<span class="number-item">${companyData.jackpot}</span>`;
+                    } else if (companyData.numbers) {
+                        companyData.numbers.forEach(num => html += `<span class="number-item">${num}</span>`);
+                    } else {
+                        html += `<span class="number-item">暂无</span>`;
+                    }
+                    html += `</div></div>`;
+                } else {
+                    html += `
+                        <div class="prize-grid">
+                            <div class="prize-card"><div class="label">First Prize</div><div class="number">${companyData['1st'] || '----'}</div></div>
+                            <div class="prize-card"><div class="label">Second Prize</div><div class="number">${companyData['2nd'] || '----'}</div></div>
+                            <div class="prize-card"><div class="label">Third Prize</div><div class="number">${companyData['3rd'] || '----'}</div></div>
+                        </div>
+                    `;
+                    
+                    if (companyData.special || companyData.consolation) {
+                        html += `<div class="subsection">`;
+                        if (companyData.special && companyData.special.length > 0) {
+                            html += `<div class="subsection-title">Special</div><div class="number-list">`;
+                            companyData.special.forEach(num => html += `<span class="number-item">${num}</span>`);
+                            html += `</div>`;
+                        }
+                        if (companyData.consolation && companyData.consolation.length > 0) {
+                            html += `<div class="subsection-title">Consolation</div><div class="number-list">`;
+                            companyData.consolation.forEach(num => html += `<span class="number-item">${num}</span>`);
+                            html += `</div>`;
+                        }
+                        html += `</div>`;
+                    }
+                }
+                html += `</div></div>`;
+            });
+
+            if (html === '') {
+                html = '<p style="text-align: center; grid-column: 1/-1; color: #666;">当日暂无开奖数据</p>';
             }
+            grid.innerHTML = html;
         }
 
         // ==================== 日历组件逻辑 ====================
-        
         function updateCalendarButtonToToday() {
-            const calendarBtn = document.getElementById('calendar-btn');
-            const today = new Date();
-            const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-            // 这里简单显示，用户点击日历后打开弹窗
-            calendarBtn.innerText = '📅 选择日历';
+            document.getElementById('calendar-btn').innerText = '📅 选择日历';
         }
 
         function initCalendar() {
@@ -467,7 +523,7 @@
             
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                if (popup.style.display === 'none') {
+                if (popup.style.display === 'none' || popup.style.display === '') {
                     popup.style.display = 'block';
                     renderCalendar();
                 } else {
@@ -475,7 +531,6 @@
                 }
             });
 
-            // 点击外部关闭日历
             document.addEventListener('click', (e) => {
                 if (!popup.contains(e.target) && e.target !== btn) {
                     popup.style.display = 'none';
@@ -500,9 +555,7 @@
                     <button class="calendar-nav" onclick="changeCalendarMonth(1)">›</button>
                 </div>
                 <table class="calendar-table">
-                    <thead>
-                        <tr><th>Su</th><th>Mo</th><th>Tu</th><th>We</th><th>Th</th><th>Fr</th><th>Sa</th></tr>
-                    </thead>
+                    <thead><tr><th>Su</th><th>Mo</th><th>Tu</th><th>We</th><th>Th</th><th>Fr</th><th>Sa</th></tr></thead>
                     <tbody>
             `;
             
@@ -534,13 +587,13 @@
             popup.innerHTML = html;
         }
 
-        function changeCalendarMonth(delta) {
+        window.changeCalendarMonth = function(delta) {
             currentCalendarDate.setMonth(currentCalendarDate.getMonth() + delta);
             renderCalendar();
         }
 
-        function selectDateFromCalendar(dateStr) {
-            if (!availableDatesSet.has(dateStr)) return; // 没有数据不可选
+        window.selectDateFromCalendar = function(dateStr) {
+            if (!availableDatesSet.has(dateStr)) return;
             selectedDate = dateStr;
             document.getElementById('calendar-popup').style.display = 'none';
             updateDateBtnWithLatest();
@@ -548,150 +601,24 @@
             fetchAndRenderData(dateStr);
         }
 
-        // ==================== 获取并渲染 4D 数据 ====================
-        
-        async function fetchAndRenderData(dateStr, isRefresh = false) {
-            const grid = document.getElementById('companies-grid');
-            grid.innerHTML = '<p style="text-align: center; grid-column: 1/-1; color: #666;">🔄 正在加载数据...</p>';
-            updateStatus('loading', '正在加载...');
-
-            try {
-                // 假设你的数据文件存放在 data/YYYY-MM-DD.json
-                const res = await fetch(`data/${dateStr}.json?t=${Date.now()}`, { cache: 'no-store' });
-                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-                
-                const data = await res.json();
-                currentRenderData = data; // 保存数据以备后续使用
-                
-                renderCompanies(data);
-                
-                const now = new Date();
-                const timeStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-                updateStatus('success', '加载完成', timeStr);
-                
-            } catch (error) {
-                console.error('获取数据失败:', error);
-                grid.innerHTML = `<p style="text-align: center; grid-column: 1/-1; color: #e53e3e;">❌ 加载失败：找不到 ${dateStr} 的数据或网络错误。</p>`;
-                updateStatus('error', '加载失败');
-            }
-        }
-
-        function renderCompanies(data) {
-            const grid = document.getElementById('companies-grid');
-            let html = '';
-            
-            // 注意：这里的 data 结构需要根据你实际 API 的 JSON 结构调整！
-            // 假设 data 是一个对象，key 是公司代号，value 是数据内容
-            // 例如: { "magnum": { "drawDate": "...", "firstPrize": "1234", ... }, ... }
-            
-            // 遍历 COMPANY_LIST 保证顺序
-            COMPANY_LIST.forEach(companyKey => {
-                if (HIDDEN_COMPANIES.includes(companyKey)) return; // 隐藏不需要的公司
-                
-                const companyData = data[companyKey];
-                if (!companyData) return; // 没有这家公司的数据就跳过
-                
-                const companyName = NAME_MAP[companyKey] || companyKey;
-                const imageName = COMPANY_IMAGE_MAP[companyKey] ? `images/${COMPANY_IMAGE_MAP[companyKey]}` : null;
-                
-                html += `
-                <div class="company-section" data-company="${companyKey}">
-                    <div class="company-title">
-                        ${companyName}
-                        ${imageName ? `<img src="${imageName}" alt="${companyName} Logo">` : ''}
-                    </div>
-                    <div class="draw-date">${companyData.drawDate || '开奖日期未知'}</div>
-                    <div class="company-content">
-                `;
-                
-                // 根据不同公司类型渲染内容 (这里只是基础示例，你需要根据你的实际 JSON 结构修改)
-                if (SPECIAL_COMPANIES.includes(companyKey)) {
-                    // 特殊公司比如 Jackpot, 5D, 6D 的渲染逻辑
-                    html += `<div class="subsection"><div class="subsection-title">Results</div>`;
-                    html += `<div class="number-list">`;
-                    if (companyData.numbers) {
-                        companyData.numbers.forEach(num => {
-                            html += `<span class="number-item">${num}</span>`;
-                        });
-                    } else {
-                        html += `<span class="number-item">暂无数据</span>`;
-                    }
-                    html += `</div></div>`;
-                } else {
-                    // 普通 4D 公司 (Magnum, Toto, Damacai 等)
-                    html += `
-                        <div class="prize-grid">
-                            <div class="prize-card">
-                                <div class="label">First Prize</div>
-                                <div class="number">${companyData.firstPrize || '----'}</div>
-                            </div>
-                            <div class="prize-card">
-                                <div class="label">Second Prize</div>
-                                <div class="number">${companyData.secondPrize || '----'}</div>
-                            </div>
-                            <div class="prize-card">
-                                <div class="label">Third Prize</div>
-                                <div class="number">${companyData.thirdPrize || '----'}</div>
-                            </div>
-                        </div>
-                    `;
-                    
-                    // Special / Consolation
-                    if (companyData.special || companyData.consolation) {
-                        html += `<div class="subsection">`;
-                        if (companyData.special) {
-                            html += `<div class="subsection-title">Special</div><div class="number-list">`;
-                            companyData.special.forEach(num => { html += `<span class="number-item">${num}</span>`; });
-                            html += `</div>`;
-                        }
-                        if (companyData.consolation) {
-                            html += `<div class="subsection-title">Consolation</div><div class="number-list">`;
-                            companyData.consolation.forEach(num => { html += `<span class="number-item">${num}</span>`; });
-                            html += `</div>`;
-                        }
-                        html += `</div>`;
-                    }
-                }
-                
-                html += `</div></div>`; // 关闭 company-content 和 company-section
-            });
-            
-            if (html === '') {
-                html = '<p style="text-align: center; grid-column: 1/-1; color: #666;">当日暂无开奖数据</p>';
-            }
-            
-            grid.innerHTML = html;
-        }
-
         // ==================== 弹窗与交互事件绑定 ====================
-        
         function bindEvents() {
-            // 刷新按钮
-            // 注意: refresh-btn 已在 HTML 里绑定了 onclick="forceRefresh()"，这里不需要重复绑定
-            
-            // 幸运号码弹窗
             const luckyModal = document.getElementById('lucky-modal');
             document.getElementById('lucky-btn').addEventListener('click', () => { luckyModal.style.display = 'flex'; });
             document.getElementById('close-modal').addEventListener('click', () => { luckyModal.style.display = 'none'; });
             
-            // 打赏弹窗
             const donateModal = document.getElementById('donate-modal');
             document.getElementById('donate-btn').addEventListener('click', () => { donateModal.style.display = 'flex'; });
             document.getElementById('close-donate-modal').addEventListener('click', () => { donateModal.style.display = 'none'; });
             
-            // APK 弹窗
             const apkModal = document.getElementById('apk-modal');
             document.getElementById('apk-btn').addEventListener('click', () => { apkModal.style.display = 'flex'; });
             document.getElementById('close-apk-modal').addEventListener('click', () => { apkModal.style.display = 'none'; });
             
-            // 点击遮罩层关闭弹窗
             document.querySelectorAll('.modal-overlay').forEach(overlay => {
-                overlay.addEventListener('click', (e) => {
-                    if (e.target === overlay) overlay.style.display = 'none';
-                });
+                overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.style.display = 'none'; });
             });
 
-            // 暗黑模式切换
             const darkModeBtn = document.getElementById('dark-mode-btn');
             darkModeBtn.addEventListener('click', () => {
                 document.body.classList.toggle('dark-mode');
@@ -700,13 +627,11 @@
                 localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
             });
 
-            // 检查本地存储的暗黑模式
             if (localStorage.getItem('darkMode') === 'enabled') {
                 document.body.classList.add('dark-mode');
                 darkModeBtn.innerText = '☀️';
             }
 
-            // 幸运号码滚动逻辑
             const spinBtn = document.getElementById('spin-btn');
             spinBtn.addEventListener('click', () => {
                 spinBtn.disabled = true;
@@ -717,10 +642,7 @@
                     document.getElementById('digit3').innerText = Math.floor(Math.random() * 10);
                     document.getElementById('digit4').innerText = Math.floor(Math.random() * 10);
                     count++;
-                    if (count > 15) {
-                        clearInterval(interval);
-                        spinBtn.disabled = false;
-                    }
+                    if (count > 15) { clearInterval(interval); spinBtn.disabled = false; }
                 }, 80);
             });
         }
