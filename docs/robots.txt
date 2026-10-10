@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://my4d.vercel.app/sitemap.xml
