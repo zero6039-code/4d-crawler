@@ -3,298 +3,185 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    
     <title>4D 成绩 Malaysia · 实时更新 | Live Malaysia 4D Results</title>
-    <meta name="description" content="提供最快、最及时的马来西亚 4D 实时开奖成绩。涵盖 Magnum 万能、Sports Toto 博彩、Damacai 大马彩、新加坡 4D 以及沙巴、砂拉越、豪龙等各大博彩公司的最新开奖结果及历史查询。">
-    <meta name="keywords" content="4d成绩, 马来西亚4d, 4d results, live 4d, magnum 4d, sports toto, damacai, gd lotto, 豪龙, 万能4d, 大马彩">
-    <meta name="author" content="LOW KEAN WAH">
-    <link rel="canonical" href="https://github.com/zero6039-code/4d-crawler">
-
-    <meta property="og:type" content="website">
-    <meta property="og:title" content="4D 成绩 Malaysia · 实时更新 | Live Malaysia 4D Results">
-    <meta property="og:description" content="最快速的马来西亚与新加坡 4D 实时开奖结果，支持历史日期查询与幸运号码摇号游戏。">
-    <meta property="og:image" content="/my4d.png">
-    <meta property="og:site_name" content="Malaysia Live 4D">
-
+    <meta name="description" content="提供最快、最及时的马来西亚 4D 实时开奖成绩。涵盖 Magnum 万能、Sports Toto 博彩、Damacai 大马彩等各大博彩公司的最新开奖结果。">
     <link rel="icon" type="image/png" href="/my4d.png">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
     <style>
-        /* ==================== 基础样式 ==================== */
+        /* ==================== 基础与布局 ==================== */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
         body { background: #f0f2f5; padding: 15px 10px; transition: background 0.3s, color 0.3s; }
         body.dark-mode { background: #1a202c; color: #e2e8f0; }
         body.dark-mode .company-section { background: #2d3748; border-color: #4a5568; }
-        body.dark-mode .company-title { background: linear-gradient(145deg, #a0aec0, #cbd5e0); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        body.dark-mode .draw-date { color: #a0aec0; }
         body.dark-mode .prize-card, body.dark-mode .subsection { background: #2d3748; border-color: #4a5568; }
         body.dark-mode .number-item { background: #1a202c; border-color: #4a5568; color: #e2e8f0; }
-        body.dark-mode .subsection-title { color: #fbbf24; }
-        body.dark-mode .prize-card .number { color: #fbbf24; }
-        body.dark-mode .date-btn, body.dark-mode .calendar-btn { background: #2d3748; color: #e2e8f0; border-color: #4a5568; }
-        body.dark-mode footer { color: #a0aec0; border-top-color: #4a5568; }
-        body.dark-mode .modal-content { background: #2d3748; color: #e2e8f0; }
-        body.dark-mode .modal-title { color: #fbbf24; }
-        body.dark-mode .close-modal-btn { background: #4a5568; color: #e2e8f0; }
-        body.dark-mode .spin-btn { background: #f59e0b; }
         .container { max-width: 1300px; margin: 0 auto; }
-        h1 { font-size: 2.2rem; font-weight: 800; text-align: center; margin-bottom: 15px; background: linear-gradient(135deg, #0b1c2f, #2c3e50); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1px; }
+        h1 { font-size: 2.2rem; font-weight: 800; text-align: center; margin-bottom: 15px; background: linear-gradient(135deg, #0b1c2f, #2c3e50); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         body.dark-mode h1 { background: linear-gradient(135deg, #e2e8f0, #a0aec0); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .top-calendar { display: flex; justify-content: center; margin-bottom: 15px; position: relative; }
         .bottom-row { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; position: relative; }
+        
+        /* ==================== 下拉与日历 ==================== */
         .date-dropdown { position: relative; display: inline-block; }
-        .date-btn { background: #ffffffcc; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.8); border-radius: 25px; padding: 8px 20px; font-size: 1rem; font-weight: 500; color: #2c3e50; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: all 0.2s; }
-        .date-btn:hover { background: #ffffff; box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
-        .date-btn .arrow { font-size: 0.8rem; transition: transform 0.2s; }
-        .date-btn.active .arrow { transform: rotate(180deg); }
-        .date-dropdown-content { display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); background: white; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); min-width: 220px; max-height: 300px; overflow-y: auto; z-index: 1000; margin-top: 8px; border: 1px solid #e2e8f0; }
+        .date-btn { background: #ffffffcc; border: 1px solid rgba(255,255,255,0.8); border-radius: 25px; padding: 8px 20px; font-size: 1rem; font-weight: 500; color: #2c3e50; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .date-dropdown-content { display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); background: white; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); min-width: 220px; max-height: 300px; overflow-y: auto; z-index: 1000; margin-top: 8px; }
         .date-dropdown.show .date-dropdown-content { display: block; }
-        .date-option { padding: 10px 16px; cursor: pointer; transition: background 0.2s; border-bottom: 1px solid #f0f0f0; }
+        .date-option { padding: 10px 16px; cursor: pointer; border-bottom: 1px solid #f0f0f0; }
         .date-option:hover { background: #f0f2f5; }
         .date-option.active { background: #e6f0ff; color: #3182ce; font-weight: 600; }
-        .loading-history { text-align: center; padding: 20px; color: #7c8b9c; }
-        
-        /* ========== 现代高级按钮样式 ========== */
-        .action-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 12px;
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
-            color: white;
-            letter-spacing: 0.3px;
-        }
-        .action-btn svg {
-            width: 18px;
-            height: 18px;
-            stroke: currentColor;
-            stroke-width: 2.2;
-            fill: none;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-            transition: transform 0.2s;
-        }
-        .action-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
-        }
-        .action-btn:active { transform: translateY(0); }
-        
-        .refresh-btn { background: linear-gradient(135deg, #4f46e5, #4338ca); }
-        .refresh-btn:hover { background: linear-gradient(135deg, #4338ca, #3730a3); }
-        .refresh-btn svg { transition: transform 0.4s ease; }
-        .refresh-btn:hover svg { transform: rotate(180deg); }
-
-        .lucky-btn { background: linear-gradient(135deg, #f59e0b, #d97706); }
-        .lucky-btn:hover { background: linear-gradient(135deg, #d97706, #b45309); }
-        
-        .donate-btn { background: linear-gradient(135deg, #10b981, #059669); }
-        .donate-btn:hover { background: linear-gradient(135deg, #059669, #047857); }
-        
-        .apk-btn { background: linear-gradient(135deg, #3b82f6, #2563eb); }
-        .apk-btn:hover { background: linear-gradient(135deg, #2563eb, #1d4ed8); }
-        
-        body.dark-mode .action-btn { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3); }
-        body.dark-mode .action-btn:hover { box-shadow: 0 10px 15px -3px rgba(0,0,0,0.4); }
-        body.dark-mode .refresh-btn { background: linear-gradient(135deg, #6366f1, #4f46e5); }
-        body.dark-mode .lucky-btn { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #1a202c; }
-        body.dark-mode .donate-btn { background: linear-gradient(135deg, #34d399, #10b981); color: #1a202c; }
-        body.dark-mode .apk-btn { background: linear-gradient(135deg, #60a5fa, #3b82f6); }
-
-        .dark-mode-btn {
-            background: transparent;
-            border: none;
-            box-shadow: none;
-            padding: 10px;
-            color: #4a5568;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .dark-mode-btn svg {
-            width: 22px;
-            height: 22px;
-            stroke: currentColor;
-            stroke-width: 2;
-            fill: none;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-        }
-        .dark-mode-btn:hover { transform: scale(1.1); color: #1a202c; }
-        body.dark-mode .dark-mode-btn { color: #e2e8f0; }
-        body.dark-mode .dark-mode-btn:hover { color: #fbbf24; }
-
-        /* ==================== 日历样式 ==================== */
-        .calendar-btn { background: #ffffffcc; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.8); border-radius: 25px; padding: 8px 20px; font-size: 1rem; font-weight: 500; color: #2c3e50; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: all 0.2s; }
-        .calendar-btn:hover { background: #ffffff; box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
-        .calendar-popup { position: absolute; background: white; border-radius: 20px; box-shadow: 0 12px 30px rgba(0,0,0,0.2); padding: 16px; z-index: 2000; width: 320px; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 8px; border: 1px solid #e2e8f0; backdrop-filter: blur(4px); }
-        .calendar-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; font-weight: 600; color: #2d3748; }
-        .calendar-nav { background: none; border: none; font-size: 1.2rem; cursor: pointer; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #f0f2f5; transition: 0.2s; }
-        .calendar-nav:hover { background: #e2e8f0; }
+        .calendar-btn { background: #ffffffcc; border: 1px solid rgba(255,255,255,0.8); border-radius: 25px; padding: 8px 20px; font-size: 1rem; font-weight: 500; color: #2c3e50; cursor: pointer; }
+        .calendar-popup { position: absolute; background: white; border-radius: 20px; box-shadow: 0 12px 30px rgba(0,0,0,0.2); padding: 16px; z-index: 2000; width: 320px; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 8px; border: 1px solid #e2e8f0; }
+        .calendar-header { display: flex; justify-content: space-between; margin-bottom: 12px; font-weight: 600; }
+        .calendar-nav { background: none; border: none; font-size: 1.2rem; cursor: pointer; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #f0f2f5; }
         .calendar-table { width: 100%; border-collapse: collapse; text-align: center; table-layout: fixed; }
         .calendar-table th, .calendar-table td { width: 36px; }
-        .calendar-table th { font-size: 0.8rem; font-weight: 600; color: #718096; padding: 6px 0; }
-        .calendar-table td { padding: 0; height: 36px; line-height: 36px; font-size: 0.9rem; cursor: pointer; border-radius: 50%; transition: 0.1s; text-align: center; vertical-align: middle; }
+        .calendar-table td { padding: 0; height: 36px; line-height: 36px; font-size: 0.9rem; cursor: pointer; border-radius: 50%; }
         .calendar-table td.has-data { background: #c6e0ff; font-weight: 600; color: #1e4a6b; }
-        .calendar-table td.today { background: transparent; box-shadow: 0 0 0 2px #a0c4ff; font-weight: 600; }
         .calendar-table td.selected { background: #3182ce !important; color: white !important; font-weight: 600; }
-        .calendar-table td:hover { background: #e2e8f0 !important; }
-        .calendar-table td.has-data:hover { background: #a9c9f0 !important; }
-        .calendar-month-year { font-size: 1.1rem; }
+        
+        /* ==================== 现代按钮 ==================== */
+        .action-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 20px; border: none; border-radius: 12px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); color: white; }
+        .action-btn svg { width: 18px; height: 18px; stroke: currentColor; stroke-width: 2.2; fill: none; }
+        .action-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .refresh-btn { background: linear-gradient(135deg, #4f46e5, #4338ca); }
+        .lucky-btn { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .donate-btn { background: linear-gradient(135deg, #10b981, #059669); }
+        .apk-btn { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .dark-mode-btn { background: transparent; border: none; padding: 10px; color: #4a5568; cursor: pointer; display: flex; align-items: center; }
+        .dark-mode-btn svg { width: 22px; height: 22px; stroke: currentColor; stroke-width: 2; fill: none; }
+        body.dark-mode .dark-mode-btn { color: #e2e8f0; }
+        
+        /* ==================== 卡片与号码 ==================== */
         .companies-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
-        .company-section { background: white; border-radius: 24px; box-shadow: 0 8px 20px rgba(0,20,30,0.1); margin-bottom: 0; padding: 14px 12px; border: 1px solid rgba(255,255,255,0.5); transition: transform 0.15s ease; }
-        .company-section { box-shadow: 0 4px 12px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.05); }
-        body.dark-mode .company-section { box-shadow: 0 4px 12px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2); }
+        .company-section { background: white; border-radius: 24px; padding: 14px 12px; border: 1px solid rgba(255,255,255,0.5); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         .company-section:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(0,0,0,0.12); }
-        .company-section.loading { opacity: 0.6; pointer-events: none; }
-        .company-section.error { border-color: #d32f2f; background: #ffebee; }
-        .hidden-company { display: none; }
-        .company-title { font-size: 1.6rem; font-weight: 800; margin-bottom: 4px; padding-left: 4px; background: linear-gradient(145deg, #1e2b3a, #2b3d55); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1px; display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
-        .company-title img { height: 4rem; width: auto; margin-left: 8px; vertical-align: middle; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); transition: transform 0.2s; }
-        .company-title img:hover { transform: scale(1.05); }
-        .company-section[data-company="damacai_1p3d"] .company-title img { height: 3rem; }
-        .draw-date { font-size: 0.8rem; color: #4a5568; margin-bottom: 8px; padding-left: 4px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .prize-grid { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 12px 0 16px; flex-direction: row !important; }
-        .prize-card { background: #f8fafd; border-radius: 16px; padding: 8px 12px; flex: 1 1 0px; min-width: 80px; text-align: center; box-shadow: inset 0 1px 4px #ffffff, 0 5px 10px rgba(0,0,0,0.04); border: 1px solid #e9ecf0; }
-        .prize-card .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #5f6b7a; font-weight: 500; margin-bottom: 4px; }
-        .prize-card .number { font-size: 2.4rem; font-weight: 800; color: #c62828; line-height: 1.2; text-shadow: 2px 2px 0 rgba(198,40,40,0.1); font-family: 'Courier New', monospace; }
-        .company-section[data-company="damacai_1p3d"] .prize-card .number { font-size: 1.8rem; }
+        .company-title { font-size: 1.6rem; font-weight: 800; margin-bottom: 4px; padding-left: 4px; color: #1e2b3a; display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+        .company-title img { height: 4rem; width: auto; margin-left: 8px; }
+        .draw-date { font-size: 0.8rem; color: #4a5568; margin-bottom: 8px; padding-left: 4px; font-weight: 500; }
+        .prize-grid { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 12px 0; }
+        .prize-card { background: #f8fafd; border-radius: 16px; padding: 8px 12px; flex: 1; min-width: 80px; text-align: center; border: 1px solid #e9ecf0; }
+        .prize-card .label { font-size: 0.75rem; color: #5f6b7a; font-weight: 500; margin-bottom: 4px; }
+        .prize-card .number { font-size: 2.4rem; font-weight: 800; color: #c62828; font-family: 'Courier New', monospace; }
         .subsection { margin-top: 16px; background: #f9fbfd; border-radius: 16px; padding: 12px 10px; border: 1px solid #e2e8f0; }
-        .subsection-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 4px; color: #1e2f3e; }
-        .subsection-title::before { content: "✨"; font-size: 1.2rem; }
-        .number-list { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-start; }
-        .number-item { background: #ffffff; padding: 6px 10px; border-radius: 28px; font-family: 'Courier New', monospace; font-size: 1.5rem; font-weight: 600; color: #0b2a41; box-shadow: 0 3px 8px rgba(0,0,0,0.03); border: 1px solid #d4deec; min-width: 50px; text-align: center; transition: all 0.1s; white-space: pre-line; line-height: 1.4; }
-        .number-item:hover { background: #e6f0ff; border-color: #8a9cb0; }
-        .custom-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 1rem; }
-        .custom-table th { background: #e2e8f0; padding: 8px 4px; text-align: center; font-weight: 600; color: #2d3748; border: 1px solid #cbd5e0; }
-        .custom-table td { padding: 6px 4px; text-align: center; border: 1px solid #cbd5e0; background: white; font-size: 1rem; }
-        .custom-table .alt-number { color: #3182ce; font-weight: 500; }
-        .group-subtitle { font-size: 0.95rem; font-weight: 600; margin: 8px 0 4px 0; color: #2c3e50; width: 100%; }
-        footer { text-align: center; margin-top: 30px; color: #7c8b9c; font-size: 0.8rem; border-top: 1px solid #dbe1ea; padding-top: 16px; }
+        .subsection-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 10px; color: #1e2f3e; }
+        .number-list { display: flex; flex-wrap: wrap; gap: 8px; }
+        .number-item { background: #ffffff; padding: 6px 10px; border-radius: 28px; font-family: 'Courier New', monospace; font-size: 1.5rem; font-weight: 600; color: #0b2a41; border: 1px solid #d4deec; min-width: 50px; text-align: center; }
+        
+        /* ==================== 弹窗（加 !important 防止意外显示） ==================== */
+        .modal-overlay { display: none !important; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 3000; align-items: center; justify-content: center; }
+        .modal-content { background: white; border-radius: 32px; padding: 25px 20px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
+        .modal-title { font-size: 1.8rem; font-weight: 800; color: #f59e0b; margin-bottom: 20px; }
+        .lucky-digits { display: flex; justify-content: center; gap: 15px; margin: 20px 0; }
+        .lucky-digit-box { width: 70px; height: 90px; background: #e5e7eb; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 3.5rem; font-weight: 800; color: #c62828; font-family: 'Courier New', monospace; }
+        .modal-buttons { display: flex; justify-content: center; gap: 15px; margin-top: 20px; }
+        .spin-btn, .close-modal-btn { padding: 12px 25px; border: none; border-radius: 30px; font-weight: 600; font-size: 1.1rem; cursor: pointer; }
+        .spin-btn { background: #f59e0b; color: white; }
+        .close-modal-btn { background: #e2e8f0; color: #2d3748; }
+        .donate-note { color: #4b5563; margin-top: 15px; line-height: 1.6; }
+        .contact-email { margin-top: 15px; color: #4b5563; }
+        .apk-download-link { display: inline-block; background: #3b82f6; color: white; padding: 12px 30px; border-radius: 30px; font-weight: 600; text-decoration: none; margin: 15px 0; }
+        .apk-note { color: #4b5563; font-size: 0.9rem; margin: 5px 0; }
+        
+        /* ==================== 状态与响应式 ==================== */
+        .fallback-banner { display: none; background: #fef3c7; color: #92400e; padding: 10px; border-radius: 12px; margin-bottom: 15px; text-align: center; font-weight: 500; border: 1px solid #fcd34d; }
         .status-indicator { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
         .status-indicator.success { background: #48bb78; }
         .status-indicator.error { background: #f56565; }
         .status-indicator.loading { background: #ecc94b; animation: blink 1s infinite; }
         @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
-        @media (max-width: 900px) { .companies-grid { grid-template-columns: repeat(2, 1fr); } }
+        footer { text-align: center; margin-top: 30px; color: #7c8b9c; font-size: 0.8rem; border-top: 1px solid #dbe1ea; padding-top: 16px; }
         @media (max-width: 800px) {
             .companies-grid { grid-template-columns: 1fr; }
-            .company-title { font-size: 1.5rem; gap: 8px; }
-            .company-title img { height: 3.2rem; }
-            .company-section[data-company="damacai_1p3d"] .company-title img { height: 2.5rem; }
-            .prize-card .number { font-size: 2rem; }
-            .company-section[data-company="damacai_1p3d"] .prize-card .number { font-size: 1.4rem; }
-            .draw-date { font-size: 0.75rem; }
-            .prize-grid { flex-direction: row !important; }
-            body .company-section .company-content .number-list { display: grid !important; grid-template-columns: repeat(4, 1fr) !important; gap: 1px !important; margin: 0 !important; padding: 0 !important; }
-            body .company-section .company-content .number-list .number-item { font-size: 20px !important; padding: 0px 1px !important; margin: 0 !important; text-align: center !important; min-width: 0 !important; width: auto !important; white-space: nowrap !important; border-radius: 4px !important; line-height: 1.2 !important; background: #ffffff !important; border: 1px solid #d4deec !important; box-shadow: none !important; }
-            body.dark-mode .company-section .company-content .number-list .number-item { background: #1a202c !important; border-color: #4a5568 !important; color: #e2e8f0 !important; }
-            .custom-table { font-size: 0.9rem; }
-            .custom-table td { font-size: 0.9rem; }
             .action-btn { padding: 8px 14px; font-size: 0.85rem; }
             .action-btn svg { width: 16px; height: 16px; }
-        }
-        .company-section[data-company="damacai"] .company-title { background: linear-gradient(145deg, #1e5620, #2a7a2d); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .company-section[data-company="magnum"] .company-title { background: linear-gradient(145deg, #aa4a1e, #c95f2a); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .company-section[data-company="toto"] .company-title { background: linear-gradient(145deg, #b71c1c, #d32f2f); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .company-section[data-company="singapore"] .company-title { background: linear-gradient(145deg, #1e4a6b, #2c6b96); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .jackpot-label { font-weight: 600; margin: 4px 0 2px 0; color: #2c3e50; font-size: 0.95rem; }
-
-        .fallback-banner {
-            display: none;
-            background: #fef3c7;
-            color: #92400e;
-            padding: 10px;
-            border-radius: 12px;
-            margin-bottom: 15px;
-            text-align: center;
-            font-weight: 500;
-            font-size: 0.95rem;
-            border: 1px solid #fcd34d;
-        }
-        body.dark-mode .fallback-banner {
-            background: #78350f;
-            color: #fef3c7;
-            border-color: #b45309;
+            body .company-section .company-content .number-list { display: grid !important; grid-template-columns: repeat(4, 1fr) !important; gap: 1px !important; }
+            body .company-section .company-content .number-list .number-item { font-size: 20px !important; padding: 0 !important; border-radius: 4px !important; box-shadow: none !important; background: #ffffff !important; border: 1px solid #d4deec !important; }
         }
     </style>
 </head>
 <body>
+    <!-- 预定义弹窗控制函数，放在最前面，确保点击绝对有效 -->
+    <script>
+        function openModal(id) {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'flex';
+        }
+        function closeModal(id) {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        }
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            const btn = document.getElementById('dark-mode-btn');
+            btn.innerHTML = isDark 
+                ? '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>'
+                : '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>';
+            localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
+        }
+    </script>
+
     <div class="container">
-        <header role="banner">
+        <header>
             <h1>MY 4D RESULT MALAYSIA</h1>
-            <nav class="top-calendar" aria-label="Date Selection Calendar">
-                <button class="calendar-btn" id="calendar-btn" aria-haspopup="dialog" aria-expanded="false">选择日历</button>
-                <div id="calendar-popup" class="calendar-popup" style="display: none;" role="dialog" aria-label="日历选择器"></div>
+            <nav class="top-calendar">
+                <button class="calendar-btn" id="calendar-btn">选择日历</button>
+                <div id="calendar-popup" class="calendar-popup" style="display: none;"></div>
             </nav>
-            <section class="bottom-row" aria-label="Control Panel">
+            <section class="bottom-row">
                 <div class="date-dropdown" id="date-dropdown">
-                    <button class="date-btn" id="date-btn" onclick="toggleDateDropdown()" aria-haspopup="listbox" aria-expanded="false">
+                    <button class="date-btn" id="date-btn" onclick="document.getElementById('date-dropdown').classList.toggle('show')">
                         <span id="selected-date">加载中...</span>
-                        <span class="arrow" aria-hidden="true">▼</span>
+                        <span class="arrow">▼</span>
                     </button>
-                    <div class="date-dropdown-content" id="date-dropdown-content" role="listbox">
+                    <div class="date-dropdown-content" id="date-dropdown-content">
                         <div class="loading-history">🔄 加载历史数据...</div>
                     </div>
                 </div>
                 
-                <!-- 使用内联 onclick，彻底解决点击无反应的问题 -->
-                <button class="action-btn refresh-btn" id="refresh-btn" onclick="forceRefresh()">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
+                <button class="action-btn refresh-btn" onclick="forceRefresh()">
+                    <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
                     Refresh
                 </button>
                 
-                <button class="action-btn lucky-btn" id="lucky-btn" onclick="openModal('lucky-modal')">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
+                <button class="action-btn lucky-btn" onclick="openModal('lucky-modal')">
+                    <svg viewBox="0 0 24 24"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
                     Lucky Number
                 </button>
                 
-                <button class="action-btn donate-btn" id="donate-btn" onclick="openModal('donate-modal')">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                <button class="action-btn donate-btn" onclick="openModal('donate-modal')">
+                    <svg viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
                     Support
                 </button>
                 
-                <button class="action-btn apk-btn" id="apk-btn" onclick="openModal('apk-modal')">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                <button class="action-btn apk-btn" onclick="openModal('apk-modal')">
+                    <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
                     APK
                 </button>
                 
-                <button class="dark-mode-btn" id="dark-mode-btn" aria-label="Toggle Dark Mode" onclick="toggleDarkMode()">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                <button class="dark-mode-btn" id="dark-mode-btn" onclick="toggleDarkMode()">
+                    <svg viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
                 </button>
             </section>
         </header>
 
         <div id="fallback-banner" class="fallback-banner"></div>
 
-        <main id="companies-grid" class="companies-grid" aria-live="polite">
+        <main id="companies-grid" class="companies-grid">
             <p style="text-align: center; grid-column: 1/-1; color: #666;">🔄 正在加载数据...</p>
         </main>
 
-        <footer role="contentinfo">
+        <footer>
             <p>⚠️ 数据仅供参考，请以官方公告为准。</p>
-            <span id="status-text">
-                <span class="status-indicator loading" aria-hidden="true"></span>正在加载...
-            </span>
+            <span id="status-text"><span class="status-indicator loading"></span>正在加载...</span>
             <br>
-            <time datetime="">更新于 <span id="update-time">-</span></time>
+            <time>更新于 <span id="update-time">-</span></time>
         </footer>
     </div>
 
-    <!-- 幸运号码弹窗 -->
-    <div class="modal-overlay" id="lucky-modal" role="dialog" aria-modal="true" aria-labelledby="lucky-modal-title">
+    <!-- 弹窗区域 -->
+    <div class="modal-overlay" id="lucky-modal">
         <div class="modal-content">
-            <div class="modal-title" id="lucky-modal-title">✨ Lucky Number ✨</div>
+            <div class="modal-title">✨ Lucky Number ✨</div>
             <div class="lucky-digits">
                 <span class="lucky-digit-box" id="digit1">0</span>
                 <span class="lucky-digit-box" id="digit2">0</span>
@@ -303,149 +190,58 @@
             </div>
             <div class="modal-buttons">
                 <button class="spin-btn" id="spin-btn">Start</button>
-                <button class="close-modal-btn" id="close-modal" onclick="closeModal('lucky-modal')">Close</button>
+                <button class="close-modal-btn" onclick="closeModal('lucky-modal')">Close</button>
             </div>
         </div>
     </div>
 
-    <!-- 打赏弹窗 -->
-    <div class="modal-overlay" id="donate-modal" role="dialog" aria-modal="true" aria-labelledby="donate-modal-title">
-        <div class="modal-content donate-modal">
-            <p class="donate-note" id="donate-modal-title">Please use TNG to scan for support. Your support is my motivation to update. The amount does not need to be much. Please verify name with LOW KEAN WAH. Thank you ❤️</p>
+    <div class="modal-overlay" id="donate-modal">
+        <div class="modal-content">
+            <p class="donate-note">Please use TNG to scan for support. Your support is my motivation to update. The amount does not need to be much. Please verify name with LOW KEAN WAH. Thank you ❤️</p>
             <p class="contact-email">Contact: zero6039@gmail.com</p>
             <div class="modal-buttons">
-                <button class="close-modal-btn" id="close-donate-modal" onclick="closeModal('donate-modal')">Close</button>
+                <button class="close-modal-btn" onclick="closeModal('donate-modal')">Close</button>
             </div>
         </div>
     </div>
 
-    <!-- APK 下载弹窗 -->
-    <div class="modal-overlay" id="apk-modal" role="dialog" aria-modal="true" aria-labelledby="apk-modal-title">
+    <div class="modal-overlay" id="apk-modal">
         <div class="modal-content">
-            <a href="/my4d.apk" download class="apk-download-link" id="apk-modal-title">📦 Download APK</a>
+            <a href="/my4d.apk" download class="apk-download-link">📦 Download APK</a>
             <p class="apk-note">✅ 需要在手机设置中允许“未知来源应用”的安装。<br>APK 无任何病毒木马程序，请放心安装使用。</p>
             <p class="apk-note">✅ You need to allow installation from 'Unknown Sources' in your phone settings.<br>This APK is completely safe, free of any viruses or malware.<br>Please feel free to install and use.</p>
             <div class="modal-buttons">
-                <button class="close-modal-btn" id="close-apk-modal" onclick="closeModal('apk-modal')">Close</button>
+                <button class="close-modal-btn" onclick="closeModal('apk-modal')">Close</button>
             </div>
         </div>
     </div>
 
+    <!-- 核心业务逻辑 -->
     <script>
-        // ==================== 全局弹窗控制（内联 onclick 调用的函数） ====================
-        // 直接绑定在 window 上，确保 HTML 解析时立即可用，避免事件绑定失效
-        window.openModal = function(id) {
-            const el = document.getElementById(id);
-            if (el) el.style.display = 'flex';
-        };
-        window.closeModal = function(id) {
-            const el = document.getElementById(id);
-            if (el) el.style.display = 'none';
-        };
-
-        // ==================== 暗黑模式切换（内联 onclick 调用） ====================
-        window.toggleDarkMode = function() {
-            document.body.classList.toggle('dark-mode');
-            const isDark = document.body.classList.contains('dark-mode');
-            const darkModeBtn = document.getElementById('dark-mode-btn');
-            darkModeBtn.innerHTML = isDark 
-                ? '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>'
-                : '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>';
-            localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
-        };
-
-        // ==================== 常量定义 ====================
-        const COMPANY_LIST = [
-            'damacai', 'magnum', 'toto', 'singapore', 'damacai_1p3d', 'grand_dragon',
-            'sandakan', 'sarawak_cashsweep', 'sabah', 'sabah_lotto',
-            'singapore_toto', 'sportstoto_lotto',
-            'magnum_jackpot_gold', 'sportstoto_5d', 'sportstoto_6d',
-            'magnum_life', 'sportstoto_fireball'
-        ];
-
-        const NAME_MAP = {
-            'grand_dragon': 'GRAND DRAGON 豪龙', 'damacai': 'DAMACAI 4D', 'magnum': 'MAGNUM 4D',
-            'toto': 'TOTO 4D', 'singapore': 'SINGAPORE 4D', 'damacai_1p3d': 'DAMACAI 1+3D',
-            'sandakan': 'SANDAKAN 4D', 'sarawak_cashsweep': 'SARAWAK CASHSWEEP', 'sabah': 'SABAH 88 4D',
-            'sabah_lotto': 'SABAH LOTTO', 'singapore_toto': 'SINGAPORE TOTO', 'sportstoto_lotto': 'SPORTS TOTO LOTTO',
-            'magnum_jackpot_gold': 'MAGNUM JACKPOT GOLD', 'sportstoto_5d': 'SPORTS TOTO 5D',
-            'sportstoto_6d': 'SPORTS TOTO 6D', 'magnum_life': 'MAGNUM LIFE', 'sportstoto_fireball': 'SPORTS TOTO FIREBALL'
-        };
-
+        const COMPANY_LIST = ['damacai', 'magnum', 'toto', 'singapore', 'damacai_1p3d', 'grand_dragon','sandakan', 'sarawak_cashsweep', 'sabah', 'sabah_lotto','singapore_toto', 'sportstoto_lotto','magnum_jackpot_gold', 'sportstoto_5d', 'sportstoto_6d','magnum_life', 'sportstoto_fireball'];
+        const NAME_MAP = {'grand_dragon': 'GRAND DRAGON 豪龙', 'damacai': 'DAMACAI 4D', 'magnum': 'MAGNUM 4D','toto': 'TOTO 4D', 'singapore': 'SINGAPORE 4D', 'damacai_1p3d': 'DAMACAI 1+3D','sandakan': 'SANDAKAN 4D', 'sarawak_cashsweep': 'SARAWAK CASHSWEEP', 'sabah': 'SABAH 88 4D','sabah_lotto': 'SABAH LOTTO', 'singapore_toto': 'SINGAPORE TOTO', 'sportstoto_lotto': 'SPORTS TOTO LOTTO','magnum_jackpot_gold': 'MAGNUM JACKPOT GOLD', 'sportstoto_5d': 'SPORTS TOTO 5D','sportstoto_6d': 'SPORTS TOTO 6D', 'magnum_life': 'MAGNUM LIFE', 'sportstoto_fireball': 'SPORTS TOTO FIREBALL'};
         const SPECIAL_COMPANIES = ['sportstoto_fireball', 'singapore_toto', 'magnum_jackpot_gold', 'sportstoto_5d', 'sportstoto_6d', 'magnum_life', 'sportstoto_lotto', 'sabah_lotto'];
-        
-        const COMPANY_IMAGE_MAP = {
-            'damacai': 'damacai.png', 'damacai_1p3d': 'damacai1+3.png', 'sandakan': 'sandakan_logo.png',
-            'sarawak_cashsweep': 'sarawak.png', 'sabah': 'sabah88.png', 'sabah_lotto': 'sabahlotto.png',
-            'grand_dragon': 'granddragon.png', 'magnum': 'magnum.png', 'toto': 'toto.png',
-            'singapore': 'singapore4d.png', 'singapore_toto': 'singapore-pools.png'
-        };
-
+        const COMPANY_IMAGE_MAP = {'damacai': 'damacai.png', 'damacai_1p3d': 'damacai1+3.png', 'sandakan': 'sandakan_logo.png','sarawak_cashsweep': 'sarawak.png', 'sabah': 'sabah88.png', 'sabah_lotto': 'sabahlotto.png','grand_dragon': 'granddragon.png', 'magnum': 'magnum.png', 'toto': 'toto.png','singapore': 'singapore4d.png', 'singapore_toto': 'singapore-pools.png'};
         const HIDDEN_COMPANIES = ['sportstoto_fireball'];
 
-        // ==================== 全局状态 ====================
-        let availableDates = [];           
-        let availableDatesSet = new Set(); 
-        let selectedDate = null;
-        let currentCalendarDate = new Date();
-        let isFallbackMode = false;
+        let availableDates = [], availableDatesSet = new Set(), selectedDate = null, currentCalendarDate = new Date(), isFallbackMode = false;
 
-        // ==================== 日期工具函数 ====================
-        function ymdToDmy(ymd) {
-            if (!ymd) return '';
-            let parts = ymd.split('-');
-            if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
-            return ymd;
-        }
+        // 日期工具
+        const ymdToDmy = ymd => { if(!ymd) return ''; let p = ymd.split('-'); return p.length===3 ? `${p[2]}-${p[1]}-${p[0]}` : ymd; };
+        const parseDMY = str => { let p = str.split('-'); let d,m,y; if(p[0].length===4){[y,m,d]=p.map(Number);}else{[d,m,y]=p.map(Number);} return {year:y,month:m,day:d}; };
+        const toSortKey = str => { let {year,month,day} = parseDMY(str); return year*10000+month*100+day; };
+        const sortDatesDesc = dates => dates.sort((a,b)=>toSortKey(b)-toSortKey(a));
+        const formatDisplayDate = str => { if(!str) return '加载中...'; let dmy = ymdToDmy(str); let p = dmy.split('-'); let d = new Date(p[2],p[1]-1,p[0]); return `${dmy} ${d.toLocaleDateString('en-US',{weekday:'short'})}`; };
 
-        function parseDMY(dateStr) {
-            let parts = dateStr.split('-');
-            let d, m, y;
-            if (parts[0].length === 4) { [y, m, d] = parts.map(Number); } 
-            else { [d, m, y] = parts.map(Number); }
-            return { year: y, month: m, day: d };
-        }
-
-        function toSortKey(dateStr) {
-            let { year, month, day } = parseDMY(dateStr);
-            return year * 10000 + month * 100 + day;
-        }
-
-        function sortDatesDesc(dates) {
-            return dates.sort((a, b) => toSortKey(b) - toSortKey(a));
-        }
-
-        function formatDisplayDate(dateStr) {
-            if (!dateStr) return '加载中...';
-            let dmy = ymdToDmy(dateStr);
-            let parts = dmy.split('-');
-            let d = new Date(parts[2], parts[1]-1, parts[0]);
-            let weekday = d.toLocaleDateString('en-US', { weekday: 'short' });
-            return `${dmy} ${weekday}`;
-        }
-
-        window.toggleDateDropdown = function() {
-            document.getElementById('date-dropdown').classList.toggle('show');
-            document.getElementById('date-btn').classList.toggle('active');
-        }
-
-        document.addEventListener('click', function(event) {
+        // 下拉框控制
+        document.addEventListener('click', e => {
             const dropdown = document.getElementById('date-dropdown');
-            if (!dropdown.contains(event.target)) {
-                dropdown.classList.remove('show');
-                document.getElementById('date-btn').classList.remove('active');
-            }
-
-            const popup = document.getElementById('calendar-popup');
-            const btn = document.getElementById('calendar-btn');
-            if (popup.contains(event.target) || btn.contains(event.target)) {
-                return;
-            }
-            popup.style.display = 'none';
+            if (!dropdown.contains(e.target)) dropdown.classList.remove('show');
+            const popup = document.getElementById('calendar-popup'), btn = document.getElementById('calendar-btn');
+            if (!popup.contains(e.target) && e.target !== btn) popup.style.display = 'none';
         });
 
-        // ==================== 数据加载与 UI 更新逻辑 ====================
-        
+        // 加载数据
         async function loadDateIndex() {
             try {
                 const res = await fetch(`data/dates.json?t=${Date.now()}`, { cache: 'no-store' });
@@ -453,402 +249,118 @@
                     let dates = await res.json();
                     availableDates = sortDatesDesc(dates);
                     availableDatesSet = new Set(availableDates);
-                    
-                    if (availableDates.length > 0) {
-                        selectedDate = availableDates[0];
-                    } else {
-                        selectedDate = null;
-                    }
-                } else {
-                    document.getElementById('date-dropdown-content').innerHTML = '<div class="loading-history">暂无历史数据</div>';
-                }
-            } catch (e) { 
-                document.getElementById('date-dropdown-content').innerHTML = '<div class="loading-history">加载失败</div>';
-            }
+                    selectedDate = availableDates.length > 0 ? availableDates[0] : null;
+                } else { document.getElementById('date-dropdown-content').innerHTML = '<div style="text-align:center;padding:20px;">暂无历史数据</div>'; }
+            } catch (e) { document.getElementById('date-dropdown-content').innerHTML = '<div style="text-align:center;padding:20px;">加载失败</div>'; }
             
-            renderDateDropdown();
-            updateDateBtnWithLatest();
-            updateCalendarButtonToToday();
-            
-            if (selectedDate) {
-                await fetchAndRenderData(selectedDate);
-            } else {
-                document.getElementById('companies-grid').innerHTML = '<p style="text-align: center; grid-column: 1/-1; color: #666;">暂无数据</p>';
-                updateStatus('error', '暂无数据');
-            }
+            renderDateDropdown(); updateDateBtnWithLatest();
+            if (selectedDate) await fetchAndRenderData(selectedDate);
+            else { document.getElementById('companies-grid').innerHTML = '<p style="text-align:center;color:#666;">暂无数据</p>'; }
         }
 
         function renderDateDropdown() {
             const container = document.getElementById('date-dropdown-content');
             if (!availableDates || availableDates.length === 0) return;
-            let html = '';
-            availableDates.forEach(date => {
-                const isActive = date === selectedDate ? 'active' : '';
-                html += `<div class="date-option ${isActive}" onclick="selectDate('${date}')">${formatDisplayDate(date)}</div>`;
-            });
-            container.innerHTML = html;
+            container.innerHTML = availableDates.map(date => `<div class="date-option ${date===selectedDate?'active':''}" onclick="selectDate('${date}')">${formatDisplayDate(date)}</div>`).join('');
         }
 
-        window.selectDate = function(date) {
-            selectedDate = date;
-            isFallbackMode = false;
-            document.getElementById('fallback-banner').style.display = 'none';
-            renderDateDropdown();
-            updateDateBtnWithLatest();
-            document.getElementById('date-dropdown').classList.remove('show');
-            fetchAndRenderData(date);
-        }
+        window.selectDate = date => { selectedDate = date; isFallbackMode = false; document.getElementById('fallback-banner').style.display = 'none'; renderDateDropdown(); updateDateBtnWithLatest(); document.getElementById('date-dropdown').classList.remove('show'); fetchAndRenderData(date); };
+        function updateDateBtnWithLatest() { document.getElementById('selected-date').innerText = selectedDate ? formatDisplayDate(selectedDate) : '选择日期'; }
+        window.forceRefresh = () => { if (selectedDate) { isFallbackMode = false; document.getElementById('fallback-banner').style.display = 'none'; fetchAndRenderData(selectedDate, true); } };
+        function updateStatus(type, text, updateTime = null) { const span = document.getElementById('status-text'); const ind = span.querySelector('.status-indicator'); ind.className = `status-indicator ${type}`; span.innerHTML = `${ind.outerHTML}${text}`; if (updateTime) document.getElementById('update-time').innerText = updateTime; }
 
-        function updateDateBtnWithLatest() {
-            const btnText = document.getElementById('selected-date');
-            btnText.innerText = selectedDate ? formatDisplayDate(selectedDate) : '选择日期';
-        }
-
-        window.forceRefresh = function() {
-            if (selectedDate) {
-                isFallbackMode = false;
-                document.getElementById('fallback-banner').style.display = 'none';
-                fetchAndRenderData(selectedDate, true);
-            }
-        }
-
-        function updateStatus(type, text, updateTime = null) {
-            const statusSpan = document.getElementById('status-text');
-            const timeSpan = document.getElementById('update-time');
-            const indicator = statusSpan.querySelector('.status-indicator');
-            
-            indicator.className = `status-indicator ${type}`;
-            statusSpan.innerHTML = `${indicator.outerHTML}${text}`;
-            
-            if (updateTime) timeSpan.innerText = updateTime;
-        }
-
+        // 核心逻辑
         async function fetchAndRenderData(dateStr, isRefresh = false) {
             const grid = document.getElementById('companies-grid');
-            grid.innerHTML = '<p style="text-align: center; grid-column: 1/-1; color: #666;">🔄 正在加载数据...</p>';
+            grid.innerHTML = '<p style="text-align:center;grid-column:1/-1;color:#666;">🔄 正在加载数据...</p>';
             updateStatus('loading', '正在加载...');
-
             const isLatest = availableDates.length > 0 && dateStr === availableDates[0];
             
-            const fetchPromises = COMPANY_LIST.map(async (companyKey) => {
-                if (HIDDEN_COMPANIES.includes(companyKey)) return { key: companyKey, data: null };
+            const promises = COMPANY_LIST.map(async key => {
+                if (HIDDEN_COMPANIES.includes(key)) return { key, data: null };
                 const basePath = isLatest ? `data` : `data/${dateStr}`;
-                const url = `${basePath}/${companyKey}.json?t=${Date.now()}`;
-                
-                try {
-                    const res = await fetch(url, { cache: 'no-store' });
-                    if (!res.ok) throw new Error('404');
-                    const data = await res.json();
-                    return { key: companyKey, data: data };
-                } catch (e) {
-                    return { key: companyKey, data: null };
-                }
+                try { const res = await fetch(`${basePath}/${key}.json?t=${Date.now()}`, { cache: 'no-store' }); if (!res.ok) throw new Error(); return { key, data: await res.json() }; } catch { return { key, data: null }; }
             });
 
-            const results = await Promise.all(fetchPromises);
-            const dataMap = {};
-            let validCount = 0;
-
-            results.forEach(item => { 
+            const results = await Promise.all(promises);
+            const dataMap = {}; let validCount = 0;
+            results.forEach(item => {
                 if (item.data) {
-                    let hasData = false;
-                    if (item.data['1st'] && typeof item.data['1st'] === 'string' && item.data['1st'].trim() !== '') hasData = true;
-                    if (item.data.winning_numbers && item.data.winning_numbers.length > 0) hasData = true;
-                    if (item.data.star && item.data.star.length > 0) hasData = true;
-                    
-                    if (hasData) {
-                        dataMap[item.key] = item.data; 
-                        validCount++;
-                    }
+                    let hasData = (item.data['1st'] && typeof item.data['1st'] === 'string' && item.data['1st'].trim() !== '') || (item.data.winning_numbers && item.data.winning_numbers.length > 0) || (item.data.star && item.data.star.length > 0);
+                    if (hasData) { dataMap[item.key] = item.data; validCount++; }
                 }
             });
 
             if (validCount === 0 && !isFallbackMode && availableDates.length > 1) {
-                const currentIndex = availableDates.indexOf(dateStr);
-                if (currentIndex >= 0 && currentIndex + 1 < availableDates.length) {
-                    const fallbackDate = availableDates[currentIndex + 1];
-                    
-                    const banner = document.getElementById('fallback-banner');
-                    banner.innerHTML = `⚠️ <b>${formatDisplayDate(dateStr)}</b> 暂无开奖数据，已自动为您显示 <b>${formatDisplayDate(fallbackDate)}</b> 的最新成绩。`;
-                    banner.style.display = 'block';
-                    
-                    isFallbackMode = true;
-                    await fetchAndRenderData(fallbackDate, true);
-                    return;
+                const idx = availableDates.indexOf(dateStr);
+                if (idx >= 0 && idx + 1 < availableDates.length) {
+                    const fallbackDate = availableDates[idx + 1];
+                    document.getElementById('fallback-banner').innerHTML = `⚠️ <b>${formatDisplayDate(dateStr)}</b> 暂无开奖数据，已自动为您显示 <b>${formatDisplayDate(fallbackDate)}</b> 的最新成绩。`;
+                    document.getElementById('fallback-banner').style.display = 'block';
+                    isFallbackMode = true; await fetchAndRenderData(fallbackDate, true); return;
                 }
             }
-
-            if (validCount === 0) {
-                grid.innerHTML = '<p style="text-align: center; grid-column: 1/-1; color: #e53e3e;">❌ 目前暂无任何可用的开奖数据，请稍后再试。</p>';
-                updateStatus('error', '加载失败');
-                return;
-            }
-
-            renderCompanies(dataMap);
+            if (validCount === 0) { grid.innerHTML = '<p style="text-align:center;grid-column:1/-1;color:#e53e3e;">❌ 目前暂无任何可用的开奖数据，请稍后再试。</p>'; updateStatus('error', '加载失败'); return; }
             
+            renderCompanies(dataMap);
             const now = new Date();
-            const timeStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-            updateStatus('success', '加载完成', timeStr);
+            updateStatus('success', '加载完成', `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`);
         }
 
         function renderCompanies(dataMap) {
-            const grid = document.getElementById('companies-grid');
-            let html = '';
-            
-            COMPANY_LIST.forEach(companyKey => {
-                if (HIDDEN_COMPANIES.includes(companyKey)) return;
-                const companyData = dataMap[companyKey];
-                if (!companyData) return; 
-
-                const companyName = NAME_MAP[companyKey] || companyKey;
-                const imageName = COMPANY_IMAGE_MAP[companyKey] ? `images/${COMPANY_IMAGE_MAP[companyKey]}` : null;
-                const isSpecial = SPECIAL_COMPANIES.includes(companyKey);
-
-                html += `
-                <div class="company-section" data-company="${companyKey}">
-                    <div class="company-title">
-                        ${companyName}
-                        ${imageName ? `<img src="${imageName}" alt="${companyName} Logo" onerror="this.style.display='none'">` : ''}
-                    </div>
-                    <div class="draw-date">${companyData.draw_date || '日期未知'} ${companyData.draw_no ? '| Draw No: ' + companyData.draw_no : ''}</div>
-                    <div class="company-content">
-                `;
-
+            const grid = document.getElementById('companies-grid'); let html = '';
+            COMPANY_LIST.forEach(key => {
+                if (HIDDEN_COMPANIES.includes(key)) return; const cd = dataMap[key]; if (!cd) return;
+                const name = NAME_MAP[key] || key; const img = COMPANY_IMAGE_MAP[key] ? `images/${COMPANY_IMAGE_MAP[key]}` : null; const isSpecial = SPECIAL_COMPANIES.includes(key);
+                html += `<div class="company-section"><div class="company-title">${name}${img?`<img src="${img}" onerror="this.style.display='none'">`:''}</div><div class="draw-date">${cd.draw_date || '未知'} ${cd.draw_no?'| Draw No: '+cd.draw_no:''}</div><div class="company-content">`;
+                
                 if (isSpecial) {
                     let rendered = false;
-
-                    const is5D = companyData.type === '5d' || (!companyData.type && companyData['1st'] && typeof companyData['1st'] === 'string' && companyData['6th'] && !companyData['2nd']?.main);
-                    if (is5D) {
-                        html += `<div class="subsection"><div class="subsection-title">5D Results</div><div class="number-list">`;
-                        ['1st', '2nd', '3rd', '4th', '5th', '6th'].forEach(key => {
-                            if (companyData[key]) html += `<span class="number-item">${companyData[key]}</span>`;
-                        });
-                        html += `</div></div>`;
-                        rendered = true;
-                    }
-
-                    const is6D = companyData.type === '6d' || (!companyData.type && companyData['1st'] && companyData['2nd'] && companyData['2nd'].main);
-                    if (is6D) {
-                        html += `<div class="subsection"><div class="subsection-title">6D Results</div><div class="number-list">`;
-                        if (companyData['1st']) html += `<span class="number-item">${companyData['1st']}</span>`;
-                        ['2nd', '3rd', '4th', '5th'].forEach(key => {
-                            if (companyData[key]) {
-                                if (typeof companyData[key] === 'object' && companyData[key].main) {
-                                    html += `<span class="number-item">${companyData[key].main} / ${companyData[key].alt}</span>`;
-                                } else if (typeof companyData[key] === 'string') {
-                                    html += `<span class="number-item">${companyData[key]}</span>`;
-                                }
-                            }
-                        });
-                        html += `</div></div>`;
-                        rendered = true;
-                    }
-
-                    const winNumbers = companyData.winning_numbers || companyData.numbers || companyData.results;
-                    if (winNumbers && Array.isArray(winNumbers) && winNumbers.length > 0) {
-                        const title = companyData.winning_numbers ? 'Winning Numbers' : 'Results';
-                        html += `<div class="subsection"><div class="subsection-title">${title}</div><div class="number-list">`;
-                        winNumbers.forEach(num => html += `<span class="number-item">${num}</span>`);
-                        html += `</div></div>`;
-                        rendered = true;
-                    }
-
-                    const arrayFields = ['star', 'power', 'supreme'];
-                    arrayFields.forEach(field => {
-                        if (companyData[field] && Array.isArray(companyData[field]) && companyData[field].length > 0) {
-                            const title = field.charAt(0).toUpperCase() + field.slice(1);
-                            html += `<div class="subsection"><div class="subsection-title">${title}</div><div class="number-list">`;
-                            companyData[field].forEach(num => html += `<span class="number-item">${num}</span>`);
-                            html += `</div></div>`;
-                            rendered = true;
-                        }
-                    });
-
-                    const jackpotFields = ['jackpot', 'jackpot1', 'jackpot2'];
-                    jackpotFields.forEach(field => {
-                        if (companyData[field] && typeof companyData[field] === 'string' && companyData[field].trim() !== '') {
-                            const title = field.replace(/([0-9])/g, ' $1').toUpperCase();
-                            html += `<div class="subsection"><div class="subsection-title">${title}</div><div class="number-list">`;
-                            html += `<span class="number-item" style="font-size: 1.2rem; color: #d97706; font-weight: bold;">${companyData[field]}</span>`;
-                            html += `</div></div>`;
-                            rendered = true;
-                        }
-                    });
-
-                    const lt6gKeys = Object.keys(companyData).filter(k => k.startsWith('LT6G') && !k.endsWith('JP') && companyData[k]);
-                    if (lt6gKeys.length > 0) {
-                        html += `<div class="subsection"><div class="subsection-title">6D Numbers</div><div class="number-list">`;
-                        lt6gKeys.sort().forEach(k => {
-                            html += `<span class="number-item">${companyData[k]}</span>`;
-                        });
-                        html += `</div></div>`;
-                        rendered = true;
-                    }
-
-                    if (!rendered) {
-                        html += `<div class="subsection"><div class="subsection-title">Results</div><div class="number-list">`;
-                        html += `<span class="number-item" style="font-size: 1rem; color: #888;">非开奖日 / 暂无记录</span>`;
-                        html += `</div></div>`;
-                    }
+                    const is5D = cd.type === '5d' || (!cd.type && cd['1st'] && typeof cd['1st']==='string' && cd['6th'] && !cd['2nd']?.main);
+                    if (is5D) { html += `<div class="subsection"><div class="subsection-title">5D Results</div><div class="number-list">`; ['1st','2nd','3rd','4th','5th','6th'].forEach(k=>{ if(cd[k]) html += `<span class="number-item">${cd[k]}</span>`; }); html += `</div></div>`; rendered = true; }
+                    const is6D = cd.type === '6d' || (!cd.type && cd['1st'] && cd['2nd'] && cd['2nd'].main);
+                    if (is6D) { html += `<div class="subsection"><div class="subsection-title">6D Results</div><div class="number-list">`; if(cd['1st']) html += `<span class="number-item">${cd['1st']}</span>`; ['2nd','3rd','4th','5th'].forEach(k=>{ if(cd[k]) { if(typeof cd[k]==='object'&&cd[k].main) html += `<span class="number-item">${cd[k].main} / ${cd[k].alt}</span>`; else if(typeof cd[k]==='string') html += `<span class="number-item">${cd[k]}</span>`; } }); html += `</div></div>`; rendered = true; }
+                    const winNums = cd.winning_numbers || cd.numbers || cd.results;
+                    if (winNums && Array.isArray(winNums) && winNums.length > 0) { html += `<div class="subsection"><div class="subsection-title">Winning Numbers</div><div class="number-list">`; winNums.forEach(n=>html+=`<span class="number-item">${n}</span>`); html += `</div></div>`; rendered = true; }
+                    ['star','power','supreme'].forEach(f=>{ if(cd[f]&&Array.isArray(cd[f])&&cd[f].length>0){ html += `<div class="subsection"><div class="subsection-title">${f.charAt(0).toUpperCase()+f.slice(1)}</div><div class="number-list">`; cd[f].forEach(n=>html+=`<span class="number-item">${n}</span>`); html += `</div></div>`; rendered = true; }});
+                    ['jackpot','jackpot1','jackpot2'].forEach(f=>{ if(cd[f]&&typeof cd[f]==='string'&&cd[f].trim()!==''){ html += `<div class="subsection"><div class="subsection-title">${f.toUpperCase()}</div><div class="number-list"><span class="number-item" style="font-size:1.2rem;color:#d97706;font-weight:bold;">${cd[f]}</span></div></div>`; rendered = true; }});
+                    const lt6g = Object.keys(cd).filter(k=>k.startsWith('LT6G')&&!k.endsWith('JP')&&cd[k]);
+                    if (lt6g.length > 0) { html += `<div class="subsection"><div class="subsection-title">6D Numbers</div><div class="number-list">`; lt6g.sort().forEach(k=>html+=`<span class="number-item">${cd[k]}</span>`); html += `</div></div>`; rendered = true; }
+                    if (!rendered) html += `<div class="subsection"><div class="subsection-title">Results</div><div class="number-list"><span class="number-item" style="font-size:1rem;color:#888;">非开奖日 / 暂无记录</span></div></div>`;
                 } else {
-                    html += `
-                        <div class="prize-grid">
-                            <div class="prize-card"><div class="label">First Prize</div><div class="number">${companyData['1st'] || '----'}</div></div>
-                            <div class="prize-card"><div class="label">Second Prize</div><div class="number">${companyData['2nd'] || '----'}</div></div>
-                            <div class="prize-card"><div class="label">Third Prize</div><div class="number">${companyData['3rd'] || '----'}</div></div>
-                        </div>
-                    `;
-                    
-                    if (companyData.special || companyData.consolation) {
-                        html += `<div class="subsection">`;
-                        if (companyData.special && companyData.special.length > 0) {
-                            html += `<div class="subsection-title">Special</div><div class="number-list">`;
-                            companyData.special.forEach(num => html += `<span class="number-item">${num}</span>`);
-                            html += `</div>`;
-                        }
-                        if (companyData.consolation && companyData.consolation.length > 0) {
-                            html += `<div class="subsection-title">Consolation</div><div class="number-list">`;
-                            companyData.consolation.forEach(num => html += `<span class="number-item">${num}</span>`);
-                            html += `</div>`;
-                        }
-                        html += `</div>`;
-                    }
+                    html += `<div class="prize-grid"><div class="prize-card"><div class="label">First Prize</div><div class="number">${cd['1st']||'----'}</div></div><div class="prize-card"><div class="label">Second Prize</div><div class="number">${cd['2nd']||'----'}</div></div><div class="prize-card"><div class="label">Third Prize</div><div class="number">${cd['3rd']||'----'}</div></div></div>`;
+                    if (cd.special || cd.consolation) { html += `<div class="subsection">`; if(cd.special&&cd.special.length>0){html+=`<div class="subsection-title">Special</div><div class="number-list">`;cd.special.forEach(n=>html+=`<span class="number-item">${n}</span>`);html+=`</div>`;} if(cd.consolation&&cd.consolation.length>0){html+=`<div class="subsection-title">Consolation</div><div class="number-list">`;cd.consolation.forEach(n=>html+=`<span class="number-item">${n}</span>`);html+=`</div>`;} html += `</div>`; }
                 }
                 html += `</div></div>`;
             });
-
-            if (html === '') {
-                html = '<p style="text-align: center; grid-column: 1/-1; color: #666;">当日暂无开奖数据</p>';
-            }
+            if (html === '') html = '<p style="text-align:center;grid-column:1/-1;color:#666;">当日暂无开奖数据</p>';
             grid.innerHTML = html;
         }
 
-        // ==================== 日历组件逻辑 ====================
-        function updateCalendarButtonToToday() {
-            document.getElementById('calendar-btn').innerText = '📅 选择日历';
-        }
-
+        // 日历逻辑
         function initCalendar() {
-            const popup = document.getElementById('calendar-popup');
-            const btn = document.getElementById('calendar-btn');
-            
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                if (popup.style.display === 'none' || popup.style.display === '') {
-                    popup.style.display = 'block';
-                    renderCalendar();
-                } else {
-                    popup.style.display = 'none';
-                }
-            });
-
-            document.addEventListener('click', (e) => {
-                if (!popup.contains(e.target) && e.target !== btn) {
-                    popup.style.display = 'none';
-                }
-            });
+            const popup = document.getElementById('calendar-popup'), btn = document.getElementById('calendar-btn');
+            btn.addEventListener('click', e => { e.stopPropagation(); if(popup.style.display==='none'||popup.style.display===''){popup.style.display='block'; renderCalendar();} else popup.style.display='none'; });
+            document.addEventListener('click', e => { if(!popup.contains(e.target)&&e.target!==btn) popup.style.display='none'; });
         }
-
         function renderCalendar() {
-            const popup = document.getElementById('calendar-popup');
-            const year = currentCalendarDate.getFullYear();
-            const month = currentCalendarDate.getMonth();
-            
-            const firstDay = new Date(year, month, 1).getDay();
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-            
-            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-            
-            let html = `
-                <div class="calendar-header">
-                    <button class="calendar-nav" onclick="changeCalendarMonth(-1, event)">‹</button>
-                    <span class="calendar-month-year">${monthNames[month]} ${year}</span>
-                    <button class="calendar-nav" onclick="changeCalendarMonth(1, event)">›</button>
-                </div>
-                <table class="calendar-table">
-                    <thead><tr><th>Su</th><th>Mo</th><th>Tu</th><th>We</th><th>Th</th><th>Fr</th><th>Sa</th></tr></thead>
-                    <tbody>
-            `;
-            
+            const popup = document.getElementById('calendar-popup'); const year = currentCalendarDate.getFullYear(), month = currentCalendarDate.getMonth();
+            const firstDay = new Date(year, month, 1).getDay(), daysInMonth = new Date(year, month+1, 0).getDate();
+            const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+            let html = `<div class="calendar-header"><button class="calendar-nav" onclick="changeCalendarMonth(-1,event)">‹</button><span>${monthNames[month]} ${year}</span><button class="calendar-nav" onclick="changeCalendarMonth(1,event)">›</button></div><table class="calendar-table"><thead><tr><th>Su</th><th>Mo</th><th>Tu</th><th>We</th><th>Th</th><th>Fr</th><th>Sa</th></tr></thead><tbody>`;
             let day = 1;
-            for (let i = 0; i < 6; i++) {
-                html += '<tr>';
-                for (let j = 0; j < 7; j++) {
-                    if (i === 0 && j < firstDay) {
-                        html += '<td></td>';
-                    } else if (day > daysInMonth) {
-                        html += '<td></td>';
-                    } else {
-                        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                        const hasData = availableDatesSet.has(dateStr);
-                        const isSelected = dateStr === selectedDate;
-                        let classes = [];
-                        if (hasData) classes.push('has-data');
-                        if (isSelected) classes.push('selected');
-                        
-                        html += `<td class="${classes.join(' ')}" onclick="selectDateFromCalendar('${dateStr}', event)">${day}</td>`;
-                        day++;
-                    }
-                }
-                html += '</tr>';
-                if (day > daysInMonth) break;
-            }
-            
-            html += `</tbody></table>`;
-            popup.innerHTML = html;
+            for (let i=0; i<6; i++) { html += '<tr>'; for(let j=0; j<7; j++){ if(i===0&&j<firstDay){html+='<td></td>';} else if(day>daysInMonth){html+='<td></td>';} else { const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`; const has = availableDatesSet.has(dateStr), sel = dateStr===selectedDate; html += `<td class="${has?'has-data':''} ${sel?'selected':''}" onclick="selectDateFromCalendar('${dateStr}',event)">${day}</td>`; day++; } } html += '</tr>'; if(day>daysInMonth) break; }
+            popup.innerHTML = html + `</tbody></table>`;
         }
+        window.changeCalendarMonth = (delta, e) => { if(e) e.stopPropagation(); currentCalendarDate.setMonth(currentCalendarDate.getMonth()+delta); renderCalendar(); };
+        window.selectDateFromCalendar = (str, e) => { if(e) e.stopPropagation(); if(!availableDatesSet.has(str)) return; selectedDate = str; isFallbackMode = false; document.getElementById('fallback-banner').style.display='none'; document.getElementById('calendar-popup').style.display='none'; updateDateBtnWithLatest(); renderDateDropdown(); fetchAndRenderData(str); };
 
-        window.changeCalendarMonth = function(delta, event) {
-            if (event) event.stopPropagation();
-            currentCalendarDate.setMonth(currentCalendarDate.getMonth() + delta);
-            renderCalendar();
-        }
-
-        window.selectDateFromCalendar = function(dateStr, event) {
-            if (event) event.stopPropagation();
-            if (!availableDatesSet.has(dateStr)) return;
-            selectedDate = dateStr;
-            isFallbackMode = false;
-            document.getElementById('fallback-banner').style.display = 'none';
-            document.getElementById('calendar-popup').style.display = 'none';
-            updateDateBtnWithLatest();
-            renderDateDropdown();
-            fetchAndRenderData(dateStr);
-        }
-
-        // ==================== 初始化启动 ====================
+        // 初始化
         document.addEventListener('DOMContentLoaded', () => {
             initCalendar();
-            
-            // 检查本地存储的暗黑模式并应用
-            const darkModeBtn = document.getElementById('dark-mode-btn');
-            if (localStorage.getItem('darkMode') === 'enabled') {
-                document.body.classList.add('dark-mode');
-                darkModeBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>';
-            }
-
-            // 绑定幸运号码滚动逻辑
-            const spinBtn = document.getElementById('spin-btn');
-            spinBtn.addEventListener('click', () => {
-                spinBtn.disabled = true;
-                let count = 0;
-                const interval = setInterval(() => {
-                    document.getElementById('digit1').innerText = Math.floor(Math.random() * 10);
-                    document.getElementById('digit2').innerText = Math.floor(Math.random() * 10);
-                    document.getElementById('digit3').innerText = Math.floor(Math.random() * 10);
-                    document.getElementById('digit4').innerText = Math.floor(Math.random() * 10);
-                    count++;
-                    if (count > 15) { clearInterval(interval); spinBtn.disabled = false; }
-                }, 80);
-            });
-
-            // 点击弹窗背景关闭弹窗
-            document.querySelectorAll('.modal-overlay').forEach(overlay => {
-                overlay.addEventListener('click', (e) => { 
-                    if (e.target === overlay) overlay.style.display = 'none'; 
-                });
-            });
-
+            if (localStorage.getItem('darkMode')==='enabled') { document.body.classList.add('dark-mode'); document.getElementById('dark-mode-btn').innerHTML = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>'; }
+            document.getElementById('spin-btn').addEventListener('click', () => { const btn = document.getElementById('spin-btn'); btn.disabled = true; let c = 0; const int = setInterval(()=>{ document.getElementById('digit1').innerText=Math.floor(Math.random()*10); document.getElementById('digit2').innerText=Math.floor(Math.random()*10); document.getElementById('digit3').innerText=Math.floor(Math.random()*10); document.getElementById('digit4').innerText=Math.floor(Math.random()*10); c++; if(c>15){clearInterval(int);btn.disabled=false;} },80); });
+            document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if(e.target===o) o.style.display='none'; }));
             loadDateIndex();
         });
     </script>
