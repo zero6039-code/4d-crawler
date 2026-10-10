@@ -44,7 +44,7 @@
         h1 { font-size: 2.2rem; font-weight: 800; text-align: center; margin-bottom: 15px; background: linear-gradient(135deg, #0b1c2f, #2c3e50); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1px; }
         body.dark-mode h1 { background: linear-gradient(135deg, #e2e8f0, #a0aec0); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .top-calendar { display: flex; justify-content: center; margin-bottom: 15px; position: relative; }
-        .bottom-row { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; position: relative; }
+        .bottom-row { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; position: relative; }
         .date-dropdown { position: relative; display: inline-block; }
         .date-btn { background: #ffffffcc; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.8); border-radius: 25px; padding: 8px 20px; font-size: 1rem; font-weight: 500; color: #2c3e50; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: all 0.2s; }
         .date-btn:hover { background: #ffffff; box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
@@ -56,8 +56,102 @@
         .date-option:hover { background: #f0f2f5; }
         .date-option.active { background: #e6f0ff; color: #3182ce; font-weight: 600; }
         .loading-history { text-align: center; padding: 20px; color: #7c8b9c; }
-        .refresh-btn { background: linear-gradient(135deg, #3182ce, #2c5282); color: white; border: none; padding: 8px 18px; border-radius: 25px; cursor: pointer; font-size: 1rem; font-weight: 600; transition: all 0.2s; box-shadow: 0 2px 8px rgba(49,130,206,0.3); line-height: 1.4; }
-        .refresh-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(49,130,206,0.4); }
+        
+        /* ========== 重新设计的按钮样式（现代、高级、统一） ========== */
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+            color: white;
+            letter-spacing: 0.3px;
+        }
+        .action-btn svg {
+            width: 18px;
+            height: 18px;
+            stroke: currentColor;
+            stroke-width: 2.2;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            transition: transform 0.2s;
+        }
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+        }
+        .action-btn:active {
+            transform: translateY(0);
+        }
+        
+        /* 按钮各自的配色 */
+        .refresh-btn { background: linear-gradient(135deg, #4f46e5, #4338ca); }
+        .refresh-btn:hover { background: linear-gradient(135deg, #4338ca, #3730a3); }
+        .refresh-btn svg { transition: transform 0.4s ease; }
+        .refresh-btn:hover svg { transform: rotate(180deg); }
+
+        .lucky-btn { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .lucky-btn:hover { background: linear-gradient(135deg, #d97706, #b45309); }
+        
+        .donate-btn { background: linear-gradient(135deg, #10b981, #059669); }
+        .donate-btn:hover { background: linear-gradient(135deg, #059669, #047857); }
+        
+        .apk-btn { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .apk-btn:hover { background: linear-gradient(135deg, #2563eb, #1d4ed8); }
+        
+        /* 暗黑模式下的按钮适配 */
+        body.dark-mode .action-btn {
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3);
+        }
+        body.dark-mode .action-btn:hover {
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.4);
+        }
+        body.dark-mode .refresh-btn { background: linear-gradient(135deg, #6366f1, #4f46e5); }
+        body.dark-mode .lucky-btn { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #1a202c; }
+        body.dark-mode .donate-btn { background: linear-gradient(135deg, #34d399, #10b981); color: #1a202c; }
+        body.dark-mode .apk-btn { background: linear-gradient(135deg, #60a5fa, #3b82f6); }
+
+        .dark-mode-btn {
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            padding: 10px;
+            color: #4a5568;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .dark-mode-btn svg {
+            width: 22px;
+            height: 22px;
+            stroke: currentColor;
+            stroke-width: 2;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        .dark-mode-btn:hover {
+            transform: scale(1.1);
+            color: #1a202c;
+        }
+        body.dark-mode .dark-mode-btn {
+            color: #e2e8f0;
+        }
+        body.dark-mode .dark-mode-btn:hover {
+            color: #fbbf24;
+        }
+
+        /* ==================== 日历样式 ==================== */
         .calendar-btn { background: #ffffffcc; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.8); border-radius: 25px; padding: 8px 20px; font-size: 1rem; font-weight: 500; color: #2c3e50; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: all 0.2s; }
         .calendar-btn:hover { background: #ffffff; box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
         .calendar-popup { position: absolute; background: white; border-radius: 20px; box-shadow: 0 12px 30px rgba(0,0,0,0.2); padding: 16px; z-index: 2000; width: 320px; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 8px; border: 1px solid #e2e8f0; backdrop-filter: blur(4px); }
@@ -124,50 +218,14 @@
             body.dark-mode .company-section .company-content .number-list .number-item { background: #1a202c !important; border-color: #4a5568 !important; color: #e2e8f0 !important; }
             .custom-table { font-size: 0.9rem; }
             .custom-table td { font-size: 0.9rem; }
+            .action-btn { padding: 8px 14px; font-size: 0.85rem; }
+            .action-btn svg { width: 16px; height: 16px; }
         }
         .company-section[data-company="damacai"] .company-title { background: linear-gradient(145deg, #1e5620, #2a7a2d); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .company-section[data-company="magnum"] .company-title { background: linear-gradient(145deg, #aa4a1e, #c95f2a); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .company-section[data-company="toto"] .company-title { background: linear-gradient(145deg, #b71c1c, #d32f2f); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .company-section[data-company="singapore"] .company-title { background: linear-gradient(145deg, #1e4a6b, #2c6b96); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .jackpot-label { font-weight: 600; margin: 4px 0 2px 0; color: #2c3e50; font-size: 0.95rem; }
-
-        .refresh-btn, .lucky-btn, .donate-btn, .apk-btn, .date-btn, .calendar-btn { box-shadow: 0 2px 8px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.05); transition: all 0.2s; }
-        .refresh-btn:hover, .lucky-btn:hover, .donate-btn:hover, .apk-btn:hover, .date-btn:hover, .calendar-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.15); }
-        body.dark-mode .refresh-btn, body.dark-mode .lucky-btn, body.dark-mode .donate-btn, body.dark-mode .apk-btn, body.dark-mode .date-btn, body.dark-mode .calendar-btn { box-shadow: 0 0 8px 2px rgba(255,255,200,0.5), 0 2px 8px rgba(0,0,0,0.3); }
-
-        .lucky-btn, .dark-mode-btn { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border: none; padding: 8px 18px; border-radius: 25px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s; line-height: 1.4; display: inline-flex; align-items: center; gap: 6px; }
-        .lucky-btn .emoji { font-size: 1.3rem; }
-        .dark-mode-btn { background: transparent !important; border: none !important; box-shadow: none !important; padding: 8px 12px !important; font-size: 1.4rem !important; color: #2c3e50 !important; }
-        body.dark-mode .dark-mode-btn { color: #e2e8f0 !important; }
-        .donate-btn { background: linear-gradient(135deg, #10b981, #059669); color: white; margin-left: 8px; padding: 8px 22px; font-size: 1.1rem; display: inline-flex; align-items: center; gap: 8px; }
-        .donate-btn .emoji { font-size: 1.3rem; }
-        .apk-btn { background: linear-gradient(135deg, #3b82f6, #1e4a6b); color: white; margin-left: 8px; padding: 8px 22px; font-size: 1rem; display: inline-flex; align-items: center; gap: 6px; }
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 3000; align-items: center; justify-content: center; }
-        .modal-content { background: white; border-radius: 32px; padding: 25px 20px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.2); text-align: center; border: 1px solid rgba(255,255,255,0.3); }
-        .modal-title { font-size: 1.8rem; font-weight: 800; color: #f59e0b; margin-bottom: 20px; }
-        .lucky-digits { display: flex; justify-content: center; gap: 15px; margin: 20px 0; }
-        .lucky-digit-box { width: 70px; height: 90px; background: linear-gradient(145deg, #f3f4f6, #e5e7eb); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 3.5rem; font-weight: 800; color: #c62828; font-family: 'Courier New', monospace; box-shadow: inset 0 -3px 0 rgba(0,0,0,0.1), 0 8px 16px rgba(0,0,0,0.1); border: 2px solid white; }
-        .modal-buttons { display: flex; justify-content: center; gap: 15px; margin-top: 20px; }
-        .spin-btn, .close-modal-btn { padding: 12px 25px; border: none; border-radius: 30px; font-weight: 600; font-size: 1.1rem; cursor: pointer; transition: all 0.2s; }
-        .spin-btn { background: #f59e0b; color: white; box-shadow: 0 4px 12px rgba(245,158,11,0.3); }
-        .spin-btn:hover { background: #d97706; transform: scale(1.05); }
-        .close-modal-btn { background: #e2e8f0; color: #2d3748; }
-        .close-modal-btn:hover { background: #cbd5e0; }
-        .spin-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
-        .donate-modal .modal-content { max-width: 350px; }
-        .donate-note { color: #4b5563; font-size: 0.95rem; margin-top: 15px; white-space: pre-line; line-height: 1.6; }
-        .contact-email { margin-top: 15px; color: #4b5563; font-size: 0.9rem; }
-        .apk-download-link { display: inline-block; background: #3b82f6; color: white; padding: 12px 30px; border-radius: 30px; font-weight: 600; font-size: 1.2rem; text-decoration: none; margin: 15px 0; box-shadow: 0 4px 12px rgba(59,130,246,0.3); transition: all 0.2s; }
-        .apk-download-link:hover { background: #1e4a6b; transform: scale(1.05); }
-        .apk-note { color: #4b5563; font-size: 0.9rem; margin: 5px 0; white-space: pre-line; }
-        .company-section { padding: 12px 10px !important; }
-        .prize-grid { margin: 6px 0 8px !important; }
-        .prize-card { padding: 6px 8px !important; min-width: 70px; }
-        .subsection { padding: 8px 8px !important; margin-top: 10px !important; }
-        .company-title { font-size: 1.4rem !important; margin-bottom: 2px !important; }
-        .company-title img { max-height: 2.8rem !important; width: auto; }
-        .draw-date { font-size: 0.7rem !important; margin-bottom: 4px !important; }
 
         .fallback-banner {
             display: none;
@@ -206,11 +264,31 @@
                         <div class="loading-history">🔄 加载历史数据...</div>
                     </div>
                 </div>
-                <button class="refresh-btn" id="refresh-btn" onclick="forceRefresh()">Refresh</button>
-                <button class="lucky-btn" id="lucky-btn"><span class="emoji" aria-hidden="true">🎰</span> Lucky Number</button>
-                <button class="donate-btn" id="donate-btn"><span class="emoji" aria-hidden="true">❤️</span> Support</button>
-                <button class="apk-btn" id="apk-btn">📦 APK ⬇️</button>
-                <button class="dark-mode-btn" id="dark-mode-btn" aria-label="Toggle Dark Mode">🌙</button>
+                
+                <!-- 使用 SVG 图标替代 Emoji 的现代按钮 -->
+                <button class="action-btn refresh-btn" id="refresh-btn" onclick="forceRefresh()">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
+                    Refresh
+                </button>
+                
+                <button class="action-btn lucky-btn" id="lucky-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
+                    Lucky Number
+                </button>
+                
+                <button class="action-btn donate-btn" id="donate-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                    Support
+                </button>
+                
+                <button class="action-btn apk-btn" id="apk-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                    APK
+                </button>
+                
+                <button class="dark-mode-btn" id="dark-mode-btn" aria-label="Toggle Dark Mode">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                </button>
             </section>
         </header>
 
@@ -355,7 +433,6 @@
 
             const popup = document.getElementById('calendar-popup');
             const btn = document.getElementById('calendar-btn');
-            // 确保点击日历内部或按钮时不关闭日历
             if (popup.contains(event.target) || btn.contains(event.target)) {
                 return;
             }
@@ -535,7 +612,6 @@
                 if (isSpecial) {
                     let rendered = false;
 
-                    // ====== 专门针对 SPORTS TOTO 5D 的处理 ======
                     const is5D = companyData.type === '5d' || (!companyData.type && companyData['1st'] && typeof companyData['1st'] === 'string' && companyData['6th'] && !companyData['2nd']?.main);
                     if (is5D) {
                         html += `<div class="subsection"><div class="subsection-title">5D Results</div><div class="number-list">`;
@@ -546,7 +622,6 @@
                         rendered = true;
                     }
 
-                    // ====== 专门针对 SPORTS TOTO 6D 的处理 ======
                     const is6D = companyData.type === '6d' || (!companyData.type && companyData['1st'] && companyData['2nd'] && companyData['2nd'].main);
                     if (is6D) {
                         html += `<div class="subsection"><div class="subsection-title">6D Results</div><div class="number-list">`;
@@ -564,7 +639,6 @@
                         rendered = true;
                     }
 
-                    // ====== 通用处理逻辑 ======
                     const winNumbers = companyData.winning_numbers || companyData.numbers || companyData.results;
                     if (winNumbers && Array.isArray(winNumbers) && winNumbers.length > 0) {
                         const title = companyData.winning_numbers ? 'Winning Numbers' : 'Results';
@@ -720,13 +794,13 @@
         }
 
         window.changeCalendarMonth = function(delta, event) {
-            if (event) event.stopPropagation(); // 关键修复：阻止事件冒泡，防止日历被意外关闭
+            if (event) event.stopPropagation();
             currentCalendarDate.setMonth(currentCalendarDate.getMonth() + delta);
             renderCalendar();
         }
 
         window.selectDateFromCalendar = function(dateStr, event) {
-            if (event) event.stopPropagation(); // 阻止事件冒泡，防止干扰
+            if (event) event.stopPropagation();
             if (!availableDatesSet.has(dateStr)) return;
             selectedDate = dateStr;
             isFallbackMode = false;
@@ -759,13 +833,15 @@
             darkModeBtn.addEventListener('click', () => {
                 document.body.classList.toggle('dark-mode');
                 const isDark = document.body.classList.contains('dark-mode');
-                darkModeBtn.innerText = isDark ? '☀️' : '🌙';
+                darkModeBtn.innerHTML = isDark 
+                    ? '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>'
+                    : '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>';
                 localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
             });
 
             if (localStorage.getItem('darkMode') === 'enabled') {
                 document.body.classList.add('dark-mode');
-                darkModeBtn.innerText = '☀️';
+                darkModeBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>';
             }
 
             const spinBtn = document.getElementById('spin-btn');
