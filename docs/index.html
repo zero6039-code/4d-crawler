@@ -168,6 +168,25 @@
         .company-title { font-size: 1.4rem !important; margin-bottom: 2px !important; }
         .company-title img { max-height: 2.8rem !important; width: auto; }
         .draw-date { font-size: 0.7rem !important; margin-bottom: 4px !important; }
+
+        /* 新增：回退提示横幅样式 */
+        .fallback-banner {
+            display: none;
+            background: #fef3c7;
+            color: #92400e;
+            padding: 10px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: 500;
+            font-size: 0.95rem;
+            border: 1px solid #fcd34d;
+        }
+        body.dark-mode .fallback-banner {
+            background: #78350f;
+            color: #fef3c7;
+            border-color: #b45309;
+        }
     </style>
 </head>
 <body>
@@ -195,6 +214,9 @@
                 <button class="dark-mode-btn" id="dark-mode-btn" aria-label="Toggle Dark Mode">🌙</button>
             </section>
         </header>
+
+        <!-- 提示横幅 -->
+        <div id="fallback-banner" class="fallback-banner"></div>
 
         <main id="companies-grid" class="companies-grid" aria-live="polite">
             <p style="text-align: center; grid-column: 1/-1; color: #666;">🔄 正在加载数据...</p>
@@ -227,7 +249,7 @@
         </div>
     </div>
 
-    <!-- 打赏弹窗 (已移除 tng_qr.jpg 图片) -->
+    <!-- 打赏弹窗 -->
     <div class="modal-overlay" id="donate-modal" role="dialog" aria-modal="true" aria-labelledby="donate-modal-title">
         <div class="modal-content donate-modal">
             <p class="donate-note" id="donate-modal-title">Please use TNG to scan for support. Your support is my motivation to update. The amount does not need to be much. Please verify name with LOW KEAN WAH. Thank you ❤️</p>
@@ -285,6 +307,7 @@
         let availableDatesSet = new Set(); 
         let selectedDate = null;
         let currentCalendarDate = new Date();
+        let isFallbackMode = false; // 是否是自动回退模式
 
         // ==================== 日期工具函数 ====================
         function ymdToDmy(ymd) {
@@ -325,7 +348,6 @@
             document.getElementById('date-btn').classList.toggle('active');
         }
 
-        // 点击外部关闭下拉框
         document.addEventListener('click', function(event) {
             const dropdown = document.getElementById('date-dropdown');
             if (!dropdown.contains(event.target)) {
@@ -345,7 +367,7 @@
                     availableDatesSet = new Set(availableDates);
                     
                     if (availableDates.length > 0) {
-                        selectedDate = availableDates[0]; // 默认选最新日期
+                        selectedDate = availableDates[0];
                     } else {
                         selectedDate = null;
                     }
@@ -381,6 +403,8 @@
 
         window.selectDate = function(date) {
             selectedDate = date;
+            isFallbackMode = false; // 手动选择时退出回退模式
+            document.getElementById('fallback-banner').style.display = 'none'; // 隐藏提示
             renderDateDropdown();
             updateDateBtnWithLatest();
             document.getElementById('date-dropdown').classList.remove('show');
@@ -393,7 +417,11 @@
         }
 
         window.forceRefresh = function() {
-            if (selectedDate) fetchAndRenderData(selectedDate, true);
+            if (selectedDate) {
+                isFallbackMode = false;
+                document.getElementById('fallback-banner').style.display = 'none';
+                fetchAndRenderData(selectedDate, true);
+            }
         }
 
         function updateStatus(type, text, updateTime = null) {
@@ -407,20 +435,16 @@
             if (updateTime) timeSpan.innerText = updateTime;
         }
 
-        // 核心：并发抓取所有公司数据（修复路径匹配问题）
+        // 核心：并发抓取所有公司数据，并支持自动回退
         async function fetchAndRenderData(dateStr, isRefresh = false) {
             const grid = document.getElementById('companies-grid');
             grid.innerHTML = '<p style="text-align: center; grid-column: 1/-1; color: #666;">🔄 正在加载数据...</p>';
             updateStatus('loading', '正在加载...');
 
-            // 判断是不是最新日期（最新数据在根目录，历史数据在日期文件夹）
             const isLatest = availableDates.length > 0 && dateStr === availableDates[0];
             
             const fetchPromises = COMPANY_LIST.map(async (companyKey) => {
                 if (HIDDEN_COMPANIES.includes(companyKey)) return { key: companyKey, data: null };
-                
-                // 历史数据：data/2026-10-09/grand_dragon.json
-                // 最新数据：data/grand_dragon.json
                 const basePath = isLatest ? `data` : `data/${dateStr}`;
                 const url = `${basePath}/${companyKey}.json?t=${Date.now()}`;
                 
@@ -436,16 +460,60 @@
 
             const results = await Promise.all(fetchPromises);
             const dataMap = {};
-            results.forEach(item => { if (item.data) dataMap[item.key] = item.data; });
+            let validCount = 0;
 
-            renderCompanies(dataMap);
+            results.forEach(item => { 
+                if (item.data) {
+                    // 简单判断是否有真实数据（比如是不是空数组、是否缺少关键字段）
+                    let hasData = false;
+                    if (item.data['1st'] && item.data['1st'].trim() !== '') hasData = true;
+                    if (item.data.winning_numbers && item.data.winning_numbers.length > 0) hasData = true;
+                    if (item.data.star && item.data.star.length > 0) hasData = true;
+                    
+                    if (hasData) {
+                        dataMap[item.key] = item.data; 
+                        validCount++;
+                    }
+                }
+            });
+
+            // 如果没有任何有效数据，并且当前不是回退模式，尝试回退
+            if (validCount === 0 && !isFallbackMode && availableDates.length > 1) {
+                const currentIndex = availableDates.indexOf(dateStr);
+                // 如果不是最后一天，就找下一个
+                if (currentIndex >= 0 && currentIndex + 1 < availableDates.length) {
+                    const fallbackDate = availableDates[currentIndex + 1];
+                    
+                    // 显示横幅提示
+                    const banner = document.getElementById('fallback-banner');
+                    banner.innerHTML = `⚠️ <b>${formatDisplayDate(dateStr)}</b> 暂无开奖数据，已自动为您显示 <b>${formatDisplayDate(fallbackDate)}</b> 的最新成绩。`;
+                    banner.style.display = 'block';
+                    
+                    isFallbackMode = true;
+                    // 改变按钮显示，虽然已回退，但 UI 还是显示用户选的日期
+                    // selectedDate = fallbackDate; // 这一步会改变下拉框高亮，不建议在此处改
+                    
+                    // 递归调用自身，获取回退日期的数据
+                    await fetchAndRenderData(fallbackDate, true);
+                    return;
+                }
+            }
+
+            if (validCount === 0) {
+                // 如果回退后依然没有数据，说明历史数据也挂了
+                grid.innerHTML = '<p style="text-align: center; grid-column: 1/-1; color: #e53e3e;">❌ 目前暂无任何可用的开奖数据，请稍后再试。</p>';
+                updateStatus('error', '加载失败');
+                return;
+            }
+
+            renderCompanies(dataMap, dateStr);
             
             const now = new Date();
             const timeStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
             updateStatus('success', '加载完成', timeStr);
         }
 
-        // 根据你的 JSON 结构渲染卡片
+        // 根据你的 JSON 结构智能渲染卡片
         function renderCompanies(dataMap) {
             const grid = document.getElementById('companies-grid');
             let html = '';
@@ -470,15 +538,54 @@
                 `;
 
                 if (isSpecial) {
-                    html += `<div class="subsection"><div class="subsection-title">Results</div><div class="number-list">`;
-                    if (companyData.jackpot) {
-                        html += `<span class="number-item">${companyData.jackpot}</span>`;
-                    } else if (companyData.numbers) {
-                        companyData.numbers.forEach(num => html += `<span class="number-item">${num}</span>`);
-                    } else {
-                        html += `<span class="number-item">暂无</span>`;
+                    let rendered = false;
+
+                    const winNumbers = companyData.winning_numbers || companyData.numbers || companyData.results;
+                    if (winNumbers && Array.isArray(winNumbers) && winNumbers.length > 0) {
+                        const title = companyData.winning_numbers ? 'Winning Numbers' : 'Results';
+                        html += `<div class="subsection"><div class="subsection-title">${title}</div><div class="number-list">`;
+                        winNumbers.forEach(num => html += `<span class="number-item">${num}</span>`);
+                        html += `</div></div>`;
+                        rendered = true;
                     }
-                    html += `</div></div>`;
+
+                    const arrayFields = ['star', 'power', 'supreme'];
+                    arrayFields.forEach(field => {
+                        if (companyData[field] && Array.isArray(companyData[field]) && companyData[field].length > 0) {
+                            const title = field.charAt(0).toUpperCase() + field.slice(1);
+                            html += `<div class="subsection"><div class="subsection-title">${title}</div><div class="number-list">`;
+                            companyData[field].forEach(num => html += `<span class="number-item">${num}</span>`);
+                            html += `</div></div>`;
+                            rendered = true;
+                        }
+                    });
+
+                    const jackpotFields = ['jackpot', 'jackpot1', 'jackpot2'];
+                    jackpotFields.forEach(field => {
+                        if (companyData[field] && typeof companyData[field] === 'string' && companyData[field].trim() !== '') {
+                            const title = field.replace(/([0-9])/g, ' $1').toUpperCase();
+                            html += `<div class="subsection"><div class="subsection-title">${title}</div><div class="number-list">`;
+                            html += `<span class="number-item" style="font-size: 1.2rem; color: #d97706; font-weight: bold;">${companyData[field]}</span>`;
+                            html += `</div></div>`;
+                            rendered = true;
+                        }
+                    });
+
+                    const lt6gKeys = Object.keys(companyData).filter(k => k.startsWith('LT6G') && !k.endsWith('JP') && companyData[k]);
+                    if (lt6gKeys.length > 0) {
+                        html += `<div class="subsection"><div class="subsection-title">6D Numbers</div><div class="number-list">`;
+                        lt6gKeys.sort().forEach(k => {
+                            html += `<span class="number-item">${companyData[k]}</span>`;
+                        });
+                        html += `</div></div>`;
+                        rendered = true;
+                    }
+
+                    if (!rendered) {
+                        html += `<div class="subsection"><div class="subsection-title">Results</div><div class="number-list">`;
+                        html += `<span class="number-item" style="font-size: 1rem; color: #888;">非开奖日 / 暂无记录</span>`;
+                        html += `</div></div>`;
+                    }
                 } else {
                     html += `
                         <div class="prize-grid">
@@ -595,6 +702,8 @@
         window.selectDateFromCalendar = function(dateStr) {
             if (!availableDatesSet.has(dateStr)) return;
             selectedDate = dateStr;
+            isFallbackMode = false;
+            document.getElementById('fallback-banner').style.display = 'none';
             document.getElementById('calendar-popup').style.display = 'none';
             updateDateBtnWithLatest();
             renderDateDropdown();
