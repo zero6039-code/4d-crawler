@@ -16,15 +16,37 @@ function toggleDarkMode() {
     }
 }
 
+// ==================== 注入 TOTO 专属布局样式 ====================
+const totoStyles = `
+    .toto-5d-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 8px; }
+    .toto-5d-col { background: rgba(255,255,255,0.8); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+    body.dark-mode .toto-5d-col { background: rgba(15,23,42,0.8); }
+    .toto-5d-col .label { font-size: 0.75rem; color: #5f6b7a; font-weight: 600; text-transform: uppercase; }
+    body.dark-mode .toto-5d-col .label { color: #94a3b8; }
+    .toto-5d-col .num { font-size: 1.25rem; font-weight: 800; color: #c62828; font-family: 'Courier New', monospace; word-break: break-all; }
+    body.dark-mode .toto-5d-col .num { color: #fbbf24; }
+    
+    .toto-6d-grid { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 8px; }
+    .toto-6d-row { display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.8); border-radius: 12px; padding: 8px 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); flex-wrap: wrap; gap: 6px; }
+    body.dark-mode .toto-6d-row { background: rgba(15,23,42,0.8); }
+    .toto-6d-row .label { font-size: 0.85rem; color: #5f6b7a; font-weight: 600; width: 40px; }
+    body.dark-mode .toto-6d-row .label { color: #94a3b8; }
+    .toto-6d-row .main-num { font-size: 1.1rem; font-weight: 800; color: #c62828; font-family: 'Courier New', monospace; }
+    body.dark-mode .toto-6d-row .main-num { color: #fbbf24; }
+    .toto-6d-row .alt-num { font-size: 1.1rem; font-weight: 800; color: #c62828; font-family: 'Courier New', monospace; }
+    body.dark-mode .toto-6d-row .alt-num { color: #fbbf24; }
+    .toto-6d-row .or-text { font-size: 0.8rem; color: #94a3b8; margin: 0 4px; }
+`;
+const styleSheet = document.createElement("style");
+styleSheet.textContent = totoStyles;
+document.head.appendChild(styleSheet);
+
 // ==================== 常量定义 ====================
-// 【已按照你的要求调整顺序】：
-// SINGAPORE 4D -> GRAND DRAGON -> Perdana -> Lucky HariHari -> SANDAKAN
-// DAMACAI 1+3D 放在 SABAH 88 4D 后面
 const COMPANY_LIST = [
     'damacai', 'magnum', 'toto', 'singapore', 
-    'grand_dragon', 'perdana4d', 'lucky_hari', // 新增的 2 个卡片
+    'grand_dragon', 'perdana4d', 'lucky_hari', 
     'sandakan', 'sarawak_cashsweep', 
-    'sabah', 'damacai_1p3d', // DAMACAI 1+3D 已移到 SABAH 后面
+    'sabah', 'damacai_1p3d', 
     'sabah_lotto', 'singapore_toto', 'sportstoto_lotto',
     'magnum_jackpot_gold', 'sportstoto_5d', 'sportstoto_6d',
     'magnum_life', 'sportstoto_fireball'
@@ -37,12 +59,10 @@ const NAME_MAP = {
     'sabah_lotto': 'SABAH LOTTO', 'singapore_toto': 'SINGAPORE TOTO', 'sportstoto_lotto': 'SPORTS TOTO LOTTO',
     'magnum_jackpot_gold': 'MAGNUM JACKPOT GOLD', 'sportstoto_5d': 'SPORTS TOTO 5D',
     'sportstoto_6d': 'SPORTS TOTO 6D', 'magnum_life': 'MAGNUM LIFE', 'sportstoto_fireball': 'SPORTS TOTO FIREBALL',
-    // 新增公司的名称
     'perdana4d': 'PERDANA LOTTERY 4D',
     'lucky_hari': 'LUCKY HARIHARI 天天好运'
 };
 
-// 注意：这里仅作为普通 4D 公司，如果你的新公司需要特殊渲染，请加入到 SPECIAL_COMPANIES 中
 const SPECIAL_COMPANIES = ['sportstoto_fireball', 'singapore_toto', 'magnum_jackpot_gold', 'sportstoto_5d', 'sportstoto_6d', 'magnum_life', 'sportstoto_lotto', 'sabah_lotto'];
 const HIDDEN_COMPANIES = ['sportstoto_fireball'];
 
@@ -51,7 +71,6 @@ const COMPANY_IMAGE_MAP = {
     'sarawak_cashsweep': 'sarawak.png', 'sabah': 'sabah88.png', 'sabah_lotto': 'sabahlotto.png',
     'grand_dragon': 'granddragon.png', 'magnum': 'magnum.png', 'toto': 'toto.png',
     'singapore': 'singapore4d.png', 'singapore_toto': 'singapore-pools.png',
-    // 新增公司的 Logo
     'perdana4d': 'Perdana4D.png',
     'lucky_hari': 'luckly_hari.png'
 };
@@ -145,29 +164,24 @@ async function fetchAndRenderData(dateStr, isRefresh = false) {
         if (item.data) {
             let hasData = false;
             
-            // 1. 检查主要号码字段 (1st, 2nd, 3rd)
             ['1st', '2nd', '3rd'].forEach(f => {
                 if (item.data[f] && typeof item.data[f] === 'string' && item.data[f].trim() !== '') hasData = true;
             });
             
-            // 2. 检查数组类字段 (special, consolation, winning_numbers, star, power, supreme)
             ['special', 'consolation', 'winning_numbers', 'star', 'power', 'supreme'].forEach(f => {
                 if (item.data[f] && Array.isArray(item.data[f]) && item.data[f].some(n => n && n.trim() !== '' && n.trim() !== '****')) hasData = true;
             });
 
-            // 3. 检查 jackpot 类字段
             ['jackpot', 'jackpot1', 'jackpot2'].forEach(f => {
                 if (item.data[f] && typeof item.data[f] === 'string' && item.data[f].trim() !== '') hasData = true;
             });
 
-            // 4. 检查 6D 特殊结构字段 (例如 cd['2nd'].main 存在)
             if (item.data['2nd'] && typeof item.data['2nd'] === 'object' && item.data['2nd'].main) hasData = true;
 
             if (hasData) { dataMap[item.key] = item.data; validCount++; }
         }
     });
 
-    // 自动回退逻辑
     if (validCount === 0 && !isFallbackMode && availableDates.length > 1) {
         const idx = availableDates.indexOf(dateStr);
         if (idx >= 0 && idx + 1 < availableDates.length) {
@@ -205,32 +219,48 @@ function renderCompanies(dataMap) {
         
         if (isSpecial) {
             let rendered = false;
-            // 优化 5D 判断
+            
+            // ====== 5D 专属布局 ======
             const is5D = cd.type === '5d' || (!cd.type && cd['6th'] && (!cd['2nd'] || typeof cd['2nd'] === 'string'));
-            if (is5D) { 
-                html += `<div class="subsection"><div class="subsection-title">5D Results</div><div class="number-list">`; 
-                ['1st','2nd','3rd','4th','5th','6th'].forEach(k=>{ 
-                    if(cd[k] && cd[k].trim() !== '') html += `<span class="number-item">${cd[k]}</span>`; 
-                }); 
-                html += `</div></div>`; 
-                rendered = true; 
+            if (is5D) {
+                html += `<div class="subsection"><div class="subsection-title">5D Results</div><div class="toto-5d-grid">`;
+                const groups = [['1st', '4th'], ['2nd', '5th'], ['3rd', '6th']];
+                groups.forEach(g => {
+                    html += `<div class="toto-5d-col">`;
+                    if (cd[g[0]]) html += `<div><div class="label">${g[0]}</div><div class="num">${cd[g[0]]}</div></div>`;
+                    if (cd[g[1]]) html += `<div><div class="label">${g[1]}</div><div class="num">${cd[g[1]]}</div></div>`;
+                    html += `</div>`;
+                });
+                html += `</div></div>`;
+                rendered = true;
             }
             
-            // 优化 6D 判断
+            // ====== 6D 专属布局 ======
             const is6D = cd.type === '6d' || (!cd.type && cd['2nd'] && cd['2nd'].main);
-            if (is6D) { 
-                html += `<div class="subsection"><div class="subsection-title">6D Results</div><div class="number-list">`; 
-                if(cd['1st'] && cd['1st'].trim() !== '') html += `<span class="number-item">${cd['1st']}</span>`; 
-                ['2nd','3rd','4th','5th'].forEach(k=>{ 
-                    if(cd[k]) { 
-                        if(typeof cd[k]==='object'&&cd[k].main) html += `<span class="number-item">${cd[k].main} / ${cd[k].alt}</span>`; 
-                        else if(typeof cd[k]==='string' && cd[k].trim() !== '') html += `<span class="number-item">${cd[k]}</span>`; 
-                    } 
-                }); 
-                html += `</div></div>`; 
-                rendered = true; 
+            if (is6D) {
+                html += `<div class="subsection"><div class="subsection-title">6D Results</div><div class="toto-6d-grid">`;
+                if (cd['1st']) {
+                    html += `<div class="toto-6d-row"><span class="label">1st</span><span class="main-num">${cd['1st']}</span><span style="flex:1;"></span></div>`;
+                }
+                ['2nd','3rd','4th','5th'].forEach(k => {
+                    if (cd[k]) {
+                        let main = (typeof cd[k] === 'object' && cd[k].main) ? cd[k].main : '----';
+                        let alt = (typeof cd[k] === 'object' && cd[k].alt) ? cd[k].alt : '----';
+                        if (main === '----' && alt === '----') return;
+                        html += `<div class="toto-6d-row"><span class="label">${k}</span>`;
+                        html += `<span class="main-num">${main}</span>`;
+                        if (alt !== '----') {
+                            html += `<span class="or-text">or</span>`;
+                            html += `<span class="alt-num">${alt}</span>`;
+                        }
+                        html += `<span style="flex:1;"></span></div>`;
+                    }
+                });
+                html += `</div></div>`;
+                rendered = true;
             }
             
+            // ====== 其他特殊渲染（通用兼容） ======
             const winNums = cd.winning_numbers || cd.numbers || cd.results;
             if (winNums && Array.isArray(winNums) && winNums.length > 0) { 
                 html += `<div class="subsection"><div class="subsection-title">Winning Numbers</div><div class="number-list">`; 
@@ -267,7 +297,7 @@ function renderCompanies(dataMap) {
                 html += `<div class="subsection"><div class="subsection-title">Results</div><div class="number-list"><span class="number-item" style="font-size:1rem;color:#888;">非开奖日 / 暂无记录</span></div></div>`;
             }
         } else {
-            // 普通公司：任何缺失的字段都显示 ----
+            // 普通公司渲染保持不变
             html += `<div class="prize-grid"><div class="prize-card"><div class="label">First Prize</div><div class="number">${cd['1st']||'----'}</div></div><div class="prize-card"><div class="label">Second Prize</div><div class="number">${cd['2nd']||'----'}</div></div><div class="prize-card"><div class="label">Third Prize</div><div class="number">${cd['3rd']||'----'}</div></div></div>`;
             
             const validSpecial = cd.special ? cd.special.filter(n => n && n.trim() !== '' && n.trim() !== '****') : [];
