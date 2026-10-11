@@ -16,9 +16,9 @@ function toggleDarkMode() {
     }
 }
 
-// ==================== 注入全局悬停效果与 5D/6D 专属布局 ====================
+// ==================== 注入全局悬停效果与专属布局样式 ====================
 const totoStyles = `
-    /* ==== 1. 顶部第一、二、三奖的悬停效果（已生效，继续保留） ==== */
+    /* ==== 1. 顶部第一、二、三奖的悬停效果 ==== */
     .prize-card { transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); cursor: default; }
     .prize-card:hover { 
         transform: translateY(-3px); 
@@ -33,7 +33,7 @@ const totoStyles = `
     }
     body.dark-mode .prize-card:hover .number { text-shadow: 0 0 15px rgba(251,191,36,0.5); }
 
-    /* ==== 2. 其他所有号码（Special, Consolation, Lotto, Toto 等）的通用悬停效果 ==== */
+    /* ==== 2. 其他所有号码的通用悬停效果 ==== */
     .number-item { transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); cursor: default; }
     .number-item:hover { 
         transform: translateY(-3px) scale(1.08); 
@@ -42,7 +42,6 @@ const totoStyles = `
         border-color: #cbd5e1 !important; 
         z-index: 10; 
     }
-    /* 暗黑模式下的通用悬停效果 */
     body.dark-mode .number-item:hover { 
         background: rgba(30,41,59,0.95) !important; 
         border-color: rgba(255,255,255,0.2) !important; 
@@ -50,7 +49,7 @@ const totoStyles = `
         color: #fbbf24 !important; 
     }
 
-    /* ==== 3. 5D 专属布局 (保持不变) ==== */
+    /* ==== 3. 5D 专属布局 ==== */
     .toto-5d-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
     .toto-5d-box { 
         background: rgba(255,255,255,0.8); border-radius: 16px; padding: 12px 8px; text-align: center; 
@@ -65,7 +64,7 @@ const totoStyles = `
     body.dark-mode .toto-5d-box .label { color: #94a3b8; }
     body.dark-mode .toto-5d-box .num { color: #fbbf24; text-shadow: 0 0 15px rgba(251,191,36,0.3); }
     
-    /* ==== 4. 6D 专属布局 (保持不变) ==== */
+    /* ==== 4. 6D 专属布局 ==== */
     .toto-6d-grid { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 8px; }
     .toto-6d-row { 
         display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.8); 
@@ -82,6 +81,31 @@ const totoStyles = `
     body.dark-mode .toto-6d-row:hover { background: rgba(30,41,59,0.9); box-shadow: 0 6px 15px rgba(0,0,0,0.4); }
     body.dark-mode .toto-6d-row .label { color: #94a3b8; }
     body.dark-mode .toto-6d-row .main-num, body.dark-mode .toto-6d-row .alt-num { color: #fbbf24; text-shadow: 0 0 10px rgba(251,191,36,0.3); }
+
+    /* ==== 5. Singapore Toto 专属布局 ==== */
+    .toto-ball-row { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+    .toto-ball { 
+        width: 44px; height: 44px; border-radius: 50%; background: #ffffff; border: 1px solid #cbd5e1; 
+        display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.2rem; 
+        color: #c62828; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: all 0.2s; cursor: default;
+    }
+    .toto-ball:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 5px 12px rgba(0,0,0,0.15); }
+    .toto-special-ball { 
+        width: 44px; height: 44px; border-radius: 50%; background: #c62828; color: #ffffff; 
+        display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.2rem; 
+        box-shadow: 0 2px 5px rgba(198,40,40,0.3); transition: all 0.2s; cursor: default;
+    }
+    .toto-special-ball:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 5px 12px rgba(198,40,40,0.5); }
+    
+    .singapore-toto-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-top: 12px; border-radius: 12px; overflow: hidden; }
+    .singapore-toto-table th { background: #4a5568; color: white; padding: 8px 4px; text-align: center; font-weight: 600; font-size: 0.8rem; }
+    .singapore-toto-table td { padding: 8px 4px; text-align: center; border-bottom: 1px solid #e2e8f0; background: rgba(255,255,255,0.8); }
+    .singapore-toto-table tr:last-child td { border-bottom: none; }
+    /* Singapore Toto 暗黑模式 */
+    body.dark-mode .toto-ball { background: #1a202c; border-color: #4a5568; color: #fbbf24; }
+    body.dark-mode .toto-special-ball { background: #9b2c2c; color: #fbbf24; }
+    body.dark-mode .singapore-toto-table th { background: #2d3748; }
+    body.dark-mode .singapore-toto-table td { background: rgba(15,23,42,0.8); border-bottom-color: #4a5568; color: #e2e8f0; }
 `;
 const styleSheet = document.createElement("style");
 styleSheet.textContent = totoStyles;
@@ -316,9 +340,46 @@ function renderCompanies(dataMap) {
                 rendered = true;
             }
             
+            // ====== Singapore Toto 专属布局 (新增) ======
+            if (key === 'singapore_toto') {
+                // 1. 渲染中奖号码球 (区分普通号码和红底附加号码)
+                if (cd.winning_numbers && cd.winning_numbers.length > 0) {
+                    html += `<div class="subsection"><div class="subsection-title">Winning Numbers</div><div class="toto-ball-row">`;
+                    cd.winning_numbers.forEach((num, index) => {
+                        // 最后一个号码为附加号码（红底）
+                        if (index === cd.winning_numbers.length - 1) {
+                            html += `<div class="toto-special-ball">${num}</div>`;
+                        } else {
+                            html += `<div class="toto-ball">${num}</div>`;
+                        }
+                    });
+                    html += `</div></div>`;
+                }
+                // 2. 渲染奖金分配表
+                if (cd.prize_table && cd.prize_table.length > 0) {
+                    html += `<div class="subsection"><div class="subsection-title">Prize Table</div>`;
+                    html += `<table class="singapore-toto-table">
+                                <thead>
+                                    <tr>
+                                        <th>Prize Group</th>
+                                        <th>Share Amount (Each)</th>
+                                        <th>No. of Winning Shares</th>
+                                    </tr>
+                                </thead>
+                                <tbody>`;
+                    cd.prize_table.forEach(row => {
+                        html += `<tr>`;
+                        row.forEach(cell => html += `<td>${cell}</td>`);
+                        html += `</tr>`;
+                    });
+                    html += `</tbody></table></div>`;
+                }
+                rendered = true;
+            }
+            
             // ====== 其他特殊渲染（通用兼容） ======
             const winNums = cd.winning_numbers || cd.numbers || cd.results;
-            if (winNums && Array.isArray(winNums) && winNums.length > 0) { 
+            if (!rendered && winNums && Array.isArray(winNums) && winNums.length > 0) { 
                 html += `<div class="subsection"><div class="subsection-title">Winning Numbers</div><div class="number-list">`; 
                 winNums.forEach(n=>html+=`<span class="number-item">${n}</span>`); 
                 html += `</div></div>`; 
@@ -468,7 +529,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if(e.target===o) o.style.display='none'; }));
+    document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if(e.target===e.currentTarget) o.style.display='none'; }));
     
     loadDateIndex();
 });
