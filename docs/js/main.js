@@ -379,7 +379,6 @@ function renderCompanies(dataMap) {
                         html += `<div class="subsection"><div class="subsection-title">${g.title}</div><div class="number-list">`;
                         cd[g.field].forEach(n => html += `<span class="number-item">${n}</span>`);
                         html += `</div>`;
-                        // 检查并添加 Jackpot
                         if (cd.jackpots && cd.jackpots[g.jpIdx] && cd.jackpots[g.jpIdx].trim() !== '') {
                             html += `<div style="margin-top: 8px; font-weight: 700; color: #d97706; font-size: 1rem;">${g.jpName}: ${cd.jackpots[g.jpIdx]}</div>`;
                         }
@@ -389,21 +388,27 @@ function renderCompanies(dataMap) {
                 });
             }
 
-            // ====== SABAH LOTTO 专属布局（修复：恢复下方所有数据） ======
+            // ====== SABAH LOTTO 专属布局 (拆分为3个卡片) ======
             if (key === 'sabah_lotto') {
-                // 1. Winning Numbers
+                let card1Html = '', card2Html = '', card3Html = '';
+                const sharedDate = `<div class="draw-date">${cd.draw_date || '未知'} ${cd.draw_no?'| Draw No: '+cd.draw_no:''}</div>`;
+                const sharedImg = img ? `<img src="${img}" onerror="this.style.display='none'">` : '';
+
+                // 卡片1：主卡 (Winning Numbers + Jackpots)
+                card1Html += `<div class="company-section" data-company="sabah_lotto"><div class="company-title">${name}${sharedImg}</div>${sharedDate}<div class="company-content">`;
                 if (cd.winning_numbers && cd.winning_numbers.length > 0) {
-                    html += `<div class="subsection"><div class="subsection-title">Winning Numbers</div><div class="number-list">`;
-                    cd.winning_numbers.forEach(n => html += `<span class="number-item">${n}</span>`);
-                    html += `</div></div>`;
+                    card1Html += `<div class="subsection"><div class="subsection-title">Winning Numbers</div><div class="number-list">`;
+                    cd.winning_numbers.forEach(n => card1Html += `<span class="number-item">${n}</span>`);
+                    card1Html += `</div></div>`;
                 }
-                // 2. Jackpots
                 ['jackpot1', 'jackpot2'].forEach(f => {
                     if (cd[f] && typeof cd[f] === 'string' && cd[f].trim() !== '') {
-                        html += `<div class="subsection"><div class="subsection-title">${f.toUpperCase()}</div><div class="number-list"><span class="number-item" style="font-size:1.2rem;color:#d97706;font-weight:bold;">${cd[f]}</span></div></div>`;
+                        card1Html += `<div class="subsection"><div class="subsection-title">${f.toUpperCase()}</div><div class="number-list"><span class="number-item" style="font-size:1.2rem;color:#d97706;font-weight:bold;">${cd[f]}</span></div></div>`;
                     }
                 });
-                // 3. Lotto 6 Groups (LT6G)
+                card1Html += `</div></div>`;
+
+                // 卡片2：6D Results
                 let lt6gHtml = '';
                 for (let g = 1; g <= 5; g++) {
                     let groupNums = [];
@@ -415,9 +420,11 @@ function renderCompanies(dataMap) {
                     }
                 }
                 if (lt6gHtml) {
-                    html += `<div class="subsection"><div class="subsection-title">6D Results</div><div>${lt6gHtml}</div></div>`;
+                    card2Html += `<div class="company-section" data-company="sabah_lotto_6d"><div class="company-title">SABAH LOTTO 6D Results${sharedImg}</div>${sharedDate}<div class="company-content"><div class="subsection"><div class="subsection-title">6D Results</div><div>${lt6gHtml}</div></div></div></div>`;
+                    html += card2Html;
                 }
-                // 4. Lotto 5 Groups (LT5G)
+
+                // 卡片3：5D Results
                 let lt5gHtml = '';
                 for (let g = 1; g <= 8; g++) {
                     let groupNums = [];
@@ -429,8 +436,11 @@ function renderCompanies(dataMap) {
                     }
                 }
                 if (lt5gHtml) {
-                    html += `<div class="subsection"><div class="subsection-title">5D Results</div><div>${lt5gHtml}</div></div>`;
+                    card3Html += `<div class="company-section" data-company="sabah_lotto_5d"><div class="company-title">SABAH LOTTO 5D Results${sharedImg}</div>${sharedDate}<div class="company-content"><div class="subsection"><div class="subsection-title">5D Results</div><div>${lt5gHtml}</div></div></div></div>`;
+                    html += card3Html;
                 }
+
+                html += card1Html;
                 rendered = true;
             }
 
