@@ -367,7 +367,7 @@ function renderCompanies(dataMap) {
                 rendered = true;
             }
 
-            // ====== SPORTS TOTO LOTTO 专属布局（新增 Jackpot 显示） ======
+            // ====== SPORTS TOTO LOTTO 专属布局 ======
             if (key === 'sportstoto_lotto') {
                 const lottoGroups = [
                     { field: 'star', title: 'Star', jpIdx: 0, jpName: 'Jackpot 1' },
@@ -389,7 +389,52 @@ function renderCompanies(dataMap) {
                 });
             }
 
-            // ====== MAGNUM LIFE 专属布局（新增 Bonus Numbers） ======
+            // ====== SABAH LOTTO 专属布局（修复：恢复下方所有数据） ======
+            if (key === 'sabah_lotto') {
+                // 1. Winning Numbers
+                if (cd.winning_numbers && cd.winning_numbers.length > 0) {
+                    html += `<div class="subsection"><div class="subsection-title">Winning Numbers</div><div class="number-list">`;
+                    cd.winning_numbers.forEach(n => html += `<span class="number-item">${n}</span>`);
+                    html += `</div></div>`;
+                }
+                // 2. Jackpots
+                ['jackpot1', 'jackpot2'].forEach(f => {
+                    if (cd[f] && typeof cd[f] === 'string' && cd[f].trim() !== '') {
+                        html += `<div class="subsection"><div class="subsection-title">${f.toUpperCase()}</div><div class="number-list"><span class="number-item" style="font-size:1.2rem;color:#d97706;font-weight:bold;">${cd[f]}</span></div></div>`;
+                    }
+                });
+                // 3. Lotto 6 Groups (LT6G)
+                let lt6gHtml = '';
+                for (let g = 1; g <= 5; g++) {
+                    let groupNums = [];
+                    for (let i = 1; i <= 6; i++) {
+                        if (cd[`LT6G${g}${i}`]) groupNums.push(cd[`LT6G${g}${i}`]);
+                    }
+                    if (groupNums.length > 0) {
+                        lt6gHtml += `<div style="margin-bottom: 6px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px;"><span style="font-size:0.8rem;color:#64748b;font-weight:600;width:50px;">Grp ${g}</span>` + groupNums.map(n => `<span class="number-item" style="font-size:1.1rem;padding:4px 8px;">${n}</span>`).join('') + `</div>`;
+                    }
+                }
+                if (lt6gHtml) {
+                    html += `<div class="subsection"><div class="subsection-title">6D Results</div><div>${lt6gHtml}</div></div>`;
+                }
+                // 4. Lotto 5 Groups (LT5G)
+                let lt5gHtml = '';
+                for (let g = 1; g <= 8; g++) {
+                    let groupNums = [];
+                    for (let i = 1; i <= 5; i++) {
+                        if (cd[`LT5G${g}${i}`]) groupNums.push(cd[`LT5G${g}${i}`]);
+                    }
+                    if (groupNums.length > 0) {
+                        lt5gHtml += `<div style="margin-bottom: 6px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px;"><span style="font-size:0.8rem;color:#64748b;font-weight:600;width:50px;">Grp ${g}</span>` + groupNums.map(n => `<span class="number-item" style="font-size:1.1rem;padding:4px 8px;">${n}</span>`).join('') + `</div>`;
+                    }
+                }
+                if (lt5gHtml) {
+                    html += `<div class="subsection"><div class="subsection-title">5D Results</div><div>${lt5gHtml}</div></div>`;
+                }
+                rendered = true;
+            }
+
+            // ====== MAGNUM LIFE 专属布局 ======
             if (key === 'magnum_life') {
                 if (cd.winning_numbers && cd.winning_numbers.length > 0) {
                     html += `<div class="subsection"><div class="subsection-title">Winning Numbers</div><div class="number-list">`;
