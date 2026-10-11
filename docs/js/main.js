@@ -111,12 +111,13 @@ styleSheet.textContent = totoStyles;
 document.head.appendChild(styleSheet);
 
 // ==================== 常量定义 ====================
+// 【已调整顺序】SINGAPORE TOTO 已移至 DAMACAI 1+3D 之后，SABAH LOTTO 之前
 const COMPANY_LIST = [
     'damacai', 'magnum', 'toto', 'singapore', 
     'grand_dragon', 'perdana4d', 'lucky_hari', 
     'sandakan', 'sarawak_cashsweep', 
     'sabah', 'damacai_1p3d', 
-    'sabah_lotto', 'singapore_toto', 'sportstoto_lotto',
+    'singapore_toto', 'sabah_lotto', 'sportstoto_lotto',
     'magnum_jackpot_gold', 'sportstoto_5d', 'sportstoto_6d',
     'magnum_life', 'sportstoto_fireball'
 ];
@@ -284,7 +285,7 @@ function renderCompanies(dataMap) {
         const name = NAME_MAP[key] || key; 
         const img = COMPANY_IMAGE_MAP[key] ? `images/${COMPANY_IMAGE_MAP[key]}` : null; 
         
-        // 【核心修复】SABAH LOTTO 提前返回，独立生成3个卡片，避免嵌套错乱
+        // SABAH LOTTO 提前返回，独立生成3个卡片
         if (key === 'sabah_lotto') {
             const sharedDate = `<div class="draw-date">${cd.draw_date || '未知'} ${cd.draw_no?'| Draw No: '+cd.draw_no:''}</div>`;
             const sharedImg = img ? `<img src="${img}" onerror="this.style.display='none'">` : '';
