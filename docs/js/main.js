@@ -277,19 +277,76 @@ async function fetchAndRenderData(dateStr, isRefresh = false) {
 // ==================== 智能渲染公司卡片 ====================
 function renderCompanies(dataMap) {
     const grid = document.getElementById('companies-grid'); let html = '';
+    
     COMPANY_LIST.forEach(key => {
         if (HIDDEN_COMPANIES.includes(key)) return; 
         const cd = dataMap[key]; if (!cd) return;
         const name = NAME_MAP[key] || key; 
         const img = COMPANY_IMAGE_MAP[key] ? `images/${COMPANY_IMAGE_MAP[key]}` : null; 
-        const isSpecial = SPECIAL_COMPANIES.includes(key);
         
+        // 【核心修复】SABAH LOTTO 提前返回，独立生成3个卡片，避免嵌套错乱
+        if (key === 'sabah_lotto') {
+            const sharedDate = `<div class="draw-date">${cd.draw_date || '未知'} ${cd.draw_no?'| Draw No: '+cd.draw_no:''}</div>`;
+            const sharedImg = img ? `<img src="${img}" onerror="this.style.display='none'">` : '';
+            let sabahCardsHtml = '';
+
+            // 1. 主卡片 (Winning Numbers + Jackpots)
+            sabahCardsHtml += `<div class="company-section" data-company="sabah_lotto"><div class="company-title">${name}${sharedImg}</div>${sharedDate}<div class="company-content">`;
+            if (cd.winning_numbers && cd.winning_numbers.length > 0) {
+                sabahCardsHtml += `<div class="subsection"><div class="subsection-title">Winning Numbers</div><div class="number-list">`;
+                cd.winning_numbers.forEach(n => sabahCardsHtml += `<span class="number-item">${n}</span>`);
+                sabahCardsHtml += `</div></div>`;
+            }
+            ['jackpot1', 'jackpot2'].forEach(f => {
+                if (cd[f] && typeof cd[f] === 'string' && cd[f].trim() !== '') {
+                    sabahCardsHtml += `<div class="subsection"><div class="subsection-title">${f.toUpperCase()}</div><div class="number-list"><span class="number-item" style="font-size:1.2rem;color:#d97706;font-weight:bold;">${cd[f]}</span></div></div>`;
+                }
+            });
+            sabahCardsHtml += `</div></div>`;
+
+            // 2. 6D 卡片
+            let lt6gHtml = '';
+            for (let g = 1; g <= 5; g++) {
+                let groupNums = [];
+                for (let i = 1; i <= 6; i++) {
+                    if (cd[`LT6G${g}${i}`]) groupNums.push(cd[`LT6G${g}${i}`]);
+                }
+                if (groupNums.length > 0) {
+                    lt6gHtml += `<div style="margin-bottom: 6px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px;"><span style="font-size:0.8rem;color:#64748b;font-weight:600;width:50px;">Grp ${g}</span>` + groupNums.map(n => `<span class="number-item" style="font-size:1.1rem;padding:4px 8px;">${n}</span>`).join('') + `</div>`;
+                }
+            }
+            if (lt6gHtml) {
+                sabahCardsHtml += `<div class="company-section" data-company="sabah_lotto_6d"><div class="company-title">SABAH LOTTO 6D Results${sharedImg}</div>${sharedDate}<div class="company-content"><div class="subsection"><div class="subsection-title">6D Results</div><div>${lt6gHtml}</div></div></div></div>`;
+            }
+
+            // 3. 5D 卡片
+            let lt5gHtml = '';
+            for (let g = 1; g <= 8; g++) {
+                let groupNums = [];
+                for (let i = 1; i <= 5; i++) {
+                    if (cd[`LT5G${g}${i}`]) groupNums.push(cd[`LT5G${g}${i}`]);
+                }
+                if (groupNums.length > 0) {
+                    lt5gHtml += `<div style="margin-bottom: 6px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px;"><span style="font-size:0.8rem;color:#64748b;font-weight:600;width:50px;">Grp ${g}</span>` + groupNums.map(n => `<span class="number-item" style="font-size:1.1rem;padding:4px 8px;">${n}</span>`).join('') + `</div>`;
+                }
+            }
+            if (lt5gHtml) {
+                sabahCardsHtml += `<div class="company-section" data-company="sabah_lotto_5d"><div class="company-title">SABAH LOTTO 5D Results${sharedImg}</div>${sharedDate}<div class="company-content"><div class="subsection"><div class="subsection-title">5D Results</div><div>${lt5gHtml}</div></div></div></div>`;
+            }
+
+            html += sabahCardsHtml;
+            return; // 跳过下方所有包裹和通用渲染逻辑
+        }
+
+        // --- 下面开始是其他卡片的通用渲染逻辑 ---
         html += `<div class="company-section" data-company="${key}"><div class="company-title">${name}${img?`<img src="${img}" onerror="this.style.display='none'">`:''}</div><div class="draw-date">${cd.draw_date || '未知'} ${cd.draw_no?'| Draw No: '+cd.draw_no:''}</div><div class="company-content">`;
+        
+        const isSpecial = SPECIAL_COMPANIES.includes(key);
         
         if (isSpecial) {
             let rendered = false;
             
-            // ====== 5D 专属布局 ======
+            // 5D 专属布局
             const is5D = cd.type === '5d' || (!cd.type && cd['6th'] && (!cd['2nd'] || typeof cd['2nd'] === 'string'));
             if (is5D) {
                 html += `<div class="subsection"><div class="subsection-title">5D Results</div><div class="toto-5d-grid">`;
@@ -308,7 +365,7 @@ function renderCompanies(dataMap) {
                 rendered = true;
             }
             
-            // ====== 6D 专属布局 ======
+            // 6D 专属布局
             const is6D = cd.type === '6d' || (!cd.type && cd['2nd'] && cd['2nd'].main);
             if (is6D) {
                 html += `<div class="subsection"><div class="subsection-title">6D Results</div><div class="toto-6d-grid">`;
@@ -339,7 +396,7 @@ function renderCompanies(dataMap) {
                 rendered = true;
             }
             
-            // ====== Singapore Toto 专属布局 ======
+            // Singapore Toto 专属布局
             if (key === 'singapore_toto') {
                 if (cd.winning_numbers && cd.winning_numbers.length > 0) {
                     html += `<div class="subsection"><div class="subsection-title">Winning Numbers</div><div class="toto-ball-row">`;
@@ -367,7 +424,7 @@ function renderCompanies(dataMap) {
                 rendered = true;
             }
 
-            // ====== SPORTS TOTO LOTTO 专属布局 ======
+            // SPORTS TOTO LOTTO 专属布局
             if (key === 'sportstoto_lotto') {
                 const lottoGroups = [
                     { field: 'star', title: 'Star', jpIdx: 0, jpName: 'Jackpot 1' },
@@ -388,63 +445,7 @@ function renderCompanies(dataMap) {
                 });
             }
 
-            // ====== SABAH LOTTO 专属布局 (拆分为3个卡片) ======
-            if (key === 'sabah_lotto') {
-                let card1Html = '', card2Html = '', card3Html = '';
-                const sharedDate = `<div class="draw-date">${cd.draw_date || '未知'} ${cd.draw_no?'| Draw No: '+cd.draw_no:''}</div>`;
-                const sharedImg = img ? `<img src="${img}" onerror="this.style.display='none'">` : '';
-
-                // 卡片1：主卡 (Winning Numbers + Jackpots)
-                card1Html += `<div class="company-section" data-company="sabah_lotto"><div class="company-title">${name}${sharedImg}</div>${sharedDate}<div class="company-content">`;
-                if (cd.winning_numbers && cd.winning_numbers.length > 0) {
-                    card1Html += `<div class="subsection"><div class="subsection-title">Winning Numbers</div><div class="number-list">`;
-                    cd.winning_numbers.forEach(n => card1Html += `<span class="number-item">${n}</span>`);
-                    card1Html += `</div></div>`;
-                }
-                ['jackpot1', 'jackpot2'].forEach(f => {
-                    if (cd[f] && typeof cd[f] === 'string' && cd[f].trim() !== '') {
-                        card1Html += `<div class="subsection"><div class="subsection-title">${f.toUpperCase()}</div><div class="number-list"><span class="number-item" style="font-size:1.2rem;color:#d97706;font-weight:bold;">${cd[f]}</span></div></div>`;
-                    }
-                });
-                card1Html += `</div></div>`;
-
-                // 卡片2：6D Results
-                let lt6gHtml = '';
-                for (let g = 1; g <= 5; g++) {
-                    let groupNums = [];
-                    for (let i = 1; i <= 6; i++) {
-                        if (cd[`LT6G${g}${i}`]) groupNums.push(cd[`LT6G${g}${i}`]);
-                    }
-                    if (groupNums.length > 0) {
-                        lt6gHtml += `<div style="margin-bottom: 6px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px;"><span style="font-size:0.8rem;color:#64748b;font-weight:600;width:50px;">Grp ${g}</span>` + groupNums.map(n => `<span class="number-item" style="font-size:1.1rem;padding:4px 8px;">${n}</span>`).join('') + `</div>`;
-                    }
-                }
-                if (lt6gHtml) {
-                    card2Html += `<div class="company-section" data-company="sabah_lotto_6d"><div class="company-title">SABAH LOTTO 6D Results${sharedImg}</div>${sharedDate}<div class="company-content"><div class="subsection"><div class="subsection-title">6D Results</div><div>${lt6gHtml}</div></div></div></div>`;
-                    html += card2Html;
-                }
-
-                // 卡片3：5D Results
-                let lt5gHtml = '';
-                for (let g = 1; g <= 8; g++) {
-                    let groupNums = [];
-                    for (let i = 1; i <= 5; i++) {
-                        if (cd[`LT5G${g}${i}`]) groupNums.push(cd[`LT5G${g}${i}`]);
-                    }
-                    if (groupNums.length > 0) {
-                        lt5gHtml += `<div style="margin-bottom: 6px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px;"><span style="font-size:0.8rem;color:#64748b;font-weight:600;width:50px;">Grp ${g}</span>` + groupNums.map(n => `<span class="number-item" style="font-size:1.1rem;padding:4px 8px;">${n}</span>`).join('') + `</div>`;
-                    }
-                }
-                if (lt5gHtml) {
-                    card3Html += `<div class="company-section" data-company="sabah_lotto_5d"><div class="company-title">SABAH LOTTO 5D Results${sharedImg}</div>${sharedDate}<div class="company-content"><div class="subsection"><div class="subsection-title">5D Results</div><div>${lt5gHtml}</div></div></div></div>`;
-                    html += card3Html;
-                }
-
-                html += card1Html;
-                rendered = true;
-            }
-
-            // ====== MAGNUM LIFE 专属布局 ======
+            // MAGNUM LIFE 专属布局
             if (key === 'magnum_life') {
                 if (cd.winning_numbers && cd.winning_numbers.length > 0) {
                     html += `<div class="subsection"><div class="subsection-title">Winning Numbers</div><div class="number-list">`;
@@ -459,7 +460,7 @@ function renderCompanies(dataMap) {
                 rendered = true;
             }
             
-            // ====== 其他特殊渲染（通用兼容） ======
+            // 其他通用渲染
             const winNums = cd.winning_numbers || cd.numbers || cd.results;
             if (!rendered && winNums && Array.isArray(winNums) && winNums.length > 0) { 
                 html += `<div class="subsection"><div class="subsection-title">Winning Numbers</div><div class="number-list">`; 
@@ -502,7 +503,7 @@ function renderCompanies(dataMap) {
                 html += `<div class="subsection"><div class="subsection-title">Results</div><div class="number-list"><span class="number-item" style="font-size:1rem;color:#888;">非开奖日 / 暂无记录</span></div></div>`;
             }
         } else {
-            // 普通公司渲染保持不变
+            // 普通公司渲染
             html += `<div class="prize-grid"><div class="prize-card"><div class="label">First Prize</div><div class="number">${cd['1st']||'----'}</div></div><div class="prize-card"><div class="label">Second Prize</div><div class="number">${cd['2nd']||'----'}</div></div><div class="prize-card"><div class="label">Third Prize</div><div class="number">${cd['3rd']||'----'}</div></div></div>`;
             
             const validSpecial = cd.special ? cd.special.filter(n => n && n.trim() !== '' && n.trim() !== '****') : [];
