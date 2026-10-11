@@ -63,6 +63,7 @@ function updateDateBtnWithLatest() { document.getElementById('selected-date').in
 window.forceRefresh = () => { if (selectedDate) { isFallbackMode = false; document.getElementById('fallback-banner').style.display = 'none'; fetchAndRenderData(selectedDate, true); } };
 function updateStatus(type, text, updateTime = null) { const span = document.getElementById('status-text'); const ind = span.querySelector('.status-indicator'); ind.className = `status-indicator ${type}`; span.innerHTML = `${ind.outerHTML}${text}`; if (updateTime) document.getElementById('update-time').innerText = updateTime; }
 
+// ==================== 核心：数据抓取与部分数据渲染 ====================
 async function fetchAndRenderData(dateStr, isRefresh = false) {
     const grid = document.getElementById('companies-grid');
     grid.innerHTML = '<p style="text-align:center;grid-column:1/-1;color:#666;">🔄 正在加载数据...</p>';
@@ -77,13 +78,35 @@ async function fetchAndRenderData(dateStr, isRefresh = false) {
 
     const results = await Promise.all(promises);
     const dataMap = {}; let validCount = 0;
+    
     results.forEach(item => {
         if (item.data) {
-            let hasData = (item.data['1st'] && typeof item.data['1st'] === 'string' && item.data['1st'].trim() !== '') || (item.data.winning_numbers && item.data.winning_numbers.length > 0) || (item.data.star && item.data.star.length > 0);
+            let hasData = false;
+            
+            // 1. 检查主要号码字段 (1st, 2nd, 3rd)
+            ['1st', '2nd', '3rd'].forEach(f => {
+                if (item.data[f] && typeof item.data[f] === 'string' && item.data[f].trim() !== '') hasData = true;
+            });
+            
+            // 2. 检查数组类字段 (special, consolation, winning_numbers, star, power, supreme)
+            ['special', 'consolation', 'winning_numbers', 'star', 'power', 'supreme'].forEach(f => {
+                if (item.data[f] && Array.isArray(item.data[f]) && item.data[f].length > 0) hasData = true;
+            });
+
+            // 3. 检查 jackpot 类字段
+            ['jackpot', 'jackpot1', 'jackpot2'].forEach(f => {
+                if (item.data[f] && typeof item.data[f] === 'string' && item.data[f].trim() !== '') hasData = true;
+            });
+
+            // 4. 检查 6D 特殊结构字段 (例如 cd['2nd'].main 存在)
+            if (item.data['2nd'] && typeof item.data['2nd'] === 'object' && item.data['2nd'].main) hasData = true;
+
+            // 只要有任何一项有数据，就纳入渲染列表
             if (hasData) { dataMap[item.key] = item.data; validCount++; }
         }
     });
 
+    // 如果一条有效数据都没有，且不是回退模式，则触发回退
     if (validCount === 0 && !isFallbackMode && availableDates.length > 1) {
         const idx = availableDates.indexOf(dateStr);
         if (idx >= 0 && idx + 1 < availableDates.length) {
@@ -93,43 +116,118 @@ async function fetchAndRenderData(dateStr, isRefresh = false) {
             isFallbackMode = true; await fetchAndRenderData(fallbackDate, true); return;
         }
     }
-    if (validCount === 0) { grid.innerHTML = '<p style="text-align:center;grid-column:1/-1;color:#e53e3e;">❌ 目前暂无任何可用的开奖数据，请稍后再试。</p>'; updateStatus('error', '加载失败'); return; }
+    
+    if (validCount === 0) { 
+        grid.innerHTML = '<p style="text-align:center;grid-column:1/-1;color:#e53e3e;">❌ 目前暂无任何可用的开奖数据，请稍后再试。</p>'; 
+        updateStatus('error', '加载失败'); 
+        return; 
+    }
     
     renderCompanies(dataMap);
     const now = new Date();
     updateStatus('success', '加载完成', `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`);
 }
 
+// ==================== 渲染逻辑优化：支持缺失字段显示 ---- ====================
 function renderCompanies(dataMap) {
     const grid = document.getElementById('companies-grid'); let html = '';
     COMPANY_LIST.forEach(key => {
         if (HIDDEN_COMPANIES.includes(key)) return; const cd = dataMap[key]; if (!cd) return;
         const name = NAME_MAP[key] || key; const img = COMPANY_IMAGE_MAP[key] ? `images/${COMPANY_IMAGE_MAP[key]}` : null; const isSpecial = SPECIAL_COMPANIES.includes(key);
+        
         html += `<div class="company-section" data-company="${key}"><div class="company-title">${name}${img?`<img src="${img}" onerror="this.style.display='none'">`:''}</div><div class="draw-date">${cd.draw_date || '未知'} ${cd.draw_no?'| Draw No: '+cd.draw_no:''}</div><div class="company-content">`;
         
         if (isSpecial) {
             let rendered = false;
-            const is5D = cd.type === '5d' || (!cd.type && cd['1st'] && typeof cd['1st']==='string' && cd['6th'] && !cd['2nd']?.main);
-            if (is5D) { html += `<div class="subsection"><div class="subsection-title">5D Results</div><div class="number-list">`; ['1st','2nd','3rd','4th','5th','6th'].forEach(k=>{ if(cd[k]) html += `<span class="number-item">${cd[k]}</span>`; }); html += `</div></div>`; rendered = true; }
-            const is6D = cd.type === '6d' || (!cd.type && cd['1st'] && cd['2nd'] && cd['2nd'].main);
-            if (is6D) { html += `<div class="subsection"><div class="subsection-title">6D Results</div><div class="number-list">`; if(cd['1st']) html += `<span class="number-item">${cd['1st']}</span>`; ['2nd','3rd','4th','5th'].forEach(k=>{ if(cd[k]) { if(typeof cd[k]==='object'&&cd[k].main) html += `<span class="number-item">${cd[k].main} / ${cd[k].alt}</span>`; else if(typeof cd[k]==='string') html += `<span class="number-item">${cd[k]}</span>`; } }); html += `</div></div>`; rendered = true; }
+            // 优化 5D 判断：即使 1st 为空，只要 6th 存在且没有 2nd.main 结构，也认为是 5D
+            const is5D = cd.type === '5d' || (!cd.type && cd['6th'] && (!cd['2nd'] || typeof cd['2nd'] === 'string'));
+            if (is5D) { 
+                html += `<div class="subsection"><div class="subsection-title">5D Results</div><div class="number-list">`; 
+                ['1st','2nd','3rd','4th','5th','6th'].forEach(k=>{ 
+                    if(cd[k] && cd[k].trim() !== '') html += `<span class="number-item">${cd[k]}</span>`; 
+                }); 
+                html += `</div></div>`; 
+                rendered = true; 
+            }
+            
+            // 优化 6D 判断：基于 2nd.main 结构判断，不依赖 1st
+            const is6D = cd.type === '6d' || (!cd.type && cd['2nd'] && cd['2nd'].main);
+            if (is6D) { 
+                html += `<div class="subsection"><div class="subsection-title">6D Results</div><div class="number-list">`; 
+                if(cd['1st'] && cd['1st'].trim() !== '') html += `<span class="number-item">${cd['1st']}</span>`; 
+                ['2nd','3rd','4th','5th'].forEach(k=>{ 
+                    if(cd[k]) { 
+                        if(typeof cd[k]==='object'&&cd[k].main) html += `<span class="number-item">${cd[k].main} / ${cd[k].alt}</span>`; 
+                        else if(typeof cd[k]==='string' && cd[k].trim() !== '') html += `<span class="number-item">${cd[k]}</span>`; 
+                    } 
+                }); 
+                html += `</div></div>`; 
+                rendered = true; 
+            }
+            
             const winNums = cd.winning_numbers || cd.numbers || cd.results;
-            if (winNums && Array.isArray(winNums) && winNums.length > 0) { html += `<div class="subsection"><div class="subsection-title">Winning Numbers</div><div class="number-list">`; winNums.forEach(n=>html+=`<span class="number-item">${n}</span>`); html += `</div></div>`; rendered = true; }
-            ['star','power','supreme'].forEach(f=>{ if(cd[f]&&Array.isArray(cd[f])&&cd[f].length>0){ html += `<div class="subsection"><div class="subsection-title">${f.charAt(0).toUpperCase()+f.slice(1)}</div><div class="number-list">`; cd[f].forEach(n=>html+=`<span class="number-item">${n}</span>`); html += `</div></div>`; rendered = true; }});
-            ['jackpot','jackpot1','jackpot2'].forEach(f=>{ if(cd[f]&&typeof cd[f]==='string'&&cd[f].trim()!==''){ html += `<div class="subsection"><div class="subsection-title">${f.toUpperCase()}</div><div class="number-list"><span class="number-item" style="font-size:1.2rem;color:#d97706;font-weight:bold;">${cd[f]}</span></div></div>`; rendered = true; }});
+            if (winNums && Array.isArray(winNums) && winNums.length > 0) { 
+                html += `<div class="subsection"><div class="subsection-title">Winning Numbers</div><div class="number-list">`; 
+                winNums.forEach(n=>html+=`<span class="number-item">${n}</span>`); 
+                html += `</div></div>`; 
+                rendered = true; 
+            }
+            
+            ['star','power','supreme'].forEach(f=>{ 
+                if(cd[f]&&Array.isArray(cd[f])&&cd[f].length>0){ 
+                    html += `<div class="subsection"><div class="subsection-title">${f.charAt(0).toUpperCase()+f.slice(1)}</div><div class="number-list">`; 
+                    cd[f].forEach(n=>html+=`<span class="number-item">${n}</span>`); 
+                    html += `</div></div>`; 
+                    rendered = true; 
+                } 
+            });
+            
+            ['jackpot','jackpot1','jackpot2'].forEach(f=>{ 
+                if(cd[f]&&typeof cd[f]==='string'&&cd[f].trim()!==''){ 
+                    html += `<div class="subsection"><div class="subsection-title">${f.toUpperCase()}</div><div class="number-list"><span class="number-item" style="font-size:1.2rem;color:#d97706;font-weight:bold;">${cd[f]}</span></div></div>`; 
+                    rendered = true; 
+                } 
+            });
+            
             const lt6g = Object.keys(cd).filter(k=>k.startsWith('LT6G')&&!k.endsWith('JP')&&cd[k]);
-            if (lt6g.length > 0) { html += `<div class="subsection"><div class="subsection-title">6D Numbers</div><div class="number-list">`; lt6g.sort().forEach(k=>html+=`<span class="number-item">${cd[k]}</span>`); html += `</div></div>`; rendered = true; }
-            if (!rendered) html += `<div class="subsection"><div class="subsection-title">Results</div><div class="number-list"><span class="number-item" style="font-size:1rem;color:#888;">非开奖日 / 暂无记录</span></div></div>`;
+            if (lt6g.length > 0) { 
+                html += `<div class="subsection"><div class="subsection-title">6D Numbers</div><div class="number-list">`; 
+                lt6g.sort().forEach(k=>html+=`<span class="number-item">${cd[k]}</span>`); 
+                html += `</div></div>`; 
+                rendered = true; 
+            }
+            
+            if (!rendered) {
+                html += `<div class="subsection"><div class="subsection-title">Results</div><div class="number-list"><span class="number-item" style="font-size:1rem;color:#888;">非开奖日 / 暂无记录</span></div></div>`;
+            }
         } else {
+            // 普通公司：任何缺失的字段都显示 ----
             html += `<div class="prize-grid"><div class="prize-card"><div class="label">First Prize</div><div class="number">${cd['1st']||'----'}</div></div><div class="prize-card"><div class="label">Second Prize</div><div class="number">${cd['2nd']||'----'}</div></div><div class="prize-card"><div class="label">Third Prize</div><div class="number">${cd['3rd']||'----'}</div></div></div>`;
-            if (cd.special || cd.consolation) { html += `<div class="subsection">`; if(cd.special&&cd.special.length>0){html+=`<div class="subsection-title">Special</div><div class="number-list">`;cd.special.forEach(n=>html+=`<span class="number-item">${n}</span>`);html+=`</div>`;} if(cd.consolation&&cd.consolation.length>0){html+=`<div class="subsection-title">Consolation</div><div class="number-list">`;cd.consolation.forEach(n=>html+=`<span class="number-item">${n}</span>`);html+=`</div>`;} html += `</div>`; }
+            
+            // 优化：即使 special 或 consolation 为空，只要前面有渲染，就展示 subsection，避免这里被完全跳过
+            if ((cd.special && cd.special.length > 0) || (cd.consolation && cd.consolation.length > 0) || cd['1st'] || cd['2nd'] || cd['3rd']) { 
+                html += `<div class="subsection">`; 
+                if(cd.special&&cd.special.length>0){
+                    html+=`<div class="subsection-title">Special</div><div class="number-list">`;
+                    cd.special.forEach(n=>html+=`<span class="number-item">${n}</span>`);
+                    html+=`</div>`;
+                }
+                if(cd.consolation&&cd.consolation.length>0){
+                    html+=`<div class="subsection-title">Consolation</div><div class="number-list">`;
+                    cd.consolation.forEach(n=>html+=`<span class="number-item">${n}</span>`);
+                    html+=`</div>`;
+                } 
+                html += `</div>`; 
+            }
         }
         html += `</div></div>`;
     });
+    
     if (html === '') html = '<p style="text-align:center;grid-column:1/-1;color:#666;">当日暂无开奖数据</p>';
     grid.innerHTML = html;
 }
 
+// ==================== 日历与初始化 ====================
 function initCalendar() {
     const popup = document.getElementById('calendar-popup'), btn = document.getElementById('calendar-btn');
     btn.addEventListener('click', e => { e.stopPropagation(); if(popup.style.display==='none'||popup.style.display===''){popup.style.display='block'; renderCalendar();} else popup.style.display='none'; });
@@ -151,6 +249,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initCalendar();
     if (localStorage.getItem('darkMode')==='enabled') { document.body.classList.add('dark-mode'); document.getElementById('dark-mode-btn').innerHTML = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>'; }
     document.getElementById('spin-btn').addEventListener('click', () => { const btn = document.getElementById('spin-btn'); btn.disabled = true; let c = 0; const int = setInterval(()=>{ document.getElementById('digit1').innerText=Math.floor(Math.random()*10); document.getElementById('digit2').innerText=Math.floor(Math.random()*10); document.getElementById('digit3').innerText=Math.floor(Math.random()*10); document.getElementById('digit4').innerText=Math.floor(Math.random()*10); c++; if(c>15){clearInterval(int);btn.disabled=false;} },80); });
-    document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if(e.target===o) o.style.display='none'; }));
+    document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if(e.target===e.currentTarget) o.style.display='none'; }));
     loadDateIndex();
 });
