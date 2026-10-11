@@ -101,7 +101,6 @@ const totoStyles = `
     .singapore-toto-table th { background: #4a5568; color: white; padding: 8px 4px; text-align: center; font-weight: 600; font-size: 0.8rem; }
     .singapore-toto-table td { padding: 8px 4px; text-align: center; border-bottom: 1px solid #e2e8f0; background: rgba(255,255,255,0.8); }
     .singapore-toto-table tr:last-child td { border-bottom: none; }
-    /* Singapore Toto 暗黑模式 */
     body.dark-mode .toto-ball { background: #1a202c; border-color: #4a5568; color: #fbbf24; }
     body.dark-mode .toto-special-ball { background: #9b2c2c; color: #fbbf24; }
     body.dark-mode .singapore-toto-table th { background: #2d3748; }
@@ -340,13 +339,11 @@ function renderCompanies(dataMap) {
                 rendered = true;
             }
             
-            // ====== Singapore Toto 专属布局 (新增) ======
+            // ====== Singapore Toto 专属布局 ======
             if (key === 'singapore_toto') {
-                // 1. 渲染中奖号码球 (区分普通号码和红底附加号码)
                 if (cd.winning_numbers && cd.winning_numbers.length > 0) {
                     html += `<div class="subsection"><div class="subsection-title">Winning Numbers</div><div class="toto-ball-row">`;
                     cd.winning_numbers.forEach((num, index) => {
-                        // 最后一个号码为附加号码（红底）
                         if (index === cd.winning_numbers.length - 1) {
                             html += `<div class="toto-special-ball">${num}</div>`;
                         } else {
@@ -355,17 +352,10 @@ function renderCompanies(dataMap) {
                     });
                     html += `</div></div>`;
                 }
-                // 2. 渲染奖金分配表
                 if (cd.prize_table && cd.prize_table.length > 0) {
                     html += `<div class="subsection"><div class="subsection-title">Prize Table</div>`;
                     html += `<table class="singapore-toto-table">
-                                <thead>
-                                    <tr>
-                                        <th>Prize Group</th>
-                                        <th>Share Amount (Each)</th>
-                                        <th>No. of Winning Shares</th>
-                                    </tr>
-                                </thead>
+                                <thead><tr><th>Prize Group</th><th>Share Amount (Each)</th><th>No. of Winning Shares</th></tr></thead>
                                 <tbody>`;
                     cd.prize_table.forEach(row => {
                         html += `<tr>`;
@@ -373,6 +363,43 @@ function renderCompanies(dataMap) {
                         html += `</tr>`;
                     });
                     html += `</tbody></table></div>`;
+                }
+                rendered = true;
+            }
+
+            // ====== SPORTS TOTO LOTTO 专属布局（新增 Jackpot 显示） ======
+            if (key === 'sportstoto_lotto') {
+                const lottoGroups = [
+                    { field: 'star', title: 'Star', jpIdx: 0, jpName: 'Jackpot 1' },
+                    { field: 'power', title: 'Power', jpIdx: 2, jpName: 'Jackpot' },
+                    { field: 'supreme', title: 'Supreme', jpIdx: 3, jpName: 'Jackpot' }
+                ];
+                lottoGroups.forEach(g => {
+                    if (cd[g.field] && Array.isArray(cd[g.field]) && cd[g.field].length > 0) {
+                        html += `<div class="subsection"><div class="subsection-title">${g.title}</div><div class="number-list">`;
+                        cd[g.field].forEach(n => html += `<span class="number-item">${n}</span>`);
+                        html += `</div>`;
+                        // 检查并添加 Jackpot
+                        if (cd.jackpots && cd.jackpots[g.jpIdx] && cd.jackpots[g.jpIdx].trim() !== '') {
+                            html += `<div style="margin-top: 8px; font-weight: 700; color: #d97706; font-size: 1rem;">${g.jpName}: ${cd.jackpots[g.jpIdx]}</div>`;
+                        }
+                        html += `</div>`;
+                        rendered = true;
+                    }
+                });
+            }
+
+            // ====== MAGNUM LIFE 专属布局（新增 Bonus Numbers） ======
+            if (key === 'magnum_life') {
+                if (cd.winning_numbers && cd.winning_numbers.length > 0) {
+                    html += `<div class="subsection"><div class="subsection-title">Winning Numbers</div><div class="number-list">`;
+                    cd.winning_numbers.forEach(n => html += `<span class="number-item">${n}</span>`);
+                    html += `</div></div>`;
+                }
+                if (cd.bonus_numbers && cd.bonus_numbers.length > 0) {
+                    html += `<div class="subsection"><div class="subsection-title">Bonus Numbers</div><div class="number-list">`;
+                    cd.bonus_numbers.forEach(n => html += `<span class="number-item">${n}</span>`);
+                    html += `</div></div>`;
                 }
                 rendered = true;
             }
@@ -386,28 +413,34 @@ function renderCompanies(dataMap) {
                 rendered = true; 
             }
             
-            ['star','power','supreme'].forEach(f=>{ 
-                if(cd[f]&&Array.isArray(cd[f])&&cd[f].length>0){ 
-                    html += `<div class="subsection"><div class="subsection-title">${f.charAt(0).toUpperCase()+f.slice(1)}</div><div class="number-list">`; 
-                    cd[f].forEach(n=>html+=`<span class="number-item">${n}</span>`); 
+            if (!rendered && ['star','power','supreme'].some(f => cd[f] && Array.isArray(cd[f]) && cd[f].length > 0)) {
+                ['star','power','supreme'].forEach(f=>{ 
+                    if(cd[f]&&Array.isArray(cd[f])&&cd[f].length>0){ 
+                        html += `<div class="subsection"><div class="subsection-title">${f.charAt(0).toUpperCase()+f.slice(1)}</div><div class="number-list">`; 
+                        cd[f].forEach(n=>html+=`<span class="number-item">${n}</span>`); 
+                        html += `</div></div>`; 
+                        rendered = true; 
+                    } 
+                });
+            }
+            
+            if (!rendered && (cd.jackpot||cd.jackpot1||cd.jackpot2)) {
+                ['jackpot','jackpot1','jackpot2'].forEach(f=>{ 
+                    if(cd[f]&&typeof cd[f]==='string'&&cd[f].trim()!==''){ 
+                        html += `<div class="subsection"><div class="subsection-title">${f.toUpperCase()}</div><div class="number-list"><span class="number-item" style="font-size:1.2rem;color:#d97706;font-weight:bold;">${cd[f]}</span></div></div>`; 
+                        rendered = true; 
+                    } 
+                });
+            }
+            
+            if (!rendered) {
+                const lt6g = Object.keys(cd).filter(k=>k.startsWith('LT6G')&&!k.endsWith('JP')&&cd[k]);
+                if (lt6g.length > 0) { 
+                    html += `<div class="subsection"><div class="subsection-title">6D Numbers</div><div class="number-list">`; 
+                    lt6g.sort().forEach(k=>html+=`<span class="number-item">${cd[k]}</span>`); 
                     html += `</div></div>`; 
                     rendered = true; 
-                } 
-            });
-            
-            ['jackpot','jackpot1','jackpot2'].forEach(f=>{ 
-                if(cd[f]&&typeof cd[f]==='string'&&cd[f].trim()!==''){ 
-                    html += `<div class="subsection"><div class="subsection-title">${f.toUpperCase()}</div><div class="number-list"><span class="number-item" style="font-size:1.2rem;color:#d97706;font-weight:bold;">${cd[f]}</span></div></div>`; 
-                    rendered = true; 
-                } 
-            });
-            
-            const lt6g = Object.keys(cd).filter(k=>k.startsWith('LT6G')&&!k.endsWith('JP')&&cd[k]);
-            if (lt6g.length > 0) { 
-                html += `<div class="subsection"><div class="subsection-title">6D Numbers</div><div class="number-list">`; 
-                lt6g.sort().forEach(k=>html+=`<span class="number-item">${cd[k]}</span>`); 
-                html += `</div></div>`; 
-                rendered = true; 
+                }
             }
             
             if (!rendered) {
