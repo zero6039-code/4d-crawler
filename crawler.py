@@ -833,6 +833,8 @@ def fetch_all_companies_from_dato4d():
         "MJG": ("magnum_jackpot_gold", extract_magnum_jackpot_gold_from_json),
         "SBLT": ("sabah_lotto", extract_sabah_lotto_from_json),
         "SGT": ("singapore_toto", extract_singapore_toto_from_json),
+        "P": ("perdana4d", extract_standard_4d_from_json),
+        "H": ("lucky_hari", extract_standard_4d_from_json),
     }
 
     success_count = 0
