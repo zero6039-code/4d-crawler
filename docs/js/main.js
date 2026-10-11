@@ -16,26 +16,87 @@ function toggleDarkMode() {
     }
 }
 
-// ==================== 注入 TOTO 专属布局样式 ====================
+// ==================== 注入 TOTO 专属布局 + 全局悬停效果样式 ====================
 const totoStyles = `
-    .toto-5d-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 8px; }
-    .toto-5d-col { background: rgba(255,255,255,0.8); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
-    body.dark-mode .toto-5d-col { background: rgba(15,23,42,0.8); }
-    .toto-5d-col .label { font-size: 0.75rem; color: #5f6b7a; font-weight: 600; text-transform: uppercase; }
-    body.dark-mode .toto-5d-col .label { color: #94a3b8; }
-    .toto-5d-col .num { font-size: 1.25rem; font-weight: 800; color: #c62828; font-family: 'Courier New', monospace; word-break: break-all; }
-    body.dark-mode .toto-5d-col .num { color: #fbbf24; }
+    /* ==== 1. 全局悬停效果修复 (包括前三名和暗黑模式) ==== */
+    .prize-card { transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); cursor: default; }
+    .prize-card:hover { 
+        transform: translateY(-3px); 
+        box-shadow: 0 8px 20px rgba(0,0,0,0.1); 
+        background: rgba(255,255,255,0.95) !important; 
+    }
+    .prize-card .number { transition: transform 0.25s ease; }
+    .prize-card:hover .number { transform: scale(1.08); }
     
+    /* 暗黑模式下的全局悬停效果 */
+    body.dark-mode .prize-card:hover { 
+        background: rgba(30,41,59,0.95) !important; 
+        box-shadow: 0 8px 20px rgba(0,0,0,0.5); 
+    }
+    body.dark-mode .prize-card:hover .number { text-shadow: 0 0 15px rgba(251,191,36,0.5); }
+
+    /* ==== 2. 5D 专属布局 (2列 x 3行) ==== */
+    .toto-5d-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
+    .toto-5d-box { 
+        background: rgba(255,255,255,0.8); 
+        border-radius: 16px; 
+        padding: 12px 8px; 
+        text-align: center; 
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); 
+        cursor: default; 
+        box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+        border: 1px solid rgba(255,255,255,0.5);
+    }
+    .toto-5d-box:hover { 
+        transform: translateY(-3px); 
+        box-shadow: 0 8px 16px rgba(0,0,0,0.1); 
+        background: #fff; 
+    }
+    .toto-5d-box .label { font-size: 0.85rem; color: #5f6b7a; font-weight: 600; text-transform: uppercase; }
+    .toto-5d-box .num { 
+        font-size: 1.8rem; 
+        font-weight: 800; 
+        color: #c62828; 
+        font-family: 'Courier New', monospace; 
+        margin-top: 4px; 
+        line-height: 1.2;
+    }
+    /* 5D 暗黑模式 */
+    body.dark-mode .toto-5d-box { background: rgba(15,23,42,0.8); border-color: rgba(255,255,255,0.05); }
+    body.dark-mode .toto-5d-box:hover { background: rgba(30,41,59,0.9); box-shadow: 0 8px 16px rgba(0,0,0,0.4); }
+    body.dark-mode .toto-5d-box .label { color: #94a3b8; }
+    body.dark-mode .toto-5d-box .num { color: #fbbf24; text-shadow: 0 0 15px rgba(251,191,36,0.3); }
+    
+    /* ==== 3. 6D 专属布局 (数字放大 + 悬停效果) ==== */
     .toto-6d-grid { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 8px; }
-    .toto-6d-row { display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.8); border-radius: 12px; padding: 8px 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); flex-wrap: wrap; gap: 6px; }
-    body.dark-mode .toto-6d-row { background: rgba(15,23,42,0.8); }
-    .toto-6d-row .label { font-size: 0.85rem; color: #5f6b7a; font-weight: 600; width: 40px; }
+    .toto-6d-row { 
+        display: flex; 
+        align-items: center; 
+        justify-content: space-between; 
+        background: rgba(255,255,255,0.8); 
+        border-radius: 12px; 
+        padding: 10px 14px; 
+        box-shadow: 0 2px 8px rgba(0,0,0,0.03); 
+        flex-wrap: wrap; 
+        gap: 6px; 
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: default;
+        border: 1px solid rgba(255,255,255,0.5);
+    }
+    .toto-6d-row:hover { 
+        transform: translateX(4px); 
+        box-shadow: 0 6px 15px rgba(0,0,0,0.08); 
+        background: #fff; 
+    }
+    .toto-6d-row .label { font-size: 0.9rem; color: #5f6b7a; font-weight: 600; width: 42px; }
+    .toto-6d-row .main-num { font-size: 1.4rem; font-weight: 800; color: #c62828; font-family: 'Courier New', monospace; }
+    .toto-6d-row .alt-num { font-size: 1.4rem; font-weight: 800; color: #c62828; font-family: 'Courier New', monospace; }
+    .toto-6d-row .or-text { font-size: 0.85rem; color: #94a3b8; margin: 0 6px; font-weight: 500; }
+    /* 6D 暗黑模式 */
+    body.dark-mode .toto-6d-row { background: rgba(15,23,42,0.8); border-color: rgba(255,255,255,0.05); }
+    body.dark-mode .toto-6d-row:hover { background: rgba(30,41,59,0.9); box-shadow: 0 6px 15px rgba(0,0,0,0.4); }
     body.dark-mode .toto-6d-row .label { color: #94a3b8; }
-    .toto-6d-row .main-num { font-size: 1.1rem; font-weight: 800; color: #c62828; font-family: 'Courier New', monospace; }
-    body.dark-mode .toto-6d-row .main-num { color: #fbbf24; }
-    .toto-6d-row .alt-num { font-size: 1.1rem; font-weight: 800; color: #c62828; font-family: 'Courier New', monospace; }
-    body.dark-mode .toto-6d-row .alt-num { color: #fbbf24; }
-    .toto-6d-row .or-text { font-size: 0.8rem; color: #94a3b8; margin: 0 4px; }
+    body.dark-mode .toto-6d-row .main-num, body.dark-mode .toto-6d-row .alt-num { color: #fbbf24; text-shadow: 0 0 10px rgba(251,191,36,0.3); }
 `;
 const styleSheet = document.createElement("style");
 styleSheet.textContent = totoStyles;
@@ -220,40 +281,50 @@ function renderCompanies(dataMap) {
         if (isSpecial) {
             let rendered = false;
             
-            // ====== 5D 专属布局 ======
+            // ====== 5D 专属布局 (2列 x 3行) ======
             const is5D = cd.type === '5d' || (!cd.type && cd['6th'] && (!cd['2nd'] || typeof cd['2nd'] === 'string'));
             if (is5D) {
                 html += `<div class="subsection"><div class="subsection-title">5D Results</div><div class="toto-5d-grid">`;
-                const groups = [['1st', '4th'], ['2nd', '5th'], ['3rd', '6th']];
-                groups.forEach(g => {
-                    html += `<div class="toto-5d-col">`;
-                    if (cd[g[0]]) html += `<div><div class="label">${g[0]}</div><div class="num">${cd[g[0]]}</div></div>`;
-                    if (cd[g[1]]) html += `<div><div class="label">${g[1]}</div><div class="num">${cd[g[1]]}</div></div>`;
-                    html += `</div>`;
+                const labels = [['1st', '2nd'], ['3rd', '4th'], ['5th', '6th']];
+                labels.forEach(row => {
+                    row.forEach(lbl => {
+                        if (cd[lbl]) {
+                            html += `<div class="toto-5d-box">
+                                        <div class="label">${lbl}</div>
+                                        <div class="num">${cd[lbl]}</div>
+                                     </div>`;
+                        }
+                    });
                 });
                 html += `</div></div>`;
                 rendered = true;
             }
             
-            // ====== 6D 专属布局 ======
+            // ====== 6D 专属布局 (放大数字 + 悬停效果) ======
             const is6D = cd.type === '6d' || (!cd.type && cd['2nd'] && cd['2nd'].main);
             if (is6D) {
                 html += `<div class="subsection"><div class="subsection-title">6D Results</div><div class="toto-6d-grid">`;
                 if (cd['1st']) {
-                    html += `<div class="toto-6d-row"><span class="label">1st</span><span class="main-num">${cd['1st']}</span><span style="flex:1;"></span></div>`;
+                    html += `<div class="toto-6d-row">
+                                <span class="label">1st</span>
+                                <span class="main-num">${cd['1st']}</span>
+                                <span style="flex:1;"></span>
+                             </div>`;
                 }
                 ['2nd','3rd','4th','5th'].forEach(k => {
                     if (cd[k]) {
                         let main = (typeof cd[k] === 'object' && cd[k].main) ? cd[k].main : '----';
                         let alt = (typeof cd[k] === 'object' && cd[k].alt) ? cd[k].alt : '----';
                         if (main === '----' && alt === '----') return;
-                        html += `<div class="toto-6d-row"><span class="label">${k}</span>`;
-                        html += `<span class="main-num">${main}</span>`;
+                        html += `<div class="toto-6d-row">
+                                    <span class="label">${k}</span>
+                                    <span class="main-num">${main}</span>`;
                         if (alt !== '----') {
-                            html += `<span class="or-text">or</span>`;
-                            html += `<span class="alt-num">${alt}</span>`;
+                            html += `<span class="or-text">or</span>
+                                     <span class="alt-num">${alt}</span>`;
                         }
-                        html += `<span style="flex:1;"></span></div>`;
+                        html += `<span style="flex:1;"></span>
+                                 </div>`;
                     }
                 });
                 html += `</div></div>`;
