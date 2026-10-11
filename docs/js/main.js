@@ -17,11 +17,44 @@ function toggleDarkMode() {
 }
 
 // ==================== 常量定义 ====================
-const COMPANY_LIST = ['damacai', 'magnum', 'toto', 'singapore', 'damacai_1p3d', 'grand_dragon','sandakan', 'sarawak_cashsweep', 'sabah', 'sabah_lotto','singapore_toto', 'sportstoto_lotto','magnum_jackpot_gold', 'sportstoto_5d', 'sportstoto_6d','magnum_life', 'sportstoto_fireball'];
-const NAME_MAP = {'grand_dragon': 'GRAND DRAGON 豪龙', 'damacai': 'DAMACAI 4D', 'magnum': 'MAGNUM 4D','toto': 'TOTO 4D', 'singapore': 'SINGAPORE 4D', 'damacai_1p3d': 'DAMACAI 1+3D','sandakan': 'SANDAKAN 4D', 'sarawak_cashsweep': 'SARAWAK CASHSWEEP', 'sabah': 'SABAH 88 4D','sabah_lotto': 'SABAH LOTTO', 'singapore_toto': 'SINGAPORE TOTO', 'sportstoto_lotto': 'SPORTS TOTO LOTTO','magnum_jackpot_gold': 'MAGNUM JACKPOT GOLD', 'sportstoto_5d': 'SPORTS TOTO 5D','sportstoto_6d': 'SPORTS TOTO 6D', 'magnum_life': 'MAGNUM LIFE', 'sportstoto_fireball': 'SPORTS TOTO FIREBALL'};
+// 【已按照你的要求调整顺序】：
+// SINGAPORE 4D -> GRAND DRAGON -> Perdana -> Lucky HariHari -> SANDAKAN
+// DAMACAI 1+3D 放在 SABAH 88 4D 后面
+const COMPANY_LIST = [
+    'damacai', 'magnum', 'toto', 'singapore', 
+    'grand_dragon', 'perdana4d', 'lucky_hari', // 新增的 2 个卡片
+    'sandakan', 'sarawak_cashsweep', 
+    'sabah', 'damacai_1p3d', // DAMACAI 1+3D 已移到 SABAH 后面
+    'sabah_lotto', 'singapore_toto', 'sportstoto_lotto',
+    'magnum_jackpot_gold', 'sportstoto_5d', 'sportstoto_6d',
+    'magnum_life', 'sportstoto_fireball'
+];
+
+const NAME_MAP = {
+    'grand_dragon': 'GRAND DRAGON 豪龙', 'damacai': 'DAMACAI 4D', 'magnum': 'MAGNUM 4D',
+    'toto': 'TOTO 4D', 'singapore': 'SINGAPORE 4D', 'damacai_1p3d': 'DAMACAI 1+3D',
+    'sandakan': 'SANDAKAN 4D', 'sarawak_cashsweep': 'SARAWAK CASHSWEEP', 'sabah': 'SABAH 88 4D',
+    'sabah_lotto': 'SABAH LOTTO', 'singapore_toto': 'SINGAPORE TOTO', 'sportstoto_lotto': 'SPORTS TOTO LOTTO',
+    'magnum_jackpot_gold': 'MAGNUM JACKPOT GOLD', 'sportstoto_5d': 'SPORTS TOTO 5D',
+    'sportstoto_6d': 'SPORTS TOTO 6D', 'magnum_life': 'MAGNUM LIFE', 'sportstoto_fireball': 'SPORTS TOTO FIREBALL',
+    // 新增公司的名称
+    'perdana4d': 'PERDANA LOTTERY 4D',
+    'lucky_hari': 'LUCKY HARIHARI 天天好运'
+};
+
+// 注意：这里仅作为普通 4D 公司，如果你的新公司需要特殊渲染，请加入到 SPECIAL_COMPANIES 中
 const SPECIAL_COMPANIES = ['sportstoto_fireball', 'singapore_toto', 'magnum_jackpot_gold', 'sportstoto_5d', 'sportstoto_6d', 'magnum_life', 'sportstoto_lotto', 'sabah_lotto'];
-const COMPANY_IMAGE_MAP = {'damacai': 'damacai.png', 'damacai_1p3d': 'damacai1+3.png', 'sandakan': 'sandakan_logo.png','sarawak_cashsweep': 'sarawak.png', 'sabah': 'sabah88.png', 'sabah_lotto': 'sabahlotto.png','grand_dragon': 'granddragon.png', 'magnum': 'magnum.png', 'toto': 'toto.png','singapore': 'singapore4d.png', 'singapore_toto': 'singapore-pools.png'};
 const HIDDEN_COMPANIES = ['sportstoto_fireball'];
+
+const COMPANY_IMAGE_MAP = {
+    'damacai': 'damacai.png', 'damacai_1p3d': 'damacai1+3.png', 'sandakan': 'sandakan_logo.png',
+    'sarawak_cashsweep': 'sarawak.png', 'sabah': 'sabah88.png', 'sabah_lotto': 'sabahlotto.png',
+    'grand_dragon': 'granddragon.png', 'magnum': 'magnum.png', 'toto': 'toto.png',
+    'singapore': 'singapore4d.png', 'singapore_toto': 'singapore-pools.png',
+    // 新增公司的 Logo
+    'perdana4d': 'Perdana4D.png',
+    'lucky_hari': 'luckly_hari.png'
+};
 
 // ==================== 全局状态 ====================
 let availableDates = [], availableDatesSet = new Set(), selectedDate = null, currentCalendarDate = new Date(), isFallbackMode = false;
@@ -237,7 +270,6 @@ function renderCompanies(dataMap) {
             // 普通公司：任何缺失的字段都显示 ----
             html += `<div class="prize-grid"><div class="prize-card"><div class="label">First Prize</div><div class="number">${cd['1st']||'----'}</div></div><div class="prize-card"><div class="label">Second Prize</div><div class="number">${cd['2nd']||'----'}</div></div><div class="prize-card"><div class="label">Third Prize</div><div class="number">${cd['3rd']||'----'}</div></div></div>`;
             
-            // 过滤掉无效的 "****"、空字符串
             const validSpecial = cd.special ? cd.special.filter(n => n && n.trim() !== '' && n.trim() !== '****') : [];
             const validConsolation = cd.consolation ? cd.consolation.filter(n => n && n.trim() !== '' && n.trim() !== '****') : [];
 
@@ -255,7 +287,6 @@ function renderCompanies(dataMap) {
                 } 
                 html += `</div>`; 
             } else if (cd['1st'] || cd['2nd'] || cd['3rd']) {
-                // 如果主要号码有，但 special/consolation 全是无效值，显示占位提示
                 html += `<div class="subsection"><div class="subsection-title">Special / Consolation</div><div class="number-list"><span class="number-item" style="font-size:1rem;color:#888;">待官方更新 / 暂无记录</span></div></div>`;
             }
         }
@@ -330,13 +361,11 @@ window.selectDateFromCalendar = (str, e) => {
 document.addEventListener('DOMContentLoaded', () => {
     initCalendar();
     
-    // 检查本地存储的暗黑模式并应用
     if (localStorage.getItem('darkMode')==='enabled') { 
         document.body.classList.add('dark-mode'); 
         document.getElementById('dark-mode-btn').innerHTML = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>'; 
     }
     
-    // 绑定幸运号码滚动逻辑
     const spinBtn = document.getElementById('spin-btn');
     if (spinBtn) {
         spinBtn.addEventListener('click', () => { 
@@ -353,9 +382,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // 点击弹窗背景关闭弹窗
     document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if(e.target===o) o.style.display='none'; }));
     
-    // 加载数据
     loadDateIndex();
 });
