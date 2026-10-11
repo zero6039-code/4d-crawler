@@ -16,9 +16,9 @@ function toggleDarkMode() {
     }
 }
 
-// ==================== 注入 TOTO 专属布局 + 全局悬停效果样式 ====================
+// ==================== 注入全局悬停效果与 5D/6D 专属布局 ====================
 const totoStyles = `
-    /* ==== 1. 全局悬停效果修复 (包括前三名和暗黑模式) ==== */
+    /* ==== 1. 顶部第一、二、三奖的悬停效果（已生效，继续保留） ==== */
     .prize-card { transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); cursor: default; }
     .prize-card:hover { 
         transform: translateY(-3px); 
@@ -27,72 +27,57 @@ const totoStyles = `
     }
     .prize-card .number { transition: transform 0.25s ease; }
     .prize-card:hover .number { transform: scale(1.08); }
-    
-    /* 暗黑模式下的全局悬停效果 */
     body.dark-mode .prize-card:hover { 
         background: rgba(30,41,59,0.95) !important; 
         box-shadow: 0 8px 20px rgba(0,0,0,0.5); 
     }
     body.dark-mode .prize-card:hover .number { text-shadow: 0 0 15px rgba(251,191,36,0.5); }
 
-    /* ==== 2. 5D 专属布局 (2列 x 3行) ==== */
+    /* ==== 2. 其他所有号码（Special, Consolation, Lotto, Toto 等）的通用悬停效果 ==== */
+    .number-item { transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); cursor: default; }
+    .number-item:hover { 
+        transform: translateY(-3px) scale(1.08); 
+        box-shadow: 0 6px 15px rgba(0,0,0,0.1); 
+        background: #ffffff !important; 
+        border-color: #cbd5e1 !important; 
+        z-index: 10; 
+    }
+    /* 暗黑模式下的通用悬停效果 */
+    body.dark-mode .number-item:hover { 
+        background: rgba(30,41,59,0.95) !important; 
+        border-color: rgba(255,255,255,0.2) !important; 
+        box-shadow: 0 6px 15px rgba(0,0,0,0.5); 
+        color: #fbbf24 !important; 
+    }
+
+    /* ==== 3. 5D 专属布局 (保持不变) ==== */
     .toto-5d-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
     .toto-5d-box { 
-        background: rgba(255,255,255,0.8); 
-        border-radius: 16px; 
-        padding: 12px 8px; 
-        text-align: center; 
-        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); 
-        cursor: default; 
-        box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-        border: 1px solid rgba(255,255,255,0.5);
+        background: rgba(255,255,255,0.8); border-radius: 16px; padding: 12px 8px; text-align: center; 
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); cursor: default; 
+        box-shadow: 0 2px 8px rgba(0,0,0,0.03); border: 1px solid rgba(255,255,255,0.5);
     }
-    .toto-5d-box:hover { 
-        transform: translateY(-3px); 
-        box-shadow: 0 8px 16px rgba(0,0,0,0.1); 
-        background: #fff; 
-    }
+    .toto-5d-box:hover { transform: translateY(-3px); box-shadow: 0 8px 16px rgba(0,0,0,0.1); background: #fff; }
     .toto-5d-box .label { font-size: 0.85rem; color: #5f6b7a; font-weight: 600; text-transform: uppercase; }
-    .toto-5d-box .num { 
-        font-size: 1.8rem; 
-        font-weight: 800; 
-        color: #c62828; 
-        font-family: 'Courier New', monospace; 
-        margin-top: 4px; 
-        line-height: 1.2;
-    }
-    /* 5D 暗黑模式 */
+    .toto-5d-box .num { font-size: 1.8rem; font-weight: 800; color: #c62828; font-family: 'Courier New', monospace; margin-top: 4px; line-height: 1.2; }
     body.dark-mode .toto-5d-box { background: rgba(15,23,42,0.8); border-color: rgba(255,255,255,0.05); }
     body.dark-mode .toto-5d-box:hover { background: rgba(30,41,59,0.9); box-shadow: 0 8px 16px rgba(0,0,0,0.4); }
     body.dark-mode .toto-5d-box .label { color: #94a3b8; }
     body.dark-mode .toto-5d-box .num { color: #fbbf24; text-shadow: 0 0 15px rgba(251,191,36,0.3); }
     
-    /* ==== 3. 6D 专属布局 (数字放大 + 悬停效果) ==== */
+    /* ==== 4. 6D 专属布局 (保持不变) ==== */
     .toto-6d-grid { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 8px; }
     .toto-6d-row { 
-        display: flex; 
-        align-items: center; 
-        justify-content: space-between; 
-        background: rgba(255,255,255,0.8); 
-        border-radius: 12px; 
-        padding: 10px 14px; 
-        box-shadow: 0 2px 8px rgba(0,0,0,0.03); 
-        flex-wrap: wrap; 
-        gap: 6px; 
-        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-        cursor: default;
-        border: 1px solid rgba(255,255,255,0.5);
+        display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.8); 
+        border-radius: 12px; padding: 10px 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); 
+        flex-wrap: wrap; gap: 6px; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); 
+        cursor: default; border: 1px solid rgba(255,255,255,0.5);
     }
-    .toto-6d-row:hover { 
-        transform: translateX(4px); 
-        box-shadow: 0 6px 15px rgba(0,0,0,0.08); 
-        background: #fff; 
-    }
+    .toto-6d-row:hover { transform: translateX(4px); box-shadow: 0 6px 15px rgba(0,0,0,0.08); background: #fff; }
     .toto-6d-row .label { font-size: 0.9rem; color: #5f6b7a; font-weight: 600; width: 42px; }
     .toto-6d-row .main-num { font-size: 1.4rem; font-weight: 800; color: #c62828; font-family: 'Courier New', monospace; }
     .toto-6d-row .alt-num { font-size: 1.4rem; font-weight: 800; color: #c62828; font-family: 'Courier New', monospace; }
     .toto-6d-row .or-text { font-size: 0.85rem; color: #94a3b8; margin: 0 6px; font-weight: 500; }
-    /* 6D 暗黑模式 */
     body.dark-mode .toto-6d-row { background: rgba(15,23,42,0.8); border-color: rgba(255,255,255,0.05); }
     body.dark-mode .toto-6d-row:hover { background: rgba(30,41,59,0.9); box-shadow: 0 6px 15px rgba(0,0,0,0.4); }
     body.dark-mode .toto-6d-row .label { color: #94a3b8; }
@@ -281,7 +266,7 @@ function renderCompanies(dataMap) {
         if (isSpecial) {
             let rendered = false;
             
-            // ====== 5D 专属布局 (2列 x 3行) ======
+            // ====== 5D 专属布局 ======
             const is5D = cd.type === '5d' || (!cd.type && cd['6th'] && (!cd['2nd'] || typeof cd['2nd'] === 'string'));
             if (is5D) {
                 html += `<div class="subsection"><div class="subsection-title">5D Results</div><div class="toto-5d-grid">`;
@@ -300,7 +285,7 @@ function renderCompanies(dataMap) {
                 rendered = true;
             }
             
-            // ====== 6D 专属布局 (放大数字 + 悬停效果) ======
+            // ====== 6D 专属布局 ======
             const is6D = cd.type === '6d' || (!cd.type && cd['2nd'] && cd['2nd'].main);
             if (is6D) {
                 html += `<div class="subsection"><div class="subsection-title">6D Results</div><div class="toto-6d-grid">`;
