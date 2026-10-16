@@ -1088,37 +1088,13 @@ def main():
         json_success = fetch_all_companies_from_dato4d()
 
     # ========== 新增：检查 Perdana 和 Lucky HariHari 是否缺失，若缺失则使用备用源 ==========
-    backup_needed = []
-    # 检查文件是否存在
-    if not os.path.exists(os.path.join("docs/data", "perdana4d.json")):
-        backup_needed.append("perdana4d")
-    else:
-        # 检查文件内容是否为空 (比如 {})
-        try:
-            with open(os.path.join("docs/data", "perdana4d.json"), "r", encoding="utf-8") as f:
-                if not json.load(f):
-                    backup_needed.append("perdana4d")
-        except:
-            backup_needed.append("perdana4d")
-
-    if not os.path.exists(os.path.join("docs/data", "lucky_hari.json")):
-        backup_needed.append("lucky_hari")
-    else:
-        try:
-            with open(os.path.join("docs/data", "lucky_hari.json"), "r", encoding="utf-8") as f:
-                if not json.load(f):
-                    backup_needed.append("lucky_hari")
-        except:
-            backup_needed.append("lucky_hari")
-
-    if backup_needed:
-        print(f"⚠️ 检测到 {backup_needed} 数据缺失，尝试从备用源获取晚间场数据...")
-        backup_data = fetch_backup_sources()
-        for key, data in backup_data.items():
-            if data and any(data.get(k) for k in ['1st', '2nd', '3rd']): # 确保有实际号码
-                save_json(key, data)
-                print(f"✅ 已使用备用源更新 {key}")
-
+    print("🔄 正在从备用源获取 Perdana 和 Lucky HariHari 的晚间场数据...")
+    backup_data = fetch_backup_sources()
+    for key, data in backup_data.items():
+        if data and any(data.get(k) for k in ['1st', '2nd', '3rd']): # 确保有实际号码才保存
+            save_json(key, data)
+            print(f"✅ 已使用备用源强制更新 {key}")
+            
     # 如果 JSON 源失败，则回退到 4d4d.co 抓取
     if not json_success:
         print("⚠️ 批量 JSON 获取失败，回退到 4d4d.co 抓取...")
