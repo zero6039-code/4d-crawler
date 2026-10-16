@@ -531,7 +531,6 @@ def extract_standard_4d_from_json(item, company):
 def extract_magnum_from_json(item, company):
     """提取 Magnum 数据（可能包含 Life 信息，但暂时只取标准 4D）"""
     result = extract_standard_4d_from_json(item, company)
-    # 如果有 Life 相关字段，可以在这里扩展
     return result
 
 def extract_damacai_1p3d_from_json(item, company):
@@ -546,7 +545,6 @@ def extract_damacai_1p3d_from_json(item, company):
         "consolation": []
     }
 
-    # 1+3D 的特别奖和安慰奖是 6 位数字，直接提取
     for i in range(1, 14):
         key = f"S{i}"
         if key in item:
@@ -564,7 +562,6 @@ def extract_damacai_1p3d_from_json(item, company):
 def extract_sabah_from_json(item, company):
     """提取 Sabah 88 4D 数据（包含 3D）"""
     result = extract_standard_4d_from_json(item, company)
-    # 提取 3D
     result['3d'] = {
         "1st": item.get("P13D", ""),
         "2nd": item.get("P23D", ""),
@@ -575,7 +572,6 @@ def extract_sabah_from_json(item, company):
 def extract_grand_dragon_from_json(item, company):
     """提取 Grand Dragon 4D 数据"""
     result = extract_standard_4d_from_json(item, company)
-    # Grand Dragon 可能有 Jackpot，但 JSON 中没有，保留为空
     result["jackpot"] = ""
     return result
 
@@ -588,18 +584,16 @@ def extract_magnum_jackpot_gold_from_json(item, company):
         "jackpots": []
     }
 
-    # 提取组号码 (P1-P8 可能代表各组号码，需确认)
     groups = []
     for i in range(1, 9):
         key = f"P{i}"
         if key in item and item[key]:
             groups.append({
                 "group": str(i),
-                "numbers": [item[key]]  # 假设每组只有一个号码
+                "numbers": [item[key]]
             })
     result["groups"] = groups
 
-    # 提取 Jackpots
     if "JP1" in item:
         result["jackpots"].append(item["JP1"])
     if "JP2" in item:
@@ -607,7 +601,7 @@ def extract_magnum_jackpot_gold_from_json(item, company):
     return result
 
 def extract_sabah_lotto_from_json(item, company):
-    """提取 Sabah Lotto 数据（包含 Lotto 6/45、Lotto 6 和 Lotto 5 的所有组）"""
+    """提取 Sabah Lotto 数据"""
     result = {
         "draw_date": extract_date_from_dd(item.get("DD", "")),
         "draw_no": item.get("DN", ""),
@@ -616,7 +610,6 @@ def extract_sabah_lotto_from_json(item, company):
         "jackpot2": ""
     }
 
-    # 提取 Lotto 6/45 主号码 (LT1-LT7)
     winning = []
     for i in range(1, 8):
         key = f"LT{i}"
@@ -626,32 +619,25 @@ def extract_sabah_lotto_from_json(item, company):
                 winning.append(num)
     result["winning_numbers"] = winning
 
-    # 提取两个主 Jackpot
     if "LTJP1" in item:
         result["jackpot1"] = item["LTJP1"]
     if "LTJP2" in item:
         result["jackpot2"] = item["LTJP2"]
 
-    # ===== 提取 Lotto 6 组数据（共5组） =====
-    for g in range(1, 6):  # 组号 1-5
-        # 每组6个号码：前5个为普通号码，第6个为额外号
+    for g in range(1, 6):
         for i in range(1, 7):
             key = f"LT6G{g}{i}"
             if key in item:
                 result[key] = item[key]
-        # 对应 Jackpot 奖金
         jp_key = f"LT6G{g}JP"
         if jp_key in item:
             result[jp_key] = item[jp_key]
 
-    # ===== 提取 Lotto 5 组数据（共8组） =====
-    for g in range(1, 9):  # 组号 1-8
-        # 每组5个号码：前4个为普通号码，第5个为额外号
+    for g in range(1, 9):
         for i in range(1, 6):
             key = f"LT5G{g}{i}"
             if key in item:
                 result[key] = item[key]
-        # 对应 Jackpot 奖金
         jp_key = f"LT5G{g}JP"
         if jp_key in item:
             result[jp_key] = item[jp_key]
@@ -667,7 +653,6 @@ def extract_singapore_toto_from_json(item, company):
         "prize_table": []
     }
 
-    # 提取开奖号码 (P1-P7)
     winning = []
     for i in range(1, 8):
         key = f"P{i}"
@@ -677,7 +662,6 @@ def extract_singapore_toto_from_json(item, company):
                 winning.append(num)
     result["winning_numbers"] = winning
 
-    # 提取奖金表 (JP1, JP2 等)
     prize_groups = [
         {"group": "Group 1", "amount": item.get("JP1", ""), "winners": item.get("JPW1", "")},
         {"group": "Group 2", "amount": item.get("JP2", ""), "winners": item.get("JPW2", "")},
@@ -691,7 +675,6 @@ def extract_singapore_toto_from_json(item, company):
 
 # ================== 新增 JSON 提取函数 ==================
 def extract_sportstoto_5d_from_json(t_item, company):
-    """从 T 对象提取 Sports Toto 5D 数据"""
     return {
         "draw_date": extract_date_from_dd(t_item.get("DD", "")),
         "draw_no": t_item.get("DN", ""),
@@ -705,7 +688,6 @@ def extract_sportstoto_5d_from_json(t_item, company):
     }
 
 def extract_sportstoto_6d_from_json(t_item, company):
-    """从 T 对象提取 Sports Toto 6D 数据"""
     return {
         "draw_date": extract_date_from_dd(t_item.get("DD", "")),
         "draw_no": t_item.get("DN", ""),
@@ -730,42 +712,15 @@ def extract_sportstoto_6d_from_json(t_item, company):
     }
 
 def extract_sportstoto_lotto_from_json(t_item, company):
-    """从 T 对象提取 Sports Toto Lotto (Star/Power/Supreme) 数据"""
-    # 过滤无效值
     def clean_num(val):
         return val if val and val not in ["-", "----"] else ""
 
-    star = [
-        clean_num(t_item.get("P6501")),
-        clean_num(t_item.get("P6502")),
-        clean_num(t_item.get("P6503")),
-        clean_num(t_item.get("P6504")),
-        clean_num(t_item.get("P6505")),
-        clean_num(t_item.get("P6506")),
-        clean_num(t_item.get("P650EX"))
-    ]
-    power = [
-        clean_num(t_item.get("P6551")),
-        clean_num(t_item.get("P6552")),
-        clean_num(t_item.get("P6553")),
-        clean_num(t_item.get("P6554")),
-        clean_num(t_item.get("P6555")),
-        clean_num(t_item.get("P6556"))
-    ]
-    supreme = [
-        clean_num(t_item.get("P6581")),
-        clean_num(t_item.get("P6582")),
-        clean_num(t_item.get("P6583")),
-        clean_num(t_item.get("P6584")),
-        clean_num(t_item.get("P6585")),
-        clean_num(t_item.get("P6586"))
-    ]
-    # 提取 Jackpots: 顺序为 Star JP1, Star JP2, Power JP, Supreme JP
+    star = [clean_num(t_item.get(f"P650{i}")) for i in range(1, 7)] + [clean_num(t_item.get("P650EX"))]
+    power = [clean_num(t_item.get(f"P655{i}")) for i in range(1, 7)]
+    supreme = [clean_num(t_item.get(f"P658{i}")) for i in range(1, 7)]
     jackpots = [
-        clean_num(t_item.get("P650JP1")),
-        clean_num(t_item.get("P650JP2")),
-        clean_num(t_item.get("P655JP")),
-        clean_num(t_item.get("P658JP"))
+        clean_num(t_item.get("P650JP1")), clean_num(t_item.get("P650JP2")),
+        clean_num(t_item.get("P655JP")), clean_num(t_item.get("P658JP"))
     ]
     return {
         "draw_date": extract_date_from_dd(t_item.get("DD", "")),
@@ -778,24 +733,11 @@ def extract_sportstoto_lotto_from_json(t_item, company):
     }
 
 def extract_magnum_life_from_json(m_item, company):
-    """从 M 对象提取 Magnum Life 数据"""
     def clean_num(val):
         return val if val and val not in ["-", "----"] else ""
 
-    winning = [
-        clean_num(m_item.get("L1")),
-        clean_num(m_item.get("L2")),
-        clean_num(m_item.get("L3")),
-        clean_num(m_item.get("L4")),
-        clean_num(m_item.get("L5")),
-        clean_num(m_item.get("L6")),
-        clean_num(m_item.get("L7")),
-        clean_num(m_item.get("L8"))
-    ]
-    bonus = [
-        clean_num(m_item.get("LB1")),
-        clean_num(m_item.get("LB2"))
-    ]
+    winning = [clean_num(m_item.get(f"L{i}")) for i in range(1, 9)]
+    bonus = [clean_num(m_item.get("LB1")), clean_num(m_item.get("LB2"))]
     return {
         "draw_date": extract_date_from_dd(m_item.get("DD", "")),
         "draw_no": m_item.get("DN", ""),
@@ -838,48 +780,64 @@ def fetch_backup_sources():
     except Exception as e:
         print(f"⚠️ 备用源 Perdana 抓取失败: {e}")
 
-    # --- 2. Lucky HariHari 4D (只取晚间场) ---
+    # --- 2. Lucky HariHari 4D (只取晚间场，自动回退到昨天) ---
     try:
-        # 使用马来西亚时区
-        # 动态生成当天 19:30:00 的日期时间字符串
         tz = timezone(timedelta(hours=8))
-        today_str = datetime.now(tz).strftime("%Y-%m-%d")
-        target_time = f"{today_str}T19:30:00"
+        now_my = datetime.now(tz)
         
+        # 1. 尝试请求今天
+        today_str = now_my.strftime("%Y-%m-%d")
+        target_time = f"{today_str}T19:30:00"
         url_hari = f"https://api.hari4d.com/DrawResultL/GetDrawResult?date={target_time}&nocache={int(time.time()*1000)}&_={int(time.time()*1000)}"
         res = requests.get(url_hari, timeout=15, headers={"User-Agent": "Mozilla/5.0"})
+        
+        json_data = {}
         if res.status_code == 200:
             json_data = res.json()
+            print(f"DEBUG: 今天 ({today_str}) API 返回: isDone={json_data.get('isDone')}, 1st={json_data.get('prize1')}")
+        
+        # 2. 检查今天是否真正开奖（如果没开奖，才回退到昨天）
+        if not json_data.get("prize1") or json_data.get("isDone") == False:
+            print("⚠️ 今天尚未开奖，自动回退抓取昨天...")
+            yesterday_str = (now_my - timedelta(days=1)).strftime("%Y-%m-%d")
+            target_time = f"{yesterday_str}T19:30:00"
+            url_hari = f"https://api.hari4d.com/DrawResultL/GetDrawResult?date={target_time}&nocache={int(time.time()*1000)}&_={int(time.time()*1000)}"
+            res = requests.get(url_hari, timeout=15, headers={"User-Agent": "Mozilla/5.0"})
+            if res.status_code == 200:
+                json_data = res.json()
+                print(f"DEBUG: 成功回退抓取昨天 ({yesterday_str}) 的数据")
 
-            # 👇 把调试打印放在这里，这才是真正的 HariHari JSON
-            print(f"DEBUG: Lucky HariHari API Response: {json_data}")
-            
+        # 3. 不管今天还是昨天，只要拿到了数据，就进行提取和保存（放在回退判断的外面）
+        if json_data.get("prize1"):
             # 映射 API 返回的字段到你的 JSON 结构
             special_nums = [
-                json_data.get("prizeA", ""), json_data.get("prizeB", ""),
-                json_data.get("prizeC", ""), json_data.get("prizeE", ""),
-                json_data.get("prizeF", ""), json_data.get("prizeH", ""),
-                json_data.get("prizeL", ""), json_data.get("prizeN", ""),
-                json_data.get("prizeO", ""), json_data.get("prizeP", "")
+                json_data.get("prizeA"), json_data.get("prizeB"),
+                json_data.get("prizeC"), json_data.get("prizeE"),
+                json_data.get("prizeF"), json_data.get("prizeH"),
+                json_data.get("prizeL"), json_data.get("prizeN"),
+                json_data.get("prizeO"), json_data.get("prizeP")
             ]
             consolation_nums = [
-                json_data.get("prizeQ", ""), json_data.get("prizeR", ""),
-                json_data.get("prizeS", ""), json_data.get("prizeT", ""),
-                json_data.get("prizeU", ""), json_data.get("prizeV", ""),
-                json_data.get("prizeW", "")
+                json_data.get("prizeQ"), json_data.get("prizeR"),
+                json_data.get("prizeS"), json_data.get("prizeT"),
+                json_data.get("prizeU"), json_data.get("prizeV"),
+                json_data.get("prizeW")
             ]
             
             backup_data["lucky_hari"] = {
-                "draw_date": json_data.get("drawDate", "").split("T")[0], # 取日期部分
+                "draw_date": json_data.get("drawDate", "").split("T")[0], 
                 "draw_no": "",
-                "draw_time": "7:30 PM",  # 新增标记
+                "draw_time": "7:30 PM", 
                 "1st": json_data.get("prize1", ""),
                 "2nd": json_data.get("prize2", ""),
                 "3rd": json_data.get("prize3", ""),
                 "special": [n for n in special_nums if n and n != "----"],
                 "consolation": [n for n in consolation_nums if n and n != "----"]
             }
-            print("✅ 从备用源获取到 Lucky HariHari 4D (晚间 7:30 PM) 数据")
+            print(f"✅ 从备用源获取到 Lucky HariHari 4D ({json_data.get('drawDate', '').split('T')[0]} 晚间 7:30 PM) 数据")
+        else:
+            print("⚠️ 今天和昨天均未获取到 Lucky HariHari 数据，跳过更新")
+            
     except Exception as e:
         print(f"⚠️ 备用源 Lucky HariHari 抓取失败: {e}")
 
@@ -933,17 +891,14 @@ def fetch_all_companies_from_dato4d():
     # 额外处理 T 对象中的 Sports Toto 5D/6D/Lotto
     if "T" in data:
         t_item = data["T"]
-        # Sports Toto 5D
         toto_5d_data = extract_sportstoto_5d_from_json(t_item, "sportstoto_5d")
         if toto_5d_data and any(toto_5d_data.get(k) for k in ['1st','2nd','3rd','4th','5th','6th']):
             save_json("sportstoto_5d", toto_5d_data)
             success_count += 1
-        # Sports Toto 6D
         toto_6d_data = extract_sportstoto_6d_from_json(t_item, "sportstoto_6d")
         if toto_6d_data and (toto_6d_data.get('1st') or any(toto_6d_data.get(k, {}).get('main') for k in ['2nd','3rd','4th','5th'])):
             save_json("sportstoto_6d", toto_6d_data)
             success_count += 1
-        # Sports Toto Lotto
         toto_lotto_data = extract_sportstoto_lotto_from_json(t_item, "sportstoto_lotto")
         if toto_lotto_data and (toto_lotto_data.get('star') or toto_lotto_data.get('power') or toto_lotto_data.get('supreme')):
             save_json("sportstoto_lotto", toto_lotto_data)
@@ -951,7 +906,6 @@ def fetch_all_companies_from_dato4d():
     else:
         print("⚠️ JSON 中缺少 T (Toto) 的数据")
 
-    # 额外处理 M 对象中的 Magnum Life
     if "M" in data:
         m_item = data["M"]
         magnum_life_data = extract_magnum_life_from_json(m_item, "magnum_life")
@@ -961,7 +915,7 @@ def fetch_all_companies_from_dato4d():
     else:
         print("⚠️ JSON 中缺少 M (Magnum) 的数据")
 
-    # ========== 新增：提取三家公司开奖结果并保存为固定文件 ==========
+    # 提取三家公司开奖结果并保存为固定文件
     companies_to_extract = {
         "D": "damacai",
         "M": "magnum",
@@ -981,21 +935,18 @@ def fetch_all_companies_from_dato4d():
                     "special": [],
                     "consolation": []
                 }
-                # 提取特别奖 S1-S13
                 for i in range(1, 14):
                     s_key = f"S{i}"
                     if s_key in company_data:
                         num = company_data[s_key]
                         if num and num not in ["----", "-"]:
                             draw_result["special"].append(num)
-                # 提取安慰奖 C1-C10
                 for i in range(1, 11):
                     c_key = f"C{i}"
                     if c_key in company_data:
                         num = company_data[c_key]
                         if num and num not in ["----", "-"]:
                             draw_result["consolation"].append(num)
-                # 保存固定文件
                 draw_dir = os.path.join("docs/data", ymd_date)
                 os.makedirs(draw_dir, exist_ok=True)
                 draw_path = os.path.join(draw_dir, f"{company_name}_draw.json")
@@ -1055,10 +1006,8 @@ def update_dates_index():
 def main():
     print("🚀 爬虫开始运行")
 
-    # 读取环境变量，判断是否为手动触发
     is_manual = os.getenv('IS_MANUAL') == 'true'
 
-    # 如果不是手动触发，则执行时段检查
     if not is_manual:
         tz = timezone(timedelta(hours=8))
         now = datetime.now(tz)
@@ -1072,7 +1021,6 @@ def main():
     else:
         print("手动触发模式，跳过时段检查。")
 
-    # 自动模式下循环重试，手动模式只尝试一次
     if not is_manual:
         max_attempts = 12
         attempt = 0
@@ -1092,11 +1040,11 @@ def main():
     else:
         json_success = fetch_all_companies_from_dato4d()
 
-    # ========== 新增：检查 Perdana 和 Lucky HariHari 是否缺失，若缺失则使用备用源 ==========
+    # ========== 强制使用备用源更新 Perdana 和 Lucky HariHari ==========
     print("🔄 正在从备用源获取 Perdana 和 Lucky HariHari 的晚间场数据...")
     backup_data = fetch_backup_sources()
     for key, data in backup_data.items():
-        if data and any(data.get(k) for k in ['1st', '2nd', '3rd']): # 确保有实际号码才保存
+        if data and any(data.get(k) for k in ['1st', '2nd', '3rd']):
             save_json(key, data)
             print(f"✅ 已使用备用源强制更新 {key}")
             
