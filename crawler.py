@@ -804,6 +804,82 @@ def extract_magnum_life_from_json(m_item, company):
         "bonus_numbers": [n for n in bonus if n]
     }
 
+# ================== 新增：备用源抓取（Perdana 和 Lucky HariHari 晚间场） ==================
+def fetch_backup_sources():
+    """
+    从备用源抓取 Perdana 和 Lucky HariHari 的晚间场数据。
+    返回一个字典，包含 'perdana4d' 和 'lucky_hari'。
+    """
+    backup_data = {}
+    print("🔄 正在从备用源抓取晚间场数据...")
+
+    # --- 1. Perdana 4D (只取晚间场) ---
+    try:
+        url_perdana = "https://4dlivetoday.com/api/v1/operators/perdana?limit=3"
+        res = requests.get(url_perdana, timeout=15, headers={"User-Agent": "Mozilla/5.0"})
+        if res.status_code == 200:
+            json_data = res.json()
+            results = json_data.get("data", {}).get("results", [])
+            for item in results:
+                # 只取 operator 为 "perdana" (晚间场)，忽略 "perdana3pm"
+                if item.get("operator") == "perdana":
+                    backup_data["perdana4d"] = {
+                        "draw_date": item.get("date", ""),
+                        "draw_no": item.get("draw_no", ""),
+                        "draw_time": "7:30 PM",  # 新增标记
+                        "1st": item.get("first", ""),
+                        "2nd": item.get("second", ""),
+                        "3rd": item.get("third", ""),
+                        "special": item.get("special", []),
+                        "consolation": item.get("consolation", [])
+                    }
+                    print("✅ 从备用源获取到 Perdana 4D (晚间 7:30 PM) 数据")
+                    break
+    except Exception as e:
+        print(f"⚠️ 备用源 Perdana 抓取失败: {e}")
+
+    # --- 2. Lucky HariHari 4D (只取晚间场) ---
+    try:
+        # 动态生成当天 19:30:00 的日期时间字符串
+        today_str = datetime.now().strftime("%Y-%m-%d")
+        target_time = f"{today_str}T19:30:00"
+        
+        url_hari = f"https://api.hari4d.com/DrawResultL/GetDrawResult?date={target_time}&nocache={int(time.time()*1000)}&_={int(time.time()*1000)}"
+        res = requests.get(url_hari, timeout=15, headers={"User-Agent": "Mozilla/5.0"})
+        if res.status_code == 200:
+            json_data = res.json()
+            
+            # 映射 API 返回的字段到你的 JSON 结构
+            special_nums = [
+                json_data.get("prizeA", ""), json_data.get("prizeB", ""),
+                json_data.get("prizeC", ""), json_data.get("prizeE", ""),
+                json_data.get("prizeF", ""), json_data.get("prizeH", ""),
+                json_data.get("prizeL", ""), json_data.get("prizeN", ""),
+                json_data.get("prizeO", ""), json_data.get("prizeP", "")
+            ]
+            consolation_nums = [
+                json_data.get("prizeQ", ""), json_data.get("prizeR", ""),
+                json_data.get("prizeS", ""), json_data.get("prizeT", ""),
+                json_data.get("prizeU", ""), json_data.get("prizeV", ""),
+                json_data.get("prizeW", "")
+            ]
+            
+            backup_data["lucky_hari"] = {
+                "draw_date": json_data.get("drawDate", "").split("T")[0], # 取日期部分
+                "draw_no": "",
+                "draw_time": "7:30 PM",  # 新增标记
+                "1st": json_data.get("prize1", ""),
+                "2nd": json_data.get("prize2", ""),
+                "3rd": json_data.get("prize3", ""),
+                "special": [n for n in special_nums if n and n != "----"],
+                "consolation": [n for n in consolation_nums if n and n != "----"]
+            }
+            print("✅ 从备用源获取到 Lucky HariHari 4D (晚间 7:30 PM) 数据")
+    except Exception as e:
+        print(f"⚠️ 备用源 Lucky HariHari 抓取失败: {e}")
+
+    return backup_data
+
 def fetch_all_companies_from_dato4d():
     """从 https://www.dato4d.com/liveos.json 获取所有公司的数据"""
     print("🔍 正在从 dato4d.com JSON 批量获取所有公司数据...")
@@ -979,7 +1055,6 @@ def main():
 
     # 如果不是手动触发，则执行时段检查
     if not is_manual:
-        from datetime import datetime, timezone, timedelta
         tz = timezone(timedelta(hours=8))
         now = datetime.now(tz)
         
@@ -1011,6 +1086,38 @@ def main():
             print("时段内多次尝试 JSON 均失败。")
     else:
         json_success = fetch_all_companies_from_dato4d()
+
+    # ========== 新增：检查 Perdana 和 Lucky HariHari 是否缺失，若缺失则使用备用源 ==========
+    backup_needed = []
+    # 检查文件是否存在
+    if not os.path.exists(os.path.join("docs/data", "perdana4d.json")):
+        backup_needed.append("perdana4d")
+    else:
+        # 检查文件内容是否为空 (比如 {})
+        try:
+            with open(os.path.join("docs/data", "perdana4d.json"), "r", encoding="utf-8") as f:
+                if not json.load(f):
+                    backup_needed.append("perdana4d")
+        except:
+            backup_needed.append("perdana4d")
+
+    if not os.path.exists(os.path.join("docs/data", "lucky_hari.json")):
+        backup_needed.append("lucky_hari")
+    else:
+        try:
+            with open(os.path.join("docs/data", "lucky_hari.json"), "r", encoding="utf-8") as f:
+                if not json.load(f):
+                    backup_needed.append("lucky_hari")
+        except:
+            backup_needed.append("lucky_hari")
+
+    if backup_needed:
+        print(f"⚠️ 检测到 {backup_needed} 数据缺失，尝试从备用源获取晚间场数据...")
+        backup_data = fetch_backup_sources()
+        for key, data in backup_data.items():
+            if data and any(data.get(k) for k in ['1st', '2nd', '3rd']): # 确保有实际号码
+                save_json(key, data)
+                print(f"✅ 已使用备用源更新 {key}")
 
     # 如果 JSON 源失败，则回退到 4d4d.co 抓取
     if not json_success:
