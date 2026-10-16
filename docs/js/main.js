@@ -340,7 +340,8 @@ function renderCompanies(dataMap) {
         }
 
         // --- 下面开始是其他卡片的通用渲染逻辑 ---
-        html += `<div class="company-section" data-company="${key}"><div class="company-title">${name}${img?`<img src="${img}" onerror="this.style.display='none'">`:''}</div><div class="draw-date">${cd.draw_date || '未知'} ${cd.draw_no?'| Draw No: '+cd.draw_no:''}</div><div class="company-content">`;
+        const timeTag = cd.draw_time ? ` | <span style="color: #d97706; font-weight: bold;">${cd.draw_time}</span>` : '';
+        html += `<div class="company-section" data-company="${key}"><div class="company-title">${name}${img?`<img src="${img}" onerror="this.style.display='none'">`:''}</div><div class="draw-date">${cd.draw_date || '未知'} ${cd.draw_no?'| Draw No: '+cd.draw_no:''}${timeTag}</div><div class="company-content">`;
         
         const isSpecial = SPECIAL_COMPANIES.includes(key);
         
