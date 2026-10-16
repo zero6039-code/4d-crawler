@@ -818,7 +818,7 @@ def fetch_backup_sources():
         url_perdana = "https://4dlivetoday.com/api/v1/operators/perdana?limit=3"
         res = requests.get(url_perdana, timeout=15, headers={"User-Agent": "Mozilla/5.0"})
         if res.status_code == 200:
-            json_data = res.json()
+            json_data = res.json()            
             results = json_data.get("data", {}).get("results", [])
             for item in results:
                 # 只取 operator 为 "perdana" (晚间场)，忽略 "perdana3pm"
@@ -840,14 +840,19 @@ def fetch_backup_sources():
 
     # --- 2. Lucky HariHari 4D (只取晚间场) ---
     try:
+        # 使用马来西亚时区
         # 动态生成当天 19:30:00 的日期时间字符串
-        today_str = datetime.now().strftime("%Y-%m-%d")
+        tz = timezone(timedelta(hours=8))
+        today_str = datetime.now(tz).strftime("%Y-%m-%d")
         target_time = f"{today_str}T19:30:00"
         
         url_hari = f"https://api.hari4d.com/DrawResultL/GetDrawResult?date={target_time}&nocache={int(time.time()*1000)}&_={int(time.time()*1000)}"
         res = requests.get(url_hari, timeout=15, headers={"User-Agent": "Mozilla/5.0"})
         if res.status_code == 200:
             json_data = res.json()
+
+            # 👇 把调试打印放在这里，这才是真正的 HariHari JSON
+            print(f"DEBUG: Lucky HariHari API Response: {json_data}")
             
             # 映射 API 返回的字段到你的 JSON 结构
             special_nums = [
