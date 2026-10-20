@@ -4,7 +4,11 @@
   "1st": "----",
   "2nd": "----",
   "3rd": "----",
-  "special": [],
-  "consolation": [],
+  "special": [
+    "5750"
+  ],
+  "consolation": [
+    "1841"
+  ],
   "jackpot": ""
 }
