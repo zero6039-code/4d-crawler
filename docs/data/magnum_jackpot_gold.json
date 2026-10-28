@@ -1,7 +1,56 @@
 {
   "draw_date": "28-10-2026",
-  "draw_no": "",
-  "groups": [],
+  "draw_no": "442/26",
+  "groups": [
+    {
+      "group": "1",
+      "numbers": [
+        "4"
+      ]
+    },
+    {
+      "group": "2",
+      "numbers": [
+        "3"
+      ]
+    },
+    {
+      "group": "3",
+      "numbers": [
+        "8"
+      ]
+    },
+    {
+      "group": "4",
+      "numbers": [
+        "7"
+      ]
+    },
+    {
+      "group": "5",
+      "numbers": [
+        "5"
+      ]
+    },
+    {
+      "group": "6",
+      "numbers": [
+        "1"
+      ]
+    },
+    {
+      "group": "7",
+      "numbers": [
+        "1"
+      ]
+    },
+    {
+      "group": "8",
+      "numbers": [
+        "2"
+      ]
+    }
+  ],
   "jackpots": [
     "",
     ""
