@@ -1,6 +1,6 @@
 {
   "outputDirectory": "docs",
-  "cleanUrls": true,
+  "cleanUrls": false,
   "headers": [
     {
       "source": "/data/(.*)",
