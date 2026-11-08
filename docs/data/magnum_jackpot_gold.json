@@ -1,58 +1,9 @@
 {
-  "draw_date": "07-11-2026",
-  "draw_no": "446/26",
-  "groups": [
-    {
-      "group": "1",
-      "numbers": [
-        "3"
-      ]
-    },
-    {
-      "group": "2",
-      "numbers": [
-        "2"
-      ]
-    },
-    {
-      "group": "3",
-      "numbers": [
-        "4"
-      ]
-    },
-    {
-      "group": "4",
-      "numbers": [
-        "2"
-      ]
-    },
-    {
-      "group": "5",
-      "numbers": [
-        "5"
-      ]
-    },
-    {
-      "group": "6",
-      "numbers": [
-        "6"
-      ]
-    },
-    {
-      "group": "7",
-      "numbers": [
-        "0"
-      ]
-    },
-    {
-      "group": "8",
-      "numbers": [
-        "5"
-      ]
-    }
-  ],
+  "draw_date": "08-11-2026",
+  "draw_no": "",
+  "groups": [],
   "jackpots": [
-    "RM 14,764,758.64",
-    "RM 100,000.00"
+    "",
+    ""
   ]
 }
