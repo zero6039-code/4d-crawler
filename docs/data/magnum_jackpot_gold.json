@@ -1,7 +1,56 @@
 {
   "draw_date": "11-11-2026",
-  "draw_no": "",
-  "groups": [],
+  "draw_no": "448/26",
+  "groups": [
+    {
+      "group": "1",
+      "numbers": [
+        "6"
+      ]
+    },
+    {
+      "group": "2",
+      "numbers": [
+        "6"
+      ]
+    },
+    {
+      "group": "3",
+      "numbers": [
+        "6"
+      ]
+    },
+    {
+      "group": "4",
+      "numbers": [
+        "2"
+      ]
+    },
+    {
+      "group": "5",
+      "numbers": [
+        "7"
+      ]
+    },
+    {
+      "group": "6",
+      "numbers": [
+        "2"
+      ]
+    },
+    {
+      "group": "7",
+      "numbers": [
+        "1"
+      ]
+    },
+    {
+      "group": "8",
+      "numbers": [
+        "4"
+      ]
+    }
+  ],
   "jackpots": [
     "",
     ""
