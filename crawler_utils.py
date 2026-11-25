@@ -69,5 +69,18 @@ def save_json(company, data, base="docs/data"):
         print(f"⚠️ {company} 缺少 draw_date，按今天 {ymd} 归档")
     data = {**data, "draw_date": to_dmy(ymd)}
     changed = atomic_write_json(os.path.join(base, f"{company}.json"), data)
-    atomic_write_json(os.path.join(base, ymd, f"{company}.json"), data)
+
+    # 单日聚合：每次成功保存都同步更新 all.json，供历史查询服务直接读取
+    all_path = os.path.join(base, ymd, "all.json")
+    merged = {}
+    if os.path.exists(all_path):
+        try:
+            with open(all_path, encoding="utf-8") as f:
+                loaded = json.load(f)
+            if isinstance(loaded, dict):
+                merged = loaded
+        except (OSError, ValueError):
+            merged = {}
+    merged[company] = data
+    atomic_write_json(all_path, merged)
     return changed
