@@ -105,6 +105,8 @@ const totoStyles = `
     body.dark-mode .toto-special-ball { background: #9b2c2c; color: #fbbf24; }
     body.dark-mode .singapore-toto-table th { background: #2d3748; }
     body.dark-mode .singapore-toto-table td { background: rgba(15,23,42,0.8); border-bottom-color: #4a5568; color: #e2e8f0; }
+    .singapore-toto-table .toto-prize-row td { background: #fff7ed; color: #b45309; font-weight: 700; text-align: center; }
+    body.dark-mode .singapore-toto-table .toto-prize-row td { background: rgba(120,53,15,0.45); color: #fbbf24; }
 `;
 const styleSheet = document.createElement("style");
 styleSheet.textContent = totoStyles;
@@ -421,6 +423,9 @@ function renderCompanies(dataMap) {
                         row.forEach(cell => html += `<td>${cell}</td>`);
                         html += `</tr>`;
                     });
+                    if (cd.prize && typeof cd.prize === 'string' && cd.prize.trim() !== '') {
+                        html += `<tr class="toto-prize-row"><td colspan="3">Prize: ${cd.prize}</td></tr>`;
+                    }
                     html += `</tbody></table></div>`;
                 }
                 rendered = true;
