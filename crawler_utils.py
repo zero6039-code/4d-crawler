@@ -26,11 +26,27 @@ FOUR_D = {"magnum", "damacai", "toto", "singapore", "sandakan", "sabah",
           "sarawak_cashsweep", "grand_dragon", "perdana4d", "lucky_hari",
           "damacai_1p3d"}
 
+PLACEHOLDER_PRIZES = {"", "-", "----", "****", "******"}
+
+def clean_prizes(value):
+    if not isinstance(value, list):
+        return []
+    cleaned = []
+    for item in value:
+        if not isinstance(item, str):
+            continue
+        item = item.strip()
+        if item and item not in PLACEHOLDER_PRIZES:
+            cleaned.append(item)
+    return cleaned
+
 def is_valid_4d(d, company="default"):
     if not isinstance(d, dict):
         return False
     pat = NUM_RE.get(company, NUM_RE["default"])
-    return all(isinstance(d.get(k), str) and pat.match(d[k]) for k in ("1st", "2nd", "3rd"))
+    if not all(isinstance(d.get(k), str) and pat.match(d[k]) for k in ("1st", "2nd", "3rd")):
+        return False
+    return isinstance(d.get("special"), list) and isinstance(d.get("consolation"), list)
 
 def resolve_date(d, now=None):
     ymd = to_ymd(d.get("draw_date"))
@@ -60,17 +76,35 @@ def atomic_write_json(path, obj):
         raise
     return True
 
-def save_json(company, data, base="docs/data"):
+def _stored_ymd(path):
+    try:
+        with open(path, encoding="utf-8") as f:
+            return to_ymd(json.load(f).get("draw_date"))
+    except (OSError, ValueError, AttributeError):
+        return None
+
+def save_json(company, data, base="docs/data", allow_inferred_date=False):
     if company in FOUR_D and not is_valid_4d(data, company):
         print(f"❌ {company} 数据未通过校验，保留旧文件")
         return False
     ymd, inferred = resolve_date(data)
-    if inferred:
-        print(f"⚠️ {company} 缺少 draw_date，按今天 {ymd} 归档")
+    if inferred and not allow_inferred_date:
+        print(f"❌ {company} 缺少或无法解析 draw_date，拒绝猜测为今天，保留旧文件")
+        return False
     data = {**data, "draw_date": to_dmy(ymd)}
-    changed = atomic_write_json(os.path.join(base, f"{company}.json"), data)
+    if company in FOUR_D:
+        data = {**data,
+                "special": clean_prizes(data.get("special")),
+                "consolation": clean_prizes(data.get("consolation"))}
 
-    # 按月归档：每次成功保存写入 YYYY-MM.json 的当天键，跨月自动建新文件
+    root = os.path.join(base, f"{company}.json")
+    prev = _stored_ymd(root)
+    if prev and ymd < prev:
+        print(f"⏭️ {company} 来源日期 {ymd} 早于现有 {prev}，不覆盖根文件")
+        changed = False
+    else:
+        changed = atomic_write_json(root, data)
+
     month = ymd[:7]
     archive_path = os.path.join(base, "archive", f"{month}.json")
     monthly = {}

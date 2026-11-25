@@ -821,20 +821,31 @@ def fetch_all_companies_from_dato4d(require_fresh=False):
 def save_json(company, data, base="docs/data"):
     return _save_json(company, data, base)
 
-def update_dates_index():
-    base_dir = "docs/data"
-    if not os.path.exists(base_dir):
+def update_dates_index(base_dir="docs/data"):
+    arch_dir = os.path.join(base_dir, "archive")
+    days = set()
+    if os.path.isdir(arch_dir):
+        for name in os.listdir(arch_dir):
+            if not re.fullmatch(r"\d{4}-\d{2}\.json", name):
+                continue
+            try:
+                with open(os.path.join(arch_dir, name), encoding="utf-8") as f:
+                    monthly = json.load(f)
+            except (OSError, ValueError):
+                continue
+            if isinstance(monthly, dict):
+                days.update(k for k, v in monthly.items()
+                            if re.fullmatch(r"\d{4}-\d{2}-\d{2}", k) and v)
+    if not days:
+        print("⚠️ 归档为空，保留现有 dates.json")
         return
-    dates = []
-    for item in os.listdir(base_dir):
-        item_path = os.path.join(base_dir, item)
-        if os.path.isdir(item_path) and re.match(r"\d{4}-\d{2}-\d{2}", item):
-            dates.append(item)
-    dates.sort(reverse=True)
+    ordered = sorted(days, reverse=True)
     index_path = os.path.join(base_dir, "dates.json")
-    with open(index_path, "w", encoding="utf-8") as f:
-        json.dump(dates, f)
-    print(f"📋 已更新日期索引，共 {len(dates)} 个历史日期")
+    tmp = index_path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(ordered, f)
+    os.replace(tmp, index_path)
+    print(f"📋 已更新日期索引，共 {len(ordered)} 个历史日期")
 
 # ---------- 聚合文件（前端单请求） ----------
 def _atomic_dump(obj, path):
@@ -858,23 +869,6 @@ def build_latest(base="docs/data"):
                 out[stem] = json.load(f)
         except (OSError, ValueError):
             continue
-    # 用最新日期目录覆盖根目录旧数据，避免官网显示过期开奖
-    try:
-        with open(os.path.join(base, "dates.json"), encoding="utf-8") as f:
-            dates = json.load(f)
-        day = os.path.join(base, dates[0])
-        if os.path.isdir(day):
-            for name in sorted(os.listdir(day)):
-                if not name.endswith(".json") or name == "all.json":
-                    continue
-                stem = name[:-5]
-                try:
-                    with open(os.path.join(day, name), encoding="utf-8") as f:
-                        out[stem] = json.load(f)
-                except (OSError, ValueError):
-                    continue
-    except (OSError, ValueError, IndexError):
-        pass
     _atomic_dump(out, os.path.join(base, "latest.json"))
 
 
