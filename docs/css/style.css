@@ -132,6 +132,6 @@ body.dark-mode .fallback-banner { background: rgba(120, 53, 15, 0.8); color: #fe
     .prize-card .number {
         white-space: nowrap !important;
         word-break: keep-all !important;
-        font-size: clamp(0.9rem, 4.5vw, 1.6rem) !important;
+        font-size: clamp(1.2rem, 5.5vw, 1.75rem) !important;
     }
 }
