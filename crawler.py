@@ -5,16 +5,28 @@ import os
 from datetime import datetime, timezone, timedelta
 import re
 import time
-import sqlite3
 from urllib.parse import urljoin
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+from crawler_utils import save_json as _save_json
 
 # ========== 路径统一配置 ==========
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, '4d_results.db')
 
 # ---------- 配置 ----------
 URL_4D4D = "https://4d4d.co/"
 URL_DATO4D = "https://www.dato4d.com/liveos.json"
+
+# ---------- 共享 HTTP 会话（连接池 + 指数退避） ----------
+def make_session():
+    s = requests.Session()
+    s.mount("https://", HTTPAdapter(max_retries=Retry(
+        total=4, backoff_factor=1.5,
+        status_forcelist=(429, 500, 502, 503, 504),
+        allowed_methods=("GET",), respect_retry_after_header=True)))
+    s.headers["User-Agent"] = "Mozilla/5.0 (compatible; 4d-crawler/2.0)"
+    return s
+
+SESSION = make_session()
 
 # ---------- 日期转换辅助函数 ----------
 def dmy_to_ymd(date_str):
@@ -23,7 +35,7 @@ def dmy_to_ymd(date_str):
     try:
         d = datetime.strptime(date_str, "%d-%m-%Y")
         return d.strftime("%Y-%m-%d")
-    except:
+    except ValueError:
         return None
 
 def ymd_to_dmy(date_str):
@@ -32,101 +44,12 @@ def ymd_to_dmy(date_str):
     try:
         d = datetime.strptime(date_str, "%Y-%m-%d")
         return d.strftime("%d-%m-%Y")
-    except:
+    except ValueError:
         return date_str
-
-# ---------- 数据库辅助函数 ----------
-def get_db_connection():
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS results (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            company TEXT NOT NULL,
-            type TEXT NOT NULL,
-            number TEXT NOT NULL,
-            draw_date TEXT NOT NULL,
-            UNIQUE(company, type, number, draw_date)
-        )
-    ''')
-    conn.commit()
-    return conn
-
-def insert_number(company, type_, number, draw_date):
-    if not number or number == '----':
-        return
-    conn = get_db_connection()
-    c = conn.cursor()
-    c.execute('''
-        SELECT id FROM results 
-        WHERE company = ? AND type = ? AND number = ? AND draw_date = ?
-    ''', (company, type_, number, draw_date))
-    if c.fetchone() is None:
-        c.execute('''
-            INSERT INTO results (company, type, number, draw_date)
-            VALUES (?, ?, ?, ?)
-        ''', (company, type_, number, draw_date))
-        conn.commit()
-        print(f"   💾 插入数据库: {company} {type_} {number} {draw_date}")
-    else:
-        print(f"   🔁 已存在: {company} {type_} {number}")
-    conn.close()
-
-def store_numbers_from_data(company, data):
-    raw_date = data.get('draw_date')
-    draw_date = dmy_to_ymd(raw_date) if raw_date else datetime.now().strftime("%Y-%m-%d")
-    if not draw_date:
-        draw_date = datetime.now().strftime("%Y-%m-%d")
-
-    prize_fields = ['1st', '2nd', '3rd']
-    list_fields = ['special', 'consolation', 'winning_numbers', 'star', 'power', 'supreme']
-    
-    for field in prize_fields:
-        num = data.get(field)
-        if num and isinstance(num, str) and num != '----':
-            insert_number(company, field, num, draw_date)
-    
-    for field in list_fields:
-        nums = data.get(field, [])
-        if isinstance(nums, list):
-            for num in nums:
-                if num and isinstance(num, str) and num != '----':
-                    insert_number(company, field, num, draw_date)
-    
-    if company == 'sportstoto_6d':
-        for pos in ['2nd', '3rd', '4th', '5th']:
-            item = data.get(pos, {})
-            if isinstance(item, dict):
-                main = item.get('main')
-                alt = item.get('alt')
-                if main and isinstance(main, str) and main != '----':
-                    insert_number(company, f'{pos}_main', main, draw_date)
-                if alt and isinstance(alt, str) and alt != '----':
-                    insert_number(company, f'{pos}_alt', alt, draw_date)
-    
-    if company == 'magnum_jackpot_gold':
-        groups = data.get('groups', [])
-        for grp in groups:
-            grp_num = grp.get('group')
-            nums = grp.get('numbers', [])
-            for num in nums:
-                if num and isinstance(num, str) and num != '+':
-                    insert_number(company, f'group_{grp_num}', num, draw_date)
 
 # ---------- 增强版请求函数（支持重试、会话、完整头）----------
 def fetch_html(url, max_retries=3, timeout=15):
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.9",
-        "Referer": "https://gdlotto.net/",
-        "Connection": "keep-alive",
-        "Upgrade-Insecure-Requests": "1",
-        "Cache-Control": "max-age=0",
-    }
-    
-    session = requests.Session()
-    session.headers.update(headers)
+    session = SESSION
     
     if "gdlotto.net" in url:
         try:
@@ -142,8 +65,6 @@ def fetch_html(url, max_retries=3, timeout=15):
             r = session.get(url, timeout=timeout)
             print(f"  状态码: {r.status_code}")
             print(f"  内容长度: {len(r.text)}")
-            preview = r.text[:500].replace('\n', ' ').replace('\r', '')
-            print(f"  内容预览: {preview}...")
             r.encoding = "utf-8"
             r.raise_for_status()
             return r.text
@@ -151,7 +72,7 @@ def fetch_html(url, max_retries=3, timeout=15):
             print(f"❌ 抓取失败: {e}")
             if attempt < max_retries - 1:
                 print(f"⏳ 等待 {attempt+1} 秒后重试...")
-                time.sleep(attempt + 1)
+                time.sleep(2 ** attempt)
             else:
                 return None
     return None
@@ -165,7 +86,7 @@ def parse_4dmoon_date(date_str):
     try:
         d = datetime.strptime(date_str.strip(), "%d-%b-%Y")
         return d.strftime("%d-%m-%Y")
-    except:
+    except ValueError:
         return None
 
 def extract_global_date(soup):
@@ -758,7 +679,8 @@ def fetch_backup_sources():
     # --- 1. Perdana 4D (只取晚间场) ---
     try:
         url_perdana = "https://4dlivetoday.com/api/v1/operators/perdana?limit=3"
-        res = requests.get(url_perdana, timeout=15, headers={"User-Agent": "Mozilla/5.0"})
+        res = SESSION.get(url_perdana, timeout=15, headers={"User-Agent": "Mozilla/5.0"})
+        res.raise_for_status()
         if res.status_code == 200:
             json_data = res.json()            
             results = json_data.get("data", {}).get("results", [])
@@ -789,7 +711,8 @@ def fetch_backup_sources():
         today_str = now_my.strftime("%Y-%m-%d")
         target_time = f"{today_str}T19:30:00"
         url_hari = f"https://api.hari4d.com/DrawResultL/GetDrawResult?date={target_time}&nocache={int(time.time()*1000)}&_={int(time.time()*1000)}"
-        res = requests.get(url_hari, timeout=15, headers={"User-Agent": "Mozilla/5.0"})
+        res = SESSION.get(url_hari, timeout=15, headers={"User-Agent": "Mozilla/5.0"})
+        res.raise_for_status()
         
         json_data = {}
         if res.status_code == 200:
@@ -802,7 +725,8 @@ def fetch_backup_sources():
             yesterday_str = (now_my - timedelta(days=1)).strftime("%Y-%m-%d")
             target_time = f"{yesterday_str}T19:30:00"
             url_hari = f"https://api.hari4d.com/DrawResultL/GetDrawResult?date={target_time}&nocache={int(time.time()*1000)}&_={int(time.time()*1000)}"
-            res = requests.get(url_hari, timeout=15, headers={"User-Agent": "Mozilla/5.0"})
+            res = SESSION.get(url_hari, timeout=15, headers={"User-Agent": "Mozilla/5.0"})
+            res.raise_for_status()
             if res.status_code == 200:
                 json_data = res.json()
                 print(f"DEBUG: 成功回退抓取昨天 ({yesterday_str}) 的数据")
@@ -976,32 +900,8 @@ def fetch_all_companies_from_dato4d(require_fresh=False):
     return True
 
 # ---------- 保存 JSON 和索引 ----------
-def save_json(company, data):
-    if not data:
-        print(f"❌ {company} 数据为空，跳过保存")
-        return
-    base_dir = "docs/data"
-    os.makedirs(base_dir, exist_ok=True)
-    latest_path = os.path.join(base_dir, f"{company}.json")
-    with open(latest_path, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-    print(f"✅ 已更新最新文件: {latest_path}")
-
-    raw_date = data.get("draw_date", "")
-    if raw_date:
-        ymd_date = dmy_to_ymd(raw_date)
-        if not ymd_date:
-            ymd_date = datetime.now().strftime("%Y-%m-%d")
-    else:
-        ymd_date = datetime.now().strftime("%Y-%m-%d")
-    archive_dir = os.path.join(base_dir, ymd_date)
-    os.makedirs(archive_dir, exist_ok=True)
-    archive_path = os.path.join(archive_dir, f"{company}.json")
-    with open(archive_path, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-    print(f"📁 已归档至: {archive_path}")
-
-    store_numbers_from_data(company, data)
+def save_json(company, data, base="docs/data"):
+    return _save_json(company, data, base)
 
 def update_dates_index():
     base_dir = "docs/data"
@@ -1056,13 +956,14 @@ def main():
     else:
         json_success = fetch_all_companies_from_dato4d()
 
-    # ========== 强制使用备用源更新 Perdana 和 Lucky HariHari ==========
-    print("🔄 正在从备用源获取 Perdana 和 Lucky HariHari 的晚间场数据...")
-    backup_data = fetch_backup_sources()
-    for key, data in backup_data.items():
-        if data and any(data.get(k) for k in ['1st', '2nd', '3rd']):
-            save_json(key, data)
-            print(f"✅ 已使用备用源强制更新 {key}")
+    # ========== 主源失败/不新鲜时才用备用源；手动模式保持原行为 ==========
+    if not json_success or is_manual:
+        print("🔄 正在从备用源获取 Perdana 和 Lucky HariHari 的晚间场数据...")
+        backup_data = fetch_backup_sources()
+        for key, data in backup_data.items():
+            if data and any(data.get(k) for k in ['1st', '2nd', '3rd']):
+                save_json(key, data)
+                print(f"✅ 已使用备用源更新 {key}")
             
     # 如果 JSON 源失败，则回退到 4d4d.co 抓取
     if not json_success:
@@ -1088,8 +989,6 @@ def main():
                 (re.compile(r'SPORTSTOTO.*5D', re.I), 'sportstoto_5d', extract_sportstoto_5d),
                 (re.compile(r'SPORTSTOTO.*6D', re.I), 'sportstoto_6d', extract_sportstoto_6d),
                 (re.compile(r'SPORTSTOTO.*LOTTO', re.I), 'sportstoto_lotto', extract_sportstoto_lotto),
-                (re.compile(r'MAGNUM.*JACKPOT.*GOLD', re.I), 'magnum_jackpot_gold', extract_grand_dragon),
-                (re.compile(r'MAGNUM.*LIFE', re.I), 'magnum_life', extract_grand_dragon),
             ]
 
             processed_companies = set()
