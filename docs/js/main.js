@@ -9,7 +9,7 @@ function toggleDarkMode() {
     var isDark = document.body.classList.contains('dark-mode');
     var btn = document.getElementById('dark-mode-btn');
     if (btn) {
-        btn.innerHTML = isDark 
+        btn.innerHTML = isDark
             ? '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>'
             : '<svg viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>';
         localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
@@ -20,40 +20,40 @@ function toggleDarkMode() {
 const totoStyles = `
     /* ==== 1. 顶部第一、二、三奖的悬停效果 ==== */
     .prize-card { transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); cursor: default; }
-    .prize-card:hover { 
-        transform: translateY(-3px); 
-        box-shadow: 0 8px 20px rgba(0,0,0,0.1); 
-        background: rgba(255,255,255,0.95) !important; 
+    .prize-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        background: rgba(255,255,255,0.95) !important;
     }
     .prize-card .number { transition: transform 0.25s ease; }
     .prize-card:hover .number { transform: scale(1.08); }
-    body.dark-mode .prize-card:hover { 
-        background: rgba(30,41,59,0.95) !important; 
-        box-shadow: 0 8px 20px rgba(0,0,0,0.5); 
+    body.dark-mode .prize-card:hover {
+        background: rgba(30,41,59,0.95) !important;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.5);
     }
     body.dark-mode .prize-card:hover .number { text-shadow: 0 0 15px rgba(251,191,36,0.5); }
 
     /* ==== 2. 其他所有号码的通用悬停效果 ==== */
     .number-item { transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); cursor: default; }
-    .number-item:hover { 
-        transform: translateY(-3px) scale(1.08); 
-        box-shadow: 0 6px 15px rgba(0,0,0,0.1); 
-        background: #ffffff !important; 
-        border-color: #cbd5e1 !important; 
-        z-index: 10; 
+    .number-item:hover {
+        transform: translateY(-3px) scale(1.08);
+        box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+        background: #ffffff !important;
+        border-color: #cbd5e1 !important;
+        z-index: 10;
     }
-    body.dark-mode .number-item:hover { 
-        background: rgba(30,41,59,0.95) !important; 
-        border-color: rgba(255,255,255,0.2) !important; 
-        box-shadow: 0 6px 15px rgba(0,0,0,0.5); 
-        color: #fbbf24 !important; 
+    body.dark-mode .number-item:hover {
+        background: rgba(30,41,59,0.95) !important;
+        border-color: rgba(255,255,255,0.2) !important;
+        box-shadow: 0 6px 15px rgba(0,0,0,0.5);
+        color: #fbbf24 !important;
     }
 
     /* ==== 3. 5D 专属布局 ==== */
     .toto-5d-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
-    .toto-5d-box { 
-        background: rgba(255,255,255,0.8); border-radius: 16px; padding: 12px 8px; text-align: center; 
-        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); cursor: default; 
+    .toto-5d-box {
+        background: rgba(255,255,255,0.8); border-radius: 16px; padding: 12px 8px; text-align: center;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); cursor: default;
         box-shadow: 0 2px 8px rgba(0,0,0,0.03); border: 1px solid rgba(255,255,255,0.5);
     }
     .toto-5d-box:hover { transform: translateY(-3px); box-shadow: 0 8px 16px rgba(0,0,0,0.1); background: #fff; }
@@ -62,14 +62,14 @@ const totoStyles = `
     body.dark-mode .toto-5d-box { background: rgba(15,23,42,0.8); border-color: rgba(255,255,255,0.05); }
     body.dark-mode .toto-5d-box:hover { background: rgba(30,41,59,0.9); box-shadow: 0 8px 16px rgba(0,0,0,0.4); }
     body.dark-mode .toto-5d-box .label { color: #94a3b8; }
-    body.dark-mode .toto-5d-box .num { color: #fbbf24; text-shadow: 0 0 15px rgba(251,191,36,0.3); }
-    
+    body.dark-mode .toto-5d-box .num { color: #fbbf24; text-shadow: 0 0 10px rgba(251,191,36,0.3); }
+
     /* ==== 4. 6D 专属布局 ==== */
     .toto-6d-grid { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 8px; }
-    .toto-6d-row { 
-        display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.8); 
-        border-radius: 12px; padding: 10px 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); 
-        flex-wrap: wrap; gap: 6px; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); 
+    .toto-6d-row {
+        display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.8);
+        border-radius: 12px; padding: 10px 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+        flex-wrap: wrap; gap: 6px; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         cursor: default; border: 1px solid rgba(255,255,255,0.5);
     }
     .toto-6d-row:hover { transform: translateX(4px); box-shadow: 0 6px 15px rgba(0,0,0,0.08); background: #fff; }
@@ -84,19 +84,19 @@ const totoStyles = `
 
     /* ==== 5. Singapore Toto 专属布局 ==== */
     .toto-ball-row { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
-    .toto-ball { 
-        width: 44px; height: 44px; border-radius: 50%; background: #ffffff; border: 1px solid #cbd5e1; 
-        display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.2rem; 
+    .toto-ball {
+        width: 44px; height: 44px; border-radius: 50%; background: #ffffff; border: 1px solid #cbd5e1;
+        display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.2rem;
         color: #c62828; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: all 0.2s; cursor: default;
     }
     .toto-ball:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 5px 12px rgba(0,0,0,0.15); }
-    .toto-special-ball { 
-        width: 44px; height: 44px; border-radius: 50%; background: #c62828; color: #ffffff; 
-        display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.2rem; 
-        box-shadow: 0 2px 5px rgba(198,40,40,0.3); transition: all 0.2s; cursor: default;
+    .toto-special-ball {
+        width: 44px; height: 44px; border-radius: 50%; background: #c62828; color: #ffffff;
+        display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.2rem;
+        box-shadow: 0 2px 8px rgba(198,40,40,0.3);
     }
     .toto-special-ball:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 5px 12px rgba(198,40,40,0.5); }
-    
+
     .singapore-toto-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-top: 12px; border-radius: 12px; overflow: hidden; }
     .singapore-toto-table th { background: #4a5568; color: white; padding: 8px 4px; text-align: center; font-weight: 600; font-size: 0.8rem; }
     .singapore-toto-table td { padding: 8px 4px; text-align: center; border-bottom: 1px solid #e2e8f0; background: rgba(255,255,255,0.8); }
@@ -112,13 +112,18 @@ const styleSheet = document.createElement("style");
 styleSheet.textContent = totoStyles;
 document.head.appendChild(styleSheet);
 
+// ==================== 安全工具 ====================
+const esc = s => String(s ?? '').replace(/[&<>"']/g,
+  c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const DATE_OK = /^\d{4}-\d{2}-\d{2}$/;
+
 // ==================== 常量定义 ====================
 // 【已调整顺序】SINGAPORE TOTO 已移至 DAMACAI 1+3D 之后，SABAH LOTTO 之前
 const COMPANY_LIST = [
-    'damacai', 'magnum', 'toto', 'singapore', 
-    'grand_dragon', 'perdana4d', 'lucky_hari', 
-    'sandakan', 'sarawak_cashsweep', 
-    'sabah', 'damacai_1p3d', 
+    'damacai', 'magnum', 'toto', 'singapore',
+    'grand_dragon', 'perdana4d', 'lucky_hari',
+    'sandakan', 'sarawak_cashsweep',
+    'sabah', 'damacai_1p3d',
     'singapore_toto', 'sabah_lotto', 'sportstoto_lotto',
     'magnum_jackpot_gold', 'sportstoto_5d', 'sportstoto_6d',
     'magnum_life', 'sportstoto_fireball'
@@ -149,6 +154,7 @@ const COMPANY_IMAGE_MAP = {
 
 // ==================== 全局状态 ====================
 let availableDates = [], availableDatesSet = new Set(), selectedDate = null, currentCalendarDate = new Date(), isFallbackMode = false;
+let dateDropdownBound = false, calendarBound = false;
 
 // ==================== 日期工具函数 ====================
 const ymdToDmy = ymd => { if(!ymd) return ''; let p = ymd.split('-'); return p.length===3 ? `${p[2]}-${p[1]}-${p[0]}` : ymd; };
@@ -170,15 +176,15 @@ document.addEventListener('click', e => {
 // ==================== 数据加载与 UI 更新 ====================
 async function loadDateIndex() {
     try {
-        const res = await fetch(`data/dates.json?t=${Date.now()}`, { cache: 'no-store' });
+        const res = await fetch('data/dates.json', { cache: 'no-cache' });
         if (res.ok) {
-            let dates = await res.json();
+            let dates = (await res.json()).filter(d => DATE_OK.test(d));
             availableDates = sortDatesDesc(dates);
             availableDatesSet = new Set(availableDates);
             selectedDate = availableDates.length > 0 ? availableDates[0] : null;
         } else { document.getElementById('date-dropdown-content').innerHTML = '<div style="text-align:center;padding:20px;">暂无历史数据</div>'; }
     } catch (e) { document.getElementById('date-dropdown-content').innerHTML = '<div style="text-align:center;padding:20px;">加载失败</div>'; }
-    
+
     renderDateDropdown(); updateDateBtnWithLatest();
     if (selectedDate) await fetchAndRenderData(selectedDate);
     else { document.getElementById('companies-grid').innerHTML = '<p style="text-align:center;color:#666;">暂无数据</p>'; }
@@ -187,91 +193,114 @@ async function loadDateIndex() {
 function renderDateDropdown() {
     const container = document.getElementById('date-dropdown-content');
     if (!availableDates || availableDates.length === 0) return;
-    container.innerHTML = availableDates.map(date => `<div class="date-option ${date===selectedDate?'active':''}" onclick="selectDate('${date}')">${formatDisplayDate(date)}</div>`).join('');
+    container.innerHTML = availableDates.map(date =>
+        `<div class="date-option${date===selectedDate?' active':''}" data-date="${esc(date)}">${esc(formatDisplayDate(date))}</div>`
+    ).join('');
+    if (!dateDropdownBound) {
+        dateDropdownBound = true;
+        container.addEventListener('click', e => {
+            const el = e.target.closest('.date-option');
+            if (el && el.dataset.date && DATE_OK.test(el.dataset.date)) selectDate(el.dataset.date);
+        });
+    }
 }
 
-window.selectDate = date => { 
-    selectedDate = date; isFallbackMode = false; 
-    document.getElementById('fallback-banner').style.display = 'none'; 
-    renderDateDropdown(); updateDateBtnWithLatest(); 
-    document.getElementById('date-dropdown').classList.remove('show'); 
-    fetchAndRenderData(date); 
+window.selectDate = date => {
+    selectedDate = date; isFallbackMode = false;
+    document.getElementById('fallback-banner').style.display = 'none';
+    renderDateDropdown(); updateDateBtnWithLatest();
+    document.getElementById('date-dropdown').classList.remove('show');
+    fetchAndRenderData(date);
 };
 
 function updateDateBtnWithLatest() { document.getElementById('selected-date').innerText = selectedDate ? formatDisplayDate(selectedDate) : '选择日期'; }
 
-window.forceRefresh = () => { 
-    if (selectedDate) { 
-        isFallbackMode = false; 
-        document.getElementById('fallback-banner').style.display = 'none'; 
-        fetchAndRenderData(selectedDate, true); 
-    } 
+window.forceRefresh = () => {
+    if (selectedDate) {
+        isFallbackMode = false;
+        document.getElementById('fallback-banner').style.display = 'none';
+        fetchAndRenderData(selectedDate, true);
+    }
 };
 
-function updateStatus(type, text, updateTime = null) { 
-    const span = document.getElementById('status-text'); 
-    const ind = span.querySelector('.status-indicator'); 
-    ind.className = `status-indicator ${type}`; 
-    span.innerHTML = `${ind.outerHTML}${text}`; 
-    if (updateTime) document.getElementById('update-time').innerText = updateTime; 
+function updateStatus(type, text, updateTime = null) {
+    const span = document.getElementById('status-text');
+    const ind = span.querySelector('.status-indicator');
+    ind.className = `status-indicator ${type}`;
+    span.innerHTML = `${ind.outerHTML}${esc(text)}`;
+    if (updateTime) document.getElementById('update-time').innerText = updateTime;
 }
 
 // ==================== 核心数据抓取与部分渲染 ====================
+function hasAnyData(d) {
+    if (!d) return false;
+    for (const f of ['1st','2nd','3rd']) if (typeof d[f] === 'string' && d[f].trim() !== '') return true;
+    for (const f of ['special','consolation','winning_numbers','star','power','supreme']) {
+        if (Array.isArray(d[f]) && d[f].some(n => n && String(n).trim() !== '' && String(n).trim() !== '****')) return true;
+    }
+    for (const f of ['jackpot','jackpot1','jackpot2']) if (typeof d[f] === 'string' && d[f].trim() !== '') return true;
+    if (d['2nd'] && typeof d['2nd'] === 'object' && d['2nd'].main) return true;
+    return false;
+}
+
+async function loadAggregated(dateStr, isLatest) {
+    const url = isLatest ? 'data/latest.json' : `data/${dateStr}/all.json`;
+    try {
+        const res = await fetch(url, { cache: 'no-cache' });
+        if (!res.ok) return null;
+        return await res.json();
+    } catch { return null; }
+}
+
 async function fetchAndRenderData(dateStr, isRefresh = false) {
     const grid = document.getElementById('companies-grid');
     grid.innerHTML = '<p style="text-align:center;grid-column:1/-1;color:#666;">🔄 正在加载数据...</p>';
     updateStatus('loading', '正在加载...');
     const isLatest = availableDates.length > 0 && dateStr === availableDates[0];
-    
-    const promises = COMPANY_LIST.map(async key => {
-        if (HIDDEN_COMPANIES.includes(key)) return { key, data: null };
-        const basePath = isLatest ? `data` : `data/${dateStr}`;
-        try { const res = await fetch(`${basePath}/${key}.json?t=${Date.now()}`, { cache: 'no-store' }); if (!res.ok) throw new Error(); return { key, data: await res.json() }; } catch { return { key, data: null }; }
-    });
 
-    const results = await Promise.all(promises);
-    const dataMap = {}; let validCount = 0;
-    
-    results.forEach(item => {
-        if (item.data) {
-            let hasData = false;
-            
-            ['1st', '2nd', '3rd'].forEach(f => {
-                if (item.data[f] && typeof item.data[f] === 'string' && item.data[f].trim() !== '') hasData = true;
-            });
-            
-            ['special', 'consolation', 'winning_numbers', 'star', 'power', 'supreme'].forEach(f => {
-                if (item.data[f] && Array.isArray(item.data[f]) && item.data[f].some(n => n && n.trim() !== '' && n.trim() !== '****')) hasData = true;
-            });
+    const agg = await loadAggregated(dateStr, isLatest);
+    let dataMap = {}, validCount = 0;
 
-            ['jackpot', 'jackpot1', 'jackpot2'].forEach(f => {
-                if (item.data[f] && typeof item.data[f] === 'string' && item.data[f].trim() !== '') hasData = true;
-            });
-
-            if (item.data['2nd'] && typeof item.data['2nd'] === 'object' && item.data['2nd'].main) hasData = true;
-
-            if (hasData) { dataMap[item.key] = item.data; validCount++; }
-        }
-    });
+    if (agg) {
+        Object.keys(agg).forEach(key => {
+            if (HIDDEN_COMPANIES.includes(key) || !COMPANY_LIST.includes(key)) return;
+            const d = agg[key];
+            if (hasAnyData(d)) { dataMap[key] = d; validCount++; }
+        });
+    } else {
+        const promises = COMPANY_LIST.map(async key => {
+            if (HIDDEN_COMPANIES.includes(key)) return { key, data: null };
+            const basePath = isLatest ? `data` : `data/${dateStr}`;
+            try {
+                const res = await fetch(`${basePath}/${key}.json`, { cache: 'no-cache' });
+                if (!res.ok) throw new Error();
+                return { key, data: await res.json() };
+            } catch { return { key, data: null }; }
+        });
+        const results = await Promise.all(promises);
+        results.forEach(item => {
+            if (hasAnyData(item.data)) { dataMap[item.key] = item.data; validCount++; }
+        });
+    }
 
     if (validCount === 0 && !isFallbackMode && availableDates.length > 1) {
         const idx = availableDates.indexOf(dateStr);
         if (idx >= 0 && idx + 1 < availableDates.length) {
             const fallbackDate = availableDates[idx + 1];
-            document.getElementById('fallback-banner').innerHTML = `⚠️ <b>${formatDisplayDate(dateStr)}</b> 暂无开奖数据，已自动为您显示 <b>${formatDisplayDate(fallbackDate)}</b> 的最新成绩。`;
+            document.getElementById('fallback-banner').innerHTML = `⚠️ <b>${esc(formatDisplayDate(dateStr))}</b> 暂无开奖数据，已自动为您显示 <b>${esc(formatDisplayDate(fallbackDate))}</b> 的最新成绩。`;
             document.getElementById('fallback-banner').style.display = 'block';
-            isFallbackMode = true; 
-            await fetchAndRenderData(fallbackDate, true); 
+            isFallbackMode = true;
+            await fetchAndRenderData(fallbackDate, true);
             return;
         }
     }
-    
-    if (validCount === 0) { 
-        grid.innerHTML = '<p style="text-align:center;grid-column:1/-1;color:#e53e3e;">❌ 目前暂无任何可用的开奖数据，请稍后再试。</p>'; 
-        updateStatus('error', '加载失败'); 
-        return; 
+
+    if (validCount === 0) {
+        grid.innerHTML = '<p style="text-align:center;grid-column:1/-1;color:#e53e3e;">❌ 目前暂无任何可用的开奖数据，请稍后再试。</p>';
+        updateStatus('error', '加载失败');
+        return;
     }
-    
+
     renderCompanies(dataMap);
     const now = new Date();
     updateStatus('success', '加载完成', `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`);
@@ -280,29 +309,29 @@ async function fetchAndRenderData(dateStr, isRefresh = false) {
 // ==================== 智能渲染公司卡片 ====================
 function renderCompanies(dataMap) {
     const grid = document.getElementById('companies-grid'); let html = '';
-    
+
     COMPANY_LIST.forEach(key => {
-        if (HIDDEN_COMPANIES.includes(key)) return; 
+        if (HIDDEN_COMPANIES.includes(key)) return;
         const cd = dataMap[key]; if (!cd) return;
-        const name = NAME_MAP[key] || key; 
-        const img = COMPANY_IMAGE_MAP[key] ? `images/${COMPANY_IMAGE_MAP[key]}` : null; 
-        
+        const name = NAME_MAP[key] || key;
+        const img = COMPANY_IMAGE_MAP[key] ? `images/${COMPANY_IMAGE_MAP[key]}` : null;
+
         // SABAH LOTTO 提前返回，独立生成3个卡片
         if (key === 'sabah_lotto') {
-            const sharedDate = `<div class="draw-date">${cd.draw_date || '未知'} ${cd.draw_no?'| Draw No: '+cd.draw_no:''}</div>`;
-            const sharedImg = img ? `<img src="${img}" onerror="this.style.display='none'">` : '';
+            const sharedDate = `<div class="draw-date">${esc(cd.draw_date || '未知')} ${cd.draw_no?'| Draw No: '+esc(cd.draw_no):''}</div>`;
+            const sharedImg = img ? `<img src="${img}">` : '';
             let sabahCardsHtml = '';
 
             // 1. 主卡片 (Winning Numbers + Jackpots)
             sabahCardsHtml += `<div class="company-section" data-company="sabah_lotto"><div class="company-title">${name}${sharedImg}</div>${sharedDate}<div class="company-content">`;
             if (cd.winning_numbers && cd.winning_numbers.length > 0) {
                 sabahCardsHtml += `<div class="subsection"><div class="subsection-title">Winning Numbers</div><div class="number-list">`;
-                cd.winning_numbers.forEach(n => sabahCardsHtml += `<span class="number-item">${n}</span>`);
+                cd.winning_numbers.forEach(n => sabahCardsHtml += `<span class="number-item">${esc(n)}</span>`);
                 sabahCardsHtml += `</div></div>`;
             }
             ['jackpot1', 'jackpot2'].forEach(f => {
                 if (cd[f] && typeof cd[f] === 'string' && cd[f].trim() !== '') {
-                    sabahCardsHtml += `<div class="subsection"><div class="subsection-title">${f.toUpperCase()}</div><div class="number-list"><span class="number-item" style="font-size:1.2rem;color:#d97706;font-weight:bold;">${cd[f]}</span></div></div>`;
+                    sabahCardsHtml += `<div class="subsection"><div class="subsection-title">${f.toUpperCase()}</div><div class="number-list"><span class="number-item" style="font-size:1.2rem;color:#d97706;font-weight:bold;">${esc(cd[f])}</span></div></div>`;
                 }
             });
             sabahCardsHtml += `</div></div>`;
@@ -315,7 +344,7 @@ function renderCompanies(dataMap) {
                     if (cd[`LT6G${g}${i}`]) groupNums.push(cd[`LT6G${g}${i}`]);
                 }
                 if (groupNums.length > 0) {
-                    lt6gHtml += `<div style="margin-bottom: 6px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px;"><span style="font-size:0.8rem;color:#64748b;font-weight:600;width:50px;">Grp ${g}</span>` + groupNums.map(n => `<span class="number-item" style="font-size:1.1rem;padding:4px 8px;">${n}</span>`).join('') + `</div>`;
+                    lt6gHtml += `<div style="margin-bottom: 6px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px;"><span style="font-size:0.8rem;color:#64748b;font-weight:600;width:50px;">Grp ${g}</span>` + groupNums.map(n => `<span class="number-item" style="font-size:1.1rem;padding:4px 8px;">${esc(n)}</span>`).join('') + `</div>`;
                 }
             }
             if (lt6gHtml) {
@@ -330,7 +359,7 @@ function renderCompanies(dataMap) {
                     if (cd[`LT5G${g}${i}`]) groupNums.push(cd[`LT5G${g}${i}`]);
                 }
                 if (groupNums.length > 0) {
-                    lt5gHtml += `<div style="margin-bottom: 6px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px;"><span style="font-size:0.8rem;color:#64748b;font-weight:600;width:50px;">Grp ${g}</span>` + groupNums.map(n => `<span class="number-item" style="font-size:1.1rem;padding:4px 8px;">${n}</span>`).join('') + `</div>`;
+                    lt5gHtml += `<div style="margin-bottom: 6px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px;"><span style="font-size:0.8rem;color:#64748b;font-weight:600;width:50px;">Grp ${g}</span>` + groupNums.map(n => `<span class="number-item" style="font-size:1.1rem;padding:4px 8px;">${esc(n)}</span>`).join('') + `</div>`;
                 }
             }
             if (lt5gHtml) {
@@ -342,14 +371,14 @@ function renderCompanies(dataMap) {
         }
 
         // --- 下面开始是其他卡片的通用渲染逻辑 ---
-        const timeTag = cd.draw_time ? ` | <span style="color: #d97706; font-weight: bold;">${cd.draw_time}</span>` : '';
-        html += `<div class="company-section" data-company="${key}"><div class="company-title">${name}${img?`<img src="${img}" onerror="this.style.display='none'">`:''}</div><div class="draw-date">${cd.draw_date || '未知'} ${cd.draw_no?'| Draw No: '+cd.draw_no:''}${timeTag}</div><div class="company-content">`;
-        
+        const timeTag = cd.draw_time ? ` | <span style="color: #d97706; font-weight: bold;">${esc(cd.draw_time)}</span>` : '';
+        html += `<div class="company-section" data-company="${esc(key)}"><div class="company-title">${name}${img?`<img src="${img}">`:''}</div><div class="draw-date">${esc(cd.draw_date || '未知')} ${cd.draw_no?'| Draw No: '+esc(cd.draw_no):''}${timeTag}</div><div class="company-content">`;
+
         const isSpecial = SPECIAL_COMPANIES.includes(key);
-        
+
         if (isSpecial) {
             let rendered = false;
-            
+
             // 5D 专属布局
             const is5D = cd.type === '5d' || (!cd.type && cd['6th'] && (!cd['2nd'] || typeof cd['2nd'] === 'string'));
             if (is5D) {
@@ -360,7 +389,7 @@ function renderCompanies(dataMap) {
                         if (cd[lbl]) {
                             html += `<div class="toto-5d-box">
                                         <div class="label">${lbl}</div>
-                                        <div class="num">${cd[lbl]}</div>
+                                        <div class="num">${esc(cd[lbl])}</div>
                                      </div>`;
                         }
                     });
@@ -368,7 +397,7 @@ function renderCompanies(dataMap) {
                 html += `</div></div>`;
                 rendered = true;
             }
-            
+
             // 6D 专属布局
             const is6D = cd.type === '6d' || (!cd.type && cd['2nd'] && cd['2nd'].main);
             if (is6D) {
@@ -376,7 +405,7 @@ function renderCompanies(dataMap) {
                 if (cd['1st']) {
                     html += `<div class="toto-6d-row">
                                 <span class="label">1st</span>
-                                <span class="main-num">${cd['1st']}</span>
+                                <span class="main-num">${esc(cd['1st'])}</span>
                                 <span style="flex:1;"></span>
                              </div>`;
                 }
@@ -387,10 +416,10 @@ function renderCompanies(dataMap) {
                         if (main === '----' && alt === '----') return;
                         html += `<div class="toto-6d-row">
                                     <span class="label">${k}</span>
-                                    <span class="main-num">${main}</span>`;
+                                    <span class="main-num">${esc(main)}</span>`;
                         if (alt !== '----') {
                             html += `<span class="or-text">or</span>
-                                     <span class="alt-num">${alt}</span>`;
+                                     <span class="alt-num">${esc(alt)}</span>`;
                         }
                         html += `<span style="flex:1;"></span>
                                  </div>`;
@@ -399,16 +428,16 @@ function renderCompanies(dataMap) {
                 html += `</div></div>`;
                 rendered = true;
             }
-            
+
             // Singapore Toto 专属布局
             if (key === 'singapore_toto') {
                 if (cd.winning_numbers && cd.winning_numbers.length > 0) {
                     html += `<div class="subsection"><div class="subsection-title">Winning Numbers</div><div class="toto-ball-row">`;
                     cd.winning_numbers.forEach((num, index) => {
                         if (index === cd.winning_numbers.length - 1) {
-                            html += `<div class="toto-special-ball">${num}</div>`;
+                            html += `<div class="toto-special-ball">${esc(num)}</div>`;
                         } else {
-                            html += `<div class="toto-ball">${num}</div>`;
+                            html += `<div class="toto-ball">${esc(num)}</div>`;
                         }
                     });
                     html += `</div></div>`;
@@ -420,11 +449,11 @@ function renderCompanies(dataMap) {
                                 <tbody>`;
                     cd.prize_table.forEach(row => {
                         html += `<tr>`;
-                        row.forEach(cell => html += `<td>${cell}</td>`);
+                        row.forEach(cell => html += `<td>${esc(cell)}</td>`);
                         html += `</tr>`;
                     });
                     if (cd.prize && typeof cd.prize === 'string' && cd.prize.trim() !== '') {
-                        html += `<tr class="toto-prize-row"><td colspan="3">Prize: ${cd.prize}</td></tr>`;
+                        html += `<tr class="toto-prize-row"><td colspan="3">Prize: ${esc(cd.prize)}</td></tr>`;
                     }
                     html += `</tbody></table></div>`;
                 }
@@ -441,10 +470,10 @@ function renderCompanies(dataMap) {
                 lottoGroups.forEach(g => {
                     if (cd[g.field] && Array.isArray(cd[g.field]) && cd[g.field].length > 0) {
                         html += `<div class="subsection"><div class="subsection-title">${g.title}</div><div class="number-list">`;
-                        cd[g.field].forEach(n => html += `<span class="number-item">${n}</span>`);
+                        cd[g.field].forEach(n => html += `<span class="number-item">${esc(n)}</span>`);
                         html += `</div>`;
                         if (cd.jackpots && cd.jackpots[g.jpIdx] && cd.jackpots[g.jpIdx].trim() !== '') {
-                            html += `<div style="margin-top: 8px; font-weight: 700; color: #d97706; font-size: 1rem;">${g.jpName}: ${cd.jackpots[g.jpIdx]}</div>`;
+                            html += `<div style="margin-top: 8px; font-weight: 700; color: #d97706; font-size: 1rem;">${g.jpName}: ${esc(cd.jackpots[g.jpIdx])}</div>`;
                         }
                         html += `</div>`;
                         rendered = true;
@@ -456,176 +485,198 @@ function renderCompanies(dataMap) {
             if (key === 'magnum_life') {
                 if (cd.winning_numbers && cd.winning_numbers.length > 0) {
                     html += `<div class="subsection"><div class="subsection-title">Winning Numbers</div><div class="number-list">`;
-                    cd.winning_numbers.forEach(n => html += `<span class="number-item">${n}</span>`);
+                    cd.winning_numbers.forEach(n => html += `<span class="number-item">${esc(n)}</span>`);
                     html += `</div></div>`;
                 }
                 if (cd.bonus_numbers && cd.bonus_numbers.length > 0) {
                     html += `<div class="subsection"><div class="subsection-title">Bonus Numbers</div><div class="number-list">`;
-                    cd.bonus_numbers.forEach(n => html += `<span class="number-item">${n}</span>`);
+                    cd.bonus_numbers.forEach(n => html += `<span class="number-item">${esc(n)}</span>`);
                     html += `</div></div>`;
                 }
                 rendered = true;
             }
-            
+
             // 其他通用渲染
             const winNums = cd.winning_numbers || cd.numbers || cd.results;
-            if (!rendered && winNums && Array.isArray(winNums) && winNums.length > 0) { 
-                html += `<div class="subsection"><div class="subsection-title">Winning Numbers</div><div class="number-list">`; 
-                winNums.forEach(n=>html+=`<span class="number-item">${n}</span>`); 
-                html += `</div></div>`; 
-                rendered = true; 
+            if (!rendered && winNums && Array.isArray(winNums) && winNums.length > 0) {
+                html += `<div class="subsection"><div class="subsection-title">Winning Numbers</div><div class="number-list">`;
+                winNums.forEach(n=>html+=`<span class="number-item">${esc(n)}</span>`);
+                html += `</div></div>`;
+                rendered = true;
             }
-            
+
             if (!rendered && ['star','power','supreme'].some(f => cd[f] && Array.isArray(cd[f]) && cd[f].length > 0)) {
-                ['star','power','supreme'].forEach(f=>{ 
-                    if(cd[f]&&Array.isArray(cd[f])&&cd[f].length>0){ 
-                        html += `<div class="subsection"><div class="subsection-title">${f.charAt(0).toUpperCase()+f.slice(1)}</div><div class="number-list">`; 
-                        cd[f].forEach(n=>html+=`<span class="number-item">${n}</span>`); 
-                        html += `</div></div>`; 
-                        rendered = true; 
-                    } 
+                ['star','power','supreme'].forEach(f=>{
+                    if(cd[f]&&Array.isArray(cd[f])&&cd[f].length>0){
+                        html += `<div class="subsection"><div class="subsection-title">${f.charAt(0).toUpperCase()+f.slice(1)}</div><div class="number-list">`;
+                        cd[f].forEach(n=>html+=`<span class="number-item">${esc(n)}</span>`);
+                        html += `</div></div>`;
+                        rendered = true;
+                    }
                 });
             }
-            
+
             if (!rendered && (cd.jackpot||cd.jackpot1||cd.jackpot2)) {
-                ['jackpot','jackpot1','jackpot2'].forEach(f=>{ 
-                    if(cd[f]&&typeof cd[f]==='string'&&cd[f].trim()!==''){ 
-                        html += `<div class="subsection"><div class="subsection-title">${f.toUpperCase()}</div><div class="number-list"><span class="number-item" style="font-size:1.2rem;color:#d97706;font-weight:bold;">${cd[f]}</span></div></div>`; 
-                        rendered = true; 
-                    } 
+                ['jackpot','jackpot1','jackpot2'].forEach(f=>{
+                    if(cd[f]&&typeof cd[f]==='string'&&cd[f].trim()!==''){
+                        html += `<div class="subsection"><div class="subsection-title">${f.toUpperCase()}</div><div class="number-list"><span class="number-item" style="font-size:1.2rem;color:#d97706;font-weight:bold;">${esc(cd[f])}</span></div></div>`;
+                        rendered = true;
+                    }
                 });
             }
-            
+
             if (!rendered) {
                 const lt6g = Object.keys(cd).filter(k=>k.startsWith('LT6G')&&!k.endsWith('JP')&&cd[k]);
-                if (lt6g.length > 0) { 
-                    html += `<div class="subsection"><div class="subsection-title">6D Numbers</div><div class="number-list">`; 
-                    lt6g.sort().forEach(k=>html+=`<span class="number-item">${cd[k]}</span>`); 
-                    html += `</div></div>`; 
-                    rendered = true; 
+                if (lt6g.length > 0) {
+                    html += `<div class="subsection"><div class="subsection-title">6D Numbers</div><div class="number-list">`;
+                    lt6g.sort().forEach(k=>html+=`<span class="number-item">${esc(cd[k])}</span>`);
+                    html += `</div></div>`;
+                    rendered = true;
                 }
             }
-            
+
             if (!rendered) {
                 html += `<div class="subsection"><div class="subsection-title">Results</div><div class="number-list"><span class="number-item" style="font-size:1rem;color:#888;">非开奖日 / 暂无记录</span></div></div>`;
             }
         } else {
             // 普通公司渲染
-            html += `<div class="prize-grid"><div class="prize-card"><div class="label">First Prize</div><div class="number">${cd['1st']||'----'}</div></div><div class="prize-card"><div class="label">Second Prize</div><div class="number">${cd['2nd']||'----'}</div></div><div class="prize-card"><div class="label">Third Prize</div><div class="number">${cd['3rd']||'----'}</div></div></div>`;
-            
-            const validSpecial = cd.special ? cd.special.filter(n => n && n.trim() !== '' && n.trim() !== '****') : [];
-            const validConsolation = cd.consolation ? cd.consolation.filter(n => n && n.trim() !== '' && n.trim() !== '****') : [];
+            html += `<div class="prize-grid"><div class="prize-card"><div class="label">First Prize</div><div class="number">${esc(cd['1st']||'----')}</div></div><div class="prize-card"><div class="label">Second Prize</div><div class="number">${esc(cd['2nd']||'----')}</div></div><div class="prize-card"><div class="label">Third Prize</div><div class="number">${esc(cd['3rd']||'----')}</div></div></div>`;
 
-            if (validSpecial.length > 0 || validConsolation.length > 0) { 
-                html += `<div class="subsection">`; 
+            const validSpecial = cd.special ? cd.special.filter(n => n && String(n).trim() !== '' && String(n).trim() !== '****') : [];
+            const validConsolation = cd.consolation ? cd.consolation.filter(n => n && String(n).trim() !== '' && String(n).trim() !== '****') : [];
+
+            if (validSpecial.length > 0 || validConsolation.length > 0) {
+                html += `<div class="subsection">`;
                 if(validSpecial.length > 0){
                     html += `<div class="subsection-title">Special</div><div class="number-list">`;
-                    validSpecial.forEach(n => html += `<span class="number-item">${n}</span>`);
+                    validSpecial.forEach(n => html += `<span class="number-item">${esc(n)}</span>`);
                     html += `</div>`;
                 }
                 if(validConsolation.length > 0){
                     html += `<div class="subsection-title">Consolation</div><div class="number-list">`;
-                    validConsolation.forEach(n => html += `<span class="number-item">${n}</span>`);
+                    validConsolation.forEach(n => html += `<span class="number-item">${esc(n)}</span>`);
                     html += `</div>`;
-                } 
-                html += `</div>`; 
+                }
+                html += `</div>`;
             } else if (cd['1st'] || cd['2nd'] || cd['3rd']) {
                 html += `<div class="subsection"><div class="subsection-title">Special / Consolation</div><div class="number-list"><span class="number-item" style="font-size:1rem;color:#888;">待官方更新 / 暂无记录</span></div></div>`;
             }
         }
         html += `</div></div>`;
     });
-    
+
     if (html === '') html = '<p style="text-align:center;grid-column:1/-1;color:#666;">当日暂无开奖数据</p>';
     grid.innerHTML = html;
+    grid.querySelectorAll('img').forEach(img => img.addEventListener('error', () => { img.style.display = 'none'; }));
 }
 
 // ==================== 日历组件逻辑 ====================
 function initCalendar() {
     const popup = document.getElementById('calendar-popup'), btn = document.getElementById('calendar-btn');
-    btn.addEventListener('click', e => { 
-        e.stopPropagation(); 
+    btn.addEventListener('click', e => {
+        e.stopPropagation();
         if(popup.style.display==='none'||popup.style.display===''){
-            popup.style.display='block'; 
+            popup.style.display='block';
             renderCalendar();
         } else {
-            popup.style.display='none'; 
+            popup.style.display='none';
         }
     });
     document.addEventListener('click', e => { if(!popup.contains(e.target)&&e.target!==btn) popup.style.display='none'; });
 }
 
 function renderCalendar() {
-    const popup = document.getElementById('calendar-popup'); 
+    const popup = document.getElementById('calendar-popup');
     const year = currentCalendarDate.getFullYear(), month = currentCalendarDate.getMonth();
     const firstDay = new Date(year, month, 1).getDay(), daysInMonth = new Date(year, month+1, 0).getDate();
     const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-    
-    let html = `<div class="calendar-header"><button class="calendar-nav" onclick="changeCalendarMonth(-1,event)">‹</button><span>${monthNames[month]} ${year}</span><button class="calendar-nav" onclick="changeCalendarMonth(1,event)">›</button></div><table class="calendar-table"><thead><tr><th>Su</th><th>Mo</th><th>Tu</th><th>We</th><th>Th</th><th>Fr</th><th>Sa</th></tr></thead><tbody>`;
-    
+
+    let html = `<div class="calendar-header"><button class="calendar-nav" data-cal-delta="-1">‹</button><span>${monthNames[month]} ${year}</span><button class="calendar-nav" data-cal-delta="1">›</button></div><table class="calendar-table"><thead><tr><th>Su</th><th>Mo</th><th>Tu</th><th>We</th><th>Th</th><th>Fr</th><th>Sa</th></tr></thead><tbody>`;
+
     let day = 1;
-    for (let i=0; i<6; i++) { 
-        html += '<tr>'; 
-        for(let j=0; j<7; j++){ 
-            if(i===0&&j<firstDay){html+='<td></td>';} 
-            else if(day>daysInMonth){html+='<td></td>';} 
-            else { 
-                const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`; 
-                const has = availableDatesSet.has(dateStr), sel = dateStr===selectedDate; 
-                html += `<td class="${has?'has-data':''} ${sel?'selected':''}" onclick="selectDateFromCalendar('${dateStr}',event)">${day}</td>`; 
-                day++; 
-            } 
-        } 
-        html += '</tr>'; 
-        if(day>daysInMonth) break; 
+    for (let i=0; i<6; i++) {
+        html += '<tr>';
+        for(let j=0; j<7; j++){
+            if(i===0&&j<firstDay){html+='<td></td>';}
+            else if(day>daysInMonth){html+='<td></td>';}
+            else {
+                const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+                const has = availableDatesSet.has(dateStr), sel = dateStr===selectedDate;
+                html += `<td class="${has?'has-data':''} ${sel?'selected':''}" data-cal-date="${dateStr}">${day}</td>`;
+                day++;
+            }
+        }
+        html += '</tr>';
+        if(day>daysInMonth) break;
     }
     popup.innerHTML = html + `</tbody></table>`;
+    if (!calendarBound) {
+        calendarBound = true;
+        popup.addEventListener('click', e => {
+            const nav = e.target.closest('[data-cal-delta]');
+            if (nav) { changeCalendarMonth(Number(nav.dataset.calDelta), e); return; }
+            const cell = e.target.closest('[data-cal-date]');
+            if (cell) selectDateFromCalendar(cell.dataset.calDate, e);
+        });
+    }
 }
 
-window.changeCalendarMonth = (delta, e) => { 
-    if(e) e.stopPropagation(); 
-    currentCalendarDate.setMonth(currentCalendarDate.getMonth()+delta); 
-    renderCalendar(); 
+window.changeCalendarMonth = (delta, e) => {
+    if(e) e.stopPropagation();
+    currentCalendarDate.setMonth(currentCalendarDate.getMonth()+delta);
+    renderCalendar();
 };
 
-window.selectDateFromCalendar = (str, e) => { 
-    if(e) e.stopPropagation(); 
-    if(!availableDatesSet.has(str)) return; 
-    selectedDate = str; 
-    isFallbackMode = false; 
-    document.getElementById('fallback-banner').style.display='none'; 
-    document.getElementById('calendar-popup').style.display='none'; 
-    updateDateBtnWithLatest(); 
-    renderDateDropdown(); 
-    fetchAndRenderData(str); 
+window.selectDateFromCalendar = (str, e) => {
+    if(e) e.stopPropagation();
+    if(!availableDatesSet.has(str)) return;
+    selectedDate = str;
+    isFallbackMode = false;
+    document.getElementById('fallback-banner').style.display='none';
+    document.getElementById('calendar-popup').style.display='none';
+    updateDateBtnWithLatest();
+    renderDateDropdown();
+    fetchAndRenderData(str);
 };
 
 // ==================== 初始化启动 ====================
 document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('click', e => {
+        const el = e.target.closest('[data-action]');
+        if (!el) return;
+        switch (el.dataset.action) {
+            case 'toggleDate': toggleDateDropdown(); break;
+            case 'refresh': forceRefresh(); break;
+            case 'modal': openModal(el.dataset.modal); break;
+            case 'close': closeModal(el.dataset.modal); break;
+            case 'dark': toggleDarkMode(); break;
+        }
+    });
+
     initCalendar();
-    
-    if (localStorage.getItem('darkMode')==='enabled') { 
-        document.body.classList.add('dark-mode'); 
-        document.getElementById('dark-mode-btn').innerHTML = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>'; 
+
+    if (localStorage.getItem('darkMode')==='enabled') {
+        document.body.classList.add('dark-mode');
+        document.getElementById('dark-mode-btn').innerHTML = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>';
     }
-    
+
     const spinBtn = document.getElementById('spin-btn');
     if (spinBtn) {
-        spinBtn.addEventListener('click', () => { 
-            spinBtn.disabled = true; 
-            let c = 0; 
-            const int = setInterval(()=>{ 
-                document.getElementById('digit1').innerText=Math.floor(Math.random()*10); 
-                document.getElementById('digit2').innerText=Math.floor(Math.random()*10); 
-                document.getElementById('digit3').innerText=Math.floor(Math.random()*10); 
-                document.getElementById('digit4').innerText=Math.floor(Math.random()*10); 
-                c++; 
-                if(c>15){clearInterval(int);spinBtn.disabled=false;} 
-            },80); 
+        spinBtn.addEventListener('click', () => {
+            spinBtn.disabled = true;
+            let c = 0;
+            const int = setInterval(()=>{
+                document.getElementById('digit1').innerText=Math.floor(Math.random()*10);
+                document.getElementById('digit2').innerText=Math.floor(Math.random()*10);
+                document.getElementById('digit3').innerText=Math.floor(Math.random()*10);
+                document.getElementById('digit4').innerText=Math.floor(Math.random()*10);
+                c++;
+                if(c>15){clearInterval(int);spinBtn.disabled=false;}
+            },80);
         });
     }
-    
+
     document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if(e.target===e.currentTarget) o.style.display='none'; }));
-    
+
     loadDateIndex();
 });

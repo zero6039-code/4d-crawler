@@ -876,6 +876,48 @@ def update_dates_index():
         json.dump(dates, f)
     print(f"📋 已更新日期索引，共 {len(dates)} 个历史日期")
 
+# ---------- 聚合文件（前端单请求） ----------
+def _atomic_dump(obj, path):
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(obj, f, ensure_ascii=False, separators=(",", ":"))
+    os.replace(tmp, path)
+
+def build_latest(base="docs/data"):
+    out = {}
+    if not os.path.isdir(base):
+        return
+    for name in sorted(os.listdir(base)):
+        if not name.endswith(".json"):
+            continue
+        stem = name[:-5]
+        if stem == "dates" or stem == "latest" or stem.endswith("_all"):
+            continue
+        try:
+            with open(os.path.join(base, name), encoding="utf-8") as f:
+                out[stem] = json.load(f)
+        except (OSError, ValueError):
+            continue
+    _atomic_dump(out, os.path.join(base, "latest.json"))
+
+def build_day(ymd, base="docs/data"):
+    day = os.path.join(base, ymd)
+    if not os.path.isdir(day):
+        return
+    out = {}
+    for name in sorted(os.listdir(day)):
+        if not name.endswith(".json"):
+            continue
+        stem = name[:-5]
+        if stem == "all":
+            continue
+        try:
+            with open(os.path.join(day, name), encoding="utf-8") as f:
+                out[stem] = json.load(f)
+        except (OSError, ValueError):
+            continue
+    _atomic_dump(out, os.path.join(day, "all.json"))
+
 # ---------- 主流程 ----------
 def main():
     print("🚀 爬虫开始运行")
@@ -988,8 +1030,16 @@ def main():
         else:
             print("❌ 无法获取 4d4d.co 数据")
 
-    # 更新日期索引
+    # 更新日期索引 + 生成前端聚合文件
     update_dates_index()
+    try:
+        with open(os.path.join("docs/data", "dates.json"), encoding="utf-8") as f:
+            _dates = json.load(f)
+        if _dates:
+            build_day(_dates[0])
+        build_latest()
+    except Exception as e:
+        print(f"⚠️ 生成聚合文件失败: {e}")
     print("🔚 爬虫执行完毕")
 
 if __name__ == "__main__":
