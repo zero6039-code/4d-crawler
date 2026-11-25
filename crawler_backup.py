@@ -68,10 +68,47 @@ def scrape_singapore_toto(min_date=None):
     return best[1] if best else None
 
 def fetch_lucky_hari(session, now=None):
-    """今天 403/失败自动回退昨天，返回现有 schema 或 {}。"""
+    """官方源优先；403/缺奖时自动切 mkt88 / i.check4d.today。"""
     now = now or datetime.now(MYT)
+
+    def _page(url):
+        r = session.get(url, timeout=15, headers={"User-Agent": UA})
+        r.raise_for_status()
+        t = re.sub(r"<script[\s\S]*?</script>|<style[\s\S]*?</style>", " ", r.text, flags=re.I | re.S)
+        t = re.sub(r"<[^>]+>", " ", t).replace("&nbsp;", " ")
+        return re.sub(r"\s+", " ", t)
+
+    def _paged_data(text, threshold, date_re, no_re, first_re, second_re, third_re, sp_re, co_re):
+        dm = re.search(date_re, text, re.I)
+        if not dm:
+            return {}
+        ymd = to_ymd(dm.group(1))
+        if not ymd or ymd < threshold:
+            return {}
+
+        def one(pattern):
+            m = re.search(pattern, text, re.I)
+            return m.group(1) if m else ""
+
+        first, second, third = one(first_re), one(second_re), one(third_re)
+        if not (first and second and third):
+            return {}
+        sp = re.search(sp_re, text, re.I | re.S)
+        co = re.search(co_re, text, re.I | re.S)
+        no = re.search(no_re, text, re.I)
+        return {
+            "draw_date": ymd,
+            "draw_no": no.group(1) if no else "",
+            "draw_time": "7:30 PM",
+            "1st": first,
+            "2nd": second,
+            "3rd": third,
+            "special": re.findall(r"\d{4}", sp.group(1)) if sp else [],
+            "consolation": re.findall(r"\d{4}", co.group(1)) if co else [],
+        }
+
     for day in (now, now - timedelta(days=1)):
-        ds = day.strftime('%Y-%m-%d')
+        ds = day.strftime("%Y-%m-%d")
         ts = int(time.time() * 1000)
         url = (f"https://api.hari4d.com/DrawResultL/GetDrawResult"
                f"?date={ds}T19:30:00&nocache={ts}&_={ts}")
@@ -80,14 +117,14 @@ def fetch_lucky_hari(session, now=None):
             r.raise_for_status()
             j = r.json()
         except Exception as e:
-            print(f"⚠️ Lucky HariHari {ds} 抓取失败: {e}")
-            continue
-        if j.get('prize1'):
-            special = [j.get(k) for k in ('prizeA','prizeB','prizeC','prizeE',
-                                          'prizeF','prizeH','prizeL','prizeN',
-                                          'prizeO','prizeP')]
-            cons = [j.get(k) for k in ('prizeQ','prizeR','prizeS','prizeT',
-                                       'prizeU','prizeV','prizeW')]
+            print(f"⚠️ Lucky HariHari 官方源 {ds} 抓取失败: {e}")
+            j = {}
+        if j.get("prize1"):
+            special = [j.get(k) for k in ("prizeA", "prizeB", "prizeC", "prizeE",
+                                          "prizeF", "prizeH", "prizeL", "prizeN",
+                                          "prizeO", "prizeP")]
+            cons = [j.get(k) for k in ("prizeQ", "prizeR", "prizeS", "prizeT",
+                                       "prizeU", "prizeV", "prizeW")]
             return {
                 "draw_date": str(j.get("drawDate", "")).split("T")[0],
                 "draw_no": "",
@@ -98,4 +135,28 @@ def fetch_lucky_hari(session, now=None):
                 "special": [n for n in special if n and n != "----"],
                 "consolation": [n for n in cons if n and n != "----"],
             }
+
+        sources = (
+            ("mkt88", "https://www.mkt88.my/result/lucky-harihari",
+             r"Date:\s*(\d{2}-\d{2}-\d{4})", r"Draw No:\s*(\d+)",
+             r"1st Prize 首奖\s*(\d{4})", r"2nd Prize 二奖\s*(\d{4})",
+             r"3rd Prize 三奖\s*(\d{4})",
+             r"Special 特别奖(.*?)Consolation 安慰奖",
+             r"Consolation 安慰奖(.*?)Jackpot Pool"),
+            ("check4d", "https://i.check4d.today/",
+             r"LUCKY HARI HARI 4D.*?(\d{2}-\d{2}-\d{4})", r"No:\s*(\d+)",
+             r"1st Prize:\s*[A-Z]\s*(\d{4})", r"2nd Prize:\s*[A-Z]\s*(\d{4})",
+             r"3rd Prize:\s*[A-Z]\s*(\d{4})",
+             r"Special\s*([A-M]\s*(?:\d{4}|----)\s*)+",
+             r"Consolation\s*([N-W]\s*(?:\d{4}|----)\s*)+"),
+        )
+        for name, url_fb, date_re, no_re, r1, r2, r3, sp_re, co_re in sources:
+            try:
+                data = _paged_data(_page(url_fb), ds, date_re, no_re, r1, r2, r3, sp_re, co_re)
+            except Exception as e:
+                print(f"⚠️ Lucky HariHari {name} 抓取失败: {e}")
+                continue
+            if data:
+                print(f"✅ Lucky HariHari 改用备用源 {name} ({data['draw_date']})")
+                return data
     return {}
