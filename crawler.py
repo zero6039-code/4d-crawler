@@ -813,46 +813,6 @@ def fetch_all_companies_from_dato4d(require_fresh=False):
     else:
         print("⚠️ JSON 中缺少 M (Magnum) 的数据")
 
-    # 提取三家公司开奖结果并保存为固定文件
-    companies_to_extract = {
-        "D": "damacai",
-        "M": "magnum",
-        "T": "sportstoto"
-    }
-    for key, company_name in companies_to_extract.items():
-        if key in data:
-            company_data = data[key]
-            raw_date = company_data.get("DD", "")
-            draw_date_str = extract_date_from_dd(raw_date)
-            ymd_date = dmy_to_ymd(draw_date_str) if draw_date_str else datetime.now().strftime("%Y-%m-%d")
-            if ymd_date:
-                draw_result = {
-                    "1st": company_data.get("P1", ""),
-                    "2nd": company_data.get("P2", ""),
-                    "3rd": company_data.get("P3", ""),
-                    "special": [],
-                    "consolation": []
-                }
-                for i in range(1, 14):
-                    s_key = f"S{i}"
-                    if s_key in company_data:
-                        num = company_data[s_key]
-                        if num and num not in ["----", "-"]:
-                            draw_result["special"].append(num)
-                for i in range(1, 11):
-                    c_key = f"C{i}"
-                    if c_key in company_data:
-                        num = company_data[c_key]
-                        if num and num not in ["----", "-"]:
-                            draw_result["consolation"].append(num)
-                draw_dir = os.path.join("docs/data", ymd_date)
-                os.makedirs(draw_dir, exist_ok=True)
-                draw_path = os.path.join(draw_dir, f"{company_name}_draw.json")
-                with open(draw_path, "w", encoding="utf-8") as f:
-                    json.dump(draw_result, f, ensure_ascii=False, indent=2)
-                print(f"📌 已保存 {company_name} 开奖结果: {draw_path}")
-        else:
-            print(f"⚠️ 无法从 JSON 中找到 {company_name} 数据，跳过保存")
 
     print(f"✅ 从 JSON 成功获取 {success_count} 家公司数据")
     return True
@@ -917,24 +877,22 @@ def build_latest(base="docs/data"):
         pass
     _atomic_dump(out, os.path.join(base, "latest.json"))
 
-def build_day(ymd, base="docs/data"):
-    day = os.path.join(base, ymd)
-    if not os.path.isdir(day):
-        return
-    out = {}
-    for name in sorted(os.listdir(day)):
-        if not name.endswith(".json"):
-            continue
-        stem = name[:-5]
-        if stem == "all":
-            continue
-        try:
-            with open(os.path.join(day, name), encoding="utf-8") as f:
-                out[stem] = json.load(f)
-        except (OSError, ValueError):
-            continue
-    _atomic_dump(out, os.path.join(day, "all.json"))
 
+
+def update_sitemap(today=None):
+    """抓取成功后更新 sitemap.xml 的 lastmod（内容不变则不写入）"""
+    today = today or datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d")
+    path = "docs/sitemap.xml"
+    try:
+        with open(path, encoding="utf-8") as f:
+            s = f.read()
+        updated = re.sub(r"<lastmod>.*?</lastmod>", f"<lastmod>{today}</lastmod>", s)
+        if updated != s:
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(updated)
+            print(f"🗺️ 已更新 sitemap lastmod: {today}")
+    except OSError as e:
+        print(f"⚠️ 更新 sitemap 失败: {e}")
 # ---------- 主流程 ----------
 def main():
     print("🚀 爬虫开始运行")
@@ -1050,13 +1008,11 @@ def main():
     # 更新日期索引 + 生成前端聚合文件
     update_dates_index()
     try:
-        with open(os.path.join("docs/data", "dates.json"), encoding="utf-8") as f:
-            _dates = json.load(f)
-        if _dates:
-            build_day(_dates[0])
         build_latest()
     except Exception as e:
         print(f"⚠️ 生成聚合文件失败: {e}")
+    if json_success:
+        update_sitemap()
     print("🔚 爬虫执行完毕")
 
 if __name__ == "__main__":
