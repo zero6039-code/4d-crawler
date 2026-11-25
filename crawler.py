@@ -898,6 +898,23 @@ def build_latest(base="docs/data"):
                 out[stem] = json.load(f)
         except (OSError, ValueError):
             continue
+    # 用最新日期目录覆盖根目录旧数据，避免官网显示过期开奖
+    try:
+        with open(os.path.join(base, "dates.json"), encoding="utf-8") as f:
+            dates = json.load(f)
+        day = os.path.join(base, dates[0])
+        if os.path.isdir(day):
+            for name in sorted(os.listdir(day)):
+                if not name.endswith(".json") or name == "all.json":
+                    continue
+                stem = name[:-5]
+                try:
+                    with open(os.path.join(day, name), encoding="utf-8") as f:
+                        out[stem] = json.load(f)
+                except (OSError, ValueError):
+                    continue
+    except (OSError, ValueError, IndexError):
+        pass
     _atomic_dump(out, os.path.join(base, "latest.json"))
 
 def build_day(ymd, base="docs/data"):
