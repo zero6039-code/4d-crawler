@@ -971,7 +971,7 @@ def main():
         else:
             print("时段内多次尝试均未拿到当天开奖数据。")
     else:
-        json_success = fetch_all_companies_from_dato4d()
+        json_success = fetch_all_companies_from_dato4d(require_fresh=True)
 
     # ========== 主源失败/不新鲜时才用备用源；手动模式保持原行为 ==========
     if not json_success or is_manual:

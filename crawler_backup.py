@@ -76,13 +76,13 @@ def fetch_lucky_hari(session, now=None):
         url = (f"https://api.hari4d.com/DrawResultL/GetDrawResult"
                f"?date={ds}T19:30:00&nocache={ts}&_={ts}")
         try:
-            r = session.get(url, timeout=15, headers={"User-Agent": UA})
+            r = session.get(url, timeout=15, headers={"User-Agent": UA, "Referer": "https://www.hari4d.com/"})
             r.raise_for_status()
             j = r.json()
         except Exception as e:
             print(f"⚠️ Lucky HariHari {ds} 抓取失败: {e}")
             continue
-        if j.get('prize1') and j.get('isDone') is not False:
+        if j.get('prize1'):
             special = [j.get(k) for k in ('prizeA','prizeB','prizeC','prizeE',
                                           'prizeF','prizeH','prizeL','prizeN',
                                           'prizeO','prizeP')]
