@@ -9,6 +9,8 @@ from urllib.parse import urljoin
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from crawler_utils import save_json as _save_json
+import crawler_utils as cu
+from crawler_backup import scrape_singapore_toto, fetch_lucky_hari
 
 # ========== 路径统一配置 ==========
 
@@ -702,68 +704,24 @@ def fetch_backup_sources():
     except Exception as e:
         print(f"⚠️ 备用源 Perdana 抓取失败: {e}")
 
-    # --- 2. Lucky HariHari 4D (只取晚间场，自动回退到昨天) ---
-    try:
-        tz = timezone(timedelta(hours=8))
-        now_my = datetime.now(tz)
-        
-        # 1. 尝试请求今天
-        today_str = now_my.strftime("%Y-%m-%d")
-        target_time = f"{today_str}T19:30:00"
-        url_hari = f"https://api.hari4d.com/DrawResultL/GetDrawResult?date={target_time}&nocache={int(time.time()*1000)}&_={int(time.time()*1000)}"
-        res = SESSION.get(url_hari, timeout=15, headers={"User-Agent": "Mozilla/5.0"})
-        res.raise_for_status()
-        
-        json_data = {}
-        if res.status_code == 200:
-            json_data = res.json()
-            print(f"DEBUG: 今天 ({today_str}) API 返回: isDone={json_data.get('isDone')}, 1st={json_data.get('prize1')}")
-        
-        # 2. 检查今天是否真正开奖（如果没开奖，才回退到昨天）
-        if not json_data.get("prize1") or json_data.get("isDone") == False:
-            print("⚠️ 今天尚未开奖，自动回退抓取昨天...")
-            yesterday_str = (now_my - timedelta(days=1)).strftime("%Y-%m-%d")
-            target_time = f"{yesterday_str}T19:30:00"
-            url_hari = f"https://api.hari4d.com/DrawResultL/GetDrawResult?date={target_time}&nocache={int(time.time()*1000)}&_={int(time.time()*1000)}"
-            res = SESSION.get(url_hari, timeout=15, headers={"User-Agent": "Mozilla/5.0"})
-            res.raise_for_status()
-            if res.status_code == 200:
-                json_data = res.json()
-                print(f"DEBUG: 成功回退抓取昨天 ({yesterday_str}) 的数据")
+    # --- 2. Lucky HariHari 4D（今天失败自动回退昨天）---
+    lucky = fetch_lucky_hari(SESSION)
+    if lucky:
+        backup_data["lucky_hari"] = lucky
+        print(f"✅ 从备用源获取到 Lucky HariHari 4D ({lucky['draw_date']} 晚间 7:30 PM) 数据")
+    else:
+        print("⚠️ 今天和昨天均未获取到 Lucky HariHari 数据，跳过更新")
 
-        # 3. 不管今天还是昨天，只要拿到了数据，就进行提取和保存（放在回退判断的外面）
-        if json_data.get("prize1"):
-            # 映射 API 返回的字段到你的 JSON 结构
-            special_nums = [
-                json_data.get("prizeA"), json_data.get("prizeB"),
-                json_data.get("prizeC"), json_data.get("prizeE"),
-                json_data.get("prizeF"), json_data.get("prizeH"),
-                json_data.get("prizeL"), json_data.get("prizeN"),
-                json_data.get("prizeO"), json_data.get("prizeP")
-            ]
-            consolation_nums = [
-                json_data.get("prizeQ"), json_data.get("prizeR"),
-                json_data.get("prizeS"), json_data.get("prizeT"),
-                json_data.get("prizeU"), json_data.get("prizeV"),
-                json_data.get("prizeW")
-            ]
-            
-            backup_data["lucky_hari"] = {
-                "draw_date": json_data.get("drawDate", "").split("T")[0], 
-                "draw_no": "",
-                "draw_time": "7:30 PM", 
-                "1st": json_data.get("prize1", ""),
-                "2nd": json_data.get("prize2", ""),
-                "3rd": json_data.get("prize3", ""),
-                "special": [n for n in special_nums if n and n != "----"],
-                "consolation": [n for n in consolation_nums if n and n != "----"]
-            }
-            print(f"✅ 从备用源获取到 Lucky HariHari 4D ({json_data.get('drawDate', '').split('T')[0]} 晚间 7:30 PM) 数据")
-        else:
-            print("⚠️ 今天和昨天均未获取到 Lucky HariHari 数据，跳过更新")
-            
-    except Exception as e:
-        print(f"⚠️ 备用源 Lucky HariHari 抓取失败: {e}")
+    # --- 3. Singapore Toto（dato4d 停更时兜底）---
+    try:
+        with open(os.path.join("docs/data", "singapore_toto.json"), encoding="utf-8") as f:
+            min_date = cu.to_ymd(json.load(f).get("draw_date"))
+    except Exception:
+        min_date = None
+    sgt = scrape_singapore_toto(min_date=min_date)
+    if sgt:
+        backup_data["singapore_toto"] = sgt
+        print(f"✅ 从备用源获取到 Singapore Toto ({sgt['draw_date']} Draw {sgt['draw_no']})")
 
     return backup_data
 
@@ -961,7 +919,7 @@ def main():
         print("🔄 正在从备用源获取 Perdana 和 Lucky HariHari 的晚间场数据...")
         backup_data = fetch_backup_sources()
         for key, data in backup_data.items():
-            if data and any(data.get(k) for k in ['1st', '2nd', '3rd']):
+            if data and (any(data.get(k) for k in ['1st', '2nd', '3rd']) or data.get('winning_numbers')):
                 save_json(key, data)
                 print(f"✅ 已使用备用源更新 {key}")
             
