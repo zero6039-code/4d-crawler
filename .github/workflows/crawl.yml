@@ -1,14 +1,12 @@
 name: Daily 4D Crawler
 
 on:
-  # 移除了原本拥挤且不靠谱的 GitHub 定时器
-  # 改为由 cron-job.org 精准调用 workflow_dispatch
-  # 保留一个备用兜底 (每天 MYT 21:00 / UTC 13:00 跑一次)
+  # 备用兜底；主触发仍为 cron-job.org 的 workflow_dispatch
   schedule:
-    - cron: '0 13 * * *' 
-  workflow_dispatch:  # 允许外部 API 和手动触发
+    - cron: '15 11 * * *'     # 19:15 MYT
+    - cron: '45 12 * * *'     # 20:45 MYT
+  workflow_dispatch:
 
-# 防止多个任务同时运行导致 git push 冲突
 concurrency:
   group: 4d-crawler-${{ github.ref }}
   cancel-in-progress: false
@@ -16,6 +14,7 @@ concurrency:
 jobs:
   crawl:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       IS_MANUAL: ${{ github.event_name == 'workflow_dispatch' }}
@@ -47,9 +46,6 @@ jobs:
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           git add docs/data/
-          # 如果没有文件变更，跳过 commit，不会报错
           git diff --quiet && git diff --staged --quiet || git commit -m "Auto-update 4D results $(TZ='Asia/Kuala_Lumpur' date +'%Y-%m-%d %H:%M')"
-          
-          # 【关键修复】拉取远程最新更改并进行变基，防止并发推送被拒绝
           git pull --rebase origin main
           git push

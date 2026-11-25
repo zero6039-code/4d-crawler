@@ -843,7 +843,18 @@ def fetch_backup_sources():
 
     return backup_data
 
-def fetch_all_companies_from_dato4d():
+def is_fresh(data, keys=("M", "D", "T")):
+    """三大公司开奖日期是否等于马来西亚当天"""
+    today = datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d")
+    for k in keys:
+        item = data.get(k)
+        if not isinstance(item, dict):
+            return False
+        if dmy_to_ymd(extract_date_from_dd(item.get("DD", ""))) != today:
+            return False
+    return True
+
+def fetch_all_companies_from_dato4d(require_fresh=False):
     """从 https://www.dato4d.com/liveos.json 获取所有公司的数据"""
     print("🔍 正在从 dato4d.com JSON 批量获取所有公司数据...")
     url = URL_DATO4D + "?_=" + str(int(time.time()*1000))
@@ -856,6 +867,11 @@ def fetch_all_companies_from_dato4d():
         data = json.loads(html)
     except json.JSONDecodeError as e:
         print(f"❌ JSON 解析失败: {e}")
+        return False
+
+    # 非手动模式：能解析不等于当天已开奖，未开奖则继续轮询
+    if require_fresh and not is_fresh(data):
+        print("⏳ JSON 可解析但三大公司尚无当天开奖数据，继续轮询...")
         return False
 
     # 定义公司映射：JSON键 -> 公司名, 数据提取函数
@@ -1013,30 +1029,30 @@ def main():
         now = datetime.now(tz)
         
         target_start = now.replace(hour=19, minute=0, second=0, microsecond=0)
-        target_end = now.replace(hour=20, minute=0, second=0, microsecond=0)
+        target_end = now.replace(hour=22, minute=30, second=0, microsecond=0)
         
         if now < target_start or now >= target_end:
-            print("当前不在抓取时段（19:00–20:00），退出。")
+            print("当前不在抓取时段（19:00–22:30），退出。")
             return
     else:
         print("手动触发模式，跳过时段检查。")
 
     if not is_manual:
-        max_attempts = 12
+        max_attempts = 6
         attempt = 0
         json_success = False
         while attempt < max_attempts and not json_success:
             print(f"第 {attempt+1} 次尝试抓取 JSON 数据...")
-            json_success = fetch_all_companies_from_dato4d()
+            json_success = fetch_all_companies_from_dato4d(require_fresh=True)
             if json_success:
-                print("JSON 抓取成功！")
+                print("JSON 抓取成功，且三大公司均为当天开奖数据！")
                 break
             else:
-                print("JSON 抓取失败，5分钟后重试...")
-                time.sleep(300)
+                print("当天开奖数据未就绪或抓取失败，3分钟后重试...")
+                time.sleep(180)
                 attempt += 1
         else:
-            print("时段内多次尝试 JSON 均失败。")
+            print("时段内多次尝试均未拿到当天开奖数据。")
     else:
         json_success = fetch_all_companies_from_dato4d()
 
