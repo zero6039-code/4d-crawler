@@ -244,11 +244,12 @@ function hasAnyData(d) {
 }
 
 async function loadAggregated(dateStr, isLatest) {
-    const url = isLatest ? 'data/latest.json' : `data/${dateStr}/all.json`;
+    const url = isLatest ? 'data/latest.json' : `data/archive/${dateStr.slice(0, 7)}.json`;
     try {
         const res = await fetch(url, { cache: 'no-cache' });
         if (!res.ok) return null;
-        return await res.json();
+        const payload = await res.json();
+        return isLatest ? payload : (payload[dateStr] || null);
     } catch { return null; }
 }
 

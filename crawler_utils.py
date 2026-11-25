@@ -70,17 +70,18 @@ def save_json(company, data, base="docs/data"):
     data = {**data, "draw_date": to_dmy(ymd)}
     changed = atomic_write_json(os.path.join(base, f"{company}.json"), data)
 
-    # 单日聚合：每次成功保存都同步更新 all.json，供历史查询服务直接读取
-    all_path = os.path.join(base, ymd, "all.json")
-    merged = {}
-    if os.path.exists(all_path):
+    # 按月归档：每次成功保存写入 YYYY-MM.json 的当天键，跨月自动建新文件
+    month = ymd[:7]
+    archive_path = os.path.join(base, "archive", f"{month}.json")
+    monthly = {}
+    if os.path.exists(archive_path):
         try:
-            with open(all_path, encoding="utf-8") as f:
+            with open(archive_path, encoding="utf-8") as f:
                 loaded = json.load(f)
             if isinstance(loaded, dict):
-                merged = loaded
+                monthly = loaded
         except (OSError, ValueError):
-            merged = {}
-    merged[company] = data
-    atomic_write_json(all_path, merged)
+            monthly = {}
+    monthly.setdefault(ymd, {})[company] = data
+    atomic_write_json(archive_path, monthly)
     return changed
