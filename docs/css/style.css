@@ -137,3 +137,90 @@ body.dark-mode .fallback-banner { background: rgba(120, 53, 15, 0.8); color: #fe
         font-size: clamp(1.2rem, 5.5vw, 1.75rem) !important;
     }
 }
+
+/* === UI patch: history + calendar row + dark aurora === */
+.bottom-row .top-calendar { margin-bottom: 0; }
+.history-btn { background: linear-gradient(135deg, #06b6d4, #0891b2); }
+.history-btn:hover { background: linear-gradient(135deg, #0891b2, #0e7490); }
+body.dark-mode .history-btn { background: linear-gradient(135deg, #22d3ee, #0891b2); color: #082f49; }
+
+/* dark: 白底下拉/日历强制黑字 */
+body.dark-mode .date-dropdown-content,
+body.dark-mode .date-dropdown-content * { color: #0f172a !important; }
+body.dark-mode .date-option.active { color: #1d4ed8 !important; }
+body.dark-mode .calendar-popup,
+body.dark-mode .calendar-popup * { color: #0f172a !important; }
+body.dark-mode .calendar-table td.selected { color: #fff !important; }
+
+/* dark: 极光科技背景 */
+body.dark-mode {
+    background-color: #070b14;
+    background-image:
+        radial-gradient(circle at 12% 18%, rgba(56, 189, 248, 0.28), transparent 42%),
+        radial-gradient(circle at 88% 22%, rgba(139, 92, 246, 0.26), transparent 45%),
+        radial-gradient(circle at 50% 88%, rgba(16, 185, 129, 0.20), transparent 48%),
+        linear-gradient(160deg, rgba(15, 23, 42, 0.96), rgba(2, 6, 23, 0.98));
+    background-attachment: fixed;
+    color: #e2e8f0;
+}
+
+/* === UI patch 2: palette A + apk modal === */
+/* 统一圆角/阴影 */
+.action-btn,
+body.dark-mode .action-btn {
+    border-radius: 14px;
+    box-shadow: 0 6px 18px -6px rgba(15, 23, 42, 0.35);
+}
+.action-btn:hover,
+body.dark-mode .action-btn:hover {
+    box-shadow: 0 10px 24px -8px rgba(15, 23, 42, 0.45);
+}
+
+/* 主操作：Refresh / History / APK 同色系 */
+.refresh-btn,
+.history-btn,
+.apk-btn { background: linear-gradient(135deg, #4f46e5, #0891b2); color: #fff; }
+.refresh-btn:hover,
+.history-btn:hover,
+.apk-btn:hover { background: linear-gradient(135deg, #4338ca, #0e7490); }
+body.dark-mode .refresh-btn,
+body.dark-mode .history-btn,
+body.dark-mode .apk-btn { background: linear-gradient(135deg, #6366f1, #0e7490); color: #fff; }
+
+/* 次要操作：Support 玻璃描边 */
+.donate-btn {
+    background: rgba(148, 163, 184, 0.16);
+    color: #334155;
+    border: 1px solid rgba(100, 116, 139, 0.35);
+    box-shadow: none;
+}
+.donate-btn:hover { background: rgba(148, 163, 184, 0.28); }
+body.dark-mode .donate-btn {
+    background: rgba(148, 163, 184, 0.12);
+    color: #e2e8f0;
+    border-color: rgba(148, 163, 184, 0.35);
+}
+body.dark-mode .donate-btn:hover { background: rgba(148, 163, 184, 0.2); }
+
+/* Lucky 保留唯一暖色 */
+.lucky-btn { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.lucky-btn:hover { background: linear-gradient(135deg, #d97706, #b45309); }
+body.dark-mode .lucky-btn { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #1a202c; }
+
+/* APK 弹窗放大 */
+#apk-modal .modal-content { max-width: 720px; }
+#apk-modal .apk-note { font-size: 0.9rem; line-height: 1.65; word-break: break-word; }
+@media (max-width: 640px) {
+    #apk-modal .modal-content { width: 94%; max-width: none; }
+}
+
+/* === UI patch 3: center apk help summary === */
+body .apk-help > summary {
+    position: relative;
+    justify-content: center;
+    text-align: center;
+}
+body .apk-help > summary::after {
+    position: absolute;
+    right: 12px;
+}
