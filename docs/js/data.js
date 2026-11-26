@@ -78,23 +78,29 @@ function hasAnyData(d) {
     return false;
 }
 
-async function loadAggregated(dateStr, isLatest) {
+async function loadAggregated(dateStr, isLatest, signal) {
     const url = isLatest ? 'data/latest.json' : `data/archive/${dateStr.slice(0, 7)}.json`;
     try {
-        const res = await fetch(url, { cache: 'no-cache' });
+        const res = await fetch(url, { cache: 'no-cache', signal });
         if (!res.ok) return null;
         const payload = await res.json();
         return isLatest ? payload : (payload[dateStr] || null);
     } catch { return null; }
 }
 
+let loadSeq = 0, loadCtl = null;
 async function fetchAndRenderData(dateStr, isRefresh = false) {
+    const seq = ++loadSeq;
+    if (loadCtl) loadCtl.abort();
+    loadCtl = new AbortController();
+    const signal = loadCtl.signal;
     const grid = document.getElementById('companies-grid');
     grid.innerHTML = '<p style="text-align:center;grid-column:1/-1;color:#666;">🔄 正在加载数据...</p>';
     updateStatus('loading', '正在加载...');
     const isLatest = availableDates.length > 0 && dateStr === availableDates[0];
 
-    const agg = await loadAggregated(dateStr, isLatest);
+    const agg = await loadAggregated(dateStr, isLatest, signal);
+    if (seq !== loadSeq) return;
     let dataMap = {}, validCount = 0;
 
     if (agg) {
@@ -108,12 +114,13 @@ async function fetchAndRenderData(dateStr, isRefresh = false) {
             if (HIDDEN_COMPANIES.includes(key)) return { key, data: null };
             const basePath = isLatest ? `data` : `data/${dateStr}`;
             try {
-                const res = await fetch(`${basePath}/${key}.json`, { cache: 'no-cache' });
+                const res = await fetch(`${basePath}/${key}.json`, { cache: 'no-cache', signal });
                 if (!res.ok) throw new Error();
                 return { key, data: await res.json() };
             } catch { return { key, data: null }; }
         });
         const results = await Promise.all(promises);
+        if (seq !== loadSeq) return;
         results.forEach(item => {
             if (hasAnyData(item.data)) { dataMap[item.key] = item.data; validCount++; }
         });
