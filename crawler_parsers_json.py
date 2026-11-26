@@ -5,6 +5,9 @@ from datetime import datetime, timezone, timedelta
 from crawler_http import URL_DATO4D, fetch_html, dmy_to_ymd
 from crawler_storage import save_json
 
+# 最近一次批量抓取实际保存的公司数（供 sitemap 判定）
+LAST_SAVED_COUNT = 0
+
 # ================== 从 dato4d.com JSON 批量获取所有公司数据 ==================
 def extract_date_from_dd(dd_str):
     """从 DD 字段提取纯日期 (dd-mm-yyyy)"""
@@ -265,6 +268,8 @@ def extract_magnum_life_from_json(m_item, company):
 
 def is_fresh(data, keys=("M", "D", "T")):
     """三大公司开奖日期是否等于马来西亚当天"""
+    if not isinstance(data, dict):
+        return False
     today = datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d")
     for k in keys:
         item = data.get(k)
@@ -274,8 +279,32 @@ def is_fresh(data, keys=("M", "D", "T")):
             return False
     return True
 
+def _try_save(company, extract_func, item):
+    """逐家隔离异常：单家数据异常只跳过这一家，不影响其余公司"""
+    global LAST_SAVED_COUNT
+    try:
+        if not isinstance(item, dict):
+            print(f"⚠️ {company}: 数据类型异常({type(item).__name__})，跳过")
+            return 0
+        payload = extract_func(item, company)
+        if not payload:
+            print(f"⚠️ 提取 {company} 数据失败")
+            return 0
+        save_json(company, payload)
+        LAST_SAVED_COUNT += 1
+        return 1
+    except Exception as e:
+        print(f"⚠️ 处理 {company} 失败: {e!r}")
+        return 0
+
 def fetch_all_companies_from_dato4d(require_fresh=False):
-    """从 https://www.dato4d.com/liveos.json 获取所有公司的数据"""
+    """从 dato4d.com/liveos.json 获取所有公司数据。
+
+    F-04：先逐家保存，再用新鲜度决定是否轮询/回退，不再整批拒写。
+    F-05：顶层结构与单家字段异常全部隔离，不向上抛出。
+    """
+    global LAST_SAVED_COUNT
+    LAST_SAVED_COUNT = 0
     print("🔍 正在从 dato4d.com JSON 批量获取所有公司数据...")
     url = URL_DATO4D + "?_=" + str(int(time.time()*1000))
     html = fetch_html(url)
@@ -289,12 +318,10 @@ def fetch_all_companies_from_dato4d(require_fresh=False):
         print(f"❌ JSON 解析失败: {e}")
         return False
 
-    # 非手动模式：能解析不等于当天已开奖，未开奖则继续轮询
-    if require_fresh and not is_fresh(data):
-        print("⏳ JSON 可解析但三大公司尚无当天开奖数据，继续轮询...")
+    if not isinstance(data, dict):
+        print(f"⚠️ JSON 顶层类型异常({type(data).__name__})，跳过批量保存")
         return False
 
-    # 定义公司映射：JSON键 -> 公司名, 数据提取函数
     company_mappings = {
         "M": ("magnum", extract_magnum_from_json),
         "D": ("damacai", extract_standard_4d_from_json),
@@ -312,45 +339,52 @@ def fetch_all_companies_from_dato4d(require_fresh=False):
         "H": ("lucky_hari", extract_standard_4d_from_json),
     }
 
-    success_count = 0
     for key, (company, extract_func) in company_mappings.items():
-        if key in data:
-            company_data = extract_func(data[key], company)
-            if company_data:
-                save_json(company, company_data)
-                success_count += 1
-            else:
-                print(f"⚠️ 提取 {company} 数据失败")
-        else:
-            print(f"⚠️ JSON 中缺少 {company} 的数据 (键 '{key}')")
+        item = data.get(key)
+        if not isinstance(item, dict):
+            print(f"⚠️ {company}: 键 '{key}' 缺失或类型异常，跳过")
+            continue
+        _try_save(company, extract_func, item)
 
     # 额外处理 T 对象中的 Sports Toto 5D/6D/Lotto
-    if "T" in data:
-        t_item = data["T"]
-        toto_5d_data = extract_sportstoto_5d_from_json(t_item, "sportstoto_5d")
-        if toto_5d_data and any(toto_5d_data.get(k) for k in ['1st','2nd','3rd','4th','5th','6th']):
-            save_json("sportstoto_5d", toto_5d_data)
-            success_count += 1
-        toto_6d_data = extract_sportstoto_6d_from_json(t_item, "sportstoto_6d")
-        if toto_6d_data and (toto_6d_data.get('1st') or any(toto_6d_data.get(k, {}).get('main') for k in ['2nd','3rd','4th','5th'])):
-            save_json("sportstoto_6d", toto_6d_data)
-            success_count += 1
-        toto_lotto_data = extract_sportstoto_lotto_from_json(t_item, "sportstoto_lotto")
-        if toto_lotto_data and (toto_lotto_data.get('star') or toto_lotto_data.get('power') or toto_lotto_data.get('supreme')):
-            save_json("sportstoto_lotto", toto_lotto_data)
-            success_count += 1
+    t_item = data.get("T")
+    if isinstance(t_item, dict):
+        extras = (
+            (extract_sportstoto_5d_from_json, "sportstoto_5d",
+             lambda d: any(d.get(k) for k in ('1st', '2nd', '3rd', '4th', '5th', '6th'))),
+            (extract_sportstoto_6d_from_json, "sportstoto_6d",
+             lambda d: bool(d.get('1st')) or any(d.get(k, {}).get('main') for k in ('2nd', '3rd', '4th', '5th'))),
+            (extract_sportstoto_lotto_from_json, "sportstoto_lotto",
+             lambda d: bool(d.get('star') or d.get('power') or d.get('supreme'))),
+        )
+        for fn, key, ok in extras:
+            try:
+                payload = fn(t_item, key)
+                if payload and ok(payload):
+                    save_json(key, payload)
+                    LAST_SAVED_COUNT += 1
+            except Exception as e:
+                print(f"⚠️ 处理 {key} 失败: {e!r}")
     else:
-        print("⚠️ JSON 中缺少 T (Toto) 的数据")
+        print("⚠️ JSON 中缺少 T (Toto) 的数据或类型异常")
 
-    if "M" in data:
-        m_item = data["M"]
-        magnum_life_data = extract_magnum_life_from_json(m_item, "magnum_life")
-        if magnum_life_data and magnum_life_data.get('winning_numbers'):
-            save_json("magnum_life", magnum_life_data)
-            success_count += 1
+    # 额外处理 M 对象中的 Magnum Life
+    m_item = data.get("M")
+    if isinstance(m_item, dict):
+        try:
+            payload = extract_magnum_life_from_json(m_item, "magnum_life")
+            if payload and payload.get('winning_numbers'):
+                save_json("magnum_life", payload)
+                LAST_SAVED_COUNT += 1
+        except Exception as e:
+            print(f"⚠️ 处理 magnum_life 失败: {e!r}")
     else:
-        print("⚠️ JSON 中缺少 M (Magnum) 的数据")
+        print("⚠️ JSON 中缺少 M (Magnum) 的数据或类型异常")
 
+    print(f"✅ 从 JSON 成功处理 {LAST_SAVED_COUNT} 家公司数据")
 
-    print(f"✅ 从 JSON 成功获取 {success_count} 家公司数据")
+    # 新鲜度只决定轮询/回退；数据已按 F-02 单调保护逐家保存
+    if require_fresh and not is_fresh(data):
+        print("⏳ JSON 可解析但三大公司尚无当天开奖数据，继续轮询/回退...")
+        return False
     return True

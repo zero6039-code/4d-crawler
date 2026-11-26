@@ -127,7 +127,7 @@ def main():
         build_latest()
     except Exception as e:
         print(f"⚠️ 生成聚合文件失败: {e}")
-    if json_success:
+    if json_success or LAST_SAVED_COUNT:
         update_sitemap()
     print("🔚 爬虫执行完毕")
 
