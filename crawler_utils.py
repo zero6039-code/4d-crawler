@@ -40,6 +40,14 @@ def clean_prizes(value):
             cleaned.append(item)
     return cleaned
 
+def normalize_draw_no(value):
+    """统一期号为 N/YY；空值或无法识别保持原样。"""
+    if not isinstance(value, str):
+        return value
+    s = value.strip()
+    m = re.fullmatch(r"(\d+)\s*[-/]\s*(\d{2})", s)
+    return f"{m.group(1)}/{m.group(2)}" if m else s
+
 def is_valid_4d(d, company="default"):
     if not isinstance(d, dict):
         return False
@@ -92,10 +100,17 @@ def save_json(company, data, base="docs/data", allow_inferred_date=False):
         print(f"❌ {company} 缺少或无法解析 draw_date，拒绝猜测为今天，保留旧文件")
         return False
     data = {**data, "draw_date": to_dmy(ymd)}
+    for key in ("draw_no", "global_draw_no"):
+        if key in data:
+            data = {**data, key: normalize_draw_no(data.get(key))}
     if company in FOUR_D:
         data = {**data,
                 "special": clean_prizes(data.get("special")),
                 "consolation": clean_prizes(data.get("consolation"))}
+        if company in ("grand_dragon", "lucky_hari"):
+            for key in ("special", "consolation"):
+                if len(data.get(key) or []) < 10:
+                    print(f"⚠️ {company} {key} 少于 10 个号码，可能来源字段映射不全")
 
     root = os.path.join(base, f"{company}.json")
     prev = _stored_ymd(root)

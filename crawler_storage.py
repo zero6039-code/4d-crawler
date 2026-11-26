@@ -49,7 +49,7 @@ def build_latest(base="docs/data"):
         if not name.endswith(".json"):
             continue
         stem = name[:-5]
-        if stem == "dates" or stem == "latest" or stem.endswith("_all"):
+        if stem == "dates" or stem == "latest" or stem == "sportstoto_fireball" or stem.endswith("_all"):
             continue
         try:
             with open(os.path.join(base, name), encoding="utf-8") as f:
