@@ -115,6 +115,7 @@ document.head.appendChild(styleSheet);
 // ==================== 安全工具 ====================
 const esc = s => String(s ?? '').replace(/[&<>"']/g,
   c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const asArr = v => Array.isArray(v) ? v : [];
 const DATE_OK = /^\d{4}-\d{2}-\d{2}$/;
 
 // ==================== 常量定义 ====================
@@ -314,6 +315,8 @@ function renderCompanies(dataMap) {
     COMPANY_LIST.forEach(key => {
         if (HIDDEN_COMPANIES.includes(key)) return;
         const cd = dataMap[key]; if (!cd) return;
+        const mark = html.length; // 失败回滚点
+        try {
         const name = NAME_MAP[key] || key;
         const img = COMPANY_IMAGE_MAP[key] ? `images/${COMPANY_IMAGE_MAP[key]}` : null;
 
@@ -325,9 +328,9 @@ function renderCompanies(dataMap) {
 
             // 1. 主卡片 (Winning Numbers + Jackpots)
             sabahCardsHtml += `<div class="company-section" data-company="sabah_lotto"><div class="company-title">${name}${sharedImg}</div>${sharedDate}<div class="company-content">`;
-            if (cd.winning_numbers && cd.winning_numbers.length > 0) {
+            if (asArr(cd.winning_numbers).length > 0) {
                 sabahCardsHtml += `<div class="subsection"><div class="subsection-title">Winning Numbers</div><div class="number-list">`;
-                cd.winning_numbers.forEach(n => sabahCardsHtml += `<span class="number-item">${esc(n)}</span>`);
+                asArr(cd.winning_numbers).forEach(n => sabahCardsHtml += `<span class="number-item">${esc(n)}</span>`);
                 sabahCardsHtml += `</div></div>`;
             }
             ['jackpot1', 'jackpot2'].forEach(f => {
@@ -432,10 +435,10 @@ function renderCompanies(dataMap) {
 
             // Singapore Toto 专属布局
             if (key === 'singapore_toto') {
-                if (cd.winning_numbers && cd.winning_numbers.length > 0) {
+                if (asArr(cd.winning_numbers).length > 0) {
                     html += `<div class="subsection"><div class="subsection-title">Winning Numbers</div><div class="toto-ball-row">`;
-                    cd.winning_numbers.forEach((num, index) => {
-                        if (index === cd.winning_numbers.length - 1) {
+                    asArr(cd.winning_numbers).forEach((num, index) => {
+                        if (index === asArr(cd.winning_numbers).length - 1) {
                             html += `<div class="toto-special-ball">${esc(num)}</div>`;
                         } else {
                             html += `<div class="toto-ball">${esc(num)}</div>`;
@@ -443,14 +446,14 @@ function renderCompanies(dataMap) {
                     });
                     html += `</div></div>`;
                 }
-                if (cd.prize_table && cd.prize_table.length > 0) {
+                if (asArr(cd.prize_table).filter(Array.isArray).length > 0) {
                     html += `<div class="subsection"><div class="subsection-title">Prize Table</div>`;
                     html += `<table class="singapore-toto-table">
                                 <thead><tr><th>Prize Group</th><th>Share Amount (Each)</th><th>No. of Winning Shares</th></tr></thead>
                                 <tbody>`;
-                    cd.prize_table.forEach(row => {
+                    asArr(cd.prize_table).filter(Array.isArray).forEach(row => {
                         html += `<tr>`;
-                        row.forEach(cell => html += `<td>${esc(cell)}</td>`);
+                        asArr(row).forEach(cell => html += `<td>${esc(cell)}</td>`);
                         html += `</tr>`;
                     });
                     if (cd.prize && typeof cd.prize === 'string' && cd.prize.trim() !== '') {
@@ -473,8 +476,8 @@ function renderCompanies(dataMap) {
                         html += `<div class="subsection"><div class="subsection-title">${g.title}</div><div class="number-list">`;
                         cd[g.field].forEach(n => html += `<span class="number-item">${esc(n)}</span>`);
                         html += `</div>`;
-                        if (cd.jackpots && cd.jackpots[g.jpIdx] && cd.jackpots[g.jpIdx].trim() !== '') {
-                            html += `<div style="margin-top: 8px; font-weight: 700; color: #d97706; font-size: 1rem;">${g.jpName}: ${esc(cd.jackpots[g.jpIdx])}</div>`;
+                        if (String((cd.jackpots || {})[g.jpIdx] ?? '').trim() !== '') {
+                            html += `<div style="margin-top: 8px; font-weight: 700; color: #d97706; font-size: 1rem;">${g.jpName}: ${esc((cd.jackpots || {})[g.jpIdx])}</div>`;
                         }
                         html += `</div>`;
                         rendered = true;
@@ -484,14 +487,14 @@ function renderCompanies(dataMap) {
 
             // MAGNUM LIFE 专属布局
             if (key === 'magnum_life') {
-                if (cd.winning_numbers && cd.winning_numbers.length > 0) {
+                if (asArr(cd.winning_numbers).length > 0) {
                     html += `<div class="subsection"><div class="subsection-title">Winning Numbers</div><div class="number-list">`;
-                    cd.winning_numbers.forEach(n => html += `<span class="number-item">${esc(n)}</span>`);
+                    asArr(cd.winning_numbers).forEach(n => html += `<span class="number-item">${esc(n)}</span>`);
                     html += `</div></div>`;
                 }
-                if (cd.bonus_numbers && cd.bonus_numbers.length > 0) {
+                if (asArr(cd.bonus_numbers).length > 0) {
                     html += `<div class="subsection"><div class="subsection-title">Bonus Numbers</div><div class="number-list">`;
-                    cd.bonus_numbers.forEach(n => html += `<span class="number-item">${esc(n)}</span>`);
+                    asArr(cd.bonus_numbers).forEach(n => html += `<span class="number-item">${esc(n)}</span>`);
                     html += `</div></div>`;
                 }
                 rendered = true;
@@ -543,8 +546,8 @@ function renderCompanies(dataMap) {
             // 普通公司渲染
             html += `<div class="prize-grid"><div class="prize-card"><div class="label">First Prize</div><div class="number">${esc(cd['1st']||'----')}</div></div><div class="prize-card"><div class="label">Second Prize</div><div class="number">${esc(cd['2nd']||'----')}</div></div><div class="prize-card"><div class="label">Third Prize</div><div class="number">${esc(cd['3rd']||'----')}</div></div></div>`;
 
-            const validSpecial = cd.special ? cd.special.filter(n => n && String(n).trim() !== '' && String(n).trim() !== '****') : [];
-            const validConsolation = cd.consolation ? cd.consolation.filter(n => n && String(n).trim() !== '' && String(n).trim() !== '****') : [];
+            const validSpecial = asArr(cd.special).filter(n => n && String(n).trim() !== '' && String(n).trim() !== '****');
+            const validConsolation = asArr(cd.consolation).filter(n => n && String(n).trim() !== '' && String(n).trim() !== '****');
 
             if (validSpecial.length > 0 || validConsolation.length > 0) {
                 html += `<div class="subsection">`;
@@ -564,6 +567,10 @@ function renderCompanies(dataMap) {
             }
         }
         html += `</div></div>`;
+    } catch (e) {
+        html = html.slice(0, mark); // 不留半截 HTML
+        console.error('渲染失败:', key, e);
+    }
     });
 
     if (html === '') html = '<p style="text-align:center;grid-column:1/-1;color:#666;">当日暂无开奖数据</p>';
