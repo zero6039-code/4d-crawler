@@ -12,15 +12,16 @@
         singapore:'singapore4d.png', damacai:'damacai.png', magnum:'magnum.png', toto:'toto.png'
     };
     const PAGE_SIZE = 20;
-    let cache = null, loading = null, allRows = [], page = 1, pagesEl = null;
+    const API = 'https://history-api.zero6039.workers.dev/api/history?num=';
+    let cache = {}, loading = {}, allRows = [], page = 1, pagesEl = null;
 
-    function loadAll() {
-        if (cache) return Promise.resolve(cache);
-        if (loading) return loading;
-        loading = fetch('data/history_index.json?t=' + Date.now(), { cache: 'no-store' })
-            .then(r => { if (!r.ok) throw new Error('index'); return r.json(); })
-            .then(j => (cache = j));
-        return loading;
+    function loadAll(num) {
+        if (cache[num]) return Promise.resolve(cache[num]);
+        if (loading[num]) return loading[num];
+        loading[num] = fetch(API + encodeURIComponent(num), { cache: 'no-store' })
+            .then(r => { if (!r.ok) throw new Error('api'); return r.json(); })
+            .then(j => (cache[num] = j));
+        return loading[num];
     }
 
     function esc(s) {
@@ -105,7 +106,7 @@
             return;
         }
         st.textContent = '加载中 / Loading…';
-        try { await loadAll(); render(search(num), num); }
+        try { await loadAll(num); render(search(num), num); }
         catch (e) { st.textContent = '加载失败 / Load failed'; }
     }
 
@@ -126,8 +127,9 @@
             });
         }
         if (btn) btn.addEventListener('click', run);
-        document.querySelectorAll('[data-modal="history-modal"]').forEach(el => {
-            el.addEventListener('click', () => { loadAll().catch(() => {}); });
+        if (input) input.addEventListener('input', () => {
+            const v = input.value.replace(/\D/g, '').slice(0, 4);
+            if (v.length >= 2) loadAll(v).catch(() => {});
         });
         if (input) input.addEventListener('keydown', e => { if (e.key === 'Enter') run(); });
         if (modal) {

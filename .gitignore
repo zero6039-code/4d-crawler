@@ -17,3 +17,4 @@ gaps_*.json
 *.bak.*
 archive_backup_*.tar.gz
 finish_push.sh
+docs/data/history_index.json
