@@ -1,26 +1,25 @@
-/* docs/js/history.js — 号码历史查询（复用 archive 月度数据） */
+/* docs/js/history.js — 号码历史查询（读取预生成索引） */
 (function () {
-    const MONTHS = ['2026-02','2026-03','2026-04','2026-05','2026-06','2026-07','2026-08','2026-10','2026-11'];
     const PRIZES = [
         ['1st','头奖 | 1st'], ['2nd','二奖 | 2nd'], ['3rd','三奖 | 3rd'],
         ['special','特别奖 | Special'], ['consolation','安慰奖 | Consolation']
     ];
+    const COMPANIES = ['sabah','sarawak_cashsweep','sandakan','lucky_hari','perdana4d',
+        'grand_dragon','singapore','damacai','magnum','toto'];
     const LOGO = {
         sabah:'sabah88.png', sarawak_cashsweep:'sarawak.png', sandakan:'sandakan_logo.png',
         lucky_hari:'luckly_hari.png', perdana4d:'Perdana4D.png', grand_dragon:'granddragon.png',
         singapore:'singapore4d.png', damacai:'damacai.png', magnum:'magnum.png', toto:'toto.png'
     };
-    const KEYS = Object.keys(LOGO), PAGE_SIZE = 20;
+    const PAGE_SIZE = 20;
     let cache = null, loading = null, allRows = [], page = 1, pagesEl = null;
 
     function loadAll() {
         if (cache) return Promise.resolve(cache);
         if (loading) return loading;
-        loading = Promise.all(MONTHS.map(m =>
-            fetch(`data/archive/${m}.json?t=${Date.now()}`, { cache: 'no-store' })
-                .then(r => r.ok ? r.json() : {})
-                .catch(() => ({}))
-        )).then(parts => (cache = parts));
+        loading = fetch('data/history_index.json?t=' + Date.now(), { cache: 'no-store' })
+            .then(r => { if (!r.ok) throw new Error('index'); return r.json(); })
+            .then(j => (cache = j));
         return loading;
     }
 
@@ -30,37 +29,26 @@
 
     function search(num) {
         const rows = [];
-        for (const part of cache) {
-            for (const date of Object.keys(part)) {
-                const daily = part[date] || {};
-                for (const key of KEYS) {
-                    const d = daily[key];
-                    if (!d) continue;
-                    for (let pi = 0; pi < PRIZES.length; pi++) {
-                        const field = PRIZES[pi][0], label = PRIZES[pi][1];
-                        const v = d[field];
-                        const list = Array.isArray(v) ? v : (v ? [v] : []);
-                        if (list.some(x => String(x).trim() === num)) {
-                            rows.push({
-                                num, label, pi, date,
-                                name: (typeof NAME_MAP !== 'undefined' && NAME_MAP[key]) || key,
-                                logo: LOGO[key]
-                            });
-                        }
-                    }
-                }
-            }
+        for (const e of (cache[num] || [])) {
+            const d = e[1];
+            const date = String(Math.floor(d / 10000)).padStart(4, '0') + '-' +
+                String(Math.floor(d / 100) % 100).padStart(2, '0') + '-' +
+                String(d % 100).padStart(2, '0');
+            const key = COMPANIES[e[2]] || '';
+            rows.push({
+                num, label: PRIZES[e[0]][1], pi: e[0], date,
+                name: (typeof NAME_MAP !== 'undefined' && NAME_MAP[key]) || key,
+                logo: LOGO[key] || ''
+            });
         }
-        rows.sort((a,b) => b.date.localeCompare(a.date) || a.pi - b.pi);
+        rows.sort((a, b) => b.date.localeCompare(a.date) || a.pi - b.pi);
         return rows;
     }
 
     function rowHtml(r) {
         return `<div class="num-history-row">` +
-            `<span>${esc(r.num)}</span>` +
-            `<span>${esc(r.label)}</span>` +
-            `<span>${esc(r.date)}</span>` +
-            `<span>${esc(r.name)}</span>` +
+            `<span>${esc(r.num)}</span><span>${esc(r.label)}</span>` +
+            `<span>${esc(r.date)}</span><span>${esc(r.name)}</span>` +
             `<img src="images/${encodeURIComponent(r.logo)}" width="32" height="32" alt="">` +
             `</div>`;
     }
@@ -81,8 +69,7 @@
     }
 
     function render(rows, num) {
-        allRows = rows;
-        page = 1;
+        allRows = rows; page = 1;
         const st = document.getElementById('num-history-status');
         const out = document.getElementById('num-history-results');
         if (!rows.length) {
@@ -103,8 +90,7 @@
         if (st) st.textContent = '';
         if (out) out.innerHTML = '';
         if (pagesEl) pagesEl.innerHTML = '';
-        allRows = [];
-        page = 1;
+        allRows = []; page = 1;
     }
 
     async function run() {
