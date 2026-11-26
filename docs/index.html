@@ -8,7 +8,7 @@
     <meta name="keywords" content="4d成绩, 马来西亚4d, 4d results, live 4d, magnum 4d, sports toto, damacai, gd lotto, 豪龙, 万能4d, 大马彩">
     <meta name="author" content="LOW KEAN WAH">
     <link rel="canonical" href="https://my4d.vercel.app/">
-    
+
     <!-- Open Graph / Facebook / WhatsApp -->
     <meta property="og:type" content="website">
     <meta property="og:title" content="4D 成绩 Malaysia · 实时更新 | Live Malaysia 4D Results">
@@ -24,7 +24,7 @@
     <meta name="twitter:image" content="https://my4d.vercel.app/my4d.png">
 
     <link rel="icon" type="image/png" href="/my4d.png">
-    
+
     <!-- SEO 结构化数据 (JSON-LD) -->
     <script type="application/ld+json">
     {
@@ -59,27 +59,27 @@
                         <div class="loading-history">🔄 加载历史数据...</div>
                     </div>
                 </div>
-                
+
                 <button class="action-btn refresh-btn" id="refresh-btn" data-action="refresh">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
                     Refresh
                 </button>
-                
+
                 <button class="action-btn lucky-btn" id="lucky-btn" data-action="modal" data-modal="lucky-modal">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
                     Lucky Number
                 </button>
-                
+
                 <button class="action-btn donate-btn" id="donate-btn" data-action="modal" data-modal="donate-modal">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
                     Support
                 </button>
-                
+
                 <button class="action-btn apk-btn" id="apk-btn" data-action="modal" data-modal="apk-modal">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
                     APK
                 </button>
-                
+
                 <button class="dark-mode-btn" id="dark-mode-btn" aria-label="Toggle Dark Mode" data-action="dark">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
                 </button>
@@ -134,6 +134,26 @@
             <a href="/app-release.apk" download class="apk-download-link">📦 Download APK (v1.2.1)</a>
             <p class="apk-note">✅ 需要允许“未知来源应用”。<br>SHA-256: <code>56e9af3b18c2b910d5f250684904dad59f0244452aa44fec5d38b12fc3b74c60</code><br>证书 SHA-256: <code>87862dd497a24b8e9091d457827cf9aec9106fb9f3f3da2998e19d4118cdfd0e</code><br>校验: <code>sha256sum app-release.apk</code></p>
             <p class="apk-note">✅ You need to allow installation from 'Unknown Sources' in your phone settings.<br>This APK is completely safe, free of any viruses or malware.<br>Please feel free to install and use.</p>
+
+            <details style="margin:12px 0;text-align:left;">
+                <summary>安装失败 / 显示“未安装应用”？点开看解决步骤 · Install failed? Tap for fixes</summary>
+                <div style="max-height:45vh;overflow:auto;line-height:1.7;">
+                    <p><strong>中文</strong></p>
+                    <ol>
+                        <li>安装时出现 Google Play Protect（Play 保护机制）警告 → 点「仍要安装 / Install anyway」。</li>
+                        <li>没有这个按钮：Play 商店 → 头像 → Play Protect → 设置 → 临时关闭「使用 Play Protect 扫描应用」；装完请重新打开。</li>
+                        <li>Honor/荣耀：设置 → 应用 → 纯净模式 → 关闭；并给浏览器/文件管理器「安装未知应用」权限。</li>
+                        <li>已装旧版请先卸载。错误码 <code>-22</code> / <code>INSTALL_FAILED_VERIFICATION_FAILURE</code> 是 Play Protect 拦截，不是 APK 损坏。</li>
+                    </ol>
+                    <p><strong>English</strong></p>
+                    <ol>
+                        <li>Google Play Protect warning appears → tap <strong>Install anyway</strong>.</li>
+                        <li>No such button? Play Store → profile → Play Protect → Settings → temporarily turn off <em>Scan apps with Play Protect</em>; turn it back on after installing.</li>
+                        <li>Honor phones: Settings → Apps → Pure Mode → off; also allow "Install unknown apps" for your browser / file manager.</li>
+                        <li>Uninstall any older version first. Error <code>-22</code> / <code>INSTALL_FAILED_VERIFICATION_FAILURE</code> means Play Protect blocked it — the APK is not corrupt.</li>
+                    </ol>
+                </div>
+            </details>
             <div class="modal-buttons">
                 <button class="close-modal-btn" data-action="close" data-modal="apk-modal">Close</button>
             </div>
