@@ -5,3 +5,15 @@ __pycache__/
 poc_*.py
 .bak/
 poc_*.js
+
+# 一次性回补/排查脚本与报告
+audit_*.py
+backfill_*.py
+fill_three*.py
+grab_*.py
+list_three_gaps.py
+verify_three.py
+gaps_*.json
+*.bak.*
+archive_backup_*.tar.gz
+finish_push.sh

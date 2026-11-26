@@ -126,6 +126,9 @@
             });
         }
         if (btn) btn.addEventListener('click', run);
+        document.querySelectorAll('[data-modal="history-modal"]').forEach(el => {
+            el.addEventListener('click', () => { loadAll().catch(() => {}); });
+        });
         if (input) input.addEventListener('keydown', e => { if (e.key === 'Enter') run(); });
         if (modal) {
             const closeBtn = modal.querySelector('[data-action="close"]');
