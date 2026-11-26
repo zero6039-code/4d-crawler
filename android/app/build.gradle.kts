@@ -18,8 +18,8 @@ android {
         applicationId = "com.my4d.viewer"
         minSdk = 24
         targetSdk = 36
-        versionCode = 3
-        versionName = "1.2.0"
+        versionCode = 4
+        versionName = "1.2.1"
     }
 
     signingConfigs {
@@ -54,5 +54,15 @@ android {
     }
     kotlinOptions {
         jvmTarget = "17"
+    }
+}
+
+afterEvaluate {
+    tasks.matching { it.name == "assembleRelease" || it.name == "bundleRelease" }.configureEach {
+        doFirst {
+            check(keystorePath != null && ksPass != null && envKeyAlias != null && keyPass != null) {
+                "Release 构建需要 KEYSTORE_PATH / KS_PASS / KEY_ALIAS / KEY_PASS"
+            }
+        }
     }
 }
