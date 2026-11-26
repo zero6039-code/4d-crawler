@@ -224,3 +224,7 @@ body .apk-help > summary::after {
     position: absolute;
     right: 12px;
 }
+
+/* === UI patch 4: new-data badge === */
+.date-btn.has-new::after { content: "•"; color: #38bdf8; font-size: 1.4rem; line-height: 0; }
+body.dark-mode .date-btn.has-new::after { color: #67e8f9; }

@@ -149,3 +149,42 @@ async function fetchAndRenderData(dateStr, isRefresh = false) {
     updateStatus('success', '加载完成', `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`);
 }
 
+
+// === UI patch 4: 60s incremental refresh ===
+(function () {
+    const POLL_MS = 60 * 1000;
+    let lastStamp = null;
+    const dateBtn = document.getElementById('date-btn');
+    if (dateBtn) dateBtn.addEventListener('click', () => {
+        dateBtn.classList.remove('has-new');
+        dateBtn.removeAttribute('title');
+    }, true);
+
+    setInterval(async () => {
+        if (document.visibilityState !== 'visible') return;
+        try {
+            const res = await fetch('data/dates.json?t=' + Date.now(), { cache: 'no-store' });
+            if (!res.ok) return;
+            const dates = sortDatesDesc((await res.json()).filter(d => DATE_OK.test(d)));
+            const stamp = JSON.stringify(dates);
+            if (lastStamp === null || stamp === lastStamp) { lastStamp = stamp; return; }
+            lastStamp = stamp;
+            if (stamp === JSON.stringify(availableDates)) return;
+
+            const wasLatest = !!selectedDate && selectedDate === availableDates[0];
+            availableDates = dates;
+            availableDatesSet = new Set(dates);
+            renderDateDropdown();
+
+            if (wasLatest && dates.length) {
+                selectedDate = dates[0];
+                updateDateBtnWithLatest();
+                fetchAndRenderData(selectedDate, true);
+                if (dateBtn) { dateBtn.classList.remove('has-new'); dateBtn.removeAttribute('title'); }
+            } else if (dates.length && dateBtn) {
+                dateBtn.classList.add('has-new');
+                dateBtn.title = '有新开奖数据';
+            }
+        } catch (e) { /* 静默失败，下一轮再试 */ }
+    }, POLL_MS);
+})();
