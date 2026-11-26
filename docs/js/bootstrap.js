@@ -19,22 +19,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('dark-mode-btn').innerHTML = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>';
     }
 
-    const spinBtn = document.getElementById('spin-btn');
-    if (spinBtn) {
-        spinBtn.addEventListener('click', () => {
-            spinBtn.disabled = true;
-            let c = 0;
-            const int = setInterval(()=>{
-                document.getElementById('digit1').innerText=Math.floor(Math.random()*10);
-                document.getElementById('digit2').innerText=Math.floor(Math.random()*10);
-                document.getElementById('digit3').innerText=Math.floor(Math.random()*10);
-                document.getElementById('digit4').innerText=Math.floor(Math.random()*10);
-                c++;
-                if(c>15){clearInterval(int);spinBtn.disabled=false;}
-            },80);
-        });
-    }
-
     document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if(e.target===e.currentTarget) o.style.display='none'; }));
 
     loadDateIndex();
