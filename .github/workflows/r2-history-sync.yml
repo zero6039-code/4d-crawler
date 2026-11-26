@@ -1,0 +1,44 @@
+name: Sync history shards to R2
+
+on:
+  schedule:
+    - cron: '0 14 * * *'   # UTC 14:00 = 大马 22:00
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install wrangler
+        run: npm i -g wrangler
+
+      - name: Build shards and upload
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          python3 build_history_index.py
+          rm -rf r2_shards && mkdir -p r2_shards
+          python3 - <<'PY'
+          import json
+          idx = json.load(open('docs/data/history_index.json', encoding='utf-8'))
+          shards = {}
+          for num, rows in idx.items():
+              shards.setdefault(num[:2], {})[num] = rows
+          for prefix, data in shards.items():
+              with open(f'r2_shards/{prefix}.json', 'w', encoding='utf-8') as f:
+                  json.dump(data, f, ensure_ascii=False, separators=(',', ':'))
+          print('shards:', len(shards))
+          PY
+          for f in r2_shards/*.json; do
+            npx wrangler r2 object put "4d-history/$(basename "$f")" --file="$f" --remote
+          done
