@@ -13,9 +13,9 @@ def _money(s):
     return f"${int(digits):,}" if digits else '-'
 
 def scrape_singapore_toto(min_date=None):
-    """从 4dpredict.app 抓取 SGT；只返回比 min_date 更新的一期。"""
+    """从 sg.4dpredict.app 抓取 SGT；含总奖池 Prize 与 Group 1-7。"""
     try:
-        r = requests.get("https://www.4dpredict.app/singaporetoto",
+        r = requests.get("https://sg.4dpredict.app/",
                          headers={"User-Agent": UA}, timeout=15)
         r.raise_for_status()
     except Exception as e:
@@ -28,18 +28,20 @@ def scrape_singapore_toto(min_date=None):
         header = col.find('td', class_='s4d')
         if not header:
             continue
-        txt = header.get_text(' ', strip=True)
-        dm = re.search(r'\d{4}-\d{2}-\d{2}', txt)
-        gm = re.search(r'(\d+)\s*$', txt)
+        head = header.get_text(' ', strip=True)
+        if 'TOTO' not in head.upper():
+            continue
+        dm = re.search(r'\d{4}-\d{2}-\d{2}', head)
+        gm = re.search(r'(\d+)\s*$', head)
         if not dm or not gm:
             continue
         ymd = dm.group(0)
-        if min_date and ymd <= min_date:
+        if min_date and ymd < min_date:  # 同日允许补全
             continue
-        row = col.find('tr', class_='is-size-3')
-        if not row:
-            continue
-        nums = [s.get_text(strip=True) for s in row.find_all('span')]
+
+        txt = col.get_text(' ', strip=True)
+        nm = re.search(r'WINNING\s+NUMBERS\s*([\d\s+]+?)\s*Prize:', txt, re.I)
+        nums = re.findall(r'\d+', nm.group(1)) if nm else []
         if len(nums) < 7:
             continue
 
@@ -47,8 +49,10 @@ def scrape_singapore_toto(min_date=None):
         for table in col.find_all('table'):
             for tr in table.find_all('tr'):
                 tds = tr.find_all('td')
+                if len(tds) != 3:
+                    continue
                 label = tds[0].get_text(strip=True)
-                if len(tds) == 3 and re.fullmatch(r'Group\s+\d+', label):
+                if re.fullmatch(r'Group\s+\d+', label):
                     shares[label] = [
                         _money(tds[1].get_text()), tds[2].get_text(strip=True)]
 
@@ -58,11 +62,8 @@ def scrape_singapore_toto(min_date=None):
             "winning_numbers": nums[:7],
             "prize_table": [[g, v[0], v[1]] for g, v in shares.items()],
         }
-        p = col.find(string=re.compile(r'Prize:'))
-        if p:
-            pm = re.search(r'\$([\d,]+)', p.parent.get_text(strip=True))
-            if pm:
-                data["prize"] = _money(pm.group(1))
+        pm = re.search(r'Prize:\s*\$\s*([\d,]+)', txt, re.I)
+        data["prize"] = _money(pm.group(1)) if pm else '-'
         if best is None or ymd > best[0]:
             best = (ymd, data)
     return best[1] if best else None

@@ -1,6 +1,7 @@
 import os
 import re
 import time
+import json
 from datetime import datetime, timezone, timedelta
 from bs4 import BeautifulSoup
 from crawler_http import *
@@ -8,6 +9,7 @@ from crawler_parsers_html import *
 from crawler_parsers_json import *
 from crawler_backup_sources import *
 from crawler_storage import *
+from crawler_utils import to_ymd
 
 # ---------- 主流程 ----------
 def main():
@@ -46,6 +48,21 @@ def main():
             print("时段内多次尝试均未拿到当天开奖数据。")
     else:
         json_success = fetch_all_companies_from_dato4d(require_fresh=True)
+
+    # Singapore Toto: 主源无总奖池/Group 7，始终用 sg.4dpredict.app 补全（日期不回退）
+    try:
+        _sgt_path = os.path.join('docs', 'data', 'singapore_toto.json')
+        with open(_sgt_path, encoding='utf-8') as _f:
+            _sgt_min = to_ymd(json.load(_f).get('draw_date'))
+    except Exception:
+        _sgt_min = None
+    try:
+        _sgt = scrape_singapore_toto(min_date=_sgt_min)
+        if _sgt:
+            save_json('singapore_toto', _sgt)
+            print(f"✅ 已补全 Singapore Toto 总奖池/Group 7 ({_sgt['draw_date']})")
+    except Exception as e:
+        print(f"⚠️ Singapore Toto 补全失败: {e!r}")
 
     # ========== 主源失败/不新鲜时才用备用源；手动模式保持原行为 ==========
     if not json_success or is_manual:
