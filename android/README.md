@@ -19,4 +19,4 @@ Verify:
     $ANDROID_SDK_ROOT/build-tools/34.0.0/apksigner verify --verbose --print-certs app/build/outputs/apk/release/app-release.apk
     sha256sum app/build/outputs/apk/release/app-release.apk
 
-Expected: debuggable=false, allowBackup=false, v1/v2/v3 true, signer not Android Debug.
+Expected: debuggable=false, allowBackup=false, v2=true (v1/v3/v3.1/v4=false), signer not Android Debug.
