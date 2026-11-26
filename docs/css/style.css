@@ -232,7 +232,7 @@ body.dark-mode .date-btn.has-new::after { color: #67e8f9; }
 /* === 号码历史查询弹窗 === */
 #history-modal .num-history-modal { max-width: 720px; }
 #history-modal .num-history-search { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-bottom:12px; }
-#history-modal #num-history-input { padding:10px 14px; border-radius:20px; border:1px solid rgba(0,0,0,0.15); font-size:1.1rem; width:200px; text-align:center; }
+#history-modal #num-history-input { padding:8px 12px; border-radius:20px; border:1px solid rgba(0,0,0,0.15); font-size:1rem; width:140px; text-align:center; }
 #history-modal .num-history-status { min-height:20px; font-size:0.9rem; color:#7c8b9c; }
 #history-modal .num-history-results { max-height:55vh; overflow-y:auto; text-align:left; margin-top:8px; }
 #history-modal .num-history-row { display:grid; grid-template-columns:70px 80px 110px 1fr 32px; gap:8px; align-items:center; padding:8px 6px; border-bottom:1px solid rgba(0,0,0,0.08); font-size:0.95rem; }
@@ -248,3 +248,9 @@ body.dark-mode #history-modal .num-history-row { border-bottom-color:rgba(255,25
 #history-modal .num-history-pages button.active { background:#06b6d4; color:#fff; border-color:#06b6d4; }
 body.dark-mode #history-modal .num-history-pages button { border-color:rgba(255,255,255,0.2); color:#e2e8f0; }
 @media (max-width: 480px) { #history-modal .num-history-row { grid-template-columns:60px 120px 100px 1fr 28px; font-size:0.8rem; } }
+
+/* history modal: outer box must not scroll; results list scrolls itself */
+#history-modal .modal-content.num-history-modal {
+    max-height: 90vh;
+    overflow: hidden !important;
+}

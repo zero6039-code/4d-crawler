@@ -140,3 +140,16 @@
         });
     });
 })();
+
+// 只接受 4 位数字
+(function () {
+  function init() {
+    const el = document.getElementById('num-history-input');
+    if (!el) return;
+    const clean = () => { el.value = el.value.replace(/\D/g, '').slice(0, 4); };
+    el.addEventListener('input', clean);
+    el.addEventListener('paste', () => setTimeout(clean, 0));
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
