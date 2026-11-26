@@ -1,0 +1,7 @@
+name = "history-api"
+main = "src/index.js"
+compatibility_date = "2026-11-26"
+
+[[r2_buckets]]
+binding = "HISTORY"
+bucket_name = "4d-history"

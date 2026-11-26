@@ -18,3 +18,7 @@ gaps_*.json
 archive_backup_*.tar.gz
 finish_push.sh
 docs/data/history_index.json
+
+# Cloudflare Worker / R2 本地产物
+.wrangler/
+r2_shards/
