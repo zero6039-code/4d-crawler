@@ -133,12 +133,12 @@ const COMPANY_LIST = [
 const NAME_MAP = {
     'grand_dragon': 'GRAND DRAGON 豪龙', 'damacai': 'DAMACAI 4D', 'magnum': 'MAGNUM 4D',
     'toto': 'TOTO 4D', 'singapore': 'SINGAPORE 4D', 'damacai_1p3d': 'DAMACAI 1+3D',
-    'sandakan': 'SANDAKAN 4D', 'sarawak_cashsweep': 'SARAWAK CASHSWEEP', 'sabah': 'SABAH 88 4D',
+    'sandakan': 'SANDAKAN 4D', 'sarawak_cashsweep': 'SARAWAK CASH', 'sabah': 'SABAH 88 4D',
     'sabah_lotto': 'SABAH LOTTO', 'singapore_toto': 'SINGAPORE TOTO', 'sportstoto_lotto': 'SPORTS TOTO LOTTO',
     'magnum_jackpot_gold': 'MAGNUM JACKPOT GOLD', 'sportstoto_5d': 'SPORTS TOTO 5D',
     'sportstoto_6d': 'SPORTS TOTO 6D', 'magnum_life': 'MAGNUM LIFE', 'sportstoto_fireball': 'SPORTS TOTO FIREBALL',
-    'perdana4d': 'PERDANA LOTTERY 4D',
-    'lucky_hari': 'LUCKY HARIHARI 天天好运'
+    'perdana4d': 'PERDANA 4D',
+    'lucky_hari': 'LUCKY 天天好运'
 };
 
 const SPECIAL_COMPANIES = ['sportstoto_fireball', 'singapore_toto', 'magnum_jackpot_gold', 'sportstoto_5d', 'sportstoto_6d', 'magnum_life', 'sportstoto_lotto', 'sabah_lotto'];

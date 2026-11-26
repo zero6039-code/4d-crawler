@@ -42,7 +42,7 @@ function renderCompanies(dataMap) {
                 }
             }
             if (lt6gHtml) {
-                sabahCardsHtml += `<div class="company-section" data-company="sabah_lotto_6d"><div class="company-title">SABAH LOTTO 6D Results${sharedImg}</div>${sharedDate}<div class="company-content"><div class="subsection"><div class="subsection-title">6D Results</div><div>${lt6gHtml}</div></div></div></div>`;
+                sabahCardsHtml += `<div class="company-section" data-company="sabah_lotto_6d"><div class="company-title">SABAH LOTTO 6D${sharedImg}</div>${sharedDate}<div class="company-content"><div class="subsection"><div class="subsection-title">6D Results</div><div>${lt6gHtml}</div></div></div></div>`;
             }
 
             // 3. 5D 卡片
@@ -57,7 +57,7 @@ function renderCompanies(dataMap) {
                 }
             }
             if (lt5gHtml) {
-                sabahCardsHtml += `<div class="company-section" data-company="sabah_lotto_5d"><div class="company-title">SABAH LOTTO 5D Results${sharedImg}</div>${sharedDate}<div class="company-content"><div class="subsection"><div class="subsection-title">5D Results</div><div>${lt5gHtml}</div></div></div></div>`;
+                sabahCardsHtml += `<div class="company-section" data-company="sabah_lotto_5d"><div class="company-title">SABAH LOTTO 5D${sharedImg}</div>${sharedDate}<div class="company-content"><div class="subsection"><div class="subsection-title">5D Results</div><div>${lt5gHtml}</div></div></div></div>`;
             }
 
             html += sabahCardsHtml;
