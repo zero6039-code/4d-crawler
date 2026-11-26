@@ -228,3 +228,23 @@ body .apk-help > summary::after {
 /* === UI patch 4: new-data badge === */
 .date-btn.has-new::after { content: "•"; color: #38bdf8; font-size: 1.4rem; line-height: 0; }
 body.dark-mode .date-btn.has-new::after { color: #67e8f9; }
+
+/* === 号码历史查询弹窗 === */
+#history-modal .num-history-modal { max-width: 720px; }
+#history-modal .num-history-search { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-bottom:12px; }
+#history-modal #num-history-input { padding:10px 14px; border-radius:20px; border:1px solid rgba(0,0,0,0.15); font-size:1.1rem; width:200px; text-align:center; }
+#history-modal .num-history-status { min-height:20px; font-size:0.9rem; color:#7c8b9c; }
+#history-modal .num-history-results { max-height:55vh; overflow-y:auto; text-align:left; margin-top:8px; }
+#history-modal .num-history-row { display:grid; grid-template-columns:70px 80px 110px 1fr 32px; gap:8px; align-items:center; padding:8px 6px; border-bottom:1px solid rgba(0,0,0,0.08); font-size:0.95rem; }
+#history-modal .num-history-row img { width:32px; height:32px; object-fit:contain; }
+body.dark-mode #history-modal #num-history-input { background:rgba(255,255,255,0.1); color:#e2e8f0; border-color:rgba(255,255,255,0.15); }
+body.dark-mode #history-modal .num-history-row { border-bottom-color:rgba(255,255,255,0.08); }
+@media (max-width: 480px) { #history-modal .num-history-row { grid-template-columns:60px 70px 100px 1fr 28px; font-size:0.82rem; } }
+
+/* === 号码历史查询：奖项中英 + 分页 === */
+#history-modal .num-history-row { grid-template-columns:70px 150px 110px 1fr 32px; }
+#history-modal .num-history-pages { text-align:center; margin-top:10px; }
+#history-modal .num-history-pages button { margin:2px; padding:4px 10px; border-radius:8px; border:1px solid rgba(0,0,0,0.15); background:transparent; cursor:pointer; }
+#history-modal .num-history-pages button.active { background:#06b6d4; color:#fff; border-color:#06b6d4; }
+body.dark-mode #history-modal .num-history-pages button { border-color:rgba(255,255,255,0.2); color:#e2e8f0; }
+@media (max-width: 480px) { #history-modal .num-history-row { grid-template-columns:60px 120px 100px 1fr 28px; font-size:0.8rem; } }

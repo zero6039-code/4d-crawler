@@ -5,3 +5,4 @@ document.write('<script src="js/render.js"><\/script>');
 document.write('<script src="js/ui.js"><\/script>');
 document.write('<script src="js/bootstrap.js"><\/script>');
 document.write('<script src="js/lucky.js"><\/script>');
+document.write('<script src="js/history.js"><\/script>');
