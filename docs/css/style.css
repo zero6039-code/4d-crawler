@@ -6,10 +6,10 @@ body.dark-mode { background-color: #0f172a; background-image: radial-gradient(ci
 h1 { font-size: 2.2rem; font-weight: 800; text-align: center; margin-bottom: 15px; background: linear-gradient(135deg, #0b1c2f, #2c3e50); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1px; }
 body.dark-mode h1 { background: linear-gradient(135deg, #e2e8f0, #a0aec0); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 /* 品牌 Logo：标题左侧 128px */
-h1 { display: flex; align-items: center; justify-content: flex-start; text-align: left; gap: 12px; }
-h1 img { width: 128px; height: 128px; object-fit: contain; flex: 0 0 auto; }
+h1 { position: relative; display: flex; align-items: center; justify-content: center; text-align: center; }
+h1 img { position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 128px; height: 128px; object-fit: contain; }
 @media (max-width: 640px) {
-    h1 { font-size: 1.6rem; gap: 8px; }
+    h1 { font-size: 1.6rem; padding: 0 72px; }
     h1 img { width: 64px; height: 64px; }
 }
 .top-calendar { display: flex; justify-content: center; margin-bottom: 15px; position: relative; }
