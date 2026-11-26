@@ -39,6 +39,4 @@ jobs:
                   json.dump(data, f, ensure_ascii=False, separators=(',', ':'))
           print('shards:', len(shards))
           PY
-          for f in r2_shards/*.json; do
-            npx wrangler r2 object put "4d-history/$(basename "$f")" --file="$f" --remote
-          done
+          printf '%s\n' r2_shards/*.json | xargs -P 8 -I{} bash -c 'f="$1"; npx wrangler r2 object put "4d-history/$(basename "$f")" --file="$f" --remote' _ {}
