@@ -287,3 +287,12 @@ body.dark-mode #history-modal .num-history-companies label { border-color:rgba(2
         font-size: clamp(1.3rem, 5.4vw, 1.65rem) !important;
     }
 }
+
+
+/* === 号码历史查询：移动端分页/不换行/防滚动穿透 === */
+#history-modal .num-history-results { overscroll-behavior:contain; }
+#history-modal .num-history-row span:nth-child(4) { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+@media (max-width:480px) {
+  #history-modal .num-history-results { max-height:42vh; }
+  #history-modal .num-history-row { grid-template-columns:48px 86px 84px 1fr 24px; font-size:0.8rem; }
+}
