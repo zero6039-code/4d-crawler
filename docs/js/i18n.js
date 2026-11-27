@@ -38,7 +38,7 @@
 
   async function apply(lang) {
     if (!packs[lang]) {
-      const res = await fetch("i18n/" + lang + ".json?v=2");
+      const res = await fetch("i18n/" + lang + ".json?v=3");
       if (!res.ok) throw new Error("i18n " + lang);
       packs[lang] = await res.json();
     }
