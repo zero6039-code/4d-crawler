@@ -36,8 +36,11 @@ FOUR_D = {"magnum", "damacai", "toto", "singapore", "sandakan", "sabah",
           "damacai_1p3d"}
 
 PLACEHOLDER_PRIZES = {"", "-", "----", "****", "******"}
+META_KEYS = {"draw_date", "draw_no", "global_draw_no", "type", "draw_time"}
+PRIZE_LIST_LIMIT = 20            # 4D 实际最多 13 个
+MAX_PAYLOAD_BYTES = 64 * 1024    # 单家公司单期数据上限
 
-def clean_prizes(value):
+def clean_prizes(value, pat=None, limit=PRIZE_LIST_LIMIT):
     if not isinstance(value, list):
         return []
     cleaned = []
@@ -45,9 +48,23 @@ def clean_prizes(value):
         if not isinstance(item, str):
             continue
         item = item.strip()
-        if item and item not in PLACEHOLDER_PRIZES:
-            cleaned.append(item)
-    return cleaned
+        if not item or item in PLACEHOLDER_PRIZES:
+            continue
+        if pat is not None and not pat.match(item):   # 逐项格式校验
+            continue
+        cleaned.append(item)
+    return cleaned[:limit]
+
+def completeness(d):
+    """一条开奖记录里“非空奖号”的数量"""
+    def walk(v):
+        if isinstance(v, dict):
+            return sum(walk(x) for x in v.values())
+        if isinstance(v, (list, tuple)):
+            return sum(walk(x) for x in v)
+        s = "" if v is None else str(v).strip()
+        return 0 if s in PLACEHOLDER_PRIZES else 1
+    return sum(walk(v) for k, v in d.items() if k not in META_KEYS)
 
 def normalize_draw_no(value):
     """统一期号为 N/YY；空值或无法识别保持原样。"""
@@ -115,24 +132,24 @@ def save_json(company, data, base="docs/data", allow_inferred_date=False):
     for key in ("draw_no", "global_draw_no"):
         if key in data:
             data = {**data, key: normalize_draw_no(data.get(key))}
+
+    pat = NUM_RE.get(company, NUM_RE["default"])
     if company in FOUR_D:
         data = {**data,
-                "special": clean_prizes(data.get("special")),
-                "consolation": clean_prizes(data.get("consolation"))}
+                "special": clean_prizes(data.get("special"), pat),
+                "consolation": clean_prizes(data.get("consolation"), pat)}
         if company in ("grand_dragon", "lucky_hari"):
             for key in ("special", "consolation"):
                 if len(data.get(key) or []) < 10:
                     print(f"⚠️ {company} {key} 少于 10 个号码，可能来源字段映射不全")
-
-    root = os.path.join(base, f"{company}.json")
-    prev = _stored_ymd(root)
-    if prev and not is_plausible_date(prev):
-        prev = None  # 存量非法高水位失效，允许真实日期覆盖
-    if prev and ymd < prev:
-        print(f"⏭️ {company} 来源日期 {ymd} 早于现有 {prev}，不覆盖根文件")
-        changed = False
     else:
-        changed = atomic_write_json(root, data)
+        for key in ("special", "consolation"):
+            if key in data:
+                data = {**data, key: clean_prizes(data.get(key), limit=None)}  # 不套 4D 正则
+
+    if len(json.dumps(data, ensure_ascii=False).encode("utf-8")) > MAX_PAYLOAD_BYTES:
+        print(f"❌ {company} 数据体积超限，拒绝写入")
+        return False
 
     month = ymd[:7]
     archive_path = os.path.join(base, "archive", f"{month}.json")
@@ -145,6 +162,23 @@ def save_json(company, data, base="docs/data", allow_inferred_date=False):
                 monthly = loaded
         except (OSError, ValueError):
             monthly = {}
+
+    existing = (monthly.get(ymd) or {}).get(company)
+    if (isinstance(existing, dict) and completeness(data) < completeness(existing)
+            and os.getenv("ALLOW_DOWNGRADE") != "1"):
+        print(f"⏭️ {company} {ymd} 新数据比已有记录更残缺，保留旧数据")
+        return False
+
+    root = os.path.join(base, f"{company}.json")
+    prev = _stored_ymd(root)
+    if prev and not is_plausible_date(prev):
+        prev = None  # 存量非法高水位失效，允许真实日期覆盖
+    if prev and ymd < prev:
+        print(f"⏭️ {company} 来源日期 {ymd} 早于现有 {prev}，不覆盖根文件")
+        changed = False
+    else:
+        changed = atomic_write_json(root, data)
+
     monthly.setdefault(ymd, {})[company] = data
     atomic_write_json(archive_path, monthly)
     return changed
