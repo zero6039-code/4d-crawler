@@ -148,8 +148,8 @@ def fetch_lucky_hari(session, now=None):
              r"LUCKY HARI HARI 4D.*?(\d{2}-\d{2}-\d{4})", r"No:\s*(\d+)",
              r"1st Prize:\s*[A-Z]\s*(\d{4})", r"2nd Prize:\s*[A-Z]\s*(\d{4})",
              r"3rd Prize:\s*[A-Z]\s*(\d{4})",
-             r"Special\s*([A-M]\s*(?:\d{4}|----)\s*)+",
-             r"Consolation\s*([N-W]\s*(?:\d{4}|----)\s*)+"),
+             r"Special\s*((?:[A-M]\s*(?:\d{4}|----)\s*)+)",
+             r"Consolation\s*((?:[N-W]\s*(?:\d{4}|----)\s*)+)"),
         )
         for name, url_fb, date_re, no_re, r1, r2, r3, sp_re, co_re in sources:
             try:
