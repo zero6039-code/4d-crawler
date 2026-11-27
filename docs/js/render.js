@@ -1,6 +1,7 @@
 // ==================== 智能渲染公司卡片 ====================
 function renderCompanies(dataMap) {
     window.__lastDataMap = dataMap;
+    const T = function (key, fallback) { return (window.i18n && window.i18n(key)) || fallback; };
     const grid = document.getElementById('companies-grid'); let html = '';
 
     COMPANY_LIST.forEach(key => {
@@ -13,7 +14,7 @@ function renderCompanies(dataMap) {
 
         // SABAH LOTTO 提前返回，独立生成3个卡片
         if (key === 'sabah_lotto') {
-            const sharedDate = `<div class="draw-date">${esc(cd.draw_date || '未知')} ${cd.draw_no?'| '+i18n('t050')+' '+esc(cd.draw_no):''}</div>`;
+            const sharedDate = `<div class="draw-date">${esc(cd.draw_date || '未知')} ${cd.draw_no?'| '+T('t050', 'Draw No:')+' '+esc(cd.draw_no):''}</div>`;
             const sharedImg = img ? `<img src="${img}">` : '';
             let sabahCardsHtml = '';
 
@@ -67,7 +68,7 @@ function renderCompanies(dataMap) {
 
         // --- 下面开始是其他卡片的通用渲染逻辑 ---
         const timeTag = cd.draw_time ? ` | <span style="color: #d97706; font-weight: bold;">${esc(cd.draw_time)}</span>` : '';
-        html += `<div class="company-section" data-company="${esc(key)}"><div class="company-title">${name}${img?`<img src="${img}">`:''}</div><div class="draw-date">${esc(cd.draw_date || '未知')} ${cd.draw_no?'| '+i18n('t050')+' '+esc(cd.draw_no):''}${timeTag}</div><div class="company-content">`;
+        html += `<div class="company-section" data-company="${esc(key)}"><div class="company-title">${name}${img?`<img src="${img}">`:''}</div><div class="draw-date">${esc(cd.draw_date || '未知')} ${cd.draw_no?'| '+T('t050', 'Draw No:')+' '+esc(cd.draw_no):''}${timeTag}</div><div class="company-content">`;
 
         const isSpecial = SPECIAL_COMPANIES.includes(key);
 
@@ -235,7 +236,7 @@ function renderCompanies(dataMap) {
             }
         } else {
             // 普通公司渲染
-            html += `<div class="prize-grid"><div class="prize-card"><div class="label">${i18n('t051')}</div><div class="number">${esc(cd['1st']||'----')}</div></div><div class="prize-card"><div class="label">${i18n('t052')}</div><div class="number">${esc(cd['2nd']||'----')}</div></div><div class="prize-card"><div class="label">${i18n('t053')}</div><div class="number">${esc(cd['3rd']||'----')}</div></div></div>`;
+            html += `<div class="prize-grid"><div class="prize-card"><div class="label">${T('t051', 'First Prize')}</div><div class="number">${esc(cd['1st']||'----')}</div></div><div class="prize-card"><div class="label">${T('t052', 'Second Prize')}</div><div class="number">${esc(cd['2nd']||'----')}</div></div><div class="prize-card"><div class="label">${T('t053', 'Third Prize')}</div><div class="number">${esc(cd['3rd']||'----')}</div></div></div>`;
 
             const validSpecial = asArr(cd.special).filter(n => n && String(n).trim() !== '' && String(n).trim() !== '****');
             const validConsolation = asArr(cd.consolation).filter(n => n && String(n).trim() !== '' && String(n).trim() !== '****');
@@ -243,18 +244,18 @@ function renderCompanies(dataMap) {
             if (validSpecial.length > 0 || validConsolation.length > 0) {
                 html += `<div class="subsection">`;
                 if(validSpecial.length > 0){
-                    html += `<div class="subsection-title">${i18n('t054')}</div><div class="number-list">`;
+                    html += `<div class="subsection-title">${T('t054', 'Special')}</div><div class="number-list">`;
                     validSpecial.forEach(n => html += `<span class="number-item">${esc(n)}</span>`);
                     html += `</div>`;
                 }
                 if(validConsolation.length > 0){
-                    html += `<div class="subsection-title">${i18n('t055')}</div><div class="number-list">`;
+                    html += `<div class="subsection-title">${T('t055', 'Consolation')}</div><div class="number-list">`;
                     validConsolation.forEach(n => html += `<span class="number-item">${esc(n)}</span>`);
                     html += `</div>`;
                 }
                 html += `</div>`;
             } else if (cd['1st'] || cd['2nd'] || cd['3rd']) {
-                html += `<div class="subsection"><div class="subsection-title">${i18n('t054')} / ${i18n('t055')}</div><div class="number-list"><span class="number-item" style="font-size:1rem;color:#888;">待官方更新 / 暂无记录</span></div></div>`;
+                html += `<div class="subsection"><div class="subsection-title">${T('t054', 'Special')} / ${T('t055', 'Consolation')}</div><div class="number-list"><span class="number-item" style="font-size:1rem;color:#888;">待官方更新 / 暂无记录</span></div></div>`;
             }
         }
         html += `</div></div>`;
