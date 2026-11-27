@@ -1,7 +1,16 @@
 import json, os, re, tempfile
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone, timedelta, date
 
 MYT = timezone(timedelta(hours=8))
+MIN_DRAW_DATE = date(1985, 1, 1)
+
+def is_plausible_date(ymd, today=None):
+    try:
+        d = datetime.strptime(ymd, "%Y-%m-%d").date()
+    except (TypeError, ValueError):
+        return False
+    today = today or datetime.now(MYT).date()
+    return MIN_DRAW_DATE <= d <= today + timedelta(days=1)  # +1 天容忍时差
 
 def to_ymd(s):
     if not s:
@@ -96,6 +105,9 @@ def save_json(company, data, base="docs/data", allow_inferred_date=False):
         print(f"❌ {company} 数据未通过校验，保留旧文件")
         return False
     ymd, inferred = resolve_date(data)
+    if not is_plausible_date(ymd):
+        print(f"❌ {company} 日期 {ymd} 不在合理范围，拒绝写入")
+        return False
     if inferred and not allow_inferred_date:
         print(f"❌ {company} 缺少或无法解析 draw_date，拒绝猜测为今天，保留旧文件")
         return False
@@ -114,6 +126,8 @@ def save_json(company, data, base="docs/data", allow_inferred_date=False):
 
     root = os.path.join(base, f"{company}.json")
     prev = _stored_ymd(root)
+    if prev and not is_plausible_date(prev):
+        prev = None  # 存量非法高水位失效，允许真实日期覆盖
     if prev and ymd < prev:
         print(f"⏭️ {company} 来源日期 {ymd} 早于现有 {prev}，不覆盖根文件")
         changed = False
