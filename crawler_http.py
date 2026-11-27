@@ -34,14 +34,6 @@ def dmy_to_ymd(date_str):
     except ValueError:
         return None
 
-def ymd_to_dmy(date_str):
-    if not date_str:
-        return ''
-    try:
-        d = datetime.strptime(date_str, "%Y-%m-%d")
-        return d.strftime("%d-%m-%Y")
-    except ValueError:
-        return date_str
 
 # ---------- 增强版请求函数（支持重试、会话、完整头）----------
 def fetch_html(url, max_retries=2, timeout=(5, 15), deadline=60):
@@ -79,17 +71,7 @@ def fetch_html(url, max_retries=2, timeout=(5, 15), deadline=60):
                 return None
     return None
 
-def find_parent_table(element):
-    while element and element.name != 'table':
-        element = element.parent
-    return element
 
-def parse_4dmoon_date(date_str):
-    try:
-        d = datetime.strptime(date_str.strip(), "%d-%b-%Y")
-        return d.strftime("%d-%m-%Y")
-    except ValueError:
-        return None
 
 def extract_global_date(soup):
     first_box = soup.find("div", class_="outerbox")

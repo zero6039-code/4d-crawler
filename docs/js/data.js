@@ -112,7 +112,8 @@ async function fetchAndRenderData(dateStr, isRefresh = false) {
     } else {
         const promises = COMPANY_LIST.map(async key => {
             if (HIDDEN_COMPANIES.includes(key)) return { key, data: null };
-            const basePath = isLatest ? `data` : `data/${dateStr}`;
+            if (!isLatest) return { key, data: null };  // 日期目录已不存在，交由下方 fallbackDate 回退
+            const basePath = 'data';
             try {
                 const res = await fetch(`${basePath}/${key}.json`, { cache: 'no-cache', signal });
                 if (!res.ok) throw new Error();

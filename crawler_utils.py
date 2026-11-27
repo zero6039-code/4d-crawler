@@ -86,9 +86,6 @@ def resolve_date(d, now=None):
     ymd = to_ymd(d.get("draw_date"))
     return (ymd, False) if ymd else ((now or datetime.now(MYT)).strftime("%Y-%m-%d"), True)
 
-def is_fresh_date(d, today=None):
-    today = today or datetime.now(MYT).strftime("%Y-%m-%d")
-    return to_ymd(d.get("draw_date")) == today
 
 def atomic_write_json(path, obj):
     new = json.dumps(obj, ensure_ascii=False, indent=2)
