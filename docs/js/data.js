@@ -153,38 +153,43 @@ async function fetchAndRenderData(dateStr, isRefresh = false) {
 // === UI patch 4: 60s incremental refresh ===
 (function () {
     const POLL_MS = 60 * 1000;
-    let lastStamp = null;
+    let lastRev = null;
     const dateBtn = document.getElementById('date-btn');
     if (dateBtn) dateBtn.addEventListener('click', () => {
         dateBtn.classList.remove('has-new');
         dateBtn.removeAttribute('title');
     }, true);
 
+    async function refetchDatesAndRender() {
+        const res = await fetch('data/dates.json', { cache: 'no-cache' });
+        if (!res.ok) return;
+        const dates = sortDatesDesc((await res.json()).filter(d => DATE_OK.test(d)));
+        const wasLatest = !!selectedDate && selectedDate === availableDates[0];
+        availableDates = dates;
+        availableDatesSet = new Set(dates);
+        renderDateDropdown();
+        if (wasLatest && dates.length) {
+            selectedDate = dates[0];
+            updateDateBtnWithLatest();
+            await fetchAndRenderData(selectedDate, true);  // 同日更新也会重拉 latest.json
+            if (dateBtn) { dateBtn.classList.remove('has-new'); dateBtn.removeAttribute('title'); }
+        } else if (dates.length && dateBtn) {
+            dateBtn.classList.add('has-new');
+            dateBtn.title = '有新开奖数据';
+        }
+    }
+
     setInterval(async () => {
         if (document.visibilityState !== 'visible') return;
         try {
-            const res = await fetch('data/dates.json?t=' + Date.now(), { cache: 'no-store' });
+            const res = await fetch('data/meta.json', { cache: 'no-cache' });
             if (!res.ok) return;
-            const dates = sortDatesDesc((await res.json()).filter(d => DATE_OK.test(d)));
-            const stamp = JSON.stringify(dates);
-            if (lastStamp === null || stamp === lastStamp) { lastStamp = stamp; return; }
-            lastStamp = stamp;
-            if (stamp === JSON.stringify(availableDates)) return;
-
-            const wasLatest = !!selectedDate && selectedDate === availableDates[0];
-            availableDates = dates;
-            availableDatesSet = new Set(dates);
-            renderDateDropdown();
-
-            if (wasLatest && dates.length) {
-                selectedDate = dates[0];
-                updateDateBtnWithLatest();
-                fetchAndRenderData(selectedDate, true);
-                if (dateBtn) { dateBtn.classList.remove('has-new'); dateBtn.removeAttribute('title'); }
-            } else if (dates.length && dateBtn) {
-                dateBtn.classList.add('has-new');
-                dateBtn.title = '有新开奖数据';
-            }
+            const m = await res.json();
+            if (!m || !m.rev) return;
+            if (lastRev === null) { lastRev = m.rev; return; }  // 首轮只初始化
+            if (m.rev === lastRev) return;
+            lastRev = m.rev;
+            await refetchDatesAndRender();
         } catch (e) { /* 静默失败，下一轮再试 */ }
     }, POLL_MS);
 })();
