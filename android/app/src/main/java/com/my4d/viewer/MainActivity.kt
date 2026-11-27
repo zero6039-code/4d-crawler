@@ -13,6 +13,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.provider.Settings
 import android.view.ViewGroup
 import android.webkit.RenderProcessGoneDetail
 import android.webkit.WebResourceRequest
@@ -38,6 +39,7 @@ class MainActivity : Activity() {
     private var downloadId = -1L
     private var expectedSha256: String? = null
     private var receiverRegistered = false
+    private var pendingInstallUri: Uri? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -204,13 +206,8 @@ class MainActivity : Activity() {
                 }
                 return
             }
-            try {
-                startActivity(Intent(Intent.ACTION_VIEW).apply {
-                    setDataAndType(uri, "application/vnd.android.package-archive")
-                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                })
-            } catch (_: ActivityNotFoundException) {
-            }
+            pendingInstallUri = uri
+            tryInstall()
         }
     }
 
@@ -225,6 +222,37 @@ class MainActivity : Activity() {
             }
         }
         return md.digest().joinToString("") { "%02x".format(it) }
+    }
+
+    private fun tryInstall() {
+        val uri = pendingInstallUri ?: return
+        if (Build.VERSION.SDK_INT >= 26 && !packageManager.canRequestPackageInstalls()) {
+            AlertDialog.Builder(this)
+                .setMessage("请允许 my4d 安装未知应用，然后返回继续更新")
+                .setPositiveButton("去设置") { _, _ ->
+                    try {
+                        startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                            Uri.parse("package:$packageName")))
+                    } catch (_: ActivityNotFoundException) {
+                    }
+                }
+                .setNegativeButton("取消") { _, _ -> pendingInstallUri = null }
+                .show()
+            return
+        }
+        pendingInstallUri = null
+        try {
+            startActivity(Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, "application/vnd.android.package-archive")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+            })
+        } catch (_: ActivityNotFoundException) {
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (pendingInstallUri != null) tryInstall()
     }
 
     override fun onBackPressed() {

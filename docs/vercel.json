@@ -1,7 +1,7 @@
 {
   "cleanUrls": false,
   "redirects": [
-    { "source": "/my4d.apk", "destination": "/my4d_v1.2.2.apk", "permanent": false }
+    { "source": "/my4d.apk", "destination": "/my4d_v1.2.3.apk", "permanent": false }
   ],
   "headers": [
     {

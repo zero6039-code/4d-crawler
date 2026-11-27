@@ -146,7 +146,7 @@ async function fetchAndRenderData(dateStr, isRefresh = false) {
 
     renderCompanies(dataMap);
     const now = new Date();
-    updateStatus('success', '加载完成', `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`);
+    updateStatus('success', '加载完成 · v1.2.3', `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`);
 }
 
 
