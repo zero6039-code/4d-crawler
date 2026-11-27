@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup
 from crawler_http import *
 from crawler_parsers_html import *
 from crawler_parsers_json import *
+import crawler_parsers_json as _pj
 from crawler_backup_sources import *
 from crawler_storage import *
 from crawler_utils import to_ymd
@@ -20,10 +21,10 @@ def main():
     if not is_manual:
         tz = timezone(timedelta(hours=8))
         now = datetime.now(tz)
-        
+
         target_start = now.replace(hour=19, minute=0, second=0, microsecond=0)
         target_end = now.replace(hour=22, minute=30, second=0, microsecond=0)
-        
+
         if now < target_start or now >= target_end:
             print("当前不在抓取时段（19:00–22:30），退出。")
             return
@@ -72,7 +73,7 @@ def main():
             if data and (any(data.get(k) for k in ['1st', '2nd', '3rd']) or data.get('winning_numbers')):
                 save_json(key, data)
                 print(f"✅ 已使用备用源更新 {key}")
-            
+
     # 如果 JSON 源失败，则回退到 4d4d.co 抓取
     if not json_success:
         print("⚠️ 批量 JSON 获取失败，回退到 4d4d.co 抓取...")
@@ -144,7 +145,7 @@ def main():
         build_latest()
     except Exception as e:
         print(f"⚠️ 生成聚合文件失败: {e}")
-    if json_success or LAST_SAVED_COUNT:
+    if json_success or _pj.LAST_SAVED_COUNT:
         update_sitemap()
     print("🔚 爬虫执行完毕")
 
