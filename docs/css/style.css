@@ -274,3 +274,16 @@ body.dark-mode #history-modal .num-history-companies label { border-color:rgba(2
     #history-modal .num-history-row span:first-child,
     #history-modal .num-history-row span:nth-child(3) { font-size: 1.05rem; font-weight: 700; }
 }
+
+/* mobile top prizes: slightly larger (<=480px) */
+@media (max-width: 480px) {
+    .prize-card .number { font-size: clamp(1.35rem, 6.2vw, 1.95rem) !important; }
+}
+
+/* mobile numbers hierarchy: top > special (<=480px) */
+@media (max-width: 480px) {
+    .prize-card .number { font-size: clamp(1.5rem, 6.2vw, 1.95rem) !important; }
+    body .company-section:not([data-company="damacai_1p3d"]) .company-content .number-list .number-item {
+        font-size: clamp(1.3rem, 5.4vw, 1.65rem) !important;
+    }
+}
