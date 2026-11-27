@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>4D 成绩 Malaysia · 实时更新 | Live Malaysia 4D Results</title>
+    <title data-i18n="t001">Malaysia 4D Results · Live Updates</title>
     <meta name="description" content="Live 4D results Malaysia & Singapore: Magnum, Sports Toto, Damacai, Sabah, Sarawak, Grand Dragon. 马来西亚4D实时开奖结果，支持历史查询。">
     <meta name="keywords" content="4d成绩, 马来西亚4d, 4d results, live 4d, magnum 4d, sports toto, damacai, gd lotto, 豪龙, 万能4d, 大马彩">
     <meta name="author" content="LOW KEAN WAH">
@@ -11,7 +11,7 @@
 
     <!-- Open Graph / Facebook / WhatsApp -->
     <meta property="og:type" content="website">
-    <meta property="og:title" content="4D 成绩 Malaysia · 实时更新 | Live Malaysia 4D Results">
+    <meta property="og:title" content="Malaysia 4D Results · Live Updates">
     <meta property="og:description" content="Fastest live 4D results Malaysia & Singapore, with history lookup. 最快马来西亚与新加坡4D实时开奖结果，支持历史查询。">
     <meta property="og:url" content="https://my4d.vercel.app/">
     <meta property="og:image" content="https://my4d.vercel.app/my4d.png">
@@ -75,47 +75,47 @@
 <body>
     <div class="container">
         <header role="banner">
-            <h1><img src="/my4d.png" alt="MY 4D Result Malaysia logo" width="128" height="128">MY 4D RESULT MALAYSIA</h1>
+            <h1 data-i18n="t002"><img src="/my4d.png" alt="MY 4D Result Malaysia logo" width="128" height="128">MY 4D RESULT MALAYSIA</h1>
             <section class="bottom-row" aria-label="Control Panel">
                 <nav class="top-calendar" aria-label="Date Selection Calendar">
-                    <button class="calendar-btn" id="calendar-btn" aria-haspopup="dialog" aria-expanded="false">Calendar</button>
+                    <button class="calendar-btn" id="calendar-btn" aria-haspopup="dialog" aria-expanded="false" data-i18n="t003">Calendar</button>
                     <div id="calendar-popup" class="calendar-popup" style="display: none;" role="dialog" aria-label="日历选择器"></div>
                 </nav>
                 <div class="date-dropdown" id="date-dropdown">
                     <button class="date-btn" id="date-btn" data-action="toggleDate" aria-haspopup="listbox" aria-expanded="false">
-                        <span id="selected-date">加载中...</span>
+                        <span id="selected-date" data-i18n="t004">Loading...</span>
                         <span class="arrow" aria-hidden="true">▼</span>
                     </button>
                     <div class="date-dropdown-content" id="date-dropdown-content" role="listbox">
-                        <div class="loading-history">🔄 加载历史数据...</div>
+                        <div class="loading-history" data-i18n="t005">🔄 Loading history...</div>
                     </div>
                 </div>
 
-                <button class="action-btn history-btn" id="history-btn" type="button" data-action="modal" data-modal="history-modal">
+                <button class="action-btn history-btn" id="history-btn" type="button" data-action="modal" data-modal="history-modal" data-i18n="t006">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
                     History
                 </button>
-                <button class="action-btn refresh-btn" id="refresh-btn" data-action="refresh">
+                <button class="action-btn refresh-btn" id="refresh-btn" data-action="refresh" data-i18n="t007">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
                     Refresh
                 </button>
 
-                <button class="action-btn lucky-btn" id="lucky-btn" data-action="modal" data-modal="lucky-modal">
+                <button class="action-btn lucky-btn" id="lucky-btn" data-action="modal" data-modal="lucky-modal" data-i18n="t008">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
                     Lucky Number
                 </button>
 
-                <button class="action-btn donate-btn" id="donate-btn" data-action="modal" data-modal="donate-modal">
+                <button class="action-btn donate-btn" id="donate-btn" data-action="modal" data-modal="donate-modal" data-i18n="t009">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
                     Support
                 </button>
 
-                <button class="action-btn donate-btn" id="entry-btn" data-action="modal" data-modal="entry-modal">
+                <button class="action-btn donate-btn" id="entry-btn" data-action="modal" data-modal="entry-modal" data-i18n="t010">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 17l5-5-5-5M4 12h11"/></svg>
                     Entry
                 </button>
 
-                <button class="action-btn apk-btn" id="apk-btn" data-action="modal" data-modal="apk-modal">
+                <button class="action-btn apk-btn" id="apk-btn" data-action="modal" data-modal="apk-modal" data-i18n="t011">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
                     APK
                 </button>
@@ -127,9 +127,9 @@
                 <div class="lang-switch" id="lang-switch">
                     <button class="lang-btn" id="lang-btn" aria-label="Language" aria-haspopup="menu" aria-expanded="false">🌐</button>
                     <div class="lang-menu" id="lang-menu" role="menu">
-                        <button type="button" role="menuitem" data-lang="en">EN</button>
-                        <button type="button" role="menuitem" data-lang="zh">CN</button>
-                        <button type="button" role="menuitem" data-lang="ms">BM</button>
+                        <button type="button" role="menuitem" data-lang="en" data-i18n="t012">EN</button>
+                        <button type="button" role="menuitem" data-lang="zh" data-i18n="t013">CN</button>
+                        <button type="button" role="menuitem" data-lang="ms" data-i18n="t014">BM</button>
                     </div>
                 </div>
             </section>
@@ -138,23 +138,23 @@
         <div id="fallback-banner" class="fallback-banner"></div>
 
         <main id="companies-grid" class="companies-grid" aria-live="polite">
-            <p style="text-align: center; grid-column: 1/-1; color: #666;">🔄 正在加载数据...</p>
+            <p style="text-align: center; grid-column: 1/-1; color: #666;" data-i18n="t015">🔄 Loading data...</p>
         </main>
 
         <footer role="contentinfo">
-            <p>⚠️ 数据仅供参考，请以官方公告为准。</p>
-            <span id="status-text">
-                <span class="status-indicator loading" aria-hidden="true"></span>正在加载...
+            <p data-i18n="t016">⚠️ For reference only; please refer to official announcements.</p>
+            <span id="status-text" data-i18n="t004">
+                <span class="status-indicator loading" aria-hidden="true"></span>Loading...
             </span>
             <br>
-            <time datetime="">更新于 <span id="update-time">-</span></time>
+            <time datetime="" data-i18n="t017">Updated <span id="update-time">-</span></time>
         </footer>
     </div>
 
     <!-- 弹窗区域 -->
     <div class="modal-overlay" id="lucky-modal" role="dialog" aria-modal="true">
         <div class="modal-content">
-            <div class="modal-title">✨ Lucky Number ✨</div>
+            <div class="modal-title" data-i18n="t018">✨ Lucky Number ✨</div>
             <div class="lucky-digits">
                 <span class="lucky-digit-box" id="digit1">0</span>
                 <span class="lucky-digit-box" id="digit2">0</span>
@@ -162,49 +162,49 @@
                 <span class="lucky-digit-box" id="digit4">0</span>
             </div>
             <div class="modal-buttons">
-                <button class="spin-btn" id="spin-btn">Start</button>
-                <button class="close-modal-btn" data-action="close" data-modal="lucky-modal">Close</button>
+                <button class="spin-btn" id="spin-btn" data-i18n="t019">Start</button>
+                <button class="close-modal-btn" data-action="close" data-modal="lucky-modal" data-i18n="t020">Close</button>
             </div>
         </div>
     </div>
 
     <div class="modal-overlay" id="donate-modal" role="dialog" aria-modal="true">
         <div class="modal-content donate-modal">
-            <p class="donate-note">Thank you ❤️</p>
-            <p class="contact-email">Contact: my4d6039@gmail.com</p>
+            <p class="donate-note" data-i18n="t021">Thank you ❤️</p>
+            <p class="contact-email" data-i18n="t022">Contact: my4d6039@gmail.com</p>
             <div class="modal-buttons">
-                <button class="close-modal-btn" data-action="close" data-modal="donate-modal">Close</button>
+                <button class="close-modal-btn" data-action="close" data-modal="donate-modal" data-i18n="t020">Close</button>
             </div>
         </div>
     </div>
 
     <div class="modal-overlay" id="apk-modal" role="dialog" aria-modal="true">
         <div class="modal-content">
-            <a href="/my4d_v1.2.3.apk" download class="apk-download-link">📦 Download my4d_v1.2.3.apk (v1.2.3)</a>
-            <p class="apk-note">✅ 需要允许“未知来源应用”。<br>SHA-256: <code>f4a96e754c363044aff5bf97bca272c6247c99f7a5c7d8ce5f99a91aae1dcab3</code><br>证书 SHA-256: <code>87862dd497a24b8e9091d457827cf9aec9106fb9f3f3da2998e19d4118cdfd0e</code><br>校验: <code>sha256sum my4d_v1.2.3.apk</code></p>
-            <p class="apk-note">✅ You need to allow installation from 'Unknown Sources' in your phone settings.<br>This APK is completely safe, free of any viruses or malware.<br>Please feel free to install and use.</p>
+            <a href="/my4d_v1.2.3.apk" download class="apk-download-link" data-i18n="t023">📦 Download my4d_v1.2.3.apk (v1.2.3)</a>
+            <p class="apk-note" data-i18n="t024|t025|t026|t027">✅ You need to allow installation from unknown sources.<br>SHA-256: <code>f4a96e754c363044aff5bf97bca272c6247c99f7a5c7d8ce5f99a91aae1dcab3</code><br>Certificate SHA-256: <code>87862dd497a24b8e9091d457827cf9aec9106fb9f3f3da2998e19d4118cdfd0e</code><br>Verify: <code>sha256sum my4d_v1.2.3.apk</code></p>
+            <p class="apk-note" data-i18n="t028|t029|t030">✅ You need to allow installation from 'Unknown Sources' in your phone settings.<br>This APK is completely safe, free of any viruses or malware.<br>Please feel free to install and use.</p>
 
             <details class="apk-help" style="margin:12px 0;">
-                <summary>安装失败 / 显示“未安装应用”？ Install failed? Tap for fixes</summary>
+                <summary data-i18n="t031">Install failed / shows "App not installed"? Tap for fixes</summary>
                 <div class="apk-help-body" style="line-height:1.7;">
-                    <p><strong>中文</strong></p>
+                    <p><strong data-i18n="t032">Chinese</strong></p>
                     <ol>
-                        <li>安装时出现 Google Play Protect（Play 保护机制）警告 → 点「仍要安装 / Install anyway」。</li>
-                        <li>没有这个按钮：Play 商店 → 头像 → Play Protect → 设置 → 临时关闭「使用 Play Protect 扫描应用」；装完请重新打开。</li>
-                        <li>Honor/荣耀：设置 → 应用 → 纯净模式 → 关闭；并给浏览器/文件管理器「安装未知应用」权限。</li>
-                        <li>已装旧版请先卸载。错误码 <code>-22</code> / <code>INSTALL_FAILED_VERIFICATION_FAILURE</code> 是 Play Protect 拦截，不是 APK 损坏。</li>
+                        <li data-i18n="t033">If Google Play Protect warns you during installation → tap "Install anyway".</li>
+                        <li data-i18n="t034">No such button? Play Store → profile → Play Protect → Settings → temporarily turn off "Scan apps with Play Protect"; turn it back on after installing.</li>
+                        <li data-i18n="t035">Honor phones: Settings → Apps → Pure Mode → off; also allow "Install unknown apps" for your browser / file manager.</li>
+                        <li data-i18n="t036|t037">Uninstall any older version first. Error <code>-22</code> / <code>INSTALL_FAILED_VERIFICATION_FAILURE</code> means Play Protect blocked it — the APK is not corrupt.</li>
                     </ol>
-                    <p><strong>English</strong></p>
+                    <p><strong data-i18n="t038">English</strong></p>
                     <ol>
-                        <li>Google Play Protect warning appears → tap <strong>Install anyway</strong>.</li>
-                        <li>No such button? Play Store → profile → Play Protect → Settings → temporarily turn off <em>Scan apps with Play Protect</em>; turn it back on after installing.</li>
-                        <li>Honor phones: Settings → Apps → Pure Mode → off; also allow "Install unknown apps" for your browser / file manager.</li>
-                        <li>Uninstall any older version first. Error <code>-22</code> / <code>INSTALL_FAILED_VERIFICATION_FAILURE</code> means Play Protect blocked it — the APK is not corrupt.</li>
+                        <li data-i18n="t039">Google Play Protect warning appears → tap <strong data-i18n="t040">Install anyway</strong>.</li>
+                        <li data-i18n="t041|t043">No such button? Play Store → profile → Play Protect → Settings → temporarily turn off <em data-i18n="t042">Scan apps with Play Protect</em>; turn it back on after installing.</li>
+                        <li data-i18n="t035">Honor phones: Settings → Apps → Pure Mode → off; also allow "Install unknown apps" for your browser / file manager.</li>
+                        <li data-i18n="t036|t037">Uninstall any older version first. Error <code>-22</code> / <code>INSTALL_FAILED_VERIFICATION_FAILURE</code> means Play Protect blocked it — the APK is not corrupt.</li>
                     </ol>
                 </div>
             </details>
             <div class="modal-buttons">
-                <button class="close-modal-btn" data-action="close" data-modal="apk-modal">Close</button>
+                <button class="close-modal-btn" data-action="close" data-modal="apk-modal" data-i18n="t020">Close</button>
             </div>
         </div>
     </div>
@@ -216,14 +216,14 @@
             <img src="/images/winbox.png" alt="WinBox" class="entry-img">
             <div class="entry-note">
                 <ol>
-                    <li>该平台需要推荐人方可注册，扫描二维码即可进入。</li>
-                    <li>根据注册流程填写邮箱或是手机号码即可完成注册，不需要任何敏感信息。</li>
-                    <li>完成后即可体验游戏内容，可在网页端或是下载手机端都可以进行。</li>
+                    <li data-i18n="t044">Referral is required to register; scan the QR code to enter.</li>
+                    <li data-i18n="t045">Complete registration with your email or phone number; no sensitive information is required.</li>
+                    <li data-i18n="t046">Once done, enjoy the games on the web or via the mobile app.</li>
                 </ol>
-                <p>免责声明：my4D 只提供博彩成绩 , 此平台和 my4D 并没有任何合作关系，一切疑问需要询问该平台客服。</p>
+                <p data-i18n="t047">Disclaimer: my4D only provides lottery results. This platform is not affiliated with my4D; direct all queries to the platform's customer support.</p>
             </div>
             <div class="modal-buttons">
-                <button class="close-modal-btn" data-action="close" data-modal="entry-modal">Close</button>
+                <button class="close-modal-btn" data-action="close" data-modal="entry-modal" data-i18n="t020">Close</button>
             </div>
         </div>
     </div>
@@ -231,11 +231,11 @@
     <!-- 号码历史查询 -->
     <div class="modal-overlay" id="history-modal" role="dialog" aria-modal="true" aria-label="号码历史查询">
         <div class="modal-content num-history-modal">
-            <div class="modal-title">输入号码 | Enter number</div>
+            <div class="modal-title" data-i18n="t048">Enter number</div>
             <div class="num-history-search">
                 <input id="num-history-input" type="text" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" placeholder="1234" autocomplete="off">
-                <button class="close-modal-btn" id="num-history-search-btn" type="button">查询 | Search</button>
-                <button class="close-modal-btn" data-action="close" data-modal="history-modal">Close</button>
+                <button class="close-modal-btn" id="num-history-search-btn" type="button" data-i18n="t049">Search</button>
+                <button class="close-modal-btn" data-action="close" data-modal="history-modal" data-i18n="t020">Close</button>
             </div>
             <div class="num-history-companies" id="num-history-companies"></div>
             <div class="num-history-status" id="num-history-status"></div>
@@ -251,6 +251,26 @@
   const btn = document.getElementById("lang-btn");
   const menu = document.getElementById("lang-menu");
   if (!sw || !btn || !menu) return;
+
+  const packs = {};
+  const targets = [];
+  document.querySelectorAll("[data-i18n]").forEach(function (el) {
+    const keys = el.getAttribute("data-i18n").split("|");
+    let i = 0;
+    Array.prototype.forEach.call(el.childNodes, function (n) {
+      if (n.nodeType === 3 && n.nodeValue.trim() && keys[i]) {
+        targets.push({ node: n, original: n.nodeValue, key: keys[i] });
+        i++;
+      }
+    });
+  });
+
+  window.i18n = function (key) {
+    const lang = document.documentElement.dataset.lang || "en";
+    const dict = packs[lang] || packs.en;
+    return (dict && dict[key]) || key;
+  };
+
   function syncTheme() {
     const body = getComputedStyle(document.body);
     const root = getComputedStyle(document.documentElement);
@@ -258,6 +278,32 @@
     menu.style.background = bg;
     menu.style.color = body.color || root.color;
   }
+
+  function closeMenu() {
+    sw.classList.remove("open");
+    btn.setAttribute("aria-expanded", "false");
+  }
+
+  async function apply(lang) {
+    if (!packs[lang]) {
+      const res = await fetch("i18n/" + lang + ".json?v=2");
+      if (!res.ok) throw new Error("i18n " + lang);
+      packs[lang] = await res.json();
+    }
+    const dict = packs[lang];
+    targets.forEach(function (t) {
+      t.node.nodeValue = dict[t.key] || t.original;
+    });
+    document.dispatchEvent(new CustomEvent("i18nchange", { detail: lang }));
+  }
+
+  function select(lang) {
+    document.documentElement.dataset.lang = lang;
+    try { localStorage.setItem("my4d-lang", lang); } catch (e) {}
+    apply(lang).catch(function (err) { console.warn("i18n load failed", err); });
+    closeMenu();
+  }
+
   btn.addEventListener("click", function (e) {
     e.stopPropagation();
     syncTheme();
@@ -265,18 +311,16 @@
     btn.setAttribute("aria-expanded", String(open));
   });
   document.addEventListener("click", function (e) {
-    if (!sw.contains(e.target)) {
-      sw.classList.remove("open");
-      btn.setAttribute("aria-expanded", "false");
-    }
+    if (!sw.contains(e.target)) closeMenu();
   });
   sw.querySelectorAll("[data-lang]").forEach(function (item) {
-    item.addEventListener("click", function () {
-      document.documentElement.dataset.lang = item.dataset.lang;
-      sw.classList.remove("open");
-      btn.setAttribute("aria-expanded", "false");
-    });
+    item.addEventListener("click", function () { select(item.dataset.lang); });
   });
+
+  let saved = "en";
+  try { saved = localStorage.getItem("my4d-lang") || "en"; } catch (e) {}
+  document.documentElement.dataset.lang = saved;
+  apply(saved).catch(function () {});
 })();
 </script>
 </body>
