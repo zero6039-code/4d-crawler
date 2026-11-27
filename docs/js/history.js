@@ -18,9 +18,10 @@
     function loadAll(num) {
         if (cache[num]) return Promise.resolve(cache[num]);
         if (loading[num]) return loading[num];
-        loading[num] = fetch(API + encodeURIComponent(num), { cache: 'no-store' })
+        loading[num] = fetch(API + encodeURIComponent(num))
             .then(r => { if (!r.ok) throw new Error('api'); return r.json(); })
-            .then(j => (cache[num] = j));
+            .then(j => (cache[num] = j))
+            .finally(() => { delete loading[num]; });
         return loading[num];
     }
 
@@ -101,8 +102,8 @@
         const out = document.getElementById('num-history-results');
         out.innerHTML = '';
         if (pagesEl) pagesEl.innerHTML = '';
-        if (!/^\d{4,6}$/.test(num)) {
-            st.textContent = '请输入 4-6 位号码 / Enter 4-6 digits';
+        if (!/^\d{4}$/.test(num)) {
+            st.textContent = '请输入 4 位号码 / Enter 4 digits';
             return;
         }
         st.textContent = '加载中 / Loading…';
@@ -129,7 +130,7 @@
         if (btn) btn.addEventListener('click', run);
         if (input) input.addEventListener('input', () => {
             const v = input.value.replace(/\D/g, '').slice(0, 4);
-            if (v.length >= 2) loadAll(v).catch(() => {});
+            if (v.length === 4) loadAll(v).catch(() => {});
         });
         if (input) input.addEventListener('keydown', e => { if (e.key === 'Enter') run(); });
         if (modal) {
