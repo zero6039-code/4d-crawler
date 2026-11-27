@@ -99,7 +99,7 @@
         if (!box) return;
         box.innerHTML = '<label class="all"><input type="checkbox" id="num-history-all" checked> ALL</label>' +
             COMPANIES.map(k =>
-                `<label><input type="checkbox" data-co="${k}" checked><img src="images/${encodeURIComponent(LOGO[k])}" width="18" height="18" alt=""></label>`
+                `<label><input type="checkbox" data-co="${k}" checked><img src="images/${encodeURIComponent(LOGO[k])}" width="24" height="24" alt=""></label>`
             ).join('');
         box.addEventListener('change', e => {
             const t = e.target;

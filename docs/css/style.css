@@ -260,7 +260,7 @@ body.dark-mode #history-modal .num-history-pages button { border-color:rgba(255,
 #history-modal .num-history-companies { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
 #history-modal .num-history-companies label { display:inline-flex; align-items:center; gap:4px; padding:4px 8px; border-radius:14px; border:1px solid rgba(0,0,0,0.15); cursor:pointer; font-size:0.82rem; }
 #history-modal .num-history-companies label.all { font-weight:600; border-color:#06b6d4; }
-#history-modal .num-history-companies img { width:18px; height:18px; object-fit:contain; }
+#history-modal .num-history-companies img { width:24px; height:24px; object-fit:contain; }
 #history-modal .num-history-companies input { accent-color:#06b6d4; margin:0; }
 body.dark-mode #history-modal .num-history-companies label { border-color:rgba(255,255,255,0.2); color:#e2e8f0; }
 
