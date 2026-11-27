@@ -19,7 +19,7 @@ jobs:
         with:
           node-version: '20'
       - name: Install wrangler
-        run: npm i -g wrangler
+        run: npm i -g wrangler@4
 
       - name: Build shards and upload
         env:
@@ -39,4 +39,4 @@ jobs:
                   json.dump(data, f, ensure_ascii=False, separators=(',', ':'))
           print('shards:', len(shards))
           PY
-          printf '%s\n' r2_shards/*.json | xargs -P 8 -I{} bash -c 'f="$1"; npx wrangler r2 object put "4d-history/$(basename "$f")" --file="$f" --remote' _ {}
+          printf '%s\n' r2_shards/*.json | xargs -P 8 -I{} bash -c 'f="$1"; wrangler r2 object put "4d-history/$(basename "$f")" --file="$f" --remote' _ {}

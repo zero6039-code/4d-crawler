@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install tooling
+        run: python3 -m pip install --upgrade pip pytest pip-audit
+      - name: Python syntax
+        run: python3 -m compileall -q crawler.py crawler_*.py build_history_index.py check_local_gaps.py
+      - name: Pytest
+        run: python3 -m pytest -q || [ $? -eq 5 ]  # 5 = 无测试收集，不算失败
+      - name: Dependency audit
+        run: pip-audit -r requirements.txt
+      - name: JS syntax
+        run: |
+          for f in docs/js/*.js; do node --check "$f"; done
