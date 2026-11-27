@@ -8,11 +8,13 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.view.ViewGroup
+import android.webkit.RenderProcessGoneDetail
 import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.webkit.WebView
@@ -29,6 +31,7 @@ class MainActivity : Activity() {
         private const val ALLOWED_HOST = "my4d.vercel.app"
         private const val VERSION_URL = "https://my4d.vercel.app/version.json"
         private const val MAX_VERSION_JSON = 4096
+        private val EXTERNAL_SCHEMES = setOf("https", "http", "mailto", "tel")
     }
 
     private lateinit var webView: WebView
@@ -58,10 +61,19 @@ class MainActivity : Activity() {
                 val uri = request?.url ?: return true
                 val allowed = uri.scheme == "https" && uri.host == ALLOWED_HOST
                 if (allowed) return false
-                try {
-                    startActivity(Intent(Intent.ACTION_VIEW, uri))
-                } catch (_: ActivityNotFoundException) {
+                if (uri.scheme in EXTERNAL_SCHEMES) {
+                    try {
+                        startActivity(Intent(Intent.ACTION_VIEW, uri))
+                    } catch (_: ActivityNotFoundException) {
+                    }
                 }
+                return true
+            }
+
+            override fun onRenderProcessGone(view: WebView, detail: RenderProcessGoneDetail): Boolean {
+                (view.parent as? ViewGroup)?.removeView(view)
+                view.destroy()
+                this@MainActivity.recreate()
                 return true
             }
         }
@@ -103,6 +115,22 @@ class MainActivity : Activity() {
     private fun installedVersionCode(): Long {
         val info = packageManager.getPackageInfo(packageName, 0)
         return if (Build.VERSION.SDK_INT >= 28) info.longVersionCode else info.versionCode.toLong()
+    }
+
+    @Suppress("DEPRECATION")
+    private fun signedByUs(apk: java.io.File): Boolean {
+        val same = if (Build.VERSION.SDK_INT >= 28) {
+            val flags = PackageManager.GET_SIGNING_CERTIFICATES
+            val theirs = packageManager.getPackageArchiveInfo(apk.path, flags)?.signingInfo?.apkContentsSigners ?: return false
+            val mine = packageManager.getPackageInfo(packageName, flags).signingInfo?.apkContentsSigners ?: return false
+            theirs.toSet() == mine.toSet()
+        } else {
+            val flags = PackageManager.GET_SIGNATURES
+            val theirs = packageManager.getPackageArchiveInfo(apk.path, flags)?.signatures ?: return false
+            val mine = packageManager.getPackageInfo(packageName, flags).signatures ?: return false
+            theirs.toSet() == mine.toSet()
+        }
+        return same
     }
 
     private fun showUpdateDialog(url: Uri, sha256: String) {
@@ -159,6 +187,18 @@ class MainActivity : Activity() {
                 if (!isFinishing && !isDestroyed) {
                     AlertDialog.Builder(this@MainActivity)
                         .setMessage("更新包校验失败，已丢弃。")
+                        .setPositiveButton("确定", null)
+                        .show()
+                }
+                return
+            }
+            val apk = java.io.File(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)?.path ?: "", "my4d-update.apk")
+            if (!signedByUs(apk)) {
+                dm.remove(downloadId)
+                expectedSha256 = null
+                if (!isFinishing && !isDestroyed) {
+                    AlertDialog.Builder(this@MainActivity)
+                        .setMessage("更新包签名与当前应用不一致，已丢弃。")
                         .setPositiveButton("确定", null)
                         .show()
                 }
