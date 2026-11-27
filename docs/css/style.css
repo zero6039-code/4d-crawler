@@ -254,3 +254,23 @@ body.dark-mode #history-modal .num-history-pages button { border-color:rgba(255,
     max-height: 90vh;
     overflow: hidden !important;
 }
+
+
+/* === 号码历史查询：公司筛选卡片 === */
+#history-modal .num-history-companies { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
+#history-modal .num-history-companies label { display:inline-flex; align-items:center; gap:4px; padding:4px 8px; border-radius:14px; border:1px solid rgba(0,0,0,0.15); cursor:pointer; font-size:0.82rem; }
+#history-modal .num-history-companies label.all { font-weight:600; border-color:#06b6d4; }
+#history-modal .num-history-companies img { width:18px; height:18px; object-fit:contain; }
+#history-modal .num-history-companies input { accent-color:#06b6d4; margin:0; }
+body.dark-mode #history-modal .num-history-companies label { border-color:rgba(255,255,255,0.2); color:#e2e8f0; }
+
+/* mobile digits: bigger + bolder (desktop untouched) */
+@media (max-width: 480px) {
+    .number-item { font-weight: 800; }
+    #history-modal #num-history-input { font-size: 1.15rem; font-weight: 700; }
+    #history-modal .num-history-status { font-size: 1rem; font-weight: 700; }
+    #history-modal .num-history-pages button { font-size: 1rem; font-weight: 700; }
+    #history-modal .num-history-row { font-size: 1rem; }
+    #history-modal .num-history-row span:first-child,
+    #history-modal .num-history-row span:nth-child(3) { font-size: 1.05rem; font-weight: 700; }
+}

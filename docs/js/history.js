@@ -13,7 +13,8 @@
     };
     const PAGE_SIZE = 20;
     const API = 'https://history-api.zero6039.workers.dev/api/history?num=';
-    let cache = {}, loading = {}, allRows = [], page = 1, pagesEl = null;
+    let cache = {}, loading = {}, allRows = [], page = 1, pagesEl = null, currentNum = '';
+    const selected = new Set(COMPANIES);
 
     function loadAll(num) {
         if (cache[num]) return Promise.resolve(cache[num]);
@@ -32,11 +33,12 @@
     function search(num) {
         const rows = [];
         for (const e of (cache[num] || [])) {
+            const key = COMPANIES[e[2]] || '';
+            if (!selected.has(key)) continue;
             const d = e[1];
             const date = String(Math.floor(d / 10000)).padStart(4, '0') + '-' +
                 String(Math.floor(d / 100) % 100).padStart(2, '0') + '-' +
                 String(d % 100).padStart(2, '0');
-            const key = COMPANIES[e[2]] || '';
             rows.push({
                 num, label: PRIZES[e[0]][1], pi: e[0], date,
                 name: (typeof NAME_MAP !== 'undefined' && NAME_MAP[key]) || key,
@@ -84,6 +86,35 @@
         draw();
     }
 
+    function syncCompanyFilters() {
+        const box = document.getElementById('num-history-companies');
+        if (!box) return;
+        const all = document.getElementById('num-history-all');
+        if (all) all.checked = selected.size === COMPANIES.length;
+        box.querySelectorAll('input[data-co]').forEach(i => { i.checked = selected.has(i.dataset.co); });
+    }
+
+    function renderCompanyFilters() {
+        const box = document.getElementById('num-history-companies');
+        if (!box) return;
+        box.innerHTML = '<label class="all"><input type="checkbox" id="num-history-all" checked> ALL</label>' +
+            COMPANIES.map(k =>
+                `<label><input type="checkbox" data-co="${k}" checked><img src="images/${encodeURIComponent(LOGO[k])}" width="18" height="18" alt=""></label>`
+            ).join('');
+        box.addEventListener('change', e => {
+            const t = e.target;
+            if (t.id === 'num-history-all') {
+                const on = t.checked;
+                COMPANIES.forEach(k => { if (on) selected.add(k); else selected.delete(k); });
+            } else if (t.dataset.co) {
+                if (t.checked) selected.add(t.dataset.co); else selected.delete(t.dataset.co);
+            }
+            syncCompanyFilters();
+            if (currentNum && cache[currentNum]) render(search(currentNum), currentNum);
+        });
+        syncCompanyFilters();
+    }
+
     function clearAll() {
         const input = document.getElementById('num-history-input');
         const st = document.getElementById('num-history-status');
@@ -92,7 +123,10 @@
         if (st) st.textContent = '';
         if (out) out.innerHTML = '';
         if (pagesEl) pagesEl.innerHTML = '';
-        allRows = []; page = 1;
+        allRows = []; page = 1; currentNum = '';
+        selected.clear();
+        COMPANIES.forEach(k => selected.add(k));
+        syncCompanyFilters();
     }
 
     async function run() {
@@ -106,12 +140,14 @@
             st.textContent = '请输入 4 位号码 / Enter 4 digits';
             return;
         }
+        currentNum = num;
         st.textContent = '加载中 / Loading…';
         try { await loadAll(num); render(search(num), num); }
         catch (e) { st.textContent = '加载失败 / Load failed'; }
     }
 
     document.addEventListener('DOMContentLoaded', () => {
+        renderCompanyFilters();
         const modal = document.getElementById('history-modal');
         const btn = document.getElementById('num-history-search-btn');
         const input = document.getElementById('num-history-input');
