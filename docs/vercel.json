@@ -1,0 +1,5 @@
+{
+  "headers": [
+    { "source": "/(.*)", "headers": [ { "key": "X-S4-Probe", "value": "docs" } ] }
+  ]
+}
