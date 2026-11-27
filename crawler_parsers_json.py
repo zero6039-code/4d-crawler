@@ -248,7 +248,7 @@ def extract_sportstoto_lotto_from_json(t_item, company):
         "star": [n for n in star if n],
         "power": [n for n in power if n],
         "supreme": [n for n in supreme if n],
-        "jackpots": [n for n in jackpots if n]
+        "jackpots": jackpots  # 保持位置语义：[Star JP1, Star JP2, Power, Supreme]，空位用 "" 占位
     }
 
 def extract_magnum_life_from_json(m_item, company):
@@ -377,7 +377,7 @@ def fetch_all_companies_from_dato4d(require_fresh=False):
                 save_json("magnum_life", payload)
                 LAST_SAVED_COUNT += 1
         except Exception as e:
-            print(f"⚠️ 处理 magnum_life 失败: {e!r}")
+            print(f"⚠️ 处理 {key} 失败: {e!r}")
     else:
         print("⚠️ JSON 中缺少 M (Magnum) 的数据或类型异常")
 
