@@ -1,8 +1,8 @@
 /* docs/js/history.js — 号码历史查询（读取预生成索引） */
 (function () {
     const PRIZES = [
-        ['1st','头奖 | 1st'], ['2nd','二奖 | 2nd'], ['3rd','三奖 | 3rd'],
-        ['special','特别奖 | Special'], ['consolation','安慰奖 | Consolation']
+        ['1st','t051','1st'], ['2nd','t052','2nd'], ['3rd','t053','3rd'],
+        ['special','t054','Special'], ['consolation','t055','Consolation']
     ];
     const COMPANIES = ['sabah','sarawak_cashsweep','sandakan','lucky_hari','perdana4d',
         'grand_dragon','singapore','damacai','magnum','toto'];
@@ -40,7 +40,7 @@
                 String(Math.floor(d / 100) % 100).padStart(2, '0') + '-' +
                 String(d % 100).padStart(2, '0');
             rows.push({
-                num, label: PRIZES[e[0]][1], pi: e[0], date,
+                num, label: T(PRIZES[e[0]][1], PRIZES[e[0]][2]), pi: e[0], date,
                 name: (typeof NAME_MAP !== 'undefined' && NAME_MAP[key]) || key,
                 logo: LOGO[key] || ''
             });
@@ -77,12 +77,12 @@
         const st = document.getElementById('num-history-status');
         const out = document.getElementById('num-history-results');
         if (!rows.length) {
-            st.textContent = `无记录 / No record: ${num}`;
+            st.textContent = `${T('t062', 'No record')}: ${num}`;
             out.innerHTML = '';
             if (pagesEl) pagesEl.innerHTML = '';
             return;
         }
-        st.textContent = `${num} — ${rows.length} 条 | ${rows.length} items`;
+        st.textContent = `${num} — ${rows.length} ${T('t063', 'items')}`;
         draw();
     }
 
@@ -137,13 +137,13 @@
         out.innerHTML = '';
         if (pagesEl) pagesEl.innerHTML = '';
         if (!/^\d{4}$/.test(num)) {
-            st.textContent = '请输入 4 位号码 / Enter 4 digits';
+            st.textContent = T('t064', 'Enter 4 digits');
             return;
         }
         currentNum = num;
-        st.textContent = '加载中 / Loading…';
+        st.textContent = T('t004', 'Loading...');
         try { await loadAll(num); render(search(num), num); }
-        catch (e) { st.textContent = '加载失败 / Load failed'; }
+        catch (e) { st.textContent = T('t065', 'Load failed'); }
     }
 
     document.addEventListener('DOMContentLoaded', () => {
