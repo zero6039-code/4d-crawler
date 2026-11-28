@@ -5,7 +5,7 @@
   if (!sw || !btn || !menu) return;
 
   const packs = {};
-  const CACHE_KEY = "my4d-i18n-cache-v5";
+  const CACHE_KEY = "my4d-i18n-cache-v6";
   try {
     const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || "{}") || {};
     Object.keys(cached).forEach(function (l) { packs[l] = cached[l]; });

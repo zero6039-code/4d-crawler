@@ -40,7 +40,7 @@
                 String(Math.floor(d / 100) % 100).padStart(2, '0') + '-' +
                 String(d % 100).padStart(2, '0');
             rows.push({
-                num, label: T(PRIZES[e[0]][1], PRIZES[e[0]][2]), pi: e[0], date,
+                num, label: window.i18n(PRIZES[e[0]][1]), pi: e[0], date,
                 name: (typeof NAME_MAP !== 'undefined' && NAME_MAP[key]) || key,
                 logo: LOGO[key] || ''
             });
@@ -77,12 +77,12 @@
         const st = document.getElementById('num-history-status');
         const out = document.getElementById('num-history-results');
         if (!rows.length) {
-            st.textContent = `${T('t062', 'No record')}: ${num}`;
+            st.textContent = `${window.i18n('t062')}: ${num}`;
             out.innerHTML = '';
             if (pagesEl) pagesEl.innerHTML = '';
             return;
         }
-        st.textContent = `${num} — ${rows.length} ${T('t063', 'items')}`;
+        st.textContent = `${num} — ${rows.length} ${window.i18n('t063')}`;
         draw();
     }
 
@@ -137,13 +137,13 @@
         out.innerHTML = '';
         if (pagesEl) pagesEl.innerHTML = '';
         if (!/^\d{4}$/.test(num)) {
-            st.textContent = T('t064', 'Enter 4 digits');
+            st.textContent = window.i18n('t064');
             return;
         }
         currentNum = num;
-        st.textContent = T('t004', 'Loading...');
+        st.textContent = window.i18n('t004');
         try { await loadAll(num); render(search(num), num); }
-        catch (e) { st.textContent = T('t065', 'Load failed'); }
+        catch (e) { st.textContent = window.i18n('t065'); }
     }
 
     document.addEventListener('DOMContentLoaded', () => {
