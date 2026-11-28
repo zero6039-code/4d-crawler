@@ -11,7 +11,7 @@
         android:label="my4d"
         android:theme="@style/My4dTheme"
         android:supportsRtl="true"
-        android:enableOnBackInvokedCallback="false">
+        android:enableOnBackInvokedCallback="true">
 
         <activity
             android:name=".MainActivity"

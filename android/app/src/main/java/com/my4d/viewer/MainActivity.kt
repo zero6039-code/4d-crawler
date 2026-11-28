@@ -15,6 +15,8 @@ import android.os.Bundle
 import android.os.Environment
 import android.provider.Settings
 import android.view.ViewGroup
+import android.window.OnBackInvokedCallback
+import android.window.OnBackInvokedDispatcher
 import android.webkit.RenderProcessGoneDetail
 import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
@@ -40,6 +42,7 @@ class MainActivity : Activity() {
     private var expectedSha256: String? = null
     private var receiverRegistered = false
     private var pendingInstallUri: Uri? = null
+    private var backCallback: Any? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -80,6 +83,16 @@ class MainActivity : Activity() {
             }
         }
 
+        if (Build.VERSION.SDK_INT >= 33) {
+            val cb = object : OnBackInvokedCallback {
+                override fun onBackInvoked() {
+                    if (webView.canGoBack()) webView.goBack() else finish()
+                }
+            }
+            backCallback = cb
+            onBackInvokedDispatcher.registerOnBackInvokedCallback(
+                OnBackInvokedDispatcher.PRIORITY_DEFAULT, cb)
+        }
         webView.loadUrl(START_URL)
         checkUpdate()
     }
@@ -140,6 +153,9 @@ class MainActivity : Activity() {
             .setTitle("新版本可用")
             .setMessage("检测到新版本，是否下载更新？")
             .setPositiveButton("更新") { _, _ ->
+            getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)?.absolutePath?.let { path: String ->
+                java.io.File(path, "my4d-update.apk").delete()
+            }
                 expectedSha256 = sha256
                 val req = DownloadManager.Request(url).apply {
                     setTitle("my4d 更新")
@@ -260,6 +276,12 @@ class MainActivity : Activity() {
     }
 
     override fun onDestroy() {
+    if (Build.VERSION.SDK_INT >= 33) {
+        (backCallback as? OnBackInvokedCallback)?.let {
+            onBackInvokedDispatcher.unregisterOnBackInvokedCallback(it)
+        }
+        backCallback = null
+    }
         if (receiverRegistered) {
             try {
                 unregisterReceiver(downloadDone)

@@ -29,6 +29,7 @@ android {
                 storePassword = ksPass
                 keyAlias = envKeyAlias
                 keyPassword = keyPass
+                enableV3Signing = true
             }
         }
     }
