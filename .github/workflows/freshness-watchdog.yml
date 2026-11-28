@@ -2,7 +2,7 @@ name: Freshness Watchdog
 
 on:
   schedule:
-    - cron: '10 14 * * *'   # 22:10 MYT
+    - cron: '30 15 * * *'   # 23:30 MYT（留 1.5h 缓冲）
   workflow_dispatch:
 
 jobs:

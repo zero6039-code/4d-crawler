@@ -31,7 +31,11 @@ def expected_draw_companies(today, base="docs/data/archive", weeks=WEEKS, thresh
     return {c for c, n in hits.items() if n >= cutoff}
 
 def check(base="docs/data", today=None):
-    today = today or datetime.now(MYT).date()
+    now = datetime.now(MYT)
+    # Actions cron 可能延迟跨日；22:00 MYT 前数据未整合，跳过避免误报
+    if today is None and now.hour < 22:
+        return now.date(), set(), []
+    today = today or now.date()
     expected = expected_draw_companies(today, base=os.path.join(base, "archive"))
     missing = []
     for company in sorted(expected):
