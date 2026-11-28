@@ -1,58 +1,9 @@
 {
-  "draw_date": "25-11-2026",
-  "draw_no": "454/26",
-  "groups": [
-    {
-      "group": "1",
-      "numbers": [
-        "2"
-      ]
-    },
-    {
-      "group": "2",
-      "numbers": [
-        "1"
-      ]
-    },
-    {
-      "group": "3",
-      "numbers": [
-        "6"
-      ]
-    },
-    {
-      "group": "4",
-      "numbers": [
-        "2"
-      ]
-    },
-    {
-      "group": "5",
-      "numbers": [
-        "0"
-      ]
-    },
-    {
-      "group": "6",
-      "numbers": [
-        "0"
-      ]
-    },
-    {
-      "group": "7",
-      "numbers": [
-        "1"
-      ]
-    },
-    {
-      "group": "8",
-      "numbers": [
-        "6"
-      ]
-    }
-  ],
+  "draw_date": "28-11-2026",
+  "draw_no": "",
+  "groups": [],
   "jackpots": [
-    "RM 14,788,626.06",
-    "RM 103,449.09"
+    "",
+    ""
   ]
 }
