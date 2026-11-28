@@ -290,9 +290,10 @@ def _try_save(company, extract_func, item):
         if not payload:
             print(f"⚠️ 提取 {company} 数据失败")
             return 0
-        save_json(company, payload)
-        LAST_SAVED_COUNT += 1
-        return 1
+        if save_json(company, payload):
+            LAST_SAVED_COUNT += 1
+            return 1
+        return 0
     except Exception as e:
         print(f"⚠️ 处理 {company} 失败: {e!r}")
         return 0
@@ -361,8 +362,8 @@ def fetch_all_companies_from_dato4d(require_fresh=False):
             try:
                 payload = fn(t_item, key)
                 if payload and ok(payload):
-                    save_json(key, payload)
-                    LAST_SAVED_COUNT += 1
+                    if save_json(key, payload):
+                        LAST_SAVED_COUNT += 1
             except Exception as e:
                 print(f"⚠️ 处理 {key} 失败: {e!r}")
     else:
@@ -374,14 +375,14 @@ def fetch_all_companies_from_dato4d(require_fresh=False):
         try:
             payload = extract_magnum_life_from_json(m_item, "magnum_life")
             if payload and payload.get('winning_numbers'):
-                save_json("magnum_life", payload)
-                LAST_SAVED_COUNT += 1
+                if save_json("magnum_life", payload):
+                    LAST_SAVED_COUNT += 1
         except Exception as e:
-            print(f"⚠️ 处理 {key} 失败: {e!r}")
+            print(f"⚠️ 处理 magnum_life 失败: {e!r}")
     else:
         print("⚠️ JSON 中缺少 M (Magnum) 的数据或类型异常")
 
-    print(f"✅ 从 JSON 成功处理 {LAST_SAVED_COUNT} 家公司数据")
+    print(f"✅ 从 JSON 写入了变化 {LAST_SAVED_COUNT} 家公司数据")
 
     # 新鲜度只决定轮询/回退；数据已按 F-02 单调保护逐家保存
     if require_fresh and not is_fresh(data):
