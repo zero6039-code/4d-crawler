@@ -155,16 +155,29 @@ def save_json(company, data, base="docs/data", allow_inferred_date=False):
         try:
             with open(archive_path, encoding="utf-8") as f:
                 loaded = json.load(f)
-            if isinstance(loaded, dict):
-                monthly = loaded
-        except (OSError, ValueError):
-            monthly = {}
+        except (OSError, ValueError) as e:
+            print(f"❌ {company} 月度归档 {archive_path} 无法解析 ({e!r})，拒绝覆盖，请人工修复")
+            return False
+        if not isinstance(loaded, dict):
+            print(f"❌ {company} 月度归档 {archive_path} 顶层不是对象，拒绝覆盖")
+            return False
+        monthly = loaded
 
     existing = (monthly.get(ymd) or {}).get(company)
     if (isinstance(existing, dict) and completeness(data) < completeness(existing)
             and os.getenv("ALLOW_DOWNGRADE") != "1"):
         print(f"⏭️ {company} {ymd} 新数据比已有记录更残缺，保留旧数据")
         return False
+
+    if isinstance(existing, dict) and os.getenv("ALLOW_OVERWRITE") != "1":
+        for k in ("1st", "2nd", "3rd"):
+            old, new = existing.get(k), data.get(k)
+            if (isinstance(old, str) and isinstance(new, str)
+                    and old.strip() not in PLACEHOLDER_PRIZES
+                    and new.strip() not in PLACEHOLDER_PRIZES and old != new):
+                print(f"🚨 {company} {ymd} 头奖冲突 {k}: 库内 {old} ≠ 新值 {new}，"
+                      f"拒绝覆盖（确认来源无误后设置 ALLOW_OVERWRITE=1）")
+                return False
 
     root = os.path.join(base, f"{company}.json")
     prev = _stored_ymd(root)
