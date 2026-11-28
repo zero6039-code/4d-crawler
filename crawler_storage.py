@@ -49,14 +49,29 @@ def build_latest(base="docs/data"):
         if not name.endswith(".json"):
             continue
         stem = name[:-5]
-        if stem in ("dates", "latest", "history_index", "sportstoto_fireball") or stem.endswith("_all"):
+        if stem in ("dates", "latest", "meta", "history_index", "sportstoto_fireball") or stem.endswith("_all"):
             continue
         try:
             with open(os.path.join(base, name), encoding="utf-8") as f:
                 out[stem] = json.load(f)
         except (OSError, ValueError):
             continue
-    _atomic_dump(out, os.path.join(base, "latest.json"))
+    latest_path = os.path.join(base, "latest.json")
+    _atomic_dump(out, latest_path)
+    _write_meta(base, latest_path)
+
+
+def _write_meta(base, latest_path):
+    """前端 60s 轮询的版本号：latest.json + dates.json 内容变化才会变。"""
+    import hashlib
+    h = hashlib.sha256()
+    for name in (latest_path, os.path.join(base, "dates.json")):
+        try:
+            with open(name, "rb") as f:
+                h.update(f.read())
+        except OSError:
+            pass
+    _atomic_dump({"rev": h.hexdigest()[:12]}, os.path.join(base, "meta.json"))
 
 
 
