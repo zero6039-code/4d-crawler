@@ -18,8 +18,9 @@ def update_dates_index(base_dir="docs/data"):
             try:
                 with open(os.path.join(arch_dir, name), encoding="utf-8") as f:
                     monthly = json.load(f)
-            except (OSError, ValueError):
-                continue
+            except (OSError, ValueError) as e:
+                print(f"❌ 归档 {name} 无法解析 ({e!r})，中止索引更新，保留现有 dates.json")
+                return False
             if isinstance(monthly, dict):
                 days.update(k for k, v in monthly.items()
                             if re.fullmatch(r"\d{4}-\d{2}-\d{2}", k) and v)
