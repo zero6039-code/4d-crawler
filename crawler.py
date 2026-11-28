@@ -68,7 +68,11 @@ def main():
     # ========== 主源失败/不新鲜时才用备用源；手动模式保持原行为 ==========
     if not json_success or is_manual:
         print("🔄 正在从备用源获取 Perdana 和 Lucky HariHari 的晚间场数据...")
-        backup_data = fetch_backup_sources()
+        try:
+            backup_data = fetch_backup_sources()
+        except Exception as e:
+            print(f"⚠️ 备用源整体失败，已跳过: {e!r}")
+            backup_data = {}
         for key, data in backup_data.items():
             if data and (any(data.get(k) for k in ['1st', '2nd', '3rd']) or data.get('winning_numbers')):
                 save_json(key, data)

@@ -40,7 +40,11 @@ def fetch_backup_sources():
         print(f"⚠️ 备用源 Perdana 抓取失败: {e}")
 
     # --- 2. Lucky HariHari 4D（今天失败自动回退昨天）---
-    lucky = fetch_lucky_hari(SESSION)
+    try:
+        lucky = fetch_lucky_hari(SESSION)
+    except Exception as e:
+        print(f"⚠️ Lucky HariHari 抓取异常: {e!r}")
+        lucky = {}
     if lucky:
         backup_data["lucky_hari"] = lucky
         print(f"✅ 从备用源获取到 Lucky HariHari 4D ({lucky['draw_date']} 晚间 7:30 PM) 数据")

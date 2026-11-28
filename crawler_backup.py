@@ -75,7 +75,7 @@ def fetch_lucky_hari(session, now=None):
     def _page(url):
         r = session.get(url, timeout=15, headers={"User-Agent": UA})
         r.raise_for_status()
-        t = re.sub(r"<script[\s\S]*?</script>|<style[\s\S]*?</style>", " ", r.text, flags=re.I | re.S)
+        t = re.sub(r"<script[\s\S]*?</script>|<style[\s\S]*?</style>", " ", r.text[:2_000_000], flags=re.I | re.S)
         t = re.sub(r"<[^>]+>", " ", t).replace("&nbsp;", " ")
         return re.sub(r"\s+", " ", t)
 
@@ -117,6 +117,8 @@ def fetch_lucky_hari(session, now=None):
             r = session.get(url, timeout=15, headers={"User-Agent": UA, "Referer": "https://www.hari4d.com/"})
             r.raise_for_status()
             j = r.json()
+            if not isinstance(j, dict):
+                raise ValueError(f"unexpected JSON type {type(j).__name__}")
         except Exception as e:
             print(f"⚠️ Lucky HariHari 官方源 {ds} 抓取失败: {e}")
             j = {}
