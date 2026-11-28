@@ -209,17 +209,9 @@ body.dark-mode .lucky-btn { background: linear-gradient(135deg, #fbbf24, #f59e0b
 
 /* APK 弹窗放大 */
 #apk-modal .modal-content { max-width: 720px; text-align: left; }
+#donate-modal .modal-content { text-align: left; }
 #apk-modal [data-i18n="t023"] { display:block; width:fit-content; max-width:100%; margin:0 auto; text-align:center; }
 
-/* entry modal: wider/taller, left-aligned, visible border */
-#entry-modal .modal-content {
-  max-width: 780px;
-  max-height: 88vh;
-  text-align: left;
-  border: 1px solid rgba(148, 163, 184, 0.55);
-}
-body.dark-mode #entry-modal .modal-content { border-color: rgba(226, 232, 240, 0.45); }
-@media (max-width: 480px) { #entry-modal .modal-content { width: 94%; max-width: none; } }
 #apk-modal .apk-note { font-size: 0.9rem; line-height: 1.65; word-break: break-word; }
 @media (max-width: 640px) {
     #apk-modal .modal-content { width: 94%; max-width: none; }

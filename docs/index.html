@@ -60,10 +60,6 @@
       .apk-help[open] > summary::after { transform: rotate(180deg); }
       .apk-help-body { padding: 10px 12px 2px; }
       .apk-help-body ol { margin: 6px 0 12px; padding-left: 20px; }
-      .entry-img { display: block; max-width: 100%; height: auto; margin: 10px auto; }
-      .entry-note { line-height: 1.7; }
-      .entry-note ol { margin: 6px 0 12px; padding-left: 20px; }
-      .entry-reminder { font-weight: 600; color: #f59e0b; margin: 6px 0; }
       .lang-switch { position: relative; display: inline-flex; }
       .lang-btn { width: 40px; height: 40px; padding: 0; border: 0; border-radius: 8px; background: transparent; color: inherit; cursor: pointer; font-size: 24px; line-height: 1; display: inline-flex; align-items: center; justify-content: center; transition: transform .2s ease, background-color .2s ease; }
       .lang-btn:hover { transform: scale(1.15); background-color: rgba(128,128,128,.18); }
@@ -111,11 +107,6 @@
                     Support
                 </button>
 
-                <button class="action-btn donate-btn" id="entry-btn" data-action="modal" data-modal="entry-modal" data-i18n="t010">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 17l5-5-5-5M4 12h11"/></svg>
-                    Entry
-                </button>
-
                 <button class="action-btn apk-btn" id="apk-btn" data-action="modal" data-modal="apk-modal" data-i18n="t011">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
                     APK
@@ -149,7 +140,7 @@
             </span>
             <br>
             <time datetime="" data-i18n="t017">Updated <span id="update-time">-</span></time>
-         | <a class="privacy-link" href="/privacy.html" target="_blank" rel="noopener noreferrer" title="Privacy Policy / Dasar Privasi">隐私政策</a>
+         | <a class="privacy-link" href="/privacy.html" target="_blank" rel="noopener noreferrer" title="Privacy Policy / Dasar Privasi" data-i18n="t061">隐私政策</a>
         </footer>
     </div>
 
@@ -172,12 +163,14 @@
 
     <div class="modal-overlay" id="donate-modal" role="dialog" aria-modal="true">
         <div class="modal-content donate-modal">
+            <div class="modal-title" data-i18n="t058">☕ 支持网站免费运营</div>
+            <div class="donate-note" data-i18n="t059">本站由独立开发者维护，永久免费提供公开开奖数据查询与历史号码分析，无任何强制收费。如果这个小工具帮到了你，欢迎请我喝杯 Kopi，支持服务器与接口续费！</div>
+            <div class="contact-email" data-i18n="t022">如有任何问题、报错或显示异常，可联系：my4d6039@gmail.com</div>
             <p class="donate-note" data-i18n="t021">Thank you ❤️</p>
             <a class="bmc-link" href="https://buymeacoffee.com/zero60391" target="_blank" rel="noopener noreferrer" aria-label="Buy Me a Coffee">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.5 8h-1.2A4.5 4.5 0 0 0 12.9 4H6.5A3.5 3.5 0 0 0 3 7.5v4A3.5 3.5 0 0 0 6.5 15h6.4a4.5 4.5 0 0 0 4.4-4h1.2A1.5 1.5 0 0 0 20 9.5 1.5 1.5 0 0 0 18.5 8ZM12 13H6.5A1.5 1.5 0 0 1 5 11.5v-4A1.5 1.5 0 0 1 6.5 6h6.4A2.6 2.6 0 0 1 15.5 8.6 2.6 2.6 0 0 1 12.9 11H12v2ZM19 11h-1V8h1v3ZM4 17h14v2H4Z"/></svg>
                 <span data-i18n="t056">Buy Me a Coffee</span>
             </a>
-            <p class="contact-email" data-i18n="t022">Contact: my4d6039@gmail.com</p>
             <div class="modal-buttons">
                 <button class="close-modal-btn" data-action="close" data-modal="donate-modal" data-i18n="t020">Close</button>
             </div>
@@ -211,26 +204,6 @@
             </details>
             <div class="modal-buttons">
                 <button class="close-modal-btn" data-action="close" data-modal="apk-modal" data-i18n="t020">Close</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Entry 弹窗（内容待补） -->
-    <div class="modal-overlay" id="entry-modal" role="dialog" aria-modal="true" aria-label="Entry">
-        <div class="modal-content">
-            <img src="/images/winboxQRcode.png" alt="WinBox QR Code" class="entry-img">
-            <img src="/images/winbox.png" alt="WinBox" class="entry-img">
-            <div class="entry-note">
-                <ol>
-                    <li data-i18n="t044">Referral is required to register; scan the QR code to enter.</li>
-                    <li data-i18n="t045">Complete registration with your email or phone number; no sensitive information is required.</li>
-                    <li data-i18n="t046">Once done, enjoy the games on the web or via the mobile app.</li>
-                </ol>
-                <p class="entry-reminder" data-i18n="t057">温馨提示：小赌怡情，切勿沉迷。</p>
-                <p data-i18n="t047">Disclaimer: my4D only provides lottery results. This platform is not affiliated with my4D; direct all queries to the platform's customer support.</p>
-            </div>
-            <div class="modal-buttons">
-                <button class="close-modal-btn" data-action="close" data-modal="entry-modal" data-i18n="t020">Close</button>
             </div>
         </div>
     </div>

@@ -8,7 +8,6 @@
   "t007": "Refresh",
   "t008": "Lucky Number",
   "t009": "Support",
-  "t010": "Entry",
   "t011": "APK",
   "t012": "EN",
   "t013": "CN",
@@ -20,7 +19,6 @@
   "t019": "Start",
   "t020": "Close",
   "t021": "Thank you ❤️",
-  "t022": "Contact: my4d6039@gmail.com",
   "t023": "📦 Download my4d_v1.2.3.apk (v1.2.3)",
   "t024": "✅ You need to allow installation from unknown sources.",
   "t025": "SHA-256:",
@@ -42,10 +40,6 @@
   "t041": "No such button? Play Store → profile → Play Protect → Settings → temporarily turn off",
   "t042": "Scan apps with Play Protect",
   "t043": "; turn it back on after installing.",
-  "t044": "Referral is required to register; scan the QR code to enter.",
-  "t045": "Complete registration with your email or phone number; no sensitive information is required.",
-  "t046": "Once done, enjoy the games on the web or via the mobile app.",
-  "t047": "Disclaimer: my4D only provides lottery results. This platform is not affiliated with my4D; direct all queries to the platform's customer support.",
   "t048": "Enter number",
   "t049": "Search",
   "t050": "Draw No:",
@@ -55,5 +49,9 @@
   "t054": "Special",
   "t055": "Consolation",
   "t056": "Buy Me a Coffee",
-  "t057": "Friendly reminder: a little gambling for fun; never overindulge."
+  "t058": "☕ Support Free Server Maintenance",
+  "t059": "This site is maintained by an independent developer and permanently offers free access to public draw results and historical number analysis, with no mandatory charges. If this tool has helped you, feel free to buy me a Kopi to support server and API renewal!",
+  "t022": "For any issues, errors or display problems, contact: my4d6039@gmail.com",
+  "t060": "Loading complete · v1.2.3",
+  "t061": "Privacy Policy"
 }

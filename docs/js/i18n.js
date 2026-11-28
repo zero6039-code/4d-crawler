@@ -5,6 +5,11 @@
   if (!sw || !btn || !menu) return;
 
   const packs = {};
+  const CACHE_KEY = "my4d-i18n-cache-v5";
+  try {
+    const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || "{}") || {};
+    Object.keys(cached).forEach(function (l) { packs[l] = cached[l]; });
+  } catch (e) {}
   const targets = [];
   document.querySelectorAll("[data-i18n]").forEach(function (el) {
     const keys = el.getAttribute("data-i18n").split("|");
@@ -36,16 +41,24 @@
     btn.setAttribute("aria-expanded", "false");
   }
 
-  async function apply(lang) {
-    if (!packs[lang]) {
-      const res = await fetch("i18n/" + lang + ".json?v=3");
-      if (!res.ok) throw new Error("i18n " + lang);
-      packs[lang] = await res.json();
-    }
-    const dict = packs[lang];
+  function render(dict) {
     targets.forEach(function (t) {
       t.node.nodeValue = dict[t.key] || t.original;
     });
+  }
+
+  function saveCache() {
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify(packs)); } catch (e) {}
+  }
+
+  async function apply(lang) {
+    if (!packs[lang]) {
+      const res = await fetch("i18n/" + lang + ".json?v=5");
+      if (!res.ok) throw new Error("i18n " + lang);
+      packs[lang] = await res.json();
+      saveCache();
+    }
+    render(packs[lang]);
     document.dispatchEvent(new CustomEvent("i18nchange", { detail: lang }));
   }
 
@@ -72,5 +85,6 @@
   let saved = "en";
   try { saved = localStorage.getItem("my4d-lang") || "en"; } catch (e) {}
   document.documentElement.dataset.lang = saved;
+  if (packs[saved]) render(packs[saved]);  // 同步套用缓存，消除英文残影
   apply(saved).catch(function () {});
 })();

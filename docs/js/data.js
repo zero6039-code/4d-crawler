@@ -95,8 +95,8 @@ async function fetchAndRenderData(dateStr, isRefresh = false) {
     loadCtl = new AbortController();
     const signal = loadCtl.signal;
     const grid = document.getElementById('companies-grid');
-    grid.innerHTML = '<p style="text-align:center;grid-column:1/-1;color:#666;">🔄 正在加载数据...</p>';
-    updateStatus('loading', '正在加载...');
+    grid.innerHTML = `<p style="text-align:center;grid-column:1/-1;color:#666;">${window.i18n ? window.i18n('t015') : '🔄 Loading data...'}</p>`;
+    updateStatus('loading', window.i18n ? window.i18n('t004') : 'Loading...');
     const isLatest = availableDates.length > 0 && dateStr === availableDates[0];
 
     const agg = await loadAggregated(dateStr, isLatest, signal);
@@ -147,7 +147,7 @@ async function fetchAndRenderData(dateStr, isRefresh = false) {
 
     renderCompanies(dataMap);
     const now = new Date();
-    updateStatus('success', '加载完成 · v1.2.3', `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`);
+    updateStatus('success', window.i18n ? window.i18n('t060') : 'Loading complete · v1.2.3', `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`);
 }
 
 
