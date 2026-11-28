@@ -58,13 +58,20 @@ window.forceRefresh = () => {
     }
 };
 
-function updateStatus(type, text, updateTime = null) {
+let lastStatus = null;
+function updateStatus(type, text, updateTime = null, key = null) {
+    lastStatus = { type, text, updateTime, key };
     const span = document.getElementById('status-text');
     const ind = span.querySelector('.status-indicator');
     ind.className = `status-indicator ${type}`;
     span.innerHTML = `${ind.outerHTML}${esc(text)}`;
     if (updateTime) document.getElementById('update-time').innerText = updateTime;
 }
+document.addEventListener('i18nchange', () => {
+    if (!lastStatus) return;
+    const { type, text, updateTime, key } = lastStatus;
+    updateStatus(type, key && window.i18n ? window.i18n(key) : text, updateTime, key);
+});
 
 // ==================== 核心数据抓取与部分渲染 ====================
 function hasAnyData(d) {
@@ -96,7 +103,7 @@ async function fetchAndRenderData(dateStr, isRefresh = false) {
     const signal = loadCtl.signal;
     const grid = document.getElementById('companies-grid');
     grid.innerHTML = `<p style="text-align:center;grid-column:1/-1;color:#666;">${window.i18n ? window.i18n('t015') : '🔄 Loading data...'}</p>`;
-    updateStatus('loading', window.i18n ? window.i18n('t004') : 'Loading...');
+    updateStatus('loading', window.i18n ? window.i18n('t004') : 'Loading...', null, 't004');
     const isLatest = availableDates.length > 0 && dateStr === availableDates[0];
 
     const agg = await loadAggregated(dateStr, isLatest, signal);
@@ -141,13 +148,13 @@ async function fetchAndRenderData(dateStr, isRefresh = false) {
 
     if (validCount === 0) {
         grid.innerHTML = '<p style="text-align:center;grid-column:1/-1;color:#e53e3e;">❌ 目前暂无任何可用的开奖数据，请稍后再试。</p>';
-        updateStatus('error', '加载失败');
+        updateStatus('error', window.i18n ? window.i18n('t065') : 'Load failed', null, 't065');
         return;
     }
 
     renderCompanies(dataMap);
     const now = new Date();
-    updateStatus('success', window.i18n ? window.i18n('t060') : 'Loading complete · v1.2.3', `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`);
+    updateStatus('success', window.i18n ? window.i18n('t060') : 'Loading complete · v1.2.3', `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`, 't060');
 }
 
 
