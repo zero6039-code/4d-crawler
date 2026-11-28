@@ -16,9 +16,9 @@ MAX_BYTES = 2 * 1024 * 1024
 def make_session():
     s = requests.Session()
     s.mount("https://", HTTPAdapter(max_retries=Retry(
-        total=3, backoff_factor=1.0, backoff_max=10,
+        total=2, backoff_factor=1.0, backoff_max=10,
         status_forcelist=(429, 500, 502, 503, 504),
-        allowed_methods=("GET",), respect_retry_after_header=False)))
+        allowed_methods=("GET",), respect_retry_after_header=True)))
     s.headers["User-Agent"] = "Mozilla/5.0 (compatible; 4d-crawler/2.0)"
     return s
 
@@ -57,10 +57,16 @@ def fetch_html(url, max_retries=2, timeout=(5, 15), deadline=60):
                 print(f"  状态码: {r.status_code}")
                 r.raise_for_status()
                 buf = bytearray()
-                for chunk in r.iter_content(65536):
+                while True:
+                    # read1：收到多少就返回多少，才能在慢速滴灌时按时检查总时限
+                    chunk = r.raw.read1(65536, decode_content=True)
+                    if not chunk:
+                        break
                     buf += chunk
                     if len(buf) > MAX_BYTES:
                         raise ValueError("响应超过上限")
+                    if time.monotonic() - t0 > deadline:
+                        raise ValueError("超过总时限")
                 return bytes(buf).decode("utf-8", "replace")
         except (requests.exceptions.RequestException, ValueError) as e:
             print(f"❌ 抓取失败: {e}")
