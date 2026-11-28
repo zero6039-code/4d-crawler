@@ -21,5 +21,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if(e.target===e.currentTarget) o.style.display='none'; }));
 
+    document.addEventListener('keydown', e => {
+        if (e.key !== 'Escape') return;
+        document.querySelectorAll('.modal-overlay').forEach(m => {
+            if (m.style.display === 'flex') m.style.display = 'none';
+        });
+    });
+
     loadDateIndex();
 });
