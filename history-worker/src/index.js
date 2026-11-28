@@ -3,7 +3,8 @@ const TTL_MS = 5 * 60 * 1000;
 const shardCache = new Map();                                    // isolate 内缓存
 
 const json = (body, status, extra) => new Response(JSON.stringify(body), {
-  status, headers: { 'Content-Type': 'application/json; charset=utf-8', ...extra } });
+  status, headers: { 'Content-Type': 'application/json; charset=utf-8',
+    'X-Content-Type-Options': 'nosniff', ...extra } });
 
 export default {
   async fetch(request, env) {
